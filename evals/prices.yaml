@@ -21,6 +21,16 @@
 #     read_on: <YYYY-MM-DD>
 
 models:
+  # The OpenCode Go reviewer arms are subscription-billed. Their token counts
+  # are recorded; their cash cost is unavailable, never zero.
+  opencode-go/glm-5.3:
+    unpriced_reason: OpenCode Go is a subscription allowance with no applicable per-token USD rate.
+    source: https://opencode.ai/docs/go/
+    read_on: 2026-11-19
+  opencode-go/deepseek-v4-pro:
+    unpriced_reason: OpenCode Go is a subscription allowance with no applicable per-token USD rate.
+    source: https://opencode.ai/docs/go/
+    read_on: 2026-11-19
   vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:
     unpriced_reason: >-
       Vercel's first-party DeepSeek endpoint publishes prompt, completion and

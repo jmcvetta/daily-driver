@@ -245,6 +245,26 @@ stays at Omp's default.
 **On this arm, the canonical name `Write` covers two things:** a file write, and
 an `xd://` device dispatch. A criterion that counts `Write` calls counts both.
 
+**A reviewer arm may restrict more than its parent route.** `vercel_gateway_only`
+also accepts a model-to-upstreams mapping, which `home.restrict_model_routes`
+merges into one private `models.yml`. The parent's own selector must be one of
+the keys, so the mapping cannot leave the subject unrestricted, and the
+`modelRoles.review` selector gets the same first-party allowlist and
+`openai-completions` transport.
+
+**Child reviewer evidence comes from subagent frames, not the parent's totals.**
+With `record_reviewer_telemetry`, the adapter sends `set_subagent_subscription`
+at level `events`, reads the parent's applied `thinkingLevel`, and reduces
+`subagent_lifecycle`, `subagent_progress` and `subagent_event` frames into
+`omp-reviewer-telemetry.json`. The progress payload supplies the requested
+role route (`modelOverride`, `modelRole`), Omp's resolved identity including
+its `@upstream`, and `resolvedThinkingLevel`; the child `message_end` frames
+supply per-message model, provider, usage (with reasoning), duration and TTFB.
+The artifact is guarded before each prompt and written atomically after it, so
+a missing or interrupted capture is visible rather than silently replaced by
+the parent's usage. Pricing uses each child message's own timestamp and prompt
+size, and the run-level parent usage never supplies a reviewer cost.
+
 **Two protocol questions are open, and the arm answers them by running.** Omp's
 `docs/rpc.md` shows `toolName` on `tool_execution_start` without showing the
 arguments, and places token accounting in "telemetry fields on `agent_end`"

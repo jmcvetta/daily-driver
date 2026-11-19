@@ -94,6 +94,24 @@ def restrict_model_upstreams(
 ) -> Path:
     """Write `agent_dir/models.yml` with `model_id` restricted to `only`.
 
+    A single-model convenience wrapper over `restrict_model_routes`; see that
+    function for the merge and refusal rules.
+    """
+    return restrict_model_routes(agent_dir, ((provider, model_id, only),))
+
+
+def restrict_model_routes(
+    agent_dir: Path,
+    routes: Sequence[tuple[str, str, Sequence[str]]],
+) -> Path:
+    """Write `agent_dir/models.yml` with every named model restricted to its upstreams.
+
+    Each route is `(provider, model_id, only)`. A reviewer arm restricts both
+    the parent selector and the `modelRoles.review` selector, so the two
+    routes are merged into one private file in a single pass. Two routes for
+    the same provider and model are refused rather than merged, because one
+    row cannot carry two allowlists.
+
     The inherited `models.yml` is read and merged into a private copy, so the
     caller's file is never written through the symlink that borrows it. Only the
     selected model's Vercel gateway routing changes: unrelated providers,
@@ -113,23 +131,31 @@ def restrict_model_upstreams(
     or its `models:` definition, or an inherited `compat.extraBody` that would
     replace the enforced model or upstream.
     """
-    allowed = list(dict.fromkeys(only))
-    if not allowed:
-        raise ValueError("an upstream restriction must name at least one provider")
+    if not routes:
+        raise ValueError("at least one model route must be restricted")
     path = agent_dir / MODEL_CONFIG_FILE
     document = _read_models(path)
     providers = _mapping(document, "providers", str(path))
-    block = _mapping(providers, provider, f"{path}: providers")
-    override = _selected_override(block, provider, model_id, path)
-    custom = _custom_model(block, model_id, path)
-    _refuse_alternate_model(override, provider, model_id, path, "modelOverrides")
-    _refuse_alternate_model(custom, provider, model_id, path, "models")
-    _refuse_extra_body(block, override, custom, model_id, path)
-    compat = _mapping(override, "compat", f"{path}: {provider}/{model_id}")
-    routing = _mapping(compat, "vercelGatewayRouting", f"{path}: {provider}/{model_id}.compat")
-    routing.pop("order", None)
-    routing["only"] = allowed
-    override["api"] = GATEWAY_ROUTING_API
+    seen: set[tuple[str, str]] = set()
+    for provider, model_id, only in routes:
+        key = (provider, model_id)
+        if key in seen:
+            raise ValueError(f"{path}: {provider}/{model_id} is restricted twice; one route needs one allowlist")
+        seen.add(key)
+        allowed = list(dict.fromkeys(only))
+        if not allowed:
+            raise ValueError("an upstream restriction must name at least one provider")
+        block = _mapping(providers, provider, f"{path}: providers")
+        override = _selected_override(block, provider, model_id, path)
+        custom = _custom_model(block, model_id, path)
+        _refuse_alternate_model(override, provider, model_id, path, "modelOverrides")
+        _refuse_alternate_model(custom, provider, model_id, path, "models")
+        _refuse_extra_body(block, override, custom, model_id, path)
+        compat = _mapping(override, "compat", f"{path}: {provider}/{model_id}")
+        routing = _mapping(compat, "vercelGatewayRouting", f"{path}: {provider}/{model_id}.compat")
+        routing.pop("order", None)
+        routing["only"] = allowed
+        override["api"] = GATEWAY_ROUTING_API
     _write_private(path, document)
     return path
 

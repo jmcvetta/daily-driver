@@ -7,6 +7,9 @@ the short version is that the built-in cannot be run on this account, is
 publicly undocumented, announces no changes, and — decisively — ships inside
 the `claude` binary, so there is no version to hold back.
 
+Campaign operations — preflight, calibration, smoke, cohort, stop and resume —
+are in [`RUNBOOK.md`](RUNBOOK.md).
+
 The arms run by `make evals-run-omp` are the required arms: their results are
 the eval evidence for the supported harness, Omp. The Claude Code arms
 (`with-without.yaml`, `with-without-haiku-5.5.yaml`, `base-vs-candidate.yaml`),
@@ -266,9 +269,62 @@ delta rubric against its labelled examples before running `--phase delta`,
 which runs five repeats of each delta case per arm. Preserve the earlier
 cohort separately: its fixed-delta response contract could not express the
 explanation its rubric required.
-Reviewer usage and latency are `unavailable` unless directly exposed.
-Parent usage is not reviewer usage. Subscription allowance consumption is
-not cash spend; unknown cash spend is not zero.
+Reviewer usage and latency in the earlier OpenCode Go cohort are `unavailable`:
+those records expose no child telemetry. The Vercel cohort below records them
+from Omp's subagent events. Parent usage is not reviewer usage. Subscription
+allowance consumption is not cash spend; unknown cash spend is not zero.
+
+### Vercel reviewer cohort
+
+Issue #906 adds seven arms on the same eight frozen cases: DeepSeek V4 Pro at
+`high` as the adequacy reference, plus Luna `high`, Kimi `low`, GLM `high`,
+Qwen `low`, MiMo `low` and Mistral `low`. Every arm pins the parent, every
+non-review helper and the judge to
+`vercel-ai-gateway/openai/gpt-6.1-sol:low`, restricted to the `openai`
+upstream. Only `modelRoles.review` differs, and each experiment's
+`vercel_gateway_only` map restricts that selector to its first-party endpoint.
+The judge is `omp-vercel-gpt-6.1-sol`, a no-tools definition on the same
+gateway route; it calibrated against all three committed reviewer-quality
+label sets (9/9, no false passes, no errors) before the cohort. This is a new
+measurement. Do not pool it with, or claim a matched comparison against, the
+earlier OpenCode Go cohort: the parent, helpers and judge routes differ.
+
+The adapter writes `omp-reviewer-telemetry.json` for every attempt. The
+collector matches the delivered `<task-result>` id to the child's own frames
+and reports the requested role route, the harness-reported model, Omp's
+resolved `@upstream` and thinking level, per-message token buckets, reviewer
+latency and per-message cost. Its `usage` block keeps the three roles apart:
+the parent's Omp messages from the run record, the reviewer's own child frames,
+and the judge's record/sidecar usage. `cost_comparison_valid` is false whenever
+a completed attempt lacks verified telemetry or a priced card. A missing
+reviewer cost is `unreported`, never zero and never the parent's cost. Prices
+are computed from the committed endpoint cards, not billed amounts.
+
+Run every attempt serially, one active attempt globally:
+
+```sh
+make evals-plan-reviewer-quality
+make evals-judge-preflight JUDGE=omp-vercel-gpt-6.1-sol
+
+python3 scripts/evals-reviewer-run.py --arm vercel-mistral --phase smoke \
+  --run-dir evals/runs/906/vercel-mistral-smoke
+make evals-record RUN=evals/runs/906/vercel-mistral-smoke \
+  EXPERIMENT=evals/experiments/omp-reviewer-mistral-large-4-vercel.yaml \
+  JUDGE=omp-vercel-gpt-6.1-sol JUDGE_TASKS_DIR=evals/tasks-judged
+python3 scripts/evals-reviewer-quality.py --arm vercel-mistral \
+  --experiment evals/experiments/omp-reviewer-mistral-large-4-vercel.yaml \
+  --run-dir evals/runs/906/vercel-mistral-smoke \
+  --record evals/provenance/<record>.json --repeats 1 \
+  --output evals/provenance/reviewer-quality/vercel-mistral-smoke.json
+```
+
+The smoke pair is `01-boundary` and `05-clean-boundary` once per arm: 14
+attempts, excluded from cohort metrics. Inspect completion, captured delivery,
+requested and resolved identities, the resolved upstream and effort, child
+usage and cost, and the judge score before dispatching that arm's cohort.
+Cohorts run all eight cases five times per arm: 40 attempts per arm, 280 total.
+Use a fresh explicit nested run directory for each phase and keep the
+interrupted attempts.
 
 ### Observed comparison
 

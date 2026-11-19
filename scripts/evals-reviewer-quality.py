@@ -4,14 +4,18 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib
 import json
 import statistics
 import math
 import re
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 CASE_IDS = (
     "reviewer-quality-01-boundary",
@@ -72,6 +76,78 @@ def bounded_response(text: str) -> str:
         return text[:MAX_FINDINGS_CHARS] + "\n...[truncated]"
     return text
 
+
+MAX_ERROR_TEXT_CHARS = 1_000
+ABSOLUTE_PATH_RE = re.compile(
+    r"(?<![\w:/])/(?:tmp|home|workspace|mnt|var|private|Users|root|opt|usr|etc)/"
+    r"[^\s\"'`;|&()<>]*"
+)
+
+
+def redact_absolute_paths(text: str) -> str:
+    """Replace absolute paths before an error field enters a committed record."""
+    return ABSOLUTE_PATH_RE.sub("<path>", text)
+
+
+def bounded_error_text(value: Any, *, tail: bool = False) -> str:
+    """Keep one error field, without control bytes or unbounded text.
+
+    The first characters of a message name the failure; the last characters of
+    stderr name the command that failed. Both are bounded and stripped of
+    absolute paths before they enter a committed record.
+    """
+    if not isinstance(value, str):
+        return "unavailable"
+    text = "".join(
+        ch for ch in redact_absolute_paths(value) if ch in "\n\t" or ord(ch) >= 32
+    ).strip()
+    if not text:
+        return "unavailable"
+    if len(text) <= MAX_ERROR_TEXT_CHARS:
+        return text
+    return text[-MAX_ERROR_TEXT_CHARS:] if tail else text[:MAX_ERROR_TEXT_CHARS] + "...[truncated]"
+
+
+def attempt_error(task: dict[str, Any], row: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Preserve why an attempt failed, when the run recorded a cause.
+
+    `run.json` and `task.json` carry the cause; the collector previously kept
+    only a boolean. The full log tail and stack trace stay local because they
+    carry absolute sandbox paths and can be large.
+    """
+    row_details = row.get("error_details") if isinstance(row, dict) else None
+    task_details = task.get("error_details")
+    details = (
+        row_details
+        if isinstance(row_details, dict)
+        else task_details
+        if isinstance(task_details, dict)
+        else {}
+    )
+    message = row.get("error_message") if isinstance(row, dict) else None
+    if not isinstance(message, str) or not message.strip():
+        message = task.get("error_message")
+    error = {
+        "message": bounded_error_text(message),
+        "category": bounded_error_text(details.get("error_category")),
+        "component": bounded_error_text(details.get("component")),
+        "agent": bounded_error_text(details.get("agent_name")),
+        "attempt": (
+            details.get("attempt_number")
+            if isinstance(details.get("attempt_number"), int)
+            and not isinstance(details.get("attempt_number"), bool)
+            else "unavailable"
+        ),
+        "stderr_tail": bounded_error_text(details.get("agent_stderr"), tail=True),
+    }
+    if all(
+        error[field] == "unavailable"
+        for field in ("message", "category", "component", "stderr_tail")
+    ):
+        return None
+    return error
+
+
 def reviewer_delivery_observed(path: Path | None, final: str | None) -> bool:
     """Require the parent's JSON to match a captured completed reviewer result."""
     if path is None or path.name != "task.json" or not path.is_file() or final is None:
@@ -102,6 +178,207 @@ def reviewer_delivery_observed(path: Path | None, final: str | None) -> bool:
                 if value == expected:
                     return True
     return False
+
+
+REVIEWER_TELEMETRY_FILENAME = "omp-reviewer-telemetry.json"
+
+
+def delivered_reviewer_id(path: Path | None) -> str | None:
+    """The subagent id a completed `<task-result>` delivered to the parent, if any.
+
+    The delivery text names the reviewer that produced the result, so the
+    adapter's child telemetry can be matched to that exact id rather than to
+    whichever reviewer happened to run last.
+    """
+    if path is None or path.name != "task.json" or not path.is_file():
+        return None
+    task = json_file(path)
+    found: list[str] = []
+    for iteration in task.get("iterations", []):
+        for command in iteration.get("commands", []):
+            result = str(command.get("result_summary") or "")
+            for tag in re.finditer(r'<task-result\b[^>]*\bagent="reviewer"[^>]*\bstatus="completed"[^>]*>', result):
+                match = re.search(r'\bid="([^"]+)"', tag.group(0))
+                if match:
+                    found.append(match.group(1))
+    return found[-1] if found else None
+
+
+def reviewer_telemetry_evidence(artifact_dir: Path, delivered_id: str | None) -> dict[str, Any]:
+    """Read the adapter's reviewer-child telemetry for one attempt.
+
+    `artifact_dir` is the attempt directory; the adapter writes inside the task
+    sandbox, which coder_eval preserves under `artifacts/<task>`. A `.pending`
+    guard, a missing file, an incomplete document and an unreadable one all
+    mean the same thing for the cost comparison: the reviewer's usage is
+    unavailable. They are reported distinctly so the reason survives the run.
+    """
+    candidates = [artifact_dir]
+    nested = [
+        path.parent
+        for path in artifact_dir.glob("artifacts/*/omp-reviewer-telemetry.json")
+        if path.is_file()
+    ]
+    if artifact_dir.name != "artifacts":
+        candidates.extend(nested)
+    if not nested and artifact_dir.is_dir():
+        candidates.extend(path.parent for path in artifact_dir.glob("artifacts/*/omp-reviewer-telemetry.json.pending"))
+    if any((directory / f"{REVIEWER_TELEMETRY_FILENAME}.pending").exists() for directory in candidates):
+        return {"status": "guard"}
+    existing = [directory for directory in candidates if (directory / REVIEWER_TELEMETRY_FILENAME).is_file()]
+    if not existing:
+        return {"status": "missing"}
+    if len(existing) > 1:
+        return {"status": "ambiguous", "candidate_directories": len(existing)}
+    path = existing[0] / REVIEWER_TELEMETRY_FILENAME
+    try:
+        document = json_file(path)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return {"status": "unreadable", "error": str(exc)}
+    if document.get("version") != 1 or document.get("complete") is not True:
+        return {"status": "incomplete"}
+    reviewers: list[dict[str, Any]] = []
+    for attempt in document.get("attempts", []):
+        if not isinstance(attempt, dict):
+            continue
+        for subagent in attempt.get("subagents", []):
+            if isinstance(subagent, dict) and subagent.get("agent") == "reviewer":
+                reviewers.append(subagent)
+    if not reviewers:
+        return {"status": "no_reviewer"}
+    if delivered_id is not None:
+        matched = [subagent for subagent in reviewers if subagent.get("id") == delivered_id]
+        if not matched:
+            return {"status": "delivery_mismatch", "delivered_id": delivered_id}
+        subagent = matched[-1]
+    else:
+        completed = [subagent for subagent in reviewers if subagent.get("status") == "completed"]
+        if len(completed) != 1:
+            return {"status": "ambiguous", "reviewer_records": len(reviewers)}
+        subagent = completed[0]
+    messages = [message for message in subagent.get("messages", []) if isinstance(message, dict)]
+    models = sorted({str(message.get("model")) for message in messages if isinstance(message.get("model"), str)})
+    peak_multipliers = [
+        message.get("peak_multiplier")
+        for message in messages
+        if isinstance(message.get("peak_multiplier"), (int, float))
+        and not isinstance(message.get("peak_multiplier"), bool)
+    ]
+    peak_messages = sum(1 for value in peak_multipliers if value > 1)
+    usage: dict[str, Any] | None = {
+        "input": 0,
+        "output": 0,
+        "reasoning": 0,
+        "cache_read": 0,
+        "cache_write": 0,
+    }
+    reasoning_reported = True
+    for message in messages:
+        message_usage = message.get("usage")
+        if not isinstance(message_usage, dict):
+            usage = None
+            break
+        assert usage is not None
+        for bucket in ("input", "output", "cache_read", "cache_write"):
+            value = message_usage.get(bucket)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+                usage = None
+                break
+            usage[bucket] += int(value)
+        if usage is None:
+            break
+        reasoning = message_usage.get("reasoning")
+        if isinstance(reasoning, (int, float)) and not isinstance(reasoning, bool) and reasoning >= 0:
+            usage["reasoning"] += int(reasoning)
+        else:
+            reasoning_reported = False
+    if usage is not None and not reasoning_reported:
+        usage["reasoning"] = None
+    return {
+        "status": "verified",
+        "subagent_id": subagent.get("id"),
+        "status_detail": subagent.get("status"),
+        "requested_model": subagent.get("requested_model"),
+        "model_role": subagent.get("model_role"),
+        "resolved_model_identity": subagent.get("resolved_model_identity"),
+        "resolved_thinking_level": subagent.get("resolved_thinking_level"),
+        "backend_provider": subagent.get("backend_provider"),
+        "backend_model": subagent.get("backend_model"),
+        "harness_models": models,
+        "elapsed_ms": subagent.get("elapsed_ms"),
+        "generation_ms": subagent.get("generation_ms"),
+        "message_count": subagent.get("message_count"),
+        "peak_priced_messages": peak_messages,
+        "peak_multipliers_seen": sorted(set(peak_multipliers)),
+        "usage": usage,
+        "cost_usd": subagent.get("cost_usd", "unreported"),
+    }
+
+
+def selector_key(value: str) -> str:
+    """A selector without its trailing thinking level."""
+    return value.rsplit(":", 1)[0] if ":" in value.rsplit("/", 1)[-1] else value
+
+
+def verify_reviewer_telemetry(
+    evidence: dict[str, Any], requested: str, expected_upstreams: list[str] | None
+) -> dict[str, Any]:
+    """Check that the child evidence is the requested reviewer route and effort.
+
+    The adapter reports what Omp recorded; this function compares it with the
+    arm's fixed selector. Any disagreement is an attribution mismatch: the
+    record keeps the evidence, but the usage and cost do not enter a measured
+    comparison.
+    """
+    if evidence.get("status") != "verified":
+        return evidence
+    problems: list[str] = []
+    telem_requested = evidence.get("requested_model")
+    if not isinstance(telem_requested, str) or selector_key(telem_requested) != selector_key(requested):
+        problems.append(f"requested_model {telem_requested!r} != {requested!r}")
+    effort = requested.rsplit(":", 1)[1] if ":" in requested.rsplit("/", 1)[-1] else None
+    resolved = evidence.get("resolved_thinking_level")
+    if effort is not None and resolved != effort:
+        problems.append(f"resolved_thinking_level {resolved!r} != {effort!r}")
+    models = evidence.get("harness_models") or []
+    expected_model = normalize_model(requested)
+    if not models or any(normalize_model(model) != expected_model for model in models):
+        problems.append(f"harness models {models!r} != {expected_model!r}")
+    backend = evidence.get("backend_provider")
+    if expected_upstreams:
+        if backend not in expected_upstreams:
+            problems.append(f"backend_provider {backend!r} not in {expected_upstreams!r}")
+    role = evidence.get("model_role")
+    if role is not None and role != "review":
+        problems.append(f"model_role {role!r} != 'review'")
+    evidence = dict(evidence)
+    evidence["attribution_problems"] = problems
+    evidence["attribution_valid"] = not problems
+    if problems:
+        evidence["status"] = "attribution_mismatch"
+    return evidence
+
+
+def identity_mismatch(reviewer_identity: str, requested: str) -> bool:
+    """Whether a child's reported identity disagrees with the arm's selector.
+
+    A Vercel child reports its provider-local id (`mistral/…`), not the gateway
+    prefix, so the gateway's own prefix is not compared; the upstream is checked
+    from the adapter's resolved identity instead. Each other provider is
+    compared by prefix, model id and any reported thinking suffix.
+    """
+    expected_provider = requested.split("/", 1)[0]
+    reported_provider = reviewer_identity.split("/", 1)[0] if "/" in reviewer_identity else None
+    provider_mismatch = (
+        expected_provider != "vercel-ai-gateway"
+        and reported_provider is not None
+        and reported_provider != expected_provider
+    )
+    effort_mismatch = (
+        ":" in reviewer_identity
+        and reviewer_identity.rsplit(":", 1)[1] != requested.rsplit(":", 1)[1]
+    )
+    return provider_mismatch or effort_mismatch or normalize_model(reviewer_identity) != normalize_model(requested)
 
 
 def reviewer_result_fields(text: str | None) -> tuple[str, str]:
@@ -248,19 +525,56 @@ def reported_identity(
     repeat: int,
     parent_requested: str,
     helper_requested: str,
+    reviewer_requested: str = "unreported",
+    telemetry: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Return parent, helper, and judge identities without conflating roles."""
+    """Return parent, helper, reviewer, and judge identities without conflating roles."""
     case_rows = [row for row in (record or {}).get("cases", []) if row.get("task_id") == case and row.get("replicate_index") == repeat]
     parent_served = case_rows[0].get("model_served", "unreported") if case_rows else "unreported"
     judge = (record or {}).get("judge") or {}
+    evidence = telemetry or {}
     return {
         "parent": {"requested": parent_requested, "served": parent_served},
         "helper": {"requested": helper_requested, "served": "unreported"},
+        "reviewer": {
+            "requested": reviewer_requested,
+            "harness": ", ".join(evidence.get("harness_models") or []) or "unreported",
+            "role_route": evidence.get("requested_model") or "unreported",
+            "backend_served": evidence.get("backend_provider") or "unreported",
+            "resolved_thinking_level": evidence.get("resolved_thinking_level") or "unreported",
+        },
         "judge": {
             "requested": judge.get("model_requested", "unreported"),
             "served": judge.get("models_observed", "unreported"),
         },
     }
+
+
+def rubric_correct(entry: dict[str, Any]) -> bool:
+    """Whether the independent judge found this attempt's review correct.
+
+    Full reviews need a 1.0; a corrected delta is the suite's accepted pass at
+    0.7 with the clear/defect verdict and classification it defines.
+    """
+    if entry.get("status") != "completed":
+        return False
+    score = entry.get("score")
+    if not isinstance(score, (int, float)) or isinstance(score, bool):
+        return False
+    case = entry["case_id"]
+    if case.endswith("07-delta-fixed"):
+        return (
+            score >= 0.7
+            and "DELTA:clear" in entry["judge_classifications"]
+            and entry["reviewer_verdict"] == "clear"
+        )
+    if case.endswith("08-delta-incomplete"):
+        return (
+            score >= 0.7
+            and "TP:still-open" in entry["judge_classifications"]
+            and entry["reviewer_verdict"] == "defects"
+        )
+    return score >= 1.0
 
 
 def summarize(entries: list[dict[str, Any]], cases: list[str]) -> dict[str, Any]:
@@ -307,10 +621,63 @@ def summarize(entries: list[dict[str, Any]], cases: list[str]) -> dict[str, Any]
             "verified_reviewer_completions": sum(entry["reviewer_status"] == "completed" for entry in group),
             "reviewer_errors": sum(entry["reviewer_status"] in {"incomplete", "provider_error", "harness_error"} for entry in group),
             "judge_errors": sum(entry["judge_status"] == "error" for entry in group),
+            "reviewer_telemetry_verified": sum(entry["reviewer_telemetry_status"] == "verified" for entry in group),
             "missing": sum(entry["status"] == "unattempted" for entry in group),
             "misses": misses,
         }
     reviewer_completed = sum(entry["reviewer_status"] == "completed" for entry in entries)
+    completed = [entry for entry in entries if entry["status"] == "completed"]
+    telemetry_verified = [entry for entry in entries if entry["reviewer_telemetry_status"] == "verified"]
+    telemetry_costed = [
+        entry
+        for entry in completed
+        if entry["reviewer_telemetry_status"] == "verified"
+        and isinstance(entry["reviewer_cost_usd"], (int, float))
+        and not isinstance(entry["reviewer_cost_usd"], bool)
+    ]
+    usage_totals: dict[str, Any] | None = None
+    for entry in telemetry_verified:
+        usage = entry.get("reviewer_usage")
+        if not isinstance(usage, dict):
+            continue
+        if usage_totals is None:
+            usage_totals = {bucket: 0 for bucket in ("input", "output", "reasoning", "cache_read", "cache_write")}
+        for bucket in usage_totals:
+            value = usage.get(bucket)
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                if usage_totals[bucket] is not None:
+                    usage_totals[bucket] += int(value)
+            else:
+                usage_totals[bucket] = None
+    reviewer_latencies = [
+        entry["latency_reviewer_seconds"]
+        for entry in telemetry_verified
+        if isinstance(entry.get("latency_reviewer_seconds"), (int, float))
+    ]
+    correct_costed = [entry for entry in telemetry_costed if rubric_correct(entry)]
+    total_cost = sum(entry["reviewer_cost_usd"] for entry in telemetry_costed) if telemetry_costed else None
+    cost_comparison_valid = bool(completed) and all(
+        entry["reviewer_telemetry_status"] == "verified"
+        and isinstance(entry["reviewer_cost_usd"], (int, float))
+        for entry in completed
+    )
+    causes: dict[tuple[str, str], dict[str, Any]] = {}
+    for entry in entries:
+        error = entry.get("error")
+        if not isinstance(error, dict):
+            continue
+        category = str(error.get("category", "unavailable"))
+        component = str(error.get("component", "unavailable"))
+        cause = causes.setdefault(
+            (category, component),
+            {
+                "category": category,
+                "component": component,
+                "count": 0,
+                "example": error.get("message", "unavailable"),
+            },
+        )
+        cause["count"] += 1
     return {
         "attempts": len(entries),
         "eligible": len(classes),
@@ -322,6 +689,10 @@ def summarize(entries: list[dict[str, Any]], cases: list[str]) -> dict[str, Any]
         "judge_unavailable": sum(entry["judge_status"] == "unavailable" for entry in entries),
         "reviewer_delivery_unverified": sum(entry["status"] == "reviewer_unverified" for entry in entries),
         "unattempted": sum(entry["status"] == "unattempted" for entry in entries),
+        "error_causes": sorted(
+            causes.values(),
+            key=lambda item: (-item["count"], item["category"], item["component"]),
+        ),
         "classification": {
             "unexpected_valid": [
                 {"case_id": entry["case_id"], "repeat": entry["repeat"], "evidence": token}
@@ -356,7 +727,71 @@ def summarize(entries: list[dict[str, Any]], cases: list[str]) -> dict[str, Any]
             "mean": sum(latencies) / len(latencies) if latencies else None,
             "population_stddev": math.sqrt(sum((value - sum(latencies) / len(latencies)) ** 2 for value in latencies) / len(latencies)) if latencies else None,
         },
+        "reviewer_telemetry": {
+            "verified": len(telemetry_verified),
+            "guard": sum(entry["reviewer_telemetry_status"] == "guard" for entry in entries),
+            "missing": sum(entry["reviewer_telemetry_status"] == "missing" for entry in entries),
+            "incomplete": sum(entry["reviewer_telemetry_status"] in {"incomplete", "unreadable"} for entry in entries),
+            "no_reviewer": sum(entry["reviewer_telemetry_status"] == "no_reviewer" for entry in entries),
+            "delivery_mismatch": sum(entry["reviewer_telemetry_status"] == "delivery_mismatch" for entry in entries),
+            "ambiguous": sum(entry["reviewer_telemetry_status"] == "ambiguous" for entry in entries),
+            "attribution_mismatch": sum(entry["reviewer_telemetry_status"] == "attribution_mismatch" for entry in entries),
+            "usage": usage_totals if usage_totals is not None else "unavailable",
+            "cost_usd": total_cost if total_cost is not None else "unavailable",
+            "peak_priced_messages": sum(
+                entry.get("reviewer_peak_priced_messages", 0)
+                for entry in telemetry_verified
+                if isinstance(entry.get("reviewer_peak_priced_messages"), int)
+            ),
+            "peak_priced_attempts": sum(
+                1
+                for entry in telemetry_verified
+                if isinstance(entry.get("reviewer_peak_priced_messages"), int)
+                and entry["reviewer_peak_priced_messages"] > 0
+            ),
+            "cost_reported_attempts": len(telemetry_costed),
+            "completed_attempts": len(completed),
+            "cost_comparison_valid": cost_comparison_valid,
+            "cost_per_rubric_correct_review_usd": (
+                total_cost / len(correct_costed) if total_cost is not None and correct_costed else None
+            ),
+            "rubric_correct_denominator": len(correct_costed),
+        },
+        "latency_reviewer_seconds": {
+            "count": len(reviewer_latencies),
+            "min": min(reviewer_latencies) if reviewer_latencies else None,
+            "median": statistics.median(reviewer_latencies) if reviewer_latencies else None,
+            "max": max(reviewer_latencies) if reviewer_latencies else None,
+            "mean": sum(reviewer_latencies) / len(reviewer_latencies) if reviewer_latencies else None,
+            "population_stddev": math.sqrt(sum((value - sum(reviewer_latencies) / len(reviewer_latencies)) ** 2 for value in reviewer_latencies) / len(reviewer_latencies)) if reviewer_latencies else None,
+        },
         "per_case": per_case,
+    }
+
+
+def evidence_gate(analysis_valid: bool | None, cost_comparison_valid: bool) -> dict[str, Any]:
+    """The fail-closed gate over the evidence a record already carries.
+
+    A record is publishable when its attribution is complete and every
+    completed attempt can be priced. Coverage is reported separately: a
+    provider stop legitimately leaves slots refused, and that record still
+    needs to be written.
+    """
+    reasons = []
+    if analysis_valid is not True:
+        reasons.append(
+            "analysis_valid is not true: reviewer attribution is incomplete or mismatched"
+        )
+    if cost_comparison_valid is not True:
+        reasons.append(
+            "cost_comparison_valid is not true: a completed attempt lacks verified "
+            "telemetry or a computed reviewer cost"
+        )
+    return {
+        "valid": not reasons,
+        "analysis_valid": analysis_valid,
+        "cost_comparison_valid": cost_comparison_valid,
+        "reasons": reasons,
     }
 
 
@@ -382,6 +817,13 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     requested = route_models.get("review", "unreported")
     parent_requested = experiments.get("defaults", {}).get("agent", {}).get("model", "unreported")
     helper_requested = route_models.get("task", "unreported")
+    restriction = experiments.get("defaults", {}).get("agent", {}).get("vercel_gateway_only")
+    expected_upstreams: list[str] | None = None
+    if isinstance(restriction, dict):
+        for selector, upstreams in restriction.items():
+            if selector_key(str(selector)) == selector_key(str(requested)) and isinstance(upstreams, list):
+                expected_upstreams = [str(value) for value in upstreams]
+                break
     settings_sha = sha256_file(args.experiment)
     overlay_sha = sha256_file(overlay_path)
     entries = []
@@ -406,16 +848,41 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             for repeat in range(args.repeats):
                 row = rows.get((args.variant, case, repeat))
                 artifact = run_dir / args.variant / case / f"{repeat:02d}" / "task.json"
-                details = json_file(artifact).get("error_details", {}) if artifact.is_file() else {}
-                interrupted = isinstance(details, dict) and details.get("origin") == "manual interruption reconciliation"
+                task_artifact = json_file(artifact) if artifact.is_file() else {}
+                details = (
+                    task_artifact.get("error_details")
+                    if isinstance(task_artifact.get("error_details"), dict)
+                    else {}
+                )
+                interrupted = details.get("origin") == "manual interruption reconciliation"
+                error = attempt_error(task_artifact, row)
                 row_status = str(row.get("status", "unreported")).upper() if row else "unattempted"
                 error_text = str(row.get("error_message", "") or "") if row else ""
-                provider_error = bool(re.search(r"rate[ -]?limit|quota|too many requests|(?:HTTP|status)[ :=]+429", error_text, re.IGNORECASE))
+                provider_error = bool(re.search(
+                    r"rate[ -]?limit|quota|too many requests|(?:HTTP|status)[ :=]+429|"
+                    r"insufficient[_ ]funds|positive credit balance|(?:HTTP|status)[ :=]+402",
+                    error_text,
+                    re.IGNORECASE,
+                ))
                 harness_error = bool(row) and not provider_error and row_status in {"ERROR", "TIMEOUT", "TIMED_OUT", "CRASHED"}
                 result_path = result_text(run_dir, args.variant, case, repeat) if row else None
                 text = final_response(result_path)
                 reviewer_identity, reviewer_verdict = reviewer_result_fields(text)
                 delivery_observed = reviewer_delivery_observed(artifact, text)
+                telemetry = verify_reviewer_telemetry(
+                    reviewer_telemetry_evidence(artifact.parent, delivered_reviewer_id(artifact)),
+                    str(requested),
+                    expected_upstreams,
+                )
+                if telemetry.get("status") == "attribution_mismatch":
+                    attribution_mismatches.append({
+                        "run_id": run_id,
+                        "case_id": case,
+                        "repeat": str(repeat),
+                        "reported": "; ".join(telemetry.get("attribution_problems") or []),
+                        "expected_selector": str(requested),
+                    })
+                telemetry_verified = telemetry.get("status") == "verified"
                 reviewer_completed = bool(text) and reviewer_verdict in {"clear", "defects"} and delivery_observed
                 parent_reported_reviewer_identity = reviewer_identity
                 if not delivery_observed:
@@ -424,9 +891,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                 judge = judge_evidence(run_dir, record, args.variant, case, repeat) if row else {"status": "unavailable", "classifications": [], "score": "unavailable"}
                 if reviewer_identity != "unreported":
                     observed_identities.append(reviewer_identity)
-                    provider_mismatch = "/" in reviewer_identity and reviewer_identity.split("/", 1)[0] != requested.split("/", 1)[0]
-                    effort_mismatch = ":" in reviewer_identity and reviewer_identity.rsplit(":", 1)[1] != requested.rsplit(":", 1)[1]
-                    if provider_mismatch or effort_mismatch or normalize_model(reviewer_identity) != normalize_model(requested):
+                    if identity_mismatch(reviewer_identity, requested):
                         attribution_mismatches.append({"run_id": run_id, "case_id": case, "repeat": str(repeat), "reported": reviewer_identity, "expected_selector": requested})
                 if not row:
                     status = "unattempted"
@@ -457,6 +922,19 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                 attempt_seconds = run_record_case.get("elapsed_seconds")
                 if not isinstance(attempt_seconds, (int, float)) and row:
                     attempt_seconds = row.get("duration")
+                reviewer_latency = telemetry.get("elapsed_ms")
+                reviewer_latency_seconds = (
+                    reviewer_latency / 1000
+                    if isinstance(reviewer_latency, (int, float)) and not isinstance(reviewer_latency, bool)
+                    else "unavailable"
+                )
+                cost = telemetry.get("cost_usd")
+                if not telemetry_verified or not delivery_observed:
+                    reviewer_cost: float | str = "unavailable"
+                elif isinstance(cost, (int, float)) and not isinstance(cost, bool):
+                    reviewer_cost = cost
+                else:
+                    reviewer_cost = "unreported"
                 entries.append({
                     "case_id": case, "repeat": repeat, "arm": args.arm, "variant_id": args.variant,
                     "run_id": run_id, "status": status,
@@ -464,6 +942,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                     "reviewer_status": "completed" if reviewer_completed else ("interrupted" if interrupted else ("provider_error" if provider_error else ("harness_error" if harness_error else ("unattempted" if not row else ("delivery_unverified" if text and not delivery_observed else "incomplete"))))),
                     "provider_error": provider_error,
                     "harness_error": harness_error and not interrupted,
+                    "error": error,
                     "judge_status": judge["status"],
                     "judge_error": judge.get("error", "unavailable"),
                     "score": judge.get("score", "unavailable"),
@@ -475,11 +954,23 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                     "reviewer_delivery_observed": delivery_observed,
                     "parent_reported_reviewer_identity": parent_reported_reviewer_identity,
                     "reviewer_reported_identity": reviewer_identity,
-                    "reviewer_backend_served": "unreported",
-                    "identity": reported_identity(record, case, repeat, parent_requested, helper_requested),
-                    "latency_reviewer_seconds": "unavailable",
+                    "reviewer_harness_model": ", ".join(telemetry.get("harness_models") or []) or "unreported",
+                    "reviewer_backend_served": telemetry.get("backend_provider") or "unreported",
+                    "reviewer_telemetry_status": telemetry.get("status"),
+                    "reviewer_telemetry": telemetry,
+                    "reviewer_subagent_id": telemetry.get("subagent_id", "unreported"),
+                    "reviewer_resolved_thinking_level": telemetry.get("resolved_thinking_level") or "unreported",
+                    "reviewer_peak_priced_messages": telemetry.get("peak_priced_messages", "unavailable"),
+                    "identity": reported_identity(record, case, repeat, parent_requested, helper_requested, str(requested), telemetry),
+                    "latency_reviewer_seconds": reviewer_latency_seconds,
                     "attempt_seconds": attempt_seconds if not interrupted and isinstance(attempt_seconds, (int, float)) else None,
-                    "reviewer_usage": "unavailable",
+                    "reviewer_usage": telemetry.get("usage") if telemetry_verified else "unavailable",
+                    "reviewer_cost_usd": reviewer_cost,
+                    "parent_token_usage": run_record_case.get("token_usage", "unavailable"),
+                    "parent_cost_usd": run_record_case.get("cost", "unavailable")
+                    if isinstance(run_record_case.get("cost"), (int, float))
+                    else "unavailable",
+                    "parent_cost_source": run_record_case.get("cost_source", "unavailable"),
                     "judge_freeze_sha": judge.get("freeze_sha", "unreported"),
                     "artifact_sha256": sha256_file(result_path) if result_path and result_path.is_file() else "unavailable",
                 })
@@ -489,20 +980,98 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         if identity_required > 0 and len(observed_identities) == identity_required
         else None
     )
+    summary = summarize(entries, cases)
+    telemetry_summary = summary["reviewer_telemetry"]
+    completed_entries = [entry for entry in entries if entry["status"] == "completed"]
+    telemetry_attribution_valid = (
+        telemetry_summary["attribution_mismatch"] == 0
+        and telemetry_summary["delivery_mismatch"] == 0
+        and all(
+            entry["reviewer_telemetry_status"] == "verified"
+            for entry in completed_entries
+        )
+        if completed_entries
+        else None
+    )
+    parent_tokens: dict[str, int | None] = {
+        "uncached_input_tokens": 0,
+        "output_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "reasoning_tokens": 0,
+    }
+    parent_cost: float | None = 0.0
+    for entry in entries:
+        usage = entry.get("parent_token_usage")
+        if isinstance(usage, dict):
+            for bucket in parent_tokens:
+                value = usage.get(bucket)
+                if isinstance(value, (int, float)) and not isinstance(value, bool):
+                    if parent_tokens[bucket] is not None:
+                        parent_tokens[bucket] += int(value)
+                else:
+                    parent_tokens[bucket] = None
+        else:
+            parent_tokens = {bucket: None for bucket in parent_tokens}
+        cost = entry.get("parent_cost_usd")
+        if isinstance(cost, (int, float)) and parent_cost is not None:
+            parent_cost += cost
+        else:
+            parent_cost = None
+    judge_usage = (record or {}).get("judge", {}).get("usage", "unavailable") if args.run_dir else "unavailable"
     return {
         "schema_version": 1,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "arm": args.arm,
         "attribution": {
             "expected_reviewer_selector": requested,
+            "expected_reviewer_upstreams": expected_upstreams or "unrestricted",
             "expected_model_id": normalize_model(requested),
             "reviewer_reported_identities": sorted(set(observed_identities)),
             "reported_model_ids": sorted({normalize_model(value) for value in observed_identities}),
             "valid": attribution_valid,
+            "telemetry_valid": telemetry_attribution_valid,
             "mismatches": attribution_mismatches,
-            "basis": "captured reviewer delivery and reported session identity; backend-served identity is unreported",
+            "basis": (
+                "captured reviewer delivery, adapter child telemetry, and Omp's resolved "
+                "role route, thinking level and upstream; a missing served identity is unreported"
+            ),
         },
         "analysis_valid": attribution_valid,
+        "cost_comparison_valid": telemetry_summary["cost_comparison_valid"],
+        "gate": evidence_gate(attribution_valid, telemetry_summary["cost_comparison_valid"]),
+        "coverage": {
+            "planned": len(entries),
+            "terminal": sum(1 for entry in entries if entry["status"] not in {"unattempted", "interrupted"}),
+            "completed": len(completed_entries),
+            "provider_errors": summary["provider_errors"],
+            "harness_errors": summary["harness_errors"],
+            "judge_errors": summary["judge_errors"],
+            "unattempted": summary["unattempted"],
+            "measurable_cohort": (
+                summary["provider_errors"] == 0
+                and summary["unattempted"] == 0
+                and summary["harness_errors"] == 0
+            ),
+        },
+        "usage": {
+            "parent": {
+                "tokens": parent_tokens,
+                "cost_usd": parent_cost if parent_cost is not None else "unavailable",
+                "source": "coder_eval record: parent Omp messages; Omp's own catalog is not used",
+            },
+            "reviewer": {
+                "tokens": telemetry_summary["usage"],
+                "cost_usd": telemetry_summary["cost_usd"],
+                "source": "adapter child telemetry, priced per message from the endpoint cards",
+            },
+            "judge": {
+                "requested": (record or {}).get("judge", {}).get("model_requested", "unreported"),
+                "served": (record or {}).get("judge", {}).get("models_observed", "unreported"),
+                "tokens": judge_usage,
+                "source": "the run record's judge usage; per-attempt judge usage is in its sidecar",
+            },
+        },
         "settings": {
             "experiment_path": args.experiment.as_posix(),
             "experiment_sha256": settings_sha,
@@ -513,10 +1082,353 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         "coverage_complete": all(entry["status"] not in {"unattempted", "interrupted"} for entry in entries),
         "cohort_complete": all(entry["status"] not in {"unattempted", "interrupted"} and str(entry["task_status"]).upper() not in {"UNREPORTED", "PENDING", "RUNNING"} for entry in entries),
         "runs": links,
-        "summary": summarize(entries, cases),
+        "summary": summary,
         "attempts": entries,
         "winner": None,
     }
+
+
+# ---------------------------------------------------------------------------
+# Self-tests: offline, inline frames and artifacts.
+# ---------------------------------------------------------------------------
+
+
+def _adapter_module(name: str) -> Any:
+    """Import a pure adapter module from the checkout, without coder_eval."""
+    src = Path(__file__).resolve().parent.parent / "evals" / "coder-eval-omp" / "src"
+    if str(src) not in sys.path:
+        sys.path.insert(0, str(src))
+    return importlib.import_module(f"coder_eval_omp.{name}")
+
+
+def _telemetry_frames() -> list[dict[str, Any]]:
+    """The shape Omp 18.22.2 emitted in the reviewer telemetry probe."""
+    return [
+        {
+            "type": "subagent_lifecycle",
+            "payload": {
+                "id": "ReviewerChild",
+                "agent": "reviewer",
+                "parentToolCallId": "call_reviewer",
+                "status": "started",
+            },
+        },
+        {
+            "type": "subagent_progress",
+            "payload": {
+                "agent": "reviewer",
+                "parentToolCallId": "call_reviewer",
+                "progress": {
+                    "id": "ReviewerChild",
+                    "status": "running",
+                    "modelOverride": ["vercel-ai-gateway/mistral/mistral-large-4:low"],
+                    "modelRole": "review",
+                    "resolvedModelIdentity": "vercel-ai-gateway/mistral/mistral-large-4@mistral",
+                    "resolvedThinkingLevel": "low",
+                    "resolvedModel": "vercel-ai-gateway/mistral/mistral-large-4@mistral:low",
+                },
+            },
+        },
+        {
+            "type": "subagent_event",
+            "payload": {
+                "id": "ReviewerChild",
+                "event": {
+                    "type": "message_end",
+                    "message": {
+                        "role": "assistant",
+                        "model": "mistral/mistral-large-4",
+                        "provider": "vercel-ai-gateway",
+                        "responseId": "gen_test",
+                        "timestamp": 1795036498397,
+                        "duration": 2069.2258299999994,
+                        "ttft": 1333.5296550000003,
+                        "stopReason": "stop",
+                        "usage": {
+                            "input": 1000,
+                            "output": 200,
+                            "cacheRead": 100,
+                            "cacheWrite": 0,
+                            "reasoningTokens": 50,
+                        },
+                    },
+                },
+            },
+        },
+        {
+            "type": "subagent_lifecycle",
+            "payload": {
+                "id": "ReviewerChild",
+                "agent": "reviewer",
+                "parentToolCallId": "call_reviewer",
+                "status": "completed",
+            },
+        },
+    ]
+
+
+def _test_reviewer_telemetry() -> None:
+    telemetry = _adapter_module("telemetry")
+    home = _adapter_module("home")
+    recorder = telemetry.ReviewerTelemetry()
+    for frame in _telemetry_frames():
+        assert recorder.ingest(frame)
+    document = recorder.document(1, 0, "vercel-ai-gateway/openai/gpt-6.1-sol:low")
+    assert len(document["subagents"]) == 1
+    child = document["subagents"][0]
+    assert child["agent"] == "reviewer"
+    assert child["parent_tool_call_id"] == "call_reviewer"
+    assert child["requested_model"] == "vercel-ai-gateway/mistral/mistral-large-4:low"
+    assert child["backend_provider"] == "mistral"
+    assert child["resolved_thinking_level"] == "low"
+    assert child["messages"][0]["usage"] == {
+        "input": 1000,
+        "output": 200,
+        "cache_read": 100,
+        "cache_write": 0,
+        "reasoning": 50,
+    }
+    assert isinstance(child["cost_usd"], float)
+
+    with tempfile.TemporaryDirectory(prefix="reviewer-selftest-") as tmp:
+        attempt_dir = Path(tmp)
+        sandbox = attempt_dir / "artifacts" / "reviewer-quality-01-boundary"
+        sandbox.mkdir(parents=True)
+        (sandbox / REVIEWER_TELEMETRY_FILENAME).write_text(
+            telemetry.artifact_document([document], complete=True), encoding="utf-8"
+        )
+        evidence = reviewer_telemetry_evidence(attempt_dir, "ReviewerChild")
+        assert evidence["status"] == "verified", evidence
+        assert evidence["usage"] == {
+            "input": 1000,
+            "output": 200,
+            "reasoning": 50,
+            "cache_read": 100,
+            "cache_write": 0,
+        }
+        assert isinstance(evidence["cost_usd"], float)
+
+        verified = verify_reviewer_telemetry(
+            evidence, "vercel-ai-gateway/mistral/mistral-large-4:low", ["mistral"]
+        )
+        assert verified["status"] == "verified"
+        mismatch = verify_reviewer_telemetry(
+            evidence, "vercel-ai-gateway/mistral/mistral-large-4:low", ["baseten"]
+        )
+        assert mismatch["status"] == "attribution_mismatch"
+        assert any("backend_provider" in problem for problem in mismatch["attribution_problems"])
+
+        wrong_effort = verify_reviewer_telemetry(
+            evidence, "vercel-ai-gateway/mistral/mistral-large-4:high", ["mistral"]
+        )
+        assert wrong_effort["status"] == "attribution_mismatch"
+
+        (sandbox / f"{REVIEWER_TELEMETRY_FILENAME}.pending").mkdir()
+        assert reviewer_telemetry_evidence(attempt_dir, "ReviewerChild")["status"] == "guard"
+        (sandbox / f"{REVIEWER_TELEMETRY_FILENAME}.pending").rmdir()
+        (sandbox / REVIEWER_TELEMETRY_FILENAME).unlink()
+        assert reviewer_telemetry_evidence(attempt_dir, "ReviewerChild")["status"] == "missing"
+
+        # A child message without usage makes the priced total unreported.
+        incomplete = telemetry.ReviewerTelemetry()
+        frames = _telemetry_frames()
+        frames[2]["payload"]["event"]["message"].pop("usage")
+        for frame in frames:
+            incomplete.ingest(frame)
+        fragment = incomplete.document(1, 0, "parent:low")
+        assert fragment["subagents"][0]["cost_usd"] == "unreported"
+        assert fragment["subagents"][0]["messages"][0]["usage"] is None
+
+        # Two role routes merge into one private models.yml; a duplicate is refused.
+        agent_dir = Path(tmp) / "agent"
+        agent_dir.mkdir()
+        home.restrict_model_routes(
+            agent_dir,
+            [
+                ("vercel-ai-gateway", "openai/gpt-6.1-sol", ["openai"]),
+                ("vercel-ai-gateway", "mistral/mistral-large-4", ["mistral"]),
+            ],
+        )
+        merged = yaml.safe_load((agent_dir / "models.yml").read_text(encoding="utf-8"))
+        overrides = merged["providers"]["vercel-ai-gateway"]["modelOverrides"]
+        assert overrides["openai/gpt-6.1-sol"]["compat"]["vercelGatewayRouting"]["only"] == ["openai"]
+        assert overrides["mistral/mistral-large-4"]["compat"]["vercelGatewayRouting"]["only"] == ["mistral"]
+        try:
+            home.restrict_model_routes(
+                agent_dir,
+                [
+                    ("vercel-ai-gateway", "mistral/mistral-large-4", ["mistral"]),
+                    ("vercel-ai-gateway", "mistral/mistral-large-4", ["zai"]),
+                ],
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("restrict_model_routes accepted two allowlists for one model")
+
+
+def _test_delivery_and_cost_summary() -> None:
+    with tempfile.TemporaryDirectory(prefix="reviewer-selftest-") as tmp:
+        artifact = Path(tmp) / "task.json"
+        artifact.write_text(
+            json.dumps(
+                {
+                    "iterations": [
+                        {
+                            "commands": [
+                                {
+                                    "result_summary": (
+                                        '<task-result id="ReviewerChild" agent="reviewer" status="completed">'
+                                        "<output>{}</output></task-result>"
+                                    )
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
+        assert delivered_reviewer_id(artifact) == "ReviewerChild"
+
+    entries = [
+        {
+            "case_id": "reviewer-quality-01-boundary",
+            "repeat": 0,
+            "status": "completed",
+            "reviewer_status": "completed",
+            "reviewer_telemetry_status": "verified",
+            "reviewer_cost_usd": 0.5,
+            "reviewer_usage": {
+                "input": 100,
+                "output": 10,
+                "reasoning": 5,
+                "cache_read": 0,
+                "cache_write": 0,
+            },
+            "latency_reviewer_seconds": 2.0,
+            "judge_classifications": ["TP:reviewer-quality-01-boundary"],
+            "reviewer_verdict": "defects",
+            "score": 1.0,
+            "provider_error": False,
+            "harness_error": False,
+            "judge_status": "judged",
+            "attempt_seconds": 10.0,
+        },
+        {
+            "case_id": "reviewer-quality-02-contract",
+            "repeat": 0,
+            "status": "completed",
+            "reviewer_status": "completed",
+            "reviewer_telemetry_status": "missing",
+            "reviewer_cost_usd": "unavailable",
+            "reviewer_usage": "unavailable",
+            "latency_reviewer_seconds": "unavailable",
+            "judge_classifications": ["FN:reviewer-quality-02-contract"],
+            "reviewer_verdict": "clear",
+            "score": 0.0,
+            "provider_error": False,
+            "harness_error": False,
+            "judge_status": "judged",
+            "attempt_seconds": 10.0,
+        },
+    ]
+    summary = summarize(entries, [entry["case_id"] for entry in entries])
+    assert summary["reviewer_telemetry"]["verified"] == 1
+    assert summary["reviewer_telemetry"]["missing"] == 1
+    assert summary["reviewer_telemetry"]["cost_comparison_valid"] is False
+    assert summary["reviewer_telemetry"]["cost_per_rubric_correct_review_usd"] == 0.5
+    assert summary["latency_reviewer_seconds"]["median"] == 2.0
+
+
+def _test_identity_mismatch() -> None:
+    requested = "vercel-ai-gateway/mistral/mistral-large-4:low"
+    assert not identity_mismatch("mistral/mistral-large-4", requested)
+    assert identity_mismatch("zai/glm-5.3", requested)
+    assert identity_mismatch("mistral/mistral-large-4:high", requested)
+    assert identity_mismatch("mistral/mistral-large-3", requested)
+    go_requested = "opencode-go/deepseek-v4-pro:high"
+    assert not identity_mismatch("opencode-go/deepseek-v4-pro:high", go_requested)
+    assert identity_mismatch("vercel-ai-gateway/deepseek/deepseek-v4-pro:high", go_requested)
+
+
+def _test_evidence_gate_and_error_causes() -> None:
+    assert evidence_gate(True, True)["valid"] is True
+    incomplete = evidence_gate(None, True)
+    assert incomplete["valid"] is False and incomplete["reasons"]
+    unpriced = evidence_gate(True, False)
+    assert unpriced["valid"] is False
+
+    task = {
+        "error_message": "omp turn failed: bootstrap exited 1",
+        "error_details": {
+            "error_category": "agent_crash",
+            "component": "orchestrator.iteration_1",
+            "agent_name": "omp",
+            "attempt_number": 1,
+            "agent_stderr": "x" * 1500 + "\nlast line\n",
+        },
+    }
+    error = attempt_error(task, None)
+    assert error is not None
+    assert error["message"].startswith("omp turn failed")
+    assert error["category"] == "agent_crash"
+    assert error["component"] == "orchestrator.iteration_1"
+    assert error["agent"] == "omp"
+    assert error["attempt"] == 1
+    assert len(error["stderr_tail"]) == MAX_ERROR_TEXT_CHARS
+    assert error["stderr_tail"].endswith("last line")
+    assert attempt_error({}, None) is None
+
+    row = {"error_message": "row message", "error_details": {"error_category": "timeout"}}
+    row_error = attempt_error({}, row)
+    assert row_error is not None
+    assert row_error["message"] == "row message"
+    assert row_error["category"] == "timeout"
+    assert bounded_error_text("open /tmp/secret/file failed") == "open <path> failed"
+    assert bounded_error_text("GET https://ai-gateway.vercel.sh/v1/models") == (
+        "GET https://ai-gateway.vercel.sh/v1/models"
+    )
+
+    base = {
+        "repeat": 0,
+        "status": "harness_error",
+        "reviewer_status": "harness_error",
+        "reviewer_telemetry_status": "missing",
+        "reviewer_cost_usd": "unavailable",
+        "reviewer_usage": "unavailable",
+        "latency_reviewer_seconds": "unavailable",
+        "judge_classifications": [],
+        "reviewer_verdict": "unreported",
+        "score": "unavailable",
+        "provider_error": False,
+        "harness_error": True,
+        "judge_status": "unavailable",
+        "attempt_seconds": None,
+    }
+    entries = [
+        dict(base, case_id=case, error=error)
+        for case in CASE_IDS[:2]
+    ] + [
+        dict(
+            base,
+            case_id=CASE_IDS[2],
+            error=attempt_error({}, {"error_message": "other", "error_details": {"error_category": "timeout"}}),
+        )
+    ]
+    summary = summarize(entries, CASE_IDS[:3])
+    top = summary["error_causes"][0]
+    assert top["category"] == "agent_crash"
+    assert top["component"] == "orchestrator.iteration_1"
+    assert top["count"] == 2
+    assert top["example"].startswith("omp turn failed")
+
+
+def _run_self_tests() -> None:
+    _test_reviewer_telemetry()
+    _test_identity_mismatch()
+    _test_delivery_and_cost_summary()
+    _test_evidence_gate_and_error_causes()
 
 
 def parser() -> argparse.ArgumentParser:
@@ -531,6 +1443,11 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--variant", default="reviewer")
     p.add_argument("--provenance", type=Path, default=Path("evals/provenance"), help="directory containing evals-record outputs")
     p.add_argument("--output", type=Path, required=True, help="supplementary JSON output path")
+    p.add_argument(
+        "--allow-invalid",
+        action="store_true",
+        help="write an invalid record and exit 0; only for regenerating historical evidence",
+    )
     return p
 
 
@@ -542,6 +1459,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.record is not None and len(args.record) != len(args.run_dir):
         raise SystemExit("pass exactly one --record per --run-dir")
     try:
+        _run_self_tests()
+    except AssertionError as exc:
+        print(f"error: collector self-test failed: {exc}", file=sys.stderr)
+        return 2
+    try:
         result = build(args)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -549,7 +1471,23 @@ def main(argv: list[str] | None = None) -> int:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(args.output)
-    return 0
+    gate = result["gate"]
+    if gate["valid"]:
+        return 0
+    for reason in gate["reasons"]:
+        print(f"gate: {reason}", file=sys.stderr)
+    if args.allow_invalid:
+        print(
+            f"warning: {args.output} written with gate.valid=false (--allow-invalid)",
+            file=sys.stderr,
+        )
+        return 0
+    print(
+        f"error: evidence gate failed; {args.output} is not a valid record "
+        "(use --allow-invalid only to regenerate history)",
+        file=sys.stderr,
+    )
+    return 3
 
 
 if __name__ == "__main__":

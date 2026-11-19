@@ -1,0 +1,40 @@
+# The adequacy reference for the Vercel reviewer cohort.
+#
+# Seven arms share this file's shape: the parent, every non-review helper and
+# the judge are GPT-6.1 Sol at low effort on the Vercel AI Gateway, and only the
+# `review` role differs. `vercel_gateway_only` names both the parent selector
+# and the reviewer selector, so each model's first-party endpoint is the only
+# upstream that may serve it. Smoke repeats are overridden to one.
+experiment_id: omp-reviewer-deepseek-v4-pro-vercel
+description: >-
+  Reviewer finding quality on eight frozen local diffs. DeepSeek V4 Pro at high
+  effort as the reference arm; parent and helpers fixed to GPT-6.1 Sol.
+defaults:
+  repeats: 5
+  run_limits:
+    max_turns: 16
+    turn_timeout: 900
+    task_timeout: 900
+  agent:
+    type: omp
+    model: vercel-ai-gateway/openai/gpt-6.1-sol:low
+    vercel_gateway_only:
+      vercel-ai-gateway/openai/gpt-6.1-sol: [openai]
+      vercel-ai-gateway/deepseek/deepseek-v4-pro-0813: [deepseek]
+    record_reviewer_telemetry: true
+    permission_mode: acceptEdits
+    allowed_tools: [Read, Bash, Task, Write, wait]
+    record_task_dispatches: true
+    settle_on_async_handoff: false
+    extra_args: [--config, routes/vercel-deepseek-v4-pro.yml]
+  post_run:
+    - command: 'cat omp-task-dispatches.json'
+    - command: 'cat omp-protocol-observations.json'
+    - command: 'cat omp-reviewer-telemetry.json'
+variants:
+  - variant_id: reviewer
+    description: Fixed plugin, parent and helpers; DeepSeek V4 Pro reviewer on the Vercel gateway.
+    agent:
+      plugins:
+        - type: local
+          path: ".."
