@@ -15,6 +15,7 @@ coder-eval-omp/
 └── src/coder_eval_omp/
     ├── rpc.py                     the command builder and frame reduction — pure, and tested
     ├── pricing.py                 prices.json lookup — pure, and tested
+    ├── telemetry.py               reviewer-child event reduction — pure, and tested
     ├── home.py                    borrowed provider files and the private routing merge — pure
     ├── agent.py                   the process, the events, and what loaded
     └── plugin.py                  register(registry)
@@ -71,20 +72,24 @@ the bare arm. The list is `coder_eval_omp/home.py`'s `PROVIDER_FILES`.
 `models.yml` as `providers.vercel-ai-gateway.modelOverrides.<model>.compat.
 vercelGatewayRouting.only`. Omp turns that into the request's
 `providerOptions.gateway.only`, so an unavailable upstream fails instead of
-falling back. The merge preserves every other provider and setting, replaces
-rather than unions the selected allowlist, drops the model's `order`
-preference, and replaces the borrowed symlink instead of writing through it.
+falling back. A mapping form names several selectors and restricts each of
+them — the parent and the `modelRoles.review` model — and must include the
+parent's own selector. `home.restrict_model_routes` performs the merge once,
+so a reviewer arm has one private file with both allowlists. The merge
+preserves every other provider and setting, replaces rather than unions each
+selected allowlist, drops the model's `order` preference, and replaces the
+borrowed symlink instead of writing through it.
 Because Omp's catalog transport for these models (`anthropic-messages`) never
 serializes the routing block, a restricted model also selects
 `api: openai-completions`, the transport that applies
 `providerOptions.gateway`. A malformed file, an empty or invalid allowlist, a
-non-Vercel selector, a model that names a compaction or context-promotion
-fallback in its override or its `models:` definition, or an inherited
-`compat.extraBody` that sets `model` or `providerOptions` is refused: Omp
-applies the extra body after the routing, so either key would replace the
-enforced value. The agent also clears `PI_CONFIG_DIR`, `OMP_PROFILE`,
-`PI_PROFILE` and `PI_CODING_AGENT_DIR` for the child: each relocates Omp's
-configuration or agent directory away from the throwaway home.
+non-Vercel selector, a duplicate route, a model that names a compaction or
+context-promotion fallback in its override or its `models:` definition, or an
+inherited `compat.extraBody` that sets `model` or `providerOptions` is
+refused: Omp applies the extra body after the routing, so either key would
+replace the enforced value. The agent also clears `PI_CONFIG_DIR`,
+`OMP_PROFILE`, `PI_PROFILE` and `PI_CODING_AGENT_DIR` for the child: each
+relocates Omp's configuration or agent directory away from the throwaway home.
 
 **A row's tool lists must hold.** `tools.select_tools` maps a row's
 `allowed_tools` and `disallowed_tools` to Omp's tool names, and the agent
@@ -213,13 +218,51 @@ and with a count matching the launch. Other suffixes, or extra launch-like
 lines after it, stay unknown and cannot pass. Captured dispatch examples live
 under `fixtures/fix-daily-driver-bugs/dispatch-evidence/`.
 
+## Reviewer-child telemetry
+
+A row that measures a child reviewer sets `record_reviewer_telemetry: true`
+(default off). At startup the adapter sends `set_subagent_subscription` with
+`level: "events"` and reads `thinkingLevel` from `get_state`, which is the
+parent's applied effort. During each turn it reduces the `subagent_event`
+frames Omp emits for a child and writes `omp-reviewer-telemetry.json` in the
+task sandbox on every exit path. A `.pending` directory created before the
+prompt is removed only after the atomic write; its presence, a missing file,
+an incomplete document or an unreadable one all mean the reviewer's usage is
+unavailable.
+
+The artifact (version 1) holds one fragment per attempt. Each subagent record
+carries the agent name, the parent tool-call id, its terminal status, the
+requested selectors and role from `subagent_progress.modelOverride` and
+`modelRole`, Omp's `resolvedModelIdentity` (including its `@upstream`),
+`resolvedThinkingLevel` and `resolvedModel`, any child
+`thinking_level_changed` frames, the child's wall time between its lifecycle
+frames, the sum of its per-message generation durations, and every completed
+assistant message with its own `responseId`, timestamp, model, provider,
+upstream fields, duration, TTFB and the four usage buckets plus
+`reasoningTokens`.
+
+`cost_usd` is computed per message from the committed endpoint cards using
+that message's own prompt size and timestamp. It is `unreported` when a
+message has no complete usage object, when the requested selector has no card,
+or when a peak-priced message has no timestamp. Parent usage, whole-attempt
+duration and allowance consumption are never substituted.
+
+The reviewer-quality collector matches a subagent id to the `<task-result>`
+the parent actually received, so a completed child that was not delivered
+cannot lend its usage to the parent's answer. A reported `resolvedThinkingLevel`
+that differs from the arm's fixed suffix, a harness model that differs, or an
+upstream outside the arm's allowlist is an attribution mismatch: the evidence
+is kept, but the attempt does not enter a measured cost comparison.
+
 ## Cost
 
 **Rates come from the pinned provider catalog, not from a person and not from Omp.**
 `prices.json` is a dated snapshot with `source` and `read_on` on every row.
 Vercel models remain sourced from
 `https://ai-gateway.vercel.sh/v1/models/<provider>/<model>/endpoints`, selecting
-the one endpoint named by `vercel_gateway_only`. OpenCode Go models are read
+the one endpoint named by `vercel_gateway_only`. A `vercel_gateway_only`
+mapping contributes every route it names, so a reviewer arm that pins both
+the parent and the `review` role prices both. OpenCode Go models are read
 from `https://opencode.ai/inference/go/v1/models` by their exact `id`. For the
 free Go arms, the generator requires numeric zero text input, output and cache
 read rates; a missing model, changed required shape or any published nonzero
@@ -275,10 +318,11 @@ network call, and prices recorded token usage without a `coder_eval` install.
 
 ## What is tested, and what is not
 
-`rpc.py`, `pricing.py`, `home.py` and `tools.py` import nothing — not
-`coder_eval`, not `omp`. They hold the protocol, pricing, borrowed-home and
-tool-list behavior described above, including token-usage and cost math and the
-private model-routing merge.
+`rpc.py`, `pricing.py`, `home.py`, `telemetry.py` and `tools.py` import
+nothing — not `coder_eval`, not `omp`. They hold the protocol, pricing,
+borrowed-home, reviewer-child and tool-list behavior described above,
+including token-usage and cost math, the private model-routing merge, and
+subagent frame reduction.
 
 `agent.py` cannot be reached without a `coder-eval` install and an `omp`
 binary, and CI here has neither. What it holds is process lifecycle and the
