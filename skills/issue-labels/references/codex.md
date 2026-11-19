@@ -15,7 +15,7 @@ Reading and writing a label
 | Operation | Call |
 | --------- | ---- |
 | Read the labels on one issue | `gh issue view <number> --json labels` |
-| Label an issue being opened | `gh issue create --label task` |
+| Label an issue being opened; settle destination under [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository) and pass it here | `gh issue create --label task [--repo OWNER/REPO when target differs from current repository]` |
 | Label an issue that exists | `gh issue edit <number> --add-label task` |
 | Take a label off | `gh issue edit <number> --remove-label proposal` |
 

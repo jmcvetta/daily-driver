@@ -8,8 +8,10 @@ session running in Codex. Claude Code's routes are in
 built-in `github` tool with an `issue://` cache behind it. There is one
 client, `gh` in the shell.
 
-- **Opening an issue with a body.** `gh issue create --label <label>
-  --body-file <path>`.
+- **Opening an issue with a body.** Settle destination under
+  [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository)
+  and pass it in `gh issue create --label <label> [--repo OWNER/REPO when the
+  target differs from the current repository] --body-file <path>`.
 - **Replacing a body.** `gh issue edit <number> --body-file <path>`.
 
 `--body-file` rather than `--body`: a handoff body carries fenced blocks and

@@ -111,6 +111,9 @@ call.
   repository and issue, such as `update OWNER/REPO#847`, already names the
   target for that update. This gate applies when the session would choose the
   repository for a create.
+Every issue-create route in other workflows applies this gate and passes the
+settled target to the call; their harness references point here without
+copying the policy.
 
 
 
