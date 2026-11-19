@@ -644,11 +644,13 @@ common currency maintenance. The undertaking retains assessment of CI, review,
 harness reference names the continuation and any owner-resume limitation.
 
 **The body is `pr-body`'s, and so are blockers that go with a Tofu diff.**
-Where the branch changes the infrastructure Tofu stack, the body carries
-`pr-body`'s apply-and-state blocker and the pull request the `human` label
-while that action remains outstanding. A plan is a separate operation: it is
-not a human action by default, and `Implement`'s escalation gate decides
-whether its target, route and restrictions permit this session to run it.
+Where the branch changes the infrastructure Tofu stack — `pr-body`'s test, the
+OpenTofu configuration under `infra/` rather than a provider-lockfile-only
+diff — the body carries `pr-body`'s apply-and-state blocker and the pull
+request the `human` label while that action remains outstanding. A plan is a
+separate operation: it is not a human action by default, and `Implement`'s
+escalation gate decides whether its target, route and restrictions permit this
+session to run it.
 `issue-labels`' `human` kind remains an issue classification, not this
 temporary pull-request state.
 

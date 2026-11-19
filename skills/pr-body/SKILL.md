@@ -38,9 +38,10 @@ The body of a pull request, whether it is being opened or rewritten. In order:
   The section below has the format and the rule that decides whether it appears
   at all.
 - **Human-Action Blocker**: A pull request whose diff changes the
-  infrastructure Tofu stack carries its apply-and-state requirement as a
-  `Blockers` bullet and the PR `human` label while the action is outstanding.
-  The section below has the wording and the rule that decides when it appears.
+  infrastructure Tofu stack — the OpenTofu configuration, not the provider
+  lockfile alone — carries its apply-and-state requirement as a `Blockers`
+  bullet and the PR `human` label while the action is outstanding. The
+  section below has the wording and the rule that decides when it appears.
 - **Executive Summary**: Next, under heading "Summary", give a
   concise high level executive summary of the PR.  If you understand the
   importance of the PR for the larger software development or business
@@ -159,3 +160,13 @@ owed. When a body is revised, add a missing apply blocker if its requirement
 is still outstanding. Do not retain a blocker solely because it was present
 before: a stale blocker misstates the merge condition just as a missing one
 does.
+
+**The stack is the configuration, not the lockfile.** The stack is what the
+OpenTofu configuration declares: the `.tf` files under `infra/` and the
+resources they define. A diff that touches only the provider lockfile —
+`.terraform.lock.hcl`, wherever it sits — records which provider builds the
+next init selects for a configuration it does not change. It applies nothing
+and alters no stack resource, so it is not a change to the infrastructure Tofu
+stack: it carries no apply-and-state blocker and no PR `human` label. A diff
+that changes a `.tf` file under `infra/` is a stack change, and the blocker and
+label go on together while the apply remains owed.
