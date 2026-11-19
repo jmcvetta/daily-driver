@@ -121,6 +121,7 @@ route identity and approval policy do not imply benchmark support.
 | openai-codex/gpt-6.1-sol | classes-smoke-sol-6-1 | mechanical | 1/1 | 0/1 | unreported | 2026-10-08_19-02-13 | 2026-10-08 |
 | openai-codex/gpt-6.1-sol | classes-sol-6-1 | mechanical | 9/9 | 6/8 | unreported | 2026-10-08_18-38-45 | 2026-10-08 |
 | openai-codex/gpt-6.1-sol:high | classes-gpt-6-1-sol | implementation | 1/1 | 2/2 | unreported | 2026-10-08_19-02-43 | 2026-10-08 |
+| opencode-go/beam-free:high | classes-beam-go | implementation | 5/5 | 3/3 | $0.00 | 2026-11-19_21-43-36 | 2026-11-19 |
 | vercel | classes-vercel | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high | classes-deepseek-v4-1-flash-gateway | implementation | 9/10 | 7/8 | $0.01 | deepseek | 2026-11-19 |
 | vercel-ai-gateway/openai/gpt-6-luna:high | classes-gpt-6-luna-gateway | implementation | 15/15 | 9/9 | $0.01 | luna | 2026-11-19 |

@@ -197,3 +197,5 @@ One row per committed record, oldest first.
 | 2026-11-13 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 6 | 5/6 | subscription | subscription | 1m 00s |
 | 2026-11-19 | classes-gpt-6-luna-gateway | omp | vercel-ai-gateway/openai/gpt-6-luna:high (requested) | not recorded | 30 | 24/30 | not recorded | not recorded | 52m 52s |
 | 2026-11-19 | classes-deepseek-v4-1-flash-gateway | omp | vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high (requested) | not recorded | 30 | 16/30 | not recorded | not recorded | 49m 10s |
+| 2026-11-19 | classes-beam-go | omp | opencode-go/beam-free:high (requested) | not recorded | 30 | 8/30 | $0.00 | $0.00 | 37m 12s |
+| 2026-11-19 | classes-iceman-contributor-go | omp | opencode-go/iceman-contributor-free (requested) | not recorded | 10 | 0/10 | not recorded | not recorded | 0m 28s |
