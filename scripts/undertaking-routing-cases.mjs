@@ -11,6 +11,8 @@ const REASONING = model("gpt-6.1-sol");
 const FRONTIER = model("gpt-6-astra");
 const DEEPSEEK = model("deepseek-v4.1-flash-1017", "vercel-ai-gateway", "openai-compatible");
 const DEEPSEEK_PRO = model("deepseek-v4-pro-0813", "vercel-ai-gateway", "openai-compatible");
+const GATEWAY_LUNA = model("openai/gpt-6-luna", "vercel-ai-gateway", "openai-compatible");
+const GATEWAY_SOL = model("openai/gpt-6.1-sol", "vercel-ai-gateway", "openai-compatible");
 const BACKEND_MISMATCH = model("gpt-luna-other-api", "openai-codex", "openai-completions");
 const FOREIGN = model("claude-sonnet", "anthropic", "anthropic-messages");
 const MODELS = [MECHANICAL, TERRA, REASONING, FRONTIER, FOREIGN, DEEPSEEK, DEEPSEEK_PRO, BACKEND_MISMATCH];
@@ -270,7 +272,7 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.deepEqual(s.calls.models, [MECHANICAL]);
 	});
 
-	// A cross-family explicit role falls back to the provider-scoped family route.
+	// A cross-family explicit role falls back to the family-mapped route.
 	routingCheck("cross-family explicit role falls back to family route", async create => {
 		const s = await create({ roles: { implementation: qualified(FOREIGN) } });
 		assert.notEqual((await s.route()).isError, true);
@@ -279,8 +281,8 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.deepEqual(s.calls.models, []);
 	});
 
-	// A same-family role for another class cannot qualify a cross-family target.
-	routingCheck("no same-provider family route retains invoking model", async create => {
+	// A route for another family must not map an unmapped invoking family.
+	routingCheck("unmapped family retains invoking model", async create => {
 		const s = await create({
 			current: DEEPSEEK,
 			roles: { integration: qualified(DEEPSEEK_PRO), implementation: qualified(MECHANICAL) },
@@ -292,6 +294,53 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.equal(s.current(), DEEPSEEK);
 		assert.equal(s.effort(), "high");
 		assert.equal(s.describe().undertaking.capability, "unverified");
+		assert.deepEqual(s.calls.models, []);
+	});
+
+	// A family mapping resolves its configured class identity through the invoking provider.
+	routingCheck("mapped family selects the matching model through the invoking provider", async create => {
+		const models = [...MODELS, GATEWAY_LUNA, GATEWAY_SOL];
+		const family = value => value.provider === "anthropic" ? "claude"
+			: value.provider === "vercel-ai-gateway" || value.provider === "openai-codex" ? "openai" : "gpt";
+		const s = await create({ current: GATEWAY_SOL, models, family });
+		const result = await s.route();
+		assert.notEqual(result.isError, true, JSON.stringify(result));
+		assert.doesNotMatch(result.content[0].text, /WARNING/iu);
+		assert.equal(s.current(), GATEWAY_LUNA);
+		assert.equal(s.current().provider, GATEWAY_SOL.provider);
+		assert.equal(s.describe().undertaking.capability, "mapped");
+		assert.equal(s.describe().undertaking.selectedModel, qualified(GATEWAY_LUNA));
+		assert.deepEqual(s.calls.models, [GATEWAY_LUNA]);
+	});
+
+	// A mapped family with no matching provider model remains an admission gap.
+	routingCheck("mapped family rejects an unavailable provider model", async create => {
+		const s = await create({ current: GATEWAY_SOL,
+			models: [...MODELS, GATEWAY_SOL],
+			family: value => value.provider === "anthropic" ? "claude"
+				: value.provider === "vercel-ai-gateway" || value.provider === "openai-codex" ? "openai" : "gpt" });
+		assertGap(await s.route(), /unavailable in the invoking provider/iu);
+		assert.equal(s.current(), GATEWAY_SOL);
+		assert.deepEqual(s.calls.models, []);
+	});
+
+	// Multiple same-identity catalog candidates must not make target selection arbitrary.
+	routingCheck("mapped family rejects an ambiguous provider model", async create => {
+		const duplicate = { ...GATEWAY_LUNA };
+		const s = await create({ current: GATEWAY_SOL,
+			models: [...MODELS, GATEWAY_LUNA, duplicate, GATEWAY_SOL],
+			family: value => value.provider === "anthropic" ? "claude"
+				: value.provider === "vercel-ai-gateway" || value.provider === "openai-codex" ? "openai" : "gpt" });
+		assertGap(await s.route(), /ambiguous in the invoking provider/iu);
+		assert.equal(s.current(), GATEWAY_SOL);
+		assert.deepEqual(s.calls.models, []);
+	});
+
+	// A cleared class in a mapped family is a configuration gap, not an unverified route.
+	routingCheck("mapped family rejects a cleared class", async create => {
+		const s = await create({ routes: [{ referenceModel: qualified(MECHANICAL), classes: { implementation: null } }] });
+		assertGap(await s.route(), /missing or cleared/iu);
+		assert.equal(s.current(), MECHANICAL);
 		assert.deepEqual(s.calls.models, []);
 	});
 

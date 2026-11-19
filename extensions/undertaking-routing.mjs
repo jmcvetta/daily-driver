@@ -89,25 +89,38 @@ function checkModel(ctx, state, model, routingOnly = false) {
 	if (!routingOnly && frontier(model) && state.modelClass !== "frontier") throw new Error("Ordinary work cannot use a frontier fallback");
 }
 
+// Catalog model IDs may include the family prefix for only one provider.
+function modelIdentity(model, family) {
+	const id = model?.id?.replace(EFFORT, "");
+	if (!id) return null;
+	return id.startsWith(`${family}/`) ? id : `${family}/${id}`;
+}
+
 function classSelection(ctx, settings, routes, model, modelClass) {
 	const family = ctx.models.family(model);
 	if (!family) throw new Error("Invoking model family is unavailable");
-	const sameFamilyAndProvider = reference => {
-		const resolved = ctx.models.resolve(reference);
-		return resolved && resolved.provider === model.provider && ctx.models.family(resolved) === family;
-	};
-	const providerRows = routes.filter(row => sameFamilyAndProvider(row.referenceModel));
-	if (providerRows.length > 1) throw new Error("Model class routes are ambiguous for the invoking family and provider");
+	const familyRows = routes.filter(row => {
+		const resolved = ctx.models.resolve(row.referenceModel);
+		return resolved && ctx.models.family(resolved) === family;
+	});
+	if (familyRows.length > 1) throw new Error("Model class routes are ambiguous for the invoking family");
 	const role = explicitModelClassRole(settings, modelClass);
 	const explicit = role.assigned && typeof role.value === "string" ? ctx.models.resolve(role.value) : null;
 	const explicitCompatible = explicit && explicit.provider === model.provider && ctx.models.family(explicit) === family;
-	const configured = explicitCompatible ? role.value : providerRows[0]?.classes[modelClass];
-	if (typeof configured !== "string" || !configured.trim()) return { target: model, capability: "unverified" };
-	const target = ctx.models.resolve(configured);
-	if (!target || !ctx.models.list().some(available => selector(available) === selector(target))) {
-		throw new Error("Configured class model is unavailable");
+	const configured = explicitCompatible ? role.value : familyRows[0]?.classes[modelClass];
+	if (typeof configured !== "string" || !configured.trim()) {
+		if (familyRows.length) throw new Error("Mapped model class route is missing or cleared");
+		return { target: model, capability: "unverified" };
 	}
-	return { target, configured, capability: "mapped" };
+	const configuredTarget = ctx.models.resolve(configured);
+	if (!configuredTarget) throw new Error("Configured class model is unavailable");
+	if (ctx.models.family(configuredTarget) !== family) throw new Error("Configured class model family must remain unchanged");
+	const identity = modelIdentity(configuredTarget, family);
+	const candidates = identity ? ctx.models.list().filter(candidate => candidate.provider === model.provider &&
+		ctx.models.family(candidate) === family && modelIdentity(candidate, family) === identity) : [];
+	if (!candidates.length) throw new Error("Configured class model is unavailable in the invoking provider");
+	if (candidates.length > 1) throw new Error("Configured class model is ambiguous in the invoking provider");
+	return { target: candidates[0], configured, capability: "mapped" };
 }
 
 

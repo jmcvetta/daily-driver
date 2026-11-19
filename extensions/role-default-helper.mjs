@@ -7,7 +7,7 @@ export const MODEL_CLASS_ROLE_DEFAULTS = Object.freeze({
 	frontier: "openai-codex/gpt-6-astra:high",
 });
 
-/** Provider-scoped class routes, identified by a catalog model from each family. */
+/** Family-scoped class routes, identified by a catalog model from each family. */
 export const MODEL_CLASS_ROUTES = Object.freeze([
 	Object.freeze({ referenceModel: "openai-codex/gpt-6-luna", classes: MODEL_CLASS_ROLE_DEFAULTS }),
 ]);
@@ -23,7 +23,7 @@ export function explicitModelClassRole(settings, role) {
 	return { assigned: value !== undefined || (provenance !== undefined && provenance !== "default"), value };
 }
 
-/** Read provider-scoped routes through Omp's typed settings registry without persisting changes. */
+/** Read family-scoped routes through Omp's typed settings registry without persisting changes. */
 export async function readModelClassRoutes(settings) {
 	const { lookup, register } = await import("@oh-my-pi/pi-coding-agent/config/registry");
 	const handle = lookup("dailyDriver.modelClassRoutes") ?? register({
