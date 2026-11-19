@@ -2607,6 +2607,9 @@ Beam Free ran the full six-case `model-classes` matrix, five repeats per case,
 `opencode-go/beam-free:high`, `max_turns: 30`, `turn_timeout: 660`,
 `task_timeout: 780`, and `JOBS=2`. Its record is
 [`classes-beam-go-2026-11-19-2026-11-19_21-43-36.json`](provenance/classes-beam-go-2026-11-19-2026-11-19_21-43-36.json).
+The observed invocation was `make evals-run-classes MODEL=beam-go JOBS=2 REPEATS=5`.
+Schema-5 provenance does not preserve the requested parallelism; `JOBS=2` is
+recorded here from the run invocation, not inferred from the JSON record.
 The Omp adapter does not report the serving backend, so the served identity is
 `unreported`; the requested route is known. All rates are from the pinned
 OpenCode Go catalog snapshot in [`coder-eval-omp/prices.json`](coder-eval-omp/prices.json),
@@ -2682,11 +2685,14 @@ report per-model consumption.
 
 Iceman's partial record
 [`classes-iceman-contributor-go-2026-11-19-2026-11-19_22-22-56.json`](provenance/classes-iceman-contributor-go-2026-11-19-2026-11-19_22-22-56.json)
-preserves 10 of 30 planned attempts. All 10 returned HTTP 400 before any tool
-commands because OpenCode Go requires the workspace-wide “Allow paid endpoints
-that train on request data” setting for this model. The remaining 20 attempts
-were not dispatched. The workspace setting was not changed; token usage is
-unreported. Iceman was then excluded by the operator.
+preserves 10 of 30 planned attempts. The runner log reported ten non-retryable
+HTTP 400 provider errors before any tool commands; the workspace required
+“Allow paid endpoints that train on request data” for this model. The
+issue-scope comment records that observed error ([#911 scope amendment](https://github.com/jmcvetta/daily-driver/issues/911#issuecomment-7014116087)).
+The schema-5 provenance record retains the ten `ERROR` outcomes but not the
+HTTP status or response message; the run log is local and ignored. The
+remaining 20 attempts were not dispatched. The workspace setting was not
+changed; token usage is unreported. Iceman was then excluded by the operator.
 
 LongCat's first round was interrupted by HTTP 429 rate-limit pushback. Only
 `career-370` and `career-141` started; each made a partial first-turn tool call
