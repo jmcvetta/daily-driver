@@ -99,12 +99,12 @@ call.
   upstream remote, or project context is only a possible target. It is not
   user approval. Do not silently create there or switch to it in the create
   call.
-- If the possible target is outside the user's own repositories and the user
-  has not explicitly approved creating an issue in its exact `OWNER/REPO`,
-  stop before the write and ask for that approval. A qualifying answer names
-  the exact repository. Silence, a general "go ahead", or "open an issue for
-  this" does not qualify. If the user declines, do not create the issue; report
-  the decision and continue work that does not depend on it.
+- If a create request does not name a repository and the possible target is
+  not the current repository, stop before the write and ask for explicit
+  approval naming its exact `OWNER/REPO`. Repository ownership or access does
+  not waive this approval. Silence, a general "go ahead", or "open an issue
+  for this" does not qualify. If the user declines, do not create the issue;
+  report the decision and continue work that does not depend on it.
 - Auto-filed Daily Driver bug reports to `jmcvetta/daily-driver` follow
   `Automatic Daily Driver bug reports` and need no additional approval.
 - Updating an existing issue is not creation. A request naming both the
@@ -117,8 +117,9 @@ call.
 The moves
 =========
 
-For a create, **the target repository runs first**: settle the destination
-under `The target repository` before preparing the issue body or create call.
+In order, and each only when the change needs it. For a create, **the target
+repository runs first**: settle the destination under `The target repository`
+before preparing the issue body or create call.
 
 **Read what is there.** The issue's current state — body, labels, edges —
 before any edit. An update that does not start from what the issue says now is
