@@ -90,8 +90,10 @@ If the known family is absent from the class table, prominently warn with the
 family, requested class, and retained provider/model. Continue immediately on
 the invoking model, provider, and effort without confirmation; class suitability
 is unverified. Do not dispatch a replacement to obtain a mapping. If a child
-cannot retain the route, work in the invoking session. Unknown identity, a
-missing class in a mapped family, and actual route violations remain gaps.
+cannot retain the route, work in the invoking session. A class omitted from a
+mapped family follows the same warning-and-continue with unverified suitability;
+unknown identity, an explicitly cleared class, and actual route violations
+remain gaps.
 Reviewer and scout specialization and host helper inference remain independent.
 
 A current measured class outranks handwritten guidance, and a measured class
