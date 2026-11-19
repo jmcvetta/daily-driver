@@ -91,7 +91,7 @@ STATUSES = ("default", "candidate", "validated")
 
 # Settings an omp judge may declare. Nothing else is read, so nothing else can
 # change a verdict without changing `freeze_sha` -- an unknown key is refused.
-OMP_SETTINGS = {"thinking", "timeout_seconds", "max_prompt_bytes"}
+OMP_SETTINGS = {"thinking", "timeout_seconds", "max_prompt_bytes", "vercel_gateway_only"}
 CLAUDE_SETTINGS = {"max_turns", "turn_timeout"}
 THINKING_LEVELS = ("off", "minimal", "low", "medium", "high")
 
@@ -245,6 +245,19 @@ def load_judge(path: Path) -> Judge:
         for key in ("timeout_seconds", "max_prompt_bytes"):
             if key in settings and not (isinstance(settings[key], int) and settings[key] > 0):
                 raise JudgeError("config", f"{path}: {key} must be a positive integer")
+        restriction = settings.get("vercel_gateway_only")
+        if restriction is not None:
+            if not isinstance(restriction, list) or not restriction or not all(
+                isinstance(slug, str) and slug for slug in restriction
+            ):
+                raise JudgeError(
+                    "config", f"{path}: vercel_gateway_only must be a non-empty list of upstream names"
+                )
+            if not model.startswith("vercel-ai-gateway/"):
+                raise JudgeError(
+                    "config",
+                    f"{path}: vercel_gateway_only requires a vercel-ai-gateway/<model> judge model",
+                )
     calibration = data.get("calibration")
     if calibration is not None and not isinstance(calibration, str):
         raise JudgeError("config", f"{path}: calibration must name a calibration result file")
@@ -502,7 +515,7 @@ def omp_argv(binary: str, judge: Judge, system_prompt: str, user_message: str) -
     return argv
 
 
-def build_judge_home(root: Path, real_agent_dir: Path) -> dict[str, str]:
+def build_judge_home(root: Path, real_agent_dir: Path, judge: Judge | None = None) -> dict[str, str]:
     """A throwaway Omp home holding provider files only; returns the child environment overrides."""
     home_dir = root / "home"
     agent_dir = home_dir / ".omp" / "agent"
@@ -511,6 +524,18 @@ def build_judge_home(root: Path, real_agent_dir: Path) -> dict[str, str]:
     (agent_dir / "config.yml").write_text("fetch:\n  enabled: false\n")
     for source in _adapter_home().inherited_files(real_agent_dir):
         (agent_dir / source.name).symlink_to(source)
+    if judge is not None:
+        upstreams = judge.settings.get("vercel_gateway_only")
+        if upstreams:
+            from coder_eval_omp.rpc import model_commands  # noqa: PLC0415
+
+            selection = model_commands(judge.model)[0]
+            _adapter_home().restrict_model_upstreams(
+                agent_dir,
+                str(selection["provider"]),
+                str(selection["modelId"]),
+                list(upstreams),
+            )
     overrides = {"HOME": str(home_dir)}
     for name in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"):
         overrides[name] = str(home_dir / name.lower())
@@ -564,7 +589,7 @@ def run_omp(judge: Judge, system_prompt: str, user_message: str, env: dict[str, 
         cwd = root / "cwd"
         cwd.mkdir()
         child = dict(base)
-        child.update(build_judge_home(root, real_agent_dir))
+        child.update(build_judge_home(root, real_agent_dir, judge))
         if "AI_GATEWAY_API_KEY" not in child and child.get("VERCEL_AI_GATEWAY_API_KEY"):
             child["AI_GATEWAY_API_KEY"] = child["VERCEL_AI_GATEWAY_API_KEY"]
         started = time.monotonic()

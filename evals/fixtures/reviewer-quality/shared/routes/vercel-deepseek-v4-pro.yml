@@ -1,0 +1,32 @@
+# DeepSeek V4 Pro as the adequacy reference on the Vercel AI Gateway.
+# The parent, every helper, and the judge are pinned to GPT-6.1 Sol; only the
+# `review` role differs, and only its first-party DeepSeek endpoint may serve it.
+modelRoles:
+  default: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  smol: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  slow: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  vision: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  plan: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  commit: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  tiny: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  memory: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  task: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  advisor: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  mechanical: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  implementation: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  reasoning: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  review: vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:high
+task:
+  maxConcurrency: 1
+  maxRecursionDepth: 1
+  maxRuntimeMs: 600000
+  softRequestBudget: 30
+  # A caller-supplied effort hint would outrank the fixed `:high` suffix.
+  enableEffort: false
+  agentModelOverrides:
+    reviewer: "@review"
+retry:
+  enabled: false
+  modelFallback: false
+  usageAwareFallback: false
+  waitForUsageReset: false

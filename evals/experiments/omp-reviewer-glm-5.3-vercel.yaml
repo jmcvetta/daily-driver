@@ -1,0 +1,37 @@
+# The GLM 5.3 reviewer arm.
+#
+# Same shape as omp-reviewer-deepseek-v4-pro-vercel: fixed parent, helpers and
+# judge, one reviewer route, first-party upstreams only.
+experiment_id: omp-reviewer-glm-5-3-vercel
+description: >-
+  Reviewer finding quality on eight frozen local diffs. GLM 5.3 at high effort;
+  parent and helpers fixed to GPT-6.1 Sol.
+defaults:
+  repeats: 5
+  run_limits:
+    max_turns: 16
+    turn_timeout: 900
+    task_timeout: 900
+  agent:
+    type: omp
+    model: vercel-ai-gateway/openai/gpt-6.1-sol:low
+    vercel_gateway_only:
+      vercel-ai-gateway/openai/gpt-6.1-sol: [openai]
+      vercel-ai-gateway/zai/glm-5.3: [zai]
+    record_reviewer_telemetry: true
+    permission_mode: acceptEdits
+    allowed_tools: [Read, Bash, Task, Write, wait]
+    record_task_dispatches: true
+    settle_on_async_handoff: false
+    extra_args: [--config, routes/vercel-glm.yml]
+  post_run:
+    - command: 'cat omp-task-dispatches.json'
+    - command: 'cat omp-protocol-observations.json'
+    - command: 'cat omp-reviewer-telemetry.json'
+variants:
+  - variant_id: reviewer
+    description: Fixed plugin, parent and helpers; GLM 5.3 reviewer on the Vercel gateway.
+    agent:
+      plugins:
+        - type: local
+          path: ".."
