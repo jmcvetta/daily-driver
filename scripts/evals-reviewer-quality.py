@@ -76,6 +76,78 @@ def bounded_response(text: str) -> str:
         return text[:MAX_FINDINGS_CHARS] + "\n...[truncated]"
     return text
 
+
+MAX_ERROR_TEXT_CHARS = 1_000
+ABSOLUTE_PATH_RE = re.compile(
+    r"(?<![\w:/])/(?:tmp|home|workspace|mnt|var|private|Users|root|opt|usr|etc)/"
+    r"[^\s\"'`;|&()<>]*"
+)
+
+
+def redact_absolute_paths(text: str) -> str:
+    """Replace absolute paths before an error field enters a committed record."""
+    return ABSOLUTE_PATH_RE.sub("<path>", text)
+
+
+def bounded_error_text(value: Any, *, tail: bool = False) -> str:
+    """Keep one error field, without control bytes or unbounded text.
+
+    The first characters of a message name the failure; the last characters of
+    stderr name the command that failed. Both are bounded and stripped of
+    absolute paths before they enter a committed record.
+    """
+    if not isinstance(value, str):
+        return "unavailable"
+    text = "".join(
+        ch for ch in redact_absolute_paths(value) if ch in "\n\t" or ord(ch) >= 32
+    ).strip()
+    if not text:
+        return "unavailable"
+    if len(text) <= MAX_ERROR_TEXT_CHARS:
+        return text
+    return text[-MAX_ERROR_TEXT_CHARS:] if tail else text[:MAX_ERROR_TEXT_CHARS] + "...[truncated]"
+
+
+def attempt_error(task: dict[str, Any], row: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Preserve why an attempt failed, when the run recorded a cause.
+
+    `run.json` and `task.json` carry the cause; the collector previously kept
+    only a boolean. The full log tail and stack trace stay local because they
+    carry absolute sandbox paths and can be large.
+    """
+    row_details = row.get("error_details") if isinstance(row, dict) else None
+    task_details = task.get("error_details")
+    details = (
+        row_details
+        if isinstance(row_details, dict)
+        else task_details
+        if isinstance(task_details, dict)
+        else {}
+    )
+    message = row.get("error_message") if isinstance(row, dict) else None
+    if not isinstance(message, str) or not message.strip():
+        message = task.get("error_message")
+    error = {
+        "message": bounded_error_text(message),
+        "category": bounded_error_text(details.get("error_category")),
+        "component": bounded_error_text(details.get("component")),
+        "agent": bounded_error_text(details.get("agent_name")),
+        "attempt": (
+            details.get("attempt_number")
+            if isinstance(details.get("attempt_number"), int)
+            and not isinstance(details.get("attempt_number"), bool)
+            else "unavailable"
+        ),
+        "stderr_tail": bounded_error_text(details.get("agent_stderr"), tail=True),
+    }
+    if all(
+        error[field] == "unavailable"
+        for field in ("message", "category", "component", "stderr_tail")
+    ):
+        return None
+    return error
+
+
 def reviewer_delivery_observed(path: Path | None, final: str | None) -> bool:
     """Require the parent's JSON to match a captured completed reviewer result."""
     if path is None or path.name != "task.json" or not path.is_file() or final is None:
@@ -589,6 +661,23 @@ def summarize(entries: list[dict[str, Any]], cases: list[str]) -> dict[str, Any]
         and isinstance(entry["reviewer_cost_usd"], (int, float))
         for entry in completed
     )
+    causes: dict[tuple[str, str], dict[str, Any]] = {}
+    for entry in entries:
+        error = entry.get("error")
+        if not isinstance(error, dict):
+            continue
+        category = str(error.get("category", "unavailable"))
+        component = str(error.get("component", "unavailable"))
+        cause = causes.setdefault(
+            (category, component),
+            {
+                "category": category,
+                "component": component,
+                "count": 0,
+                "example": error.get("message", "unavailable"),
+            },
+        )
+        cause["count"] += 1
     return {
         "attempts": len(entries),
         "eligible": len(classes),
@@ -600,6 +689,10 @@ def summarize(entries: list[dict[str, Any]], cases: list[str]) -> dict[str, Any]
         "judge_unavailable": sum(entry["judge_status"] == "unavailable" for entry in entries),
         "reviewer_delivery_unverified": sum(entry["status"] == "reviewer_unverified" for entry in entries),
         "unattempted": sum(entry["status"] == "unattempted" for entry in entries),
+        "error_causes": sorted(
+            causes.values(),
+            key=lambda item: (-item["count"], item["category"], item["component"]),
+        ),
         "classification": {
             "unexpected_valid": [
                 {"case_id": entry["case_id"], "repeat": entry["repeat"], "evidence": token}
@@ -676,6 +769,32 @@ def summarize(entries: list[dict[str, Any]], cases: list[str]) -> dict[str, Any]
     }
 
 
+def evidence_gate(analysis_valid: bool | None, cost_comparison_valid: bool) -> dict[str, Any]:
+    """The fail-closed gate over the evidence a record already carries.
+
+    A record is publishable when its attribution is complete and every
+    completed attempt can be priced. Coverage is reported separately: a
+    provider stop legitimately leaves slots refused, and that record still
+    needs to be written.
+    """
+    reasons = []
+    if analysis_valid is not True:
+        reasons.append(
+            "analysis_valid is not true: reviewer attribution is incomplete or mismatched"
+        )
+    if cost_comparison_valid is not True:
+        reasons.append(
+            "cost_comparison_valid is not true: a completed attempt lacks verified "
+            "telemetry or a computed reviewer cost"
+        )
+    return {
+        "valid": not reasons,
+        "analysis_valid": analysis_valid,
+        "cost_comparison_valid": cost_comparison_valid,
+        "reasons": reasons,
+    }
+
+
 def build(args: argparse.Namespace) -> dict[str, Any]:
     cases = args.case or list(CASE_IDS)
     unknown = sorted(set(cases) - set(CASE_IDS))
@@ -729,8 +848,14 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             for repeat in range(args.repeats):
                 row = rows.get((args.variant, case, repeat))
                 artifact = run_dir / args.variant / case / f"{repeat:02d}" / "task.json"
-                details = json_file(artifact).get("error_details", {}) if artifact.is_file() else {}
-                interrupted = isinstance(details, dict) and details.get("origin") == "manual interruption reconciliation"
+                task_artifact = json_file(artifact) if artifact.is_file() else {}
+                details = (
+                    task_artifact.get("error_details")
+                    if isinstance(task_artifact.get("error_details"), dict)
+                    else {}
+                )
+                interrupted = details.get("origin") == "manual interruption reconciliation"
+                error = attempt_error(task_artifact, row)
                 row_status = str(row.get("status", "unreported")).upper() if row else "unattempted"
                 error_text = str(row.get("error_message", "") or "") if row else ""
                 provider_error = bool(re.search(
@@ -817,6 +942,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                     "reviewer_status": "completed" if reviewer_completed else ("interrupted" if interrupted else ("provider_error" if provider_error else ("harness_error" if harness_error else ("unattempted" if not row else ("delivery_unverified" if text and not delivery_observed else "incomplete"))))),
                     "provider_error": provider_error,
                     "harness_error": harness_error and not interrupted,
+                    "error": error,
                     "judge_status": judge["status"],
                     "judge_error": judge.get("error", "unavailable"),
                     "score": judge.get("score", "unavailable"),
@@ -913,6 +1039,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         },
         "analysis_valid": attribution_valid,
         "cost_comparison_valid": telemetry_summary["cost_comparison_valid"],
+        "gate": evidence_gate(attribution_valid, telemetry_summary["cost_comparison_valid"]),
         "coverage": {
             "planned": len(entries),
             "terminal": sum(1 for entry in entries if entry["status"] not in {"unattempted", "interrupted"}),
@@ -1225,10 +1352,83 @@ def _test_identity_mismatch() -> None:
     assert identity_mismatch("vercel-ai-gateway/deepseek/deepseek-v4-pro:high", go_requested)
 
 
+def _test_evidence_gate_and_error_causes() -> None:
+    assert evidence_gate(True, True)["valid"] is True
+    incomplete = evidence_gate(None, True)
+    assert incomplete["valid"] is False and incomplete["reasons"]
+    unpriced = evidence_gate(True, False)
+    assert unpriced["valid"] is False
+
+    task = {
+        "error_message": "omp turn failed: bootstrap exited 1",
+        "error_details": {
+            "error_category": "agent_crash",
+            "component": "orchestrator.iteration_1",
+            "agent_name": "omp",
+            "attempt_number": 1,
+            "agent_stderr": "x" * 1500 + "\nlast line\n",
+        },
+    }
+    error = attempt_error(task, None)
+    assert error is not None
+    assert error["message"].startswith("omp turn failed")
+    assert error["category"] == "agent_crash"
+    assert error["component"] == "orchestrator.iteration_1"
+    assert error["agent"] == "omp"
+    assert error["attempt"] == 1
+    assert len(error["stderr_tail"]) == MAX_ERROR_TEXT_CHARS
+    assert error["stderr_tail"].endswith("last line")
+    assert attempt_error({}, None) is None
+
+    row = {"error_message": "row message", "error_details": {"error_category": "timeout"}}
+    row_error = attempt_error({}, row)
+    assert row_error is not None
+    assert row_error["message"] == "row message"
+    assert row_error["category"] == "timeout"
+    assert bounded_error_text("open /tmp/secret/file failed") == "open <path> failed"
+    assert bounded_error_text("GET https://ai-gateway.vercel.sh/v1/models") == (
+        "GET https://ai-gateway.vercel.sh/v1/models"
+    )
+
+    base = {
+        "repeat": 0,
+        "status": "harness_error",
+        "reviewer_status": "harness_error",
+        "reviewer_telemetry_status": "missing",
+        "reviewer_cost_usd": "unavailable",
+        "reviewer_usage": "unavailable",
+        "latency_reviewer_seconds": "unavailable",
+        "judge_classifications": [],
+        "reviewer_verdict": "unreported",
+        "score": "unavailable",
+        "provider_error": False,
+        "harness_error": True,
+        "judge_status": "unavailable",
+        "attempt_seconds": None,
+    }
+    entries = [
+        dict(base, case_id=case, error=error)
+        for case in CASE_IDS[:2]
+    ] + [
+        dict(
+            base,
+            case_id=CASE_IDS[2],
+            error=attempt_error({}, {"error_message": "other", "error_details": {"error_category": "timeout"}}),
+        )
+    ]
+    summary = summarize(entries, CASE_IDS[:3])
+    top = summary["error_causes"][0]
+    assert top["category"] == "agent_crash"
+    assert top["component"] == "orchestrator.iteration_1"
+    assert top["count"] == 2
+    assert top["example"].startswith("omp turn failed")
+
+
 def _run_self_tests() -> None:
     _test_reviewer_telemetry()
     _test_identity_mismatch()
     _test_delivery_and_cost_summary()
+    _test_evidence_gate_and_error_causes()
 
 
 def parser() -> argparse.ArgumentParser:
@@ -1243,6 +1443,11 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--variant", default="reviewer")
     p.add_argument("--provenance", type=Path, default=Path("evals/provenance"), help="directory containing evals-record outputs")
     p.add_argument("--output", type=Path, required=True, help="supplementary JSON output path")
+    p.add_argument(
+        "--allow-invalid",
+        action="store_true",
+        help="write an invalid record and exit 0; only for regenerating historical evidence",
+    )
     return p
 
 
@@ -1266,7 +1471,23 @@ def main(argv: list[str] | None = None) -> int:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(args.output)
-    return 0
+    gate = result["gate"]
+    if gate["valid"]:
+        return 0
+    for reason in gate["reasons"]:
+        print(f"gate: {reason}", file=sys.stderr)
+    if args.allow_invalid:
+        print(
+            f"warning: {args.output} written with gate.valid=false (--allow-invalid)",
+            file=sys.stderr,
+        )
+        return 0
+    print(
+        f"error: evidence gate failed; {args.output} is not a valid record "
+        "(use --allow-invalid only to regenerate history)",
+        file=sys.stderr,
+    )
+    return 3
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@ SHELL := /bin/bash
 	check-issue-infra check-model-telemetry model-telemetry check-checkov check-zizmor \
 	evals-install evals-setup-claude evals-setup-omp evals-plan evals-judge-preflight evals-judge-calibrate \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-leaks check-evals-leaks evals-run evals-run-omp \
+	evals-campaign-preflight \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-deepseek-v4-1-flash \
 	check-claude-dependency evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna \
 	evals-run-codex evals-run-comparison evals-run-classes evals-run-haiku-5-5
@@ -414,6 +415,21 @@ REVIEWER_EXPERIMENTS := \
 	evals/experiments/omp-reviewer-qwen4-max-vercel.yaml \
 	evals/experiments/omp-reviewer-mimo-v2.6-pro-vercel.yaml \
 	evals/experiments/omp-reviewer-mistral-large-4-vercel.yaml
+# evals-campaign-preflight: refuse a paid reviewer campaign whose inputs are
+# incomplete. Read-only: it checks omp, provider balance, judge calibration
+# freshness, price cards, materialized tasks and route/arm agreement. The
+# ordered procedure and the terminal-state table are in evals/RUNBOOK.md.
+# EXPERIMENT names every arm of ONE matched cohort.
+#   make evals-campaign-preflight JUDGE=omp-gpt-6.1-sol \
+#     EXPERIMENT='evals/experiments/a.yaml evals/experiments/b.yaml'
+evals-campaign-preflight:
+	test -n "$(JUDGE)"
+	test -n "$(EXPERIMENT)"
+	uv run --frozen python3 scripts/evals-campaign-preflight.py \
+		--judge "$(JUDGE)" \
+		$(foreach experiment,$(EXPERIMENT),--experiment $(experiment)) \
+		$(if $(EXPECT_ARMS),--expect-arms $(EXPECT_ARMS),)
+
 .PHONY: evals-plan-reviewer-quality
 evals-plan-reviewer-quality: evals-setup-claude
 	uv run --frozen python3 scripts/evals-variants.py $(REVIEWER_EXPERIMENTS)
