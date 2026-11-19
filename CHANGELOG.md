@@ -4,6 +4,8 @@
 
 ### Changed
 
+* Return a cached Omp harness version, ready-to-use provenance block, and commit trailer from `daily_driver_get_session`, removing the separate version command and attribution formatting from each write.
+
 * Remove epic #800's task-contract and completion-evidence machinery and restore direct standing-instruction delivery across supported harnesses ([#895](https://github.com/jmcvetta/daily-driver/issues/895)).
 
 * Require criterion-level completion evidence and render current change receipts across Omp, Claude Code and Codex; retain unresolved requirements, stale identities and attributed judgments instead of accepting summary-only completion, and preserve startup failures and case-normalized failed check outcomes in receipts ([#801](https://github.com/jmcvetta/daily-driver/issues/801)).

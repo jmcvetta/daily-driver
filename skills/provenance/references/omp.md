@@ -10,21 +10,23 @@ The block
 
 `daily_driver_get_session`, the tool `extensions/daily-driver.js` registers,
 answers this session's own id (`ctx.sessionManager.getSessionId()`), its
-name, and the id of the model serving it. Record both verbatim — `Model:
-<model>` and `session: <id>` — with no note about where the values came
-from. Omp has no web URL for a session, so the id goes in bare rather than
-linked.
+name, the id of the model serving it, and the installed Omp version. Copy
+`details.provenanceBlock` verbatim at the end of the body, including its
+leading `---`. Do not run `omp --version`, reconstruct the block, or make a
+confirmation read. Omp has no web URL for a session, so the id in the block
+is bare rather than linked.
 
-**The harness version** is `omp --version`, where it answers. A version no
-surface in the session reports is `n/a`, never a guessed one.
+The version reader caches its result for the extension's lifetime. If no
+version surface answers, the block records `Harness: Omp n/a`, never a
+guessed version.
 
 
 Commits
 =======
 
 Omp does not append a commit trailer of its own, so the agent adds
-`Co-Authored-By: <model id> <address>` and, beside it, a session trailer,
-`Omp-Session: <id, or n/a>`.
+`Co-Authored-By: <model id> <address>` and, beside it, copies
+`details.commitTrailer` from the same session read.
 
 **No fixed address is documented.** Omp's own commit documentation ties a
 co-author trailer to a configured session identity rather than to a built-in

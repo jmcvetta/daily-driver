@@ -43,6 +43,20 @@ import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { installModelClassDefaults, readModelClassRoutes } from "./role-default-helper.mjs";
 import { installUndertakingRouting } from "./undertaking-routing.mjs";
 
+/** Read the installed Omp version without exposing subprocess diagnostics. */
+function queryHarnessVersion() {
+	try {
+		const output = execFileSync("omp", ["--version"], {
+			encoding: "utf8",
+			stdio: ["ignore", "pipe", "ignore"],
+			timeout: 1000,
+		}).trim();
+		return /^omp\/(\S+)$/u.exec(output)?.[1] ?? null;
+	} catch {
+		return null;
+	}
+}
+
 /**
  * What the model is told when it calls Omp's `ask` tool. Mirrors the wording
  * of `hooks/ask-in-chat.py`'s REASON so the two harnesses deny the widget the
@@ -2344,8 +2358,17 @@ function newTriggerId() {
 }
 
 /** The `daily-driver` Omp extension factory. */
-export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
+export default function dailyDriverExtension(pi, { modelTagsSetting, readHarnessVersion = queryHarnessVersion } = {}) {
 	const z = pi.zod;
+	let cachedHarnessVersion;
+	let harnessVersionLoaded = false;
+	function harnessVersion() {
+		if (!harnessVersionLoaded) {
+			cachedHarnessVersion = readHarnessVersion();
+			harnessVersionLoaded = true;
+		}
+		return cachedHarnessVersion;
+	}
 
 	const initializedSettings = new WeakSet();
 	const routingSettings = new Map();
@@ -2682,16 +2705,21 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 		name: "daily_driver_get_session",
 		label: "Get session info",
 		description:
-			"Read this session's own id, name, and model. The id is what an " +
-			"undertake claim comment records; the name and model are the " +
-			"session's current values.",
+			"Read this session's own id, name, model, and ready-to-use Omp " +
+			"attribution. The id is what an undertake claim comment records; " +
+			"the name and model are the session's current values.",
 		parameters: z.object({}),
 		execute: async (_toolCallId, _params, _signal, _onUpdate, ctx) => {
 			const model = ctx.model?.id ?? null;
+			const sessionId = ctx.sessionManager.getSessionId();
+			const version = harnessVersion();
 			const info = {
-				sessionId: ctx.sessionManager.getSessionId(),
+				sessionId,
 				sessionName: ctx.sessionManager.getSessionName() ?? null,
 				model,
+				harnessVersion: version,
+				provenanceBlock: `---\nModel: ${model ?? "unknown"}\nHarness: Omp ${version ?? "n/a"}\nsession: ${sessionId}`,
+				commitTrailer: `Omp-Session: ${sessionId}`,
 				...undertakingRouting.describe(ctx),
 			};
 			return {

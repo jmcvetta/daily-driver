@@ -3425,7 +3425,11 @@ check("set_session_title calls pi.setSessionName", async () => {
 
 // --- get_session ------------------------------------------------------------
 check("get_session reads the session manager and the serving model", async () => {
-	const s = makeSession();
+	let versionReads = 0;
+	const s = makeSession({}, { readHarnessVersion: () => {
+		versionReads++;
+		return "19.0.0";
+	} });
 	const def = s.tools.get("daily_driver_get_session");
 	assert.ok(def, "daily_driver_get_session is registered");
 	const ctx = {
@@ -3440,18 +3444,34 @@ check("get_session reads the session manager and the serving model", async () =>
 		sessionId: "0199c0a2-7d17-7b13-a2f4-6f21f5b4e9a8",
 		sessionName: "Fix the parser",
 		model: "zai/glm-5.3",
+		harnessVersion: "19.0.0",
+		provenanceBlock: "---\nModel: zai/glm-5.3\nHarness: Omp 19.0.0\nsession: 0199c0a2-7d17-7b13-a2f4-6f21f5b4e9a8",
+		commitTrailer: "Omp-Session: 0199c0a2-7d17-7b13-a2f4-6f21f5b4e9a8",
 		provider: null,
 		authenticationRoute: null,
 		undertaking: null,
 	});
+	// Repeating the subprocess on every identity read would recreate the delay this result is meant to remove.
+	await def.execute("c0-cache", {}, undefined, undefined, ctx);
+	assert.equal(versionReads, 1, "the harness version is read once per extension instance");
 });
 
 check("get_session tolerates an unnamed session and no model", async () => {
-	const s = makeSession();
+	const s = makeSession({}, { readHarnessVersion: () => null });
 	const def = s.tools.get("daily_driver_get_session");
 	const ctx = { sessionManager: { getSessionId: () => "s1", getSessionName: () => undefined } };
 	const result = await def.execute("c0b", {}, undefined, undefined, ctx);
-	assert.deepEqual(result.details, { sessionId: "s1", sessionName: null, model: null, provider: null, authenticationRoute: null, undertaking: null });
+	assert.deepEqual(result.details, {
+		sessionId: "s1",
+		sessionName: null,
+		model: null,
+		harnessVersion: null,
+		provenanceBlock: "---\nModel: unknown\nHarness: Omp n/a\nsession: s1",
+		commitTrailer: "Omp-Session: s1",
+		provider: null,
+		authenticationRoute: null,
+		undertaking: null,
+	});
 });
 
 // --- legacy task worktree entries do not restore a separate status ----------
