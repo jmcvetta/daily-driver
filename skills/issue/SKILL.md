@@ -85,11 +85,40 @@ it either.** A claim, a report, an answer is prose on an issue, not a change
 to one. Comments happen inside other sequences — `undertake`'s `Claim the
 issue` among them — and not through here.
 
+The target repository
+=====================
+
+Before creating an issue, settle and state its destination before the create
+call.
+
+- When the user's create request explicitly names the exact destination — for
+  example, `OWNER/REPO` or `issue://OWNER/REPO/<number>` — use that target;
+  naming it explicitly approves that create. When no other repository is
+  named, the current repository is the default.
+- A repository inferred from an installed dependency, package metadata, an
+  upstream remote, or project context is only a possible target. It is not
+  user approval. Do not silently create there or switch to it in the create
+  call.
+- If the possible target is outside the user's own repositories and the user
+  has not explicitly approved creating an issue in its exact `OWNER/REPO`,
+  stop before the write and ask for that approval. A qualifying answer names
+  the exact repository. Silence, a general "go ahead", or "open an issue for
+  this" does not qualify. If the user declines, do not create the issue; report
+  the decision and continue work that does not depend on it.
+- Auto-filed Daily Driver bug reports to `jmcvetta/daily-driver` follow
+  `Automatic Daily Driver bug reports` and need no additional approval.
+- Updating an existing issue is not creation. A request naming both the
+  repository and issue, such as `update OWNER/REPO#847`, already names the
+  target for that update. This gate applies when the session would choose the
+  repository for a create.
+
+
 
 The moves
 =========
 
-In order, and each only when the change needs it:
+For a create, **the target repository runs first**: settle the destination
+under `The target repository` before preparing the issue body or create call.
 
 **Read what is there.** The issue's current state — body, labels, edges —
 before any edit. An update that does not start from what the issue says now is

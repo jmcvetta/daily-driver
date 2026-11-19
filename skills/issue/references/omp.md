@@ -14,7 +14,7 @@ writes to.
 | Read what is there | Read the issue | `issue://<number>` |
 | Read what is there | Search the open issues | `github.search_issues`, or `gh search issues` |
 | The label | Set or swap a label | `gh issue edit <number> --add-label <label> --remove-label <the old one>` |
-| The body | Open with a body | `gh issue create --label <label> --body-file <path>` |
+| The body | Open with a body | `gh issue create --repo <owner>/<repo> --label <label> --body-file <path>` |
 | The body | Replace a body | `gh issue edit <number> --body-file <path>` |
 | The edges | Blocked-by, parent, sub-issue | `issue-deps`'s own routes |
 | The state | Close or reopen | `gh issue close <number>` / `gh issue reopen <number>` |

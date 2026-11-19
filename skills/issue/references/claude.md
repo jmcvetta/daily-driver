@@ -13,6 +13,8 @@ running in Claude Code. Omp's routes are in [`omp.md`](omp.md), Codex's in
 | The body | Replace a body | `mcp__github__issue_write`, `method: update`, `body` set |
 | The edges | Blocked-by, parent, sub-issue | `issue-deps`'s own routes |
 | The state | Close or reopen | `mcp__github__issue_write`, `method: update`, `state` set |
+**Creating outside the current repository:** set `owner` and `repo` to the
+approved target repository on `mcp__github__issue_write`.
 
 **`method: update` replaces `body` outright rather than appending**, so an
 update carries the whole new body and not the part that is new.
