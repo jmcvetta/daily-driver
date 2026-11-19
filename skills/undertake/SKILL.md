@@ -415,40 +415,40 @@ Beyond the claim itself the comment always carries:
   branch as the branch GitHub will carry. Ordinary and resume paths have one
   branch identity, so the linked and local branch are the same.
 
-- **`provenance`'s block**, immediately after the work identity lines:
-  the model that served the turn, the harness and its version, and the session
-  reading each field — never a name recalled instead of read, and where the
-  model the session was *set* to run disagrees with the one that served, both
-  are named. The `Model:` and lowercase `session:` line shapes are what the
-  claim lookup below and `The milestone` match on, so they are never varied
-  here.
-- **A brief poem, in the claiming agent's own style, placed last** — after
-  the work identity, model and session, so that a reader looking for them
-  finds them in a fixed place and is never made to read past verse to reach
-  them. Each line is written in italics — wrapped in asterisks, line by line,
-  as `HAIKU.md` at the repo root shows — because italics designate the verse
-  as poetry, so a reader never mistakes a line of it for part of the claim
-  data: the work identity, model or session. The style is the agent's own,
-  and deliberately so: a pull request's salutation is classical and a task
-  issue's opening verse is a haiku, but a claim is the agent's voice at the
-  moment it takes the work.
+- **`provenance`'s block.** Where the agent supplies it, place it immediately
+  after the work identity lines. It names the serving model, harness/version,
+  and session under the exact `Model:` and lowercase `session:` shapes used by
+  claim lookup and milestone timing. Where the serving model differs from the
+  session's configured model, name both. For Omp body-bearing GitHub writes,
+  the GitHub-write wrapper appends the block from live execution context at
+  the end of the submitted body; do not read model/session identity or format it.
+- **A brief poem, in the claiming agent's own style, last in the authored
+  body** — after the work identity and, where the agent supplies it, the
+  provenance block. On Omp, the wrapper appends its block after the poem. Each
+  line is written in italics — wrapped in asterisks, line by line, as
+  `HAIKU.md` at the repo root shows — because italics designate the verse as
+  poetry, so a reader never mistakes it for claim data. The style is the
+  agent's own: a pull request's salutation is classical and a task issue's
+  opening verse is a haiku, but a claim is the agent's voice at the moment it
+  takes the work.
 
-The model and session come from the harness's session call, where it has one —
-the call `session-title` documents. In branch-free answer-only research, no
-branch is designated or established. Otherwise, without a resume or a
-verified primary-held designation exception, a branch designated by that call
-must be the branch `task-worktree` established; disagreement is a collision,
-not a choice between two branch sources. With a resume, the remote push branch
-is the adopted branch and outranks the designation. In the exception, the
-local execution branch may differ from the designation only as
-`task-worktree` verified; the designated branch remains the push/PR head.
-Other paths retain one branch identity.
+Where the agent supplies a provenance block, model and session values come
+from the harness's session call, where it has one. Omp's wrapper instead reads
+live execution context for each body-bearing write; the session-info tool
+remains available for separate purposes such as title handling. In branch-free
+answer-only research, no branch is designated or established. Otherwise,
+without a resume or a verified primary-held designation exception, a branch
+designated by the relevant harness call must be the branch `task-worktree`
+established; disagreement is a collision, not a choice between two branch
+sources. With a resume, the remote push branch is the adopted branch and
+outranks the designation. In the exception, the local execution branch may
+differ from the designation only as `task-worktree` verified; the designated
+branch remains the push/PR head. Other paths retain one branch identity.
 
-**The comment never goes up with the work identity alone.** For repository
-work, the branch comes from the task worktree's Git state, never from a fresh
-naming decision in this step. For branch-free research, the identity is
-explicitly `Branch: none`; the model and session lines follow the rules above
-whatever the harness supplies.
+**The comment never goes up with the work identity alone.** The active route
+supplies provenance. On Omp, the wrapper appends it automatically, so the
+authored claim contains the branch identity and poem but no new attribution
+block. Other routes include the model and session lines under the rules above.
 
 **Once per session, not once per run.** A sequence re-entered — its blocker
 cleared, the issue handed over again — does not claim what it has claimed
@@ -557,12 +557,13 @@ Gather the evidence and prepare the agreed answer. If follow-on issue
 specifications are required, create those through `issue` or `epic` under
 their existing gates and include their links in the result. If a required
 issue cannot be created, leave the research issue open and report the failure.
-Post the complete findings to the issue with `provenance`'s block. If that
-write fails, leave the issue open. Close the research issue as completed only
-when `issue-body`'s completion test holds and the answer was recorded. A
-supported no is a result. Inconclusive work is complete only under
-`issue-body`'s bounded-report rule. Failed access, unresolved blocking intent,
-or abandoned work stays open and follows `Where it stops and waits`.
+Post complete findings with provenance supplied by the active route; Omp's
+wrapper attaches it automatically. If that write fails, leave the issue open.
+Close the research issue as completed only when `issue-body`'s completion test
+holds and the answer was recorded. A supported no is a result. Inconclusive
+work is complete only under `issue-body`'s bounded-report rule. Failed access,
+unresolved blocking intent, or abandoned work stays open and follows `Where it
+stops and waits`.
 
 After completion, finish the Omp undertaking through its harness route before
 reusing the session for another issue. Do not finish a stopped or incomplete
@@ -1118,10 +1119,12 @@ What the report carries
   unavailable. If posting fails, publish no milestone; revalidate the gate and
   capture a new time before retrying.
 
-- **`provenance`'s block, under `Claim the issue`'s rules for it.** One
-  session did the work, so one model and one session are named; where a
-  resume moved the work to another session, both are named in the order they
-  ran, and attribution nobody reported is not reconstructed.
+- **`provenance`'s block.** The active route supplies attribution. Omp's
+  wrapper attaches the current write's live model/harness/session tuple; do
+  not perform identity reads or format a block for it. Each claim or report is
+  its own comment, so attribution on an earlier claim remains there rather
+  than being copied into this report. Other routes follow the agent-supplied
+  block rules above.
 
 - **The head it binds to.** The pull request's head SHA and the report
   timestamp. The comment is a statement about that head: a later head — after
@@ -1258,9 +1261,10 @@ In order:
      on the branch above">.
    ```
 
-   It ends with `provenance`'s block and carries no verse: somebody acts on
-   it, the reason `stand-down`'s task handoffs carry none. A push that fails
-   is stated here: `Pushed head:` names the last head that reached origin,
+   The active route appends `provenance`'s block; on Omp the wrapper handles
+   it, so the handoff body must not format or include one. A user-action
+   handoff carries no verse, because somebody acts on it. A push that fails is
+   stated here: `Pushed head:` names the last head that reached origin,
    `Outstanding:` names the failure, and the handoff is still written.
    **The handoff is filled from what this session already knows**, plus the
    git read the reference names for `Pushed head:`. No test or CI check is

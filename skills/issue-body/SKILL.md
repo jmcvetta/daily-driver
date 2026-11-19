@@ -181,10 +181,12 @@ envelope. A task issue retains its normal body sections and puts the
 authorization record in `Detail`. Ask again before materially expanding the
 approved assignment.
 
-Every complete issue-body draft intended for a write includes the block it
-would publish. Withholding the live write does not remove the provenance
-requirement. Follow `provenance`'s placement, field, and distinct-attribution
-rules on an edited issue.
+Every complete issue-body draft follows the active harness route for
+provenance. For Omp GitHub writes, keep the authored body free of a new block;
+the wrapper attaches and deduplicates attribution. Other routes include the
+block they will publish. Withholding a live write does not remove the
+provenance requirement. Follow `provenance`'s placement, field, and
+distinct-attribution rules on an edited issue.
 
 
 **Relationships are edges, not prose.** What an issue waits on is

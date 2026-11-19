@@ -17,12 +17,15 @@ The issues
 | `Size the work` | Read an issue already in hand | `issue://<number>` |
 | `Open the issues` | Search the open issues | `github.search_issues`, or `gh search issues` |
 | `Open the issues` | Open the epic and each task; settle destination under [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository) and pass it to both creates | `gh issue create --label epic [--repo OWNER/REPO when target differs from current repository]` / `gh issue create --label task [--repo OWNER/REPO when target differs from current repository]` |
-| `Open the issues` | Turn an existing issue into the epic | `gh issue edit <number> --body-file <path> --add-label epic --remove-label <the old one>` |
-| `Fill in the epic` | Replace the epic's body | `gh issue edit <number> --body-file <path>` |
+| `Open the issues` | Turn an existing issue into the epic | `daily_driver_gh_write({ args: ["issue", "edit", <number>, "--body-file", <path>, "--add-label", "epic", "--remove-label", <old label>] })` |
+| `Fill in the epic` | Replace the epic's body | `daily_driver_gh_write({ args: ["issue", "edit", <number>, "--body-file", <path>] })` |
 
-`--body-file` rather than `--body`: an epic body carries a fenced block and a
-table, and passing that through a shell argument is where the quoting breaks.
-Write the body to a file and hand over the path.
+Bodyless issue creation remains on `gh issue create`. If creation includes a
+body, route the same argument array through `daily_driver_gh_write`; the wrapper
+attaches provenance without changing the supplied title or labels.
+
+The wrapper adds and deduplicates provenance to each body-bearing write; do not
+include a new block in the supplied body.
 
 
 The parent, at creation
