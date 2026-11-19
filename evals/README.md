@@ -7,6 +7,9 @@ the short version is that the built-in cannot be run on this account, is
 publicly undocumented, announces no changes, and — decisively — ships inside
 the `claude` binary, so there is no version to hold back.
 
+Campaign operations — preflight, calibration, smoke, cohort, stop and resume —
+are in [`RUNBOOK.md`](RUNBOOK.md).
+
 The arms run by `make evals-run-omp` are the required arms: their results are
 the eval evidence for the supported harness, Omp. The Claude Code arms
 (`with-without.yaml`, `with-without-haiku-5.5.yaml`, `base-vs-candidate.yaml`),
