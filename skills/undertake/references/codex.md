@@ -15,7 +15,7 @@ The issue
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Open the issue` | Search the open issues | `gh search issues` |
-| `Open the issue` | Open one, labelled | `gh issue create --label task` |
+| `Open the issue` | Open one, labelled; settle destination under [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository) and pass it here | `gh issue create --label task [--repo OWNER/REPO when target differs from current repository]` |
 | `Read the issue and its edges` | Read the body, the graph and the comments | `gh issue view <number> --json body,labels,comments,blockedBy,subIssues,parent` |
 | `Read the issue and its edges` | Label an issue that carries none | `gh issue edit <number> --add-label task` |
 | `Claim the issue` | Comment on the issue | `gh issue comment <number> --body-file <path>` |
