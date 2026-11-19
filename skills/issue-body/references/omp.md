@@ -6,13 +6,13 @@ session running in Oh My Pi. Claude Code's routes are in
 
 - **Opening an issue with a body.** Settle destination under
   [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository)
-  and pass it in `gh issue create --label <label> [--repo OWNER/REPO when the
-  target differs from the current repository] --body-file <path>`.
-- **Replacing a body.** `gh issue edit <number> --body-file <path>`.
+  and pass it in `daily_driver_gh_write({ args: ["issue", "create", "--label", <label>, "--body-file", <path>] })`,
+  adding `"--repo", "OWNER/REPO"` when the target differs from the current
+  repository.
+- **Replacing a body.** `daily_driver_gh_write({ args: ["issue", "edit", <number>, "--body-file", <path>] })`.
 
-`--body-file` rather than `--body`: a handoff body carries fenced blocks and
-lists, and passing that through a shell argument is where the quoting breaks.
-Write the body to a file and hand over the path.
+The wrapper reads the supplied body file, applies provenance, and sends a
+private attributed copy to `gh`; keep the caller's file free of a new block.
 
 
 The required class

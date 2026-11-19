@@ -4,6 +4,8 @@
 
 ### Changed
 
+* Route body-bearing Omp GitHub writes through `daily_driver_gh_write`, which attaches live provenance and deduplicates historical attribution ([#916](https://github.com/jmcvetta/daily-driver/issues/916)).
+
 * Remove epic #800's task-contract and completion-evidence machinery and restore direct standing-instruction delivery across supported harnesses ([#895](https://github.com/jmcvetta/daily-driver/issues/895)).
 
 * Require criterion-level completion evidence and render current change receipts across Omp, Claude Code and Codex; retain unresolved requirements, stale identities and attributed judgments instead of accepting summary-only completion, and preserve startup failures and case-normalized failed check outcomes in receipts ([#801](https://github.com/jmcvetta/daily-driver/issues/801)).
@@ -45,6 +47,13 @@
 * Give the live Omp title-barrier fixture enough context for expanded skills without entering unsupported scripted-model compaction ([#726](https://github.com/jmcvetta/daily-driver/issues/726)).
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
+
+## [0.66.0](https://github.com/jmcvetta/daily-driver/compare/v0.65.1...v0.66.0) (2026-11-19)
+
+
+### Features
+
+* **omp:** attach provenance to GitHub writes ([#923](https://github.com/jmcvetta/daily-driver/issues/923)) ([4f3742f](https://github.com/jmcvetta/daily-driver/commit/4f3742f74ac18a86fb2ac54163487d796415160e))
 
 ## [0.65.1](https://github.com/jmcvetta/daily-driver/compare/v0.65.0...v0.65.1) (2026-11-19)
 

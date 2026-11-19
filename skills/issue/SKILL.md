@@ -55,10 +55,11 @@ metadata; never put the label in the body. Keep the report brief, but include
 the bug contract's available core information: affected component, expected and
 observed behavior, minimal failure evidence, relevant version/context and
 impact when known. State material unknowns rather than filling them in. Redact
-secrets and private project data, and end with `provenance`'s block. This route
-establishes Daily Driver ownership; it does not acquire task sections, model
-class metadata, a task template, a haiku, an implementation map, an acceptance
-plan, or a proposed fix.
+secrets and private project data. The active route supplies `provenance`'s
+block; on Omp, leave it out of the authored body for the wrapper to append.
+This route establishes Daily Driver ownership; it does not acquire task
+sections, model class metadata, a task template, a haiku, an implementation
+map, an acceptance plan, or a proposed fix.
 
 If attribution remains uncertain, investigate only as needed to resolve it;
 do not file an asserted bug based on suspicion. Target-repository defects
@@ -146,12 +147,12 @@ never states in prose what an edge records; that rule is `issue-deps`'s, cited
 here rather than restated.
 
 **The close, when it is not planned.** An issue closed with `state_reason:
-not_planned` gets one comment with the state change: a line saying why the
-work will not be done, `provenance`'s block, and last a short elegy for it —
-two to four lines, each italicised as [`HAIKU.md`](../../HAIKU.md) shows.
-The reason comes first so a reader never reads past verse to learn it. A
-close as `completed` or `duplicate` carries no elegy: the work was done, or
-lives on elsewhere.
+not_planned` gets one comment with the state change: a line saying why it will
+not be done and last a short elegy for it — two to four lines, each italicised
+as [`HAIKU.md`](../../HAIKU.md) shows. The reason comes first so a reader never
+reads past verse to learn it. The active route supplies provenance; on Omp the
+wrapper appends the block after the authored comment. A close as `completed` or
+`duplicate` carries no elegy: the work was done, or lives on elsewhere.
 
 
 Reporting a newly opened issue

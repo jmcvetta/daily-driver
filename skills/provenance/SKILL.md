@@ -28,6 +28,14 @@ operation below is named in words here and resolved to a route there:
 [`references/codex.md`](references/codex.md) for Codex. Read the one for the
 harness in use before the first write this skill governs.
 
+On Omp, the GitHub-write wrapper attaches this block to every body-bearing
+GitHub write and applies the edit deduplication rules below. Callers provide
+the substantive body without a new block. Do not read session identity, run
+`omp --version`, or format attribution solely for an Omp GitHub write; the
+wrapper reads the live model and session on each call and caches the Omp
+version once per extension instance. Read-only and non-body GitHub operations
+keep their existing routes. The Omp commit procedure below is unchanged.
+
 
 The block
 =========

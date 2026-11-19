@@ -42,8 +42,12 @@ The wave
 | `Take the wave` | Read each eligible child's body and claim | `issue://<number>`, comments included |
 | `Open the sessions` | Dispatch one implementor per eligible child, concurrently | `task`, one item per child issue in a single batch |
 | `Open the sessions` | Name the implementor | the item's `name`, in `session-title`'s form |
-| `Post the muster roll` | Comment on the epic | `gh issue comment <number> --body-file <path>` |
-| `Post the muster roll` | Mark the wave in the epic's body | `gh issue edit <number> --body-file <path>` |
+| `Post the muster roll` | Comment on the epic | `daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file", <path>] })` |
+| `Post the muster roll` | Mark the wave in the epic's body | `daily_driver_gh_write({ args: ["issue", "edit", <number>, "--body-file", <path>] })` |
+
+The wrapper appends and deduplicates provenance for both writes; submit the
+body or comment without a new attribution block.
+
 
 The dispatch is one batch, never one call per child: the items run
 concurrently, and an item that fails to launch is reported in its own result
@@ -160,7 +164,7 @@ The watch
 | `Land the pull request` | Read the review-cycle completion notice | `gh pr view <number> --json headRefOid,comments` — `comments[].author.login` |
 | `Land the pull request` | Read the commits after the notice's SHA | `git rev-list --first-parent --no-merges <sha>..<headRefOid>` after `git fetch` of the head |
 | `Land the pull request` | Squash merge the gated head | `gh pr merge <number> --squash --match-head-commit <headRefOid>` |
-| `Close the epic` | Comment with the landed pull requests or missing claim | `gh issue comment <number> --body-file <path>` |
+| `Close the epic` | Comment with the landed pull requests or missing claim | `daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file", <path>] })` |
 | `Close the epic` | Close as completed | `gh issue close <number> --reason completed` |
 
 `Land the pull request` reads its own state: `isDraft` must be false,

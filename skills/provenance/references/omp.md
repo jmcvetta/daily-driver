@@ -8,15 +8,26 @@ session running in Oh My Pi. Claude Code's routes are in
 The block
 =========
 
-`daily_driver_get_session`, the tool `extensions/daily-driver.js` registers,
-answers this session's own id (`ctx.sessionManager.getSessionId()`), its
-name, and the id of the model serving it. Record both verbatim — `Model:
-<model>` and `session: <id>` — with no note about where the values came
-from. Omp has no web URL for a session, so the id goes in bare rather than
-linked.
+Every body-bearing Omp GitHub write uses `daily_driver_gh_write` with `args`
+as an array of `gh` arguments, excluding the executable. The tool runs `gh`
+directly without shell interpolation and adds the provenance block immediately
+before the write. It reads the live model and session id from the execution
+context on each call; it reads and caches the installed Omp version once per
+extension instance, using `n/a` when unavailable.
 
-**The harness version** is `omp --version`, where it answers. A version no
-surface in the session reports is `n/a`, never a guessed one.
+For `--body` and `--body-file`, the wrapper appends the block while retaining
+one complete block per distinct attribution tuple in original order. It removes
+exact duplicate blocks, preserves incomplete historical records and all other
+body content, and does not modify the caller's body file. For supported
+`gh api --input` review and reply routes, it updates the JSON `body` fields,
+including each inline review comment, in a private temporary copy and removes
+that copy after success or failure.
+
+Direct body-bearing `gh` calls from Bash are denied with a recovery instruction
+that names `daily_driver_gh_write`. Read-only calls and non-body operations,
+including labels and state changes, keep their existing `gh` routes. Callers do
+not read session identity or `omp --version` and do not format provenance for
+these writes.
 
 
 Commits

@@ -57,9 +57,9 @@ The body of a pull request, whether it is being opened or rewritten. In order:
   delivery from unverified allocation.
 - **Unopinionated**: This is a short description of the branch, NOT a code
   review. Do NOT do opine on code quality or security.
-- **Provenance**: Last, below all of the above, `provenance`'s block — the
-  model, harness and session that wrote the body — placed and retained as
-  that skill defines.
+- **Provenance**: The active harness route attaches `provenance`'s block. For
+  Omp GitHub writes, the wrapper appends it; keep the authored body free of a
+  new block. Other routes place and retain it as `provenance` defines.
 
 **The body is human-facing, and the constitution's audience rule governs
 it.** Keep every essential fact — the change, the reason, the verification
