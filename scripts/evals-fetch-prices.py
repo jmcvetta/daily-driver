@@ -1,24 +1,15 @@
 #!/usr/bin/env python3
-"""Generate `evals/coder-eval-omp/prices.json` from the gateway endpoints API.
+"""Generate `evals/coder-eval-omp/prices.json` from provider catalogs.
 
-Reads every experiment under `evals/experiments/`, takes the gateway models an
-arm pins *and restricts to one upstream* with `vercel_gateway_only`, and writes
-one row per model from the Vercel AI Gateway endpoints API at
-`https://ai-gateway.vercel.sh/v1/models/<provider>/<model>/endpoints`. The
-endpoint whose `provider_name` matches the arm's restriction is the only card
-that can price that arm; a missing or ambiguous match is a hard failure, never
-a guessed card.
+Reads pinned Vercel AI Gateway models from their provider endpoint cards, and
+pinned OpenCode Go models from its public model catalog. Vercel arms must name
+one allowed upstream; Go arms must publish zero text input, output, and cache
+read rates. Missing or ambiguous models, changed required shapes, or nonzero
+rates fail rather than guessing.
 
-Rows carry the four published buckets, the published tier as one threshold
-with the rates that replace the base card at or above it, and the published
-peak windows. `source` and `read_on` name the card and the day it was read, so
-a record can name the card that priced it. Rows for models no restricted
-experiment pins are dropped: a gateway model without a restriction has one
-card per upstream and nothing here can choose between them.
-
-The output is validated through the adapter's own loader before it replaces the
-committed file, so a change to either side that breaks the contract fails here
-rather than during a paid run.
+Rows carry published buckets and source dates. A cache-write bucket the Go
+catalog does not publish remains null. The output is validated through the
+adapter's own loader before replacing the committed snapshot.
 
 USAGE
 
@@ -55,6 +46,8 @@ PRICING_MODULE = ROOT / "evals" / "coder-eval-omp" / "src" / "coder_eval_omp" / 
 
 GATEWAY_PREFIX = "vercel-ai-gateway/"
 ENDPOINTS_URL = "https://ai-gateway.vercel.sh/v1/models/{provider}/{model}/endpoints"
+OPENCODE_GO_PREFIX = "opencode-go/"
+GO_MODELS_URL = "https://opencode.ai/inference/go/v1/models"
 
 #: Our row field, and the API field it is converted from. The API publishes
 #: USD per token as a decimal string; every row here is USD per million.
@@ -149,6 +142,83 @@ def restricted_arms(experiments_dir: Path) -> dict[str, tuple[str, ...]]:
                 )
             arms[key] = restriction
     return dict(sorted(arms.items()))
+
+
+def split_opencode_go_model(key: str) -> str:
+    """The OpenCode Go catalog id for a pinned Omp model."""
+    if not key.startswith(OPENCODE_GO_PREFIX):
+        raise PriceError(f"{key} is not an {OPENCODE_GO_PREFIX} model")
+    model_id = key[len(OPENCODE_GO_PREFIX) :]
+    if not model_id or "/" in model_id:
+        raise PriceError(f"{key} does not name one OpenCode Go model")
+    return model_id
+
+
+def opencode_go_arms(experiments_dir: Path) -> tuple[str, ...]:
+    """Every pinned OpenCode Go model in experiment defaults or variants."""
+    models: set[str] = set()
+    for path in sorted(experiments_dir.glob("*.yaml")):
+        document = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        agents = [(document.get("defaults") or {}).get("agent")]
+        for variant in document.get("variants") or []:
+            if isinstance(variant, dict):
+                agents.append(variant.get("agent"))
+        for agent in agents:
+            if not isinstance(agent, dict):
+                continue
+            model = agent.get("model")
+            if isinstance(model, str) and model.startswith(OPENCODE_GO_PREFIX):
+                key = price_key(model)
+                split_opencode_go_model(key)
+                models.add(key)
+    return tuple(sorted(models))
+
+
+def select_opencode_go_model(payload: Any, key: str) -> dict:
+    """The one exact model record in the OpenCode Go catalog."""
+    model_id = split_opencode_go_model(key)
+    if not isinstance(payload, dict) or payload.get("object") != "list" or not isinstance(payload.get("data"), list):
+        raise PriceError(f"{key}: the OpenCode Go models catalog changed shape")
+    matches = [model for model in payload["data"] if isinstance(model, dict) and model.get("id") == model_id]
+    if not matches:
+        raise PriceError(f"{key}: the OpenCode Go catalog does not publish this model")
+    if len(matches) != 1:
+        raise PriceError(f"{key}: the OpenCode Go catalog publishes this model more than once")
+    if matches[0].get("object") != "model":
+        raise PriceError(f"{key}: the OpenCode Go model record changed shape")
+    return matches[0]
+
+
+def _zero_catalog_rate(value: Any, key: str, field: str) -> float:
+    """A published numeric Go price, which this free-arm snapshot requires to be zero."""
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        raise PriceError(f"{key}: the OpenCode Go catalog has no numeric `{field}` price")
+    if value != 0:
+        raise PriceError(f"{key}: the OpenCode Go catalog publishes nonzero `{field}` price {value!r}")
+    return 0.0
+
+
+def opencode_go_price_row(model: dict, key: str, source: str, read_on: str) -> dict:
+    """One strict zero-rate row from an OpenCode Go model record."""
+    cost = model.get("cost")
+    text = cost.get("text") if isinstance(cost, dict) else None
+    input_cost = text.get("input") if isinstance(text, dict) else None
+    output_cost = text.get("output") if isinstance(text, dict) else None
+    cache = input_cost.get("cache") if isinstance(input_cost, dict) else None
+    if not isinstance(input_cost, dict) or not isinstance(output_cost, dict) or not isinstance(cache, dict):
+        raise PriceError(f"{key}: the OpenCode Go text pricing block changed shape")
+
+    return {
+        "input_usd_per_million": _zero_catalog_rate(input_cost.get("price"), key, "text input"),
+        "output_usd_per_million": _zero_catalog_rate(output_cost.get("price"), key, "text output"),
+        "cache_read_usd_per_million": _zero_catalog_rate(cache.get("read"), key, "cache read"),
+        "cache_write_usd_per_million": (
+            _zero_catalog_rate(cache["write"], key, "cache write") if "write" in cache else None
+        ),
+        "source": source,
+        "read_on": read_on,
+        "recorded": read_on,
+    }
 
 
 def select_endpoint(payload: Any, key: str, upstreams: tuple[str, ...]) -> dict:
@@ -270,21 +340,39 @@ def fetch_endpoints(provider: str, model: str) -> Any:
         raise PriceError(f"{url}: {exc}") from exc
 
 
+def fetch_opencode_go_catalog() -> Any:
+    """The public OpenCode Go model catalog, over HTTPS."""
+    request = urllib.request.Request(GO_MODELS_URL, headers={"User-Agent": "daily-driver-evals-fetch-prices"})
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310 - fixed https URL
+            return json.loads(response.read().decode("utf-8"))
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        raise PriceError(f"{GO_MODELS_URL}: {exc}") from exc
+
+
 def build_table(
     experiments_dir: Path,
     read_on: str,
     fetcher: Callable[[str, str], Any] = fetch_endpoints,
+    go_fetcher: Callable[[], Any] = fetch_opencode_go_catalog,
 ) -> dict[str, dict]:
-    """The whole `prices.json` document."""
+    """The whole `prices.json` document for pinned supported provider arms."""
     table: dict[str, dict] = {}
     for key, upstreams in restricted_arms(experiments_dir).items():
         provider, model = split_model(key)
         payload = fetcher(provider, model)
         pricing = select_endpoint(payload, key, upstreams)
         table[key] = price_row(pricing, key, ENDPOINTS_URL.format(provider=provider, model=model), read_on)
+
+    go_arms = opencode_go_arms(experiments_dir)
+    if go_arms:
+        catalog = go_fetcher()
+        for key in go_arms:
+            model = select_opencode_go_model(catalog, key)
+            table[key] = opencode_go_price_row(model, key, GO_MODELS_URL, read_on)
     if not table:
-        raise PriceError(f"{experiments_dir}: no experiment restricts a gateway model to one upstream")
-    return table
+        raise PriceError(f"{experiments_dir}: no pinned supported model-price arms")
+    return dict(sorted(table.items()))
 
 
 def _load_loader() -> Callable[[Path], dict]:
@@ -386,6 +474,23 @@ DEEPSEEK_PRICING = {
         ],
         "holiday_calendar": "cn",
     },
+}
+
+
+GO_PRICING = {
+    "text": {
+        "input": {"price": 0, "cache": {"read": 0}},
+        "output": {"price": 0},
+    },
+}
+
+GO_CATALOG = {
+    "object": "list",
+    "data": [
+        {"object": "model", "id": "beam-free", "cost": GO_PRICING},
+        {"object": "model", "id": "iceman-contributor-free", "cost": GO_PRICING},
+        {"object": "model", "id": "longcat-2.5-free", "cost": GO_PRICING},
+    ],
 }
 
 
@@ -558,16 +663,91 @@ def _test_restricted_arms() -> None:
             raise AssertionError("restricted_arms accepted two upstreams for one model")
 
 
+
+def _test_opencode_go_arms() -> None:
+    with tempfile.TemporaryDirectory(prefix="prices-go-arms-selftest-") as tmp:
+        directory = Path(tmp)
+        (directory / "arms.yaml").write_text(
+            "defaults:\n"
+            "  agent:\n"
+            "    model: opencode-go/beam-free:high\n"
+            "variants:\n"
+            "  - variant_id: default\n"
+            "    agent:\n"
+            "      model: opencode-go/iceman-contributor-free\n"
+            "  - variant_id: longcat\n"
+            "    agent:\n"
+            "      model: opencode-go/longcat-2.5-free\n",
+            encoding="utf-8",
+        )
+        assert opencode_go_arms(directory) == (
+            "opencode-go/beam-free",
+            "opencode-go/iceman-contributor-free",
+            "opencode-go/longcat-2.5-free",
+        )
+    assert split_opencode_go_model("opencode-go/beam-free") == "beam-free"
+    for bad in ("vercel-ai-gateway/openai/gpt-6-luna", "opencode-go/", "opencode-go/a/b"):
+        try:
+            split_opencode_go_model(bad)
+        except PriceError:
+            continue
+        raise AssertionError(f"split_opencode_go_model accepted {bad}")
+
+
+def _test_opencode_go_catalog() -> None:
+    key = "opencode-go/beam-free"
+    model = select_opencode_go_model(GO_CATALOG, key)
+    row = opencode_go_price_row(model, key, GO_MODELS_URL, "2026-11-19")
+    assert row == {
+        "input_usd_per_million": 0.0,
+        "output_usd_per_million": 0.0,
+        "cache_read_usd_per_million": 0.0,
+        "cache_write_usd_per_million": None,
+        "source": GO_MODELS_URL,
+        "read_on": "2026-11-19",
+        "recorded": "2026-11-19",
+    }
+
+    for payload, why in (
+        ({"object": "list", "data": []}, "missing model"),
+        ({"object": "list", "data": [GO_CATALOG["data"][0], GO_CATALOG["data"][0]]}, "duplicate model"),
+        ({"object": "unexpected", "data": []}, "changed catalog shape"),
+    ):
+        try:
+            select_opencode_go_model(payload, key)
+        except PriceError:
+            continue
+        raise AssertionError(f"select_opencode_go_model accepted {why}")
+
+    for cost, why in (
+        ({"text": {"input": {"price": 0, "cache": {"read": 0}}, "output": {"price": 0.1}}}, "paid output"),
+        ({"text": {"input": {"price": 0.1, "cache": {"read": 0}}, "output": {"price": 0}}}, "paid input"),
+        ({"text": {"input": {"price": 0, "cache": {"read": 0.1}}, "output": {"price": 0}}}, "paid cache"),
+        ({"text": {"input": {"price": 0, "cache": {"read": 0, "write": 0.1}}, "output": {"price": 0}}}, "paid cache write"),
+        ({"text": {"input": {"price": 0}, "output": {"price": 0}}}, "missing cache shape"),
+        ({"text": {"input": {"price": "0", "cache": {"read": 0}}, "output": {"price": 0}}}, "changed price type"),
+    ):
+        try:
+            opencode_go_price_row({"cost": cost}, key, GO_MODELS_URL, "2026-11-19")
+        except PriceError:
+            continue
+        raise AssertionError(f"opencode_go_price_row accepted {why}")
+
 def _test_build_table() -> None:
     payloads = {
         ("deepseek", "deepseek-v4.1-flash-1017"): _payload(("baseten", {"prompt": "0.0000003", "completion": "0.0000012"}, 0), ("deepseek", DEEPSEEK_PRICING, 0)),
         ("openai", "gpt-6-luna"): _payload(("azure", LUNA_PRICING, 0), ("openai", LUNA_PRICING, 0)),
     }
     requested: list[tuple[str, str]] = []
+    go_catalog_requests: list[str] = []
 
     def fetcher(provider: str, model: str) -> Any:
         requested.append((provider, model))
         return payloads[(provider, model)]
+
+    def go_fetcher() -> Any:
+        go_catalog_requests.append(GO_MODELS_URL)
+        return GO_CATALOG
 
     with tempfile.TemporaryDirectory(prefix="prices-selftest-") as tmp:
         directory = Path(tmp)
@@ -581,30 +761,39 @@ def _test_build_table() -> None:
             "  - variant_id: default\n"
             "    agent:\n"
             "      model: vercel-ai-gateway/openai/gpt-6-luna:high\n"
-            "      vercel_gateway_only: [openai]\n",
+            "      vercel_gateway_only: [openai]\n"
+            "  - variant_id: go\n"
+            "    agent:\n"
+            "      type: omp\n"
+            "      model: opencode-go/beam-free:high\n",
             encoding="utf-8",
         )
-        table = build_table(directory, "2026-11-18", fetcher=fetcher)
+        table = build_table(directory, "2026-11-18", fetcher=fetcher, go_fetcher=go_fetcher)
         assert sorted(requested) == [("deepseek", "deepseek-v4.1-flash-1017"), ("openai", "gpt-6-luna")]
+        assert go_catalog_requests == [GO_MODELS_URL]
         assert set(table) == {
+            "opencode-go/beam-free",
             "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017",
             "vercel-ai-gateway/openai/gpt-6-luna",
         }
-        assert table["vercel-ai-gateway/openai/gpt-6-luna"]["source"].endswith("/v1/models/openai/gpt-6-luna/endpoints")
+        assert table["opencode-go/beam-free"]["source"] == GO_MODELS_URL
+        assert table["vercel-ai-gateway/openai/gpt-6-luna"]["source"].endswith(
+            "/v1/models/openai/gpt-6-luna/endpoints"
+        )
 
         output = directory / "prices.json"
         write_table(table, output)
         # The generated document is exactly what the adapter's loader reads.
         assert set(_load_loader()(output)) == set(table)
 
-
 def _run_self_tests() -> None:
     _test_per_million()
     _test_select_endpoint()
     _test_price_row()
     _test_restricted_arms()
+    _test_opencode_go_arms()
+    _test_opencode_go_catalog()
     _test_build_table()
-
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

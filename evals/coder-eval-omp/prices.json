@@ -1,4 +1,31 @@
 {
+  "opencode-go/beam-free": {
+    "input_usd_per_million": 0.0,
+    "output_usd_per_million": 0.0,
+    "cache_read_usd_per_million": 0.0,
+    "cache_write_usd_per_million": null,
+    "source": "https://opencode.ai/inference/go/v1/models",
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
+  },
+  "opencode-go/iceman-contributor-free": {
+    "input_usd_per_million": 0.0,
+    "output_usd_per_million": 0.0,
+    "cache_read_usd_per_million": 0.0,
+    "cache_write_usd_per_million": null,
+    "source": "https://opencode.ai/inference/go/v1/models",
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
+  },
+  "opencode-go/longcat-2.5-free": {
+    "input_usd_per_million": 0.0,
+    "output_usd_per_million": 0.0,
+    "cache_read_usd_per_million": 0.0,
+    "cache_write_usd_per_million": null,
+    "source": "https://opencode.ai/inference/go/v1/models",
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
+  },
   "vercel-ai-gateway/deepseek/deepseek-v4-pro-0813": {
     "input_usd_per_million": 0.66,
     "output_usd_per_million": 1.98,
@@ -33,8 +60,8 @@
       "holiday_calendar": "cn"
     },
     "source": "https://ai-gateway.vercel.sh/v1/models/deepseek/deepseek-v4-pro-0813/endpoints",
-    "read_on": "2026-11-18",
-    "recorded": "2026-11-18"
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
   },
   "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017": {
     "input_usd_per_million": 0.15,
@@ -70,8 +97,8 @@
       "holiday_calendar": "cn"
     },
     "source": "https://ai-gateway.vercel.sh/v1/models/deepseek/deepseek-v4.1-flash-1017/endpoints",
-    "read_on": "2026-11-18",
-    "recorded": "2026-11-18"
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
   },
   "vercel-ai-gateway/openai/gpt-6-luna": {
     "input_usd_per_million": 0.1,
@@ -86,8 +113,8 @@
       "cache_write_usd_per_million": 0.25
     },
     "source": "https://ai-gateway.vercel.sh/v1/models/openai/gpt-6-luna/endpoints",
-    "read_on": "2026-11-18",
-    "recorded": "2026-11-18"
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
   },
   "vercel-ai-gateway/zai/glm-5.3": {
     "input_usd_per_million": 1.4,
@@ -95,8 +122,8 @@
     "cache_read_usd_per_million": 0.26,
     "cache_write_usd_per_million": null,
     "source": "https://ai-gateway.vercel.sh/v1/models/zai/glm-5.3/endpoints",
-    "read_on": "2026-11-18",
-    "recorded": "2026-11-18"
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
   },
   "vercel-ai-gateway/zai/glm-5.3-flash": {
     "input_usd_per_million": 0.15,
@@ -104,7 +131,7 @@
     "cache_read_usd_per_million": 0.03,
     "cache_write_usd_per_million": null,
     "source": "https://ai-gateway.vercel.sh/v1/models/zai/glm-5.3-flash/endpoints",
-    "read_on": "2026-11-18",
-    "recorded": "2026-11-18"
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
   }
 }

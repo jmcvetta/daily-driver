@@ -1,0 +1,407 @@
+{
+  "attempts": [
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-141",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "model-classes-career-141",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-370",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "model-classes-career-370",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-444",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-462",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "model-classes-career-462",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-469",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "model-classes-career-469",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-475",
+      "variant_id": "default"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.152775049209595,
+      "model_requested": "opencode-go/iceman-contributor-free",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "classes-iceman-contributor-go",
+      "source": "jmcvetta/career#141",
+      "task_id": "model-classes-career-141",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "default"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.64450740814209,
+      "model_requested": "opencode-go/iceman-contributor-free",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "classes-iceman-contributor-go",
+      "source": "jmcvetta/career#141",
+      "task_id": "model-classes-career-141",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "default"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.430732727050781,
+      "model_requested": "opencode-go/iceman-contributor-free",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "classes-iceman-contributor-go",
+      "source": "jmcvetta/career#370",
+      "task_id": "model-classes-career-370",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "default"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 5.514262914657593,
+      "model_requested": "opencode-go/iceman-contributor-free",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "classes-iceman-contributor-go",
+      "source": "jmcvetta/career#370",
+      "task_id": "model-classes-career-370",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "default"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.905691385269165,
+      "model_requested": "opencode-go/iceman-contributor-free",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "classes-iceman-contributor-go",
+      "source": "jmcvetta/career#444",
+      "task_id": "model-classes-career-444",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "default"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 8.242746591567993,
+      "model_requested": "opencode-go/iceman-contributor-free",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "classes-iceman-contributor-go",
+      "source": "jmcvetta/career#462",
+      "task_id": "model-classes-career-462",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "default"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.785633325576782,
+      "model_requested": "opencode-go/iceman-contributor-free",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "classes-iceman-contributor-go",
+      "source": "jmcvetta/career#462",
+      "task_id": "model-classes-career-462",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "default"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 6.631596803665161,
+      "model_requested": "opencode-go/iceman-contributor-free",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "classes-iceman-contributor-go",
+      "source": "jmcvetta/career#469",
+      "task_id": "model-classes-career-469",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "default"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 5.883585453033447,
+      "model_requested": "opencode-go/iceman-contributor-free",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "classes-iceman-contributor-go",
+      "source": "jmcvetta/career#469",
+      "task_id": "model-classes-career-469",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "default"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.843517780303955,
+      "model_requested": "opencode-go/iceman-contributor-free",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "classes-iceman-contributor-go",
+      "source": "jmcvetta/career#475",
+      "task_id": "model-classes-career-475",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "default"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.0.0",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-19T22:23:25.168868",
+  "experiment_id": "classes-iceman-contributor-go",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "plugin_revision": {
+    "commit": "345e1a29d026d05a4d9a804c4061ff0612b18147",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-19T15:25:51.460717+00:00",
+  "run_id": "2026-11-19_22-22-56",
+  "schema_version": 5,
+  "started_at": "2026-11-19T22:22:56.912870",
+  "variants": [
+    {
+      "model_requested": "opencode-go/iceman-contributor-free",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "model-classes-career-141": [
+          0.0,
+          0.0
+        ],
+        "model-classes-career-370": [
+          0.0,
+          0.0
+        ],
+        "model-classes-career-444": [
+          0.0
+        ],
+        "model-classes-career-462": [
+          0.0,
+          0.0
+        ],
+        "model-classes-career-469": [
+          0.0,
+          0.0
+        ],
+        "model-classes-career-475": [
+          0.0
+        ]
+      },
+      "task_ids": [
+        "model-classes-career-141",
+        "model-classes-career-370",
+        "model-classes-career-444",
+        "model-classes-career-462",
+        "model-classes-career-469",
+        "model-classes-career-475"
+      ],
+      "variant_id": "default"
+    }
+  ]
+}

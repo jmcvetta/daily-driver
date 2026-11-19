@@ -2595,6 +2595,123 @@ boundary overlaps at exactly 272,001 prompt tokens.
   partial or a behavioural success. It is a failure to do the task, and it
   stays visible rather than being dropped.
 
+## OpenCode Go Beam Free: scoped single-arm evidence
+
+The operator later excluded Iceman Contributor Free and LongCat 2.5 Free from
+further execution and comparison. This supersedes their campaign requirements
+in issue #911; neither model is included in Beam's effect estimate. The issue's
+scope amendment records the operator decision and the observed reasons. This is
+a single-arm record, not the requested three-model comparison.
+
+Beam Free ran the full six-case `model-classes` matrix, five repeats per case,
+`opencode-go/beam-free:high`, `max_turns: 30`, `turn_timeout: 660`,
+`task_timeout: 780`, and `JOBS=2`. Its record is
+[`classes-beam-go-2026-11-19-2026-11-19_21-43-36.json`](provenance/classes-beam-go-2026-11-19-2026-11-19_21-43-36.json).
+The observed invocation was `make evals-run-classes MODEL=beam-go JOBS=2 REPEATS=5`.
+Schema-5 provenance does not preserve the requested parallelism; `JOBS=2` is
+recorded here from the run invocation, not inferred from the JSON record.
+The Omp adapter does not report the serving backend, so the served identity is
+`unreported`; the requested route is known. All rates are from the pinned
+OpenCode Go catalog snapshot in [`coder-eval-omp/prices.json`](coder-eval-omp/prices.json),
+read 2026-11-19. The reported USD amount is computed, not billed.
+
+**Per case.** `Passed / completed` excludes turn-capped attempts; `passed / all`
+counts every prescribed attempt, with caps and answer-key contacts as
+non-passes. Both denominators are shown. Fixture faults, provider errors and
+timeouts have separate columns.
+
+| Case | Class | Passed / completed (rate; passed / all 5 (rate)) | Turn-capped | Answer-key contact | Fixture faults | Provider errors | Timeouts |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| career-141 | implementation | 0/0 (n/a; 0/5, 0%) | 5 | 2 | 0 | 0 | 0 |
+| career-370 | mechanical | 0/0 (n/a; 0/5, 0%) | 5 | 1 | 0 | 0 | 0 |
+| career-444 | mechanical | 0/0 (n/a; 0/5, 0%) | 5 | 2 | 0 | 0 | 0 |
+| career-462 | mechanical | 5/5 (100%; 5/5, 100%) | 0 | 0 | 0 | 0 | 0 |
+| career-469 | implementation | 0/0 (n/a; 0/5, 0%) | 5 | 0 | 0 | 0 | 0 |
+| career-475 | implementation | 3/3 (100%; 3/5, 60%) | 2 | 1 | 0 | 0 | 0 |
+| **Total** | | **8/8 (100%; 8/30, 27%)** | **22** | **6** | **0** | **0** | **0** |
+
+The five `career-141` attempts reached the turn cap; three also failed the
+executable test criterion `apply-tests.sh` plus the viewer pytest command.
+Those are retained as failures, not rerun. Six attempts contacted answer-key
+material and are not passes. The run has no fixture failure, provider error or
+timeout.
+
+**Outcome and uncertainty.** On the all-attempt denominator, turn caps and
+answer-key contacts are non-passes: the six case-cluster rates are 0/5, 0/5,
+0/5, 5/5, 0/5 and 3/5, equally weighted to **0.267**. Its exact nonparametric
+bootstrap 95% interval is **[0.000, 0.600]**, enumerating all 46,656 ordered
+resamples of the six cases. This is a descriptive all-attempt yield on these
+six clusters, not a general capability claim.
+
+On completed attempts alone, 8/8 passed, but only two of six cases produced a
+completed model session; the other four have no completed-attempt denominator.
+The completed-only rate is therefore not a six-case reliability estimate. The
+operator excluded Iceman, so no Beam-versus-Iceman uncertainty estimate is
+reported.
+
+**Latency.** Seconds over the eight attempts with a completed model session and
+terminal grade. Turn-capped attempts are not included.
+
+| Case | Median (range), seconds |
+| --- | ---: |
+| career-141 | no completed attempts |
+| career-370 | no completed attempts |
+| career-444 | no completed attempts |
+| career-462 | 36.1 (28.7–106.8) |
+| career-469 | no completed attempts |
+| career-475 | 123.5 (94.7–234.3) |
+| **All completed** | **68.6 (28.7–234.3)** |
+
+**Token buckets and cost.** Totals cover all 30 Beam attempts, including
+turn-capped sessions; no fixture failed before dispatch.
+
+| Bucket | Beam |
+| --- | ---: |
+| Uncached input | 1,519,672 |
+| Output | 158,650 |
+| Reasoning | unreported |
+| Cache read | 10,594,880 |
+| Cache write | 0 tokens; published write rate unavailable |
+| Computed USD | $0.0000 |
+
+All three published Go text rates and cache-read rates are zero for Beam.
+This is the calculated model-call cost under that card, not evidence about
+subscription allowance. `omp usage` remained at 3% of the 5-hour limit, 28% of
+the weekly limit and 100% of the monthly limit; the usage endpoint did not
+report per-model consumption.
+
+**Excluded routes.** The operator excluded Iceman Contributor Free and LongCat
+2.5 Free from further execution and comparison ([issue #911 scope amendment](https://github.com/jmcvetta/daily-driver/issues/911#issuecomment-7014116087)).
+
+Iceman's partial record
+[`classes-iceman-contributor-go-2026-11-19-2026-11-19_22-22-56.json`](provenance/classes-iceman-contributor-go-2026-11-19-2026-11-19_22-22-56.json)
+preserves 10 of 30 planned attempts. The runner log reported ten non-retryable
+HTTP 400 provider errors before any tool commands; the workspace required
+“Allow paid endpoints that train on request data” for this model. The
+issue-scope comment records that observed error ([#911 scope amendment](https://github.com/jmcvetta/daily-driver/issues/911#issuecomment-7014116087)).
+The schema-5 provenance record retains the ten `ERROR` outcomes but not the
+HTTP status or response message; the run log is local and ignored. The
+remaining 20 attempts were not dispatched. The workspace setting was not
+changed; token usage is unreported. Iceman was then excluded by the operator.
+
+LongCat's first round was interrupted by HTTP 429 rate-limit pushback. Only
+`career-370` and `career-141` started; each made a partial first-turn tool call
+(38 and 40 commands) and then received 429 responses. The provider's
+`retry-after-ms` values were 30,350,000–30,652,000 (about 8.4–8.5 hours).
+`coder-eval` retried twice per case after the first 429; I cancelled after the
+third response for each. The other four cases were not dispatched. No `task.json`
+finalized, so there is no LongCat provenance record; the interrupted logs stay
+under ignored `evals/runs/2026-11-19_22-24-52/`. The Global-region setting was
+not read, and these 429 responses do not verify it. No second round or later
+Iceman/LongCat request was made.
+
+The generated [Measured routes table](../skills/issue-body/references/omp.md#measured-routes)
+shows only scored case rows: Beam's 5/5 mechanical and 3/3 implementation
+entries correspond to `career-462` and `career-475`. The other four cases
+ended in turn caps and are omitted by that renderer's scored-outcome rule, so
+the row is partial evidence, not full-suite coverage.
+
+
 
 ## Two defaults, decided on purpose
 

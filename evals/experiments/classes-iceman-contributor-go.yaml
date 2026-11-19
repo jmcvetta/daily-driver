@@ -1,0 +1,26 @@
+# The model-classes capability arm for Iceman Contributor Free through Go.
+#
+# Measures all six fixed merged-PR cases with the provider's default reasoning
+# settings. `make evals-run-classes MODEL=iceman-contributor-go` runs five
+# repeats; the operator accepted this model's prompt-training condition for
+# these nonsensitive public fixtures.
+experiment_id: classes-iceman-contributor-go
+description: >-
+  Model-class capability on the six fixed merged-PR cases,
+  opencode-go/iceman-contributor-free, in the `task` role.
+
+defaults:
+  repeats: 5
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 660
+  agent:
+    type: omp
+    model: opencode-go/iceman-contributor-free
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+
+variants:
+  - variant_id: default
+    description: Iceman Contributor Free against the model-classes suite.
