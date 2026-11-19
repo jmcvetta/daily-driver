@@ -11,17 +11,24 @@ The block
 Every body-bearing Omp GitHub write uses `daily_driver_gh_write` with `args`
 as an array of `gh` arguments, excluding the executable. The tool runs `gh`
 directly without shell interpolation and adds the provenance block immediately
-before the write. It reads the live model and session id from the execution
-context on each call; it reads and caches the installed Omp version once per
-extension instance, using `n/a` when unavailable.
+before the write. It reads the live model, provider and session id from the
+execution context on each call; it reads and caches the installed Omp version
+once per extension instance, using `n/a` when unavailable.
+
+The serving provider is the harness-reported one,
+`ctx.models.current()?.provider ?? ctx.model.provider`, the same selection
+`extensions/undertaking-routing.mjs` uses. Never derive it from the model id.
+Where neither surface reports a provider, the block carries `Provider: n/a`.
 
 For `--body` and `--body-file`, the wrapper appends the block while retaining
-one complete block per distinct attribution tuple in original order. It removes
-exact duplicate blocks, preserves incomplete historical records and all other
-body content, and does not modify the caller's body file. For supported
-`gh api --input` review and reply routes, it updates the JSON `body` fields,
-including each inline review comment, in a private temporary copy and removes
-that copy after success or failure.
+one complete block per distinct `(Model, Provider, Harness, Session)` tuple in
+original order. It removes exact duplicate blocks, preserves incomplete
+historical records and all other body content, and does not modify the
+caller's body file. A historical block with no `Provider:` line compares as
+provider `n/a`, and the two session-field capitalizations are the same field.
+For supported `gh api --input` review and reply routes, it updates the JSON
+`body` fields, including each inline review comment, in a private temporary
+copy and removes that copy after success or failure.
 
 Direct body-bearing `gh` calls from Bash are denied with a recovery instruction
 that names `daily_driver_gh_write`. Read-only calls and non-body operations,

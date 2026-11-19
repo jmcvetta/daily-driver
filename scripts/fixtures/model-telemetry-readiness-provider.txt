@@ -1,0 +1,11 @@
+First-readiness report
+
+Elapsed: 31 minutes 44 seconds, from claim (2026-09-28T12:35:20Z) to first ready-for-review gate (2026-09-28T13:07:04Z).
+
+Head: 9786d61ef31146ef00faeb3e78120810db9bc677
+
+---
+Model: deepseek-v4.1-flash
+Provider: vercel-ai-gateway
+Harness: Omp 19.0.0
+Session: 01a1f537-0d84-73a6-9caf-192ddc32f19a
