@@ -1031,15 +1031,18 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 	const tool = session.tools.get("daily_driver_gh_write");
 	let model = "model-a";
 	let provider = "provider-a";
+	let modelProvider = null;
+	let modelsCurrent = () => ({ id: model, provider });
 	let sessionId = "session-a";
 	const ctx = {
 		cwd: root,
 		model: { id: model },
-		models: { current: () => ({ id: model, provider }) },
+		models: { current: () => modelsCurrent() },
 		sessionManager: { getSessionId: () => sessionId },
 	};
 	const execute = async (args) => {
-		ctx.model = { id: model };
+		ctx.model = { id: model, ...(modelProvider ? { provider: modelProvider } : {}) };
+		ctx.models = { current: () => modelsCurrent() };
 		const result = await tool.execute("gh-write", { args }, undefined, undefined, ctx);
 		return { result, capture: JSON.parse(readFileSync(capturePath, "utf8")) };
 	};
@@ -1127,7 +1130,47 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 		provider = null;
 		const missingProvider = await execute(["issue", "comment", "91", "--body", "no provider identity"]);
 		assert.ok(missingProvider.capture.body.includes("Provider: n/a\nHarness: Omp 19.4.2\nSession: session-b"));
+
+		// A historical block without a Provider line is the same attribution
+		// as a current one whose provider is `n/a`: nothing is appended and
+		// the historical text keeps its shape.
+		const historicalFile = join(root, "historical-provider.md");
+		writeFileSync(historicalFile, "---\nModel: model-b\nHarness: Omp 19.4.2\nsession: session-b");
+		const historicalOnly = await execute(["issue", "edit", "93", "--body-file", historicalFile]);
+		assert.equal(
+			(historicalOnly.capture.body.match(/Model: model-b/gu) ?? []).length,
+			1,
+			"an absent historical provider compares as n/a and does not append",
+		);
+		assert.equal(
+			(historicalOnly.capture.body.match(/Provider:/gu) ?? []).length,
+			0,
+			"the historical block is not rewritten",
+		);
+
+		// The model surface is the fallback when the models surface names no
+		// provider.
+		modelProvider = "fallback-provider";
+		const fallbackProvider = await execute(["issue", "comment", "91", "--body", "fallback provider"]);
+		assert.ok(
+			fallbackProvider.capture.body.includes("Provider: fallback-provider\nHarness: Omp 19.4.2\nSession: session-b"),
+		);
+
+		// The models surface wins over the model's own provider.
+		provider = "surface-provider";
+		const surfacePrecedence = await execute(["issue", "comment", "91", "--body", "surface precedence"]);
+		assert.ok(
+			surfacePrecedence.capture.body.includes("Provider: surface-provider\nHarness: Omp 19.4.2\nSession: session-b"),
+		);
+
+		// A provider read failure records n/a rather than failing the write.
 		provider = "provider-a";
+		modelsCurrent = () => { throw new Error("provider surface unavailable"); };
+		const unreadableProvider = await execute(["issue", "comment", "91", "--body", "unreadable provider"]);
+		assert.ok(unreadableProvider.capture.body.includes("Provider: n/a\nHarness: Omp 19.4.2\nSession: session-b"));
+
+		modelProvider = null;
+		modelsCurrent = () => ({ id: model, provider });
 
 		const editFile = join(root, "issue-edit.json");
 		writeFileSync(editFile, JSON.stringify({ body: "edited issue body" }));
