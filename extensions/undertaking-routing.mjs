@@ -108,10 +108,11 @@ function classSelection(ctx, settings, routes, model, modelClass) {
 	const explicit = role.assigned && typeof role.value === "string" ? ctx.models.resolve(role.value) : null;
 	const explicitCompatible = explicit && explicit.provider === model.provider && ctx.models.family(explicit) === family;
 	const configured = explicitCompatible ? role.value : familyRows[0]?.classes[modelClass];
-	if (typeof configured !== "string" || !configured.trim()) {
-		if (familyRows.length) throw new Error("Mapped model class route is missing or cleared");
-		return { target: model, capability: "unverified" };
+	// An omitted class keeps the absent-family continuation; an explicit null is a configuration gap.
+	if (configured !== undefined && (typeof configured !== "string" || !configured.trim())) {
+		throw new Error(`Mapped model class route is cleared for ${modelClass}`);
 	}
+	if (configured === undefined) return { target: model, capability: "unverified" };
 	const configuredTarget = ctx.models.resolve(configured);
 	if (!configuredTarget) throw new Error("Configured class model is unavailable");
 	if (ctx.models.family(configuredTarget) !== family) throw new Error("Configured class model family must remain unchanged");

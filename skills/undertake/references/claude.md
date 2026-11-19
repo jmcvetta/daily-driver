@@ -59,12 +59,13 @@ family, class, and retained provider/model, then continue immediately on the
 invoking model and effort without confirmation. Identity does not establish
 class suitability. Frontier approval and agent-route constraints still apply.
 
-For a mapped family, a missing or cleared class, unavailable target, or
-incompatible assignment is a gap. Unknown family or identity is not an absent
-family. The Claude Agent SDK's host-side `Query.setModel` is not an
-agent-callable switch tool. Do not invent one or assume that a session selector
-constrains backend, authentication, and fallbacks. Report any unsupported
-control and do not claim it is verified.
+For a mapped family, a class omitted from the family map follows the same
+warning-and-continue with suitability unverified. An explicitly cleared class,
+unavailable target, or incompatible assignment is a gap. Unknown family or
+identity is not an absent family. The Claude Agent SDK's host-side
+`Query.setModel` is not an agent-callable switch tool. Do not invent one or
+assume that a session selector constrains backend, authentication, and
+fallbacks. Report any unsupported control and do not claim it is verified.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a

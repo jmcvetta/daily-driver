@@ -83,9 +83,11 @@ the family, class, and retained provider/model. Continue immediately on the
 invoking model, provider, and effort without confirmation. Class suitability
 remains unverified. Preserve this disposition for agent-initiated worker
 dispatch. If a child cannot retain the initial route, work in the invoking
-session. A missing or cleared class, unavailable initial target, or incompatible
-agent assignment is a configuration gap; unknown identity and later operator
-selection are not absent-family continuation or route violations.
+session. A class omitted from a mapped family follows the same
+warning-and-continue with suitability unverified. An explicitly cleared class,
+unavailable initial target, or incompatible agent assignment is a configuration
+gap; unknown identity and later operator selection are not absent-family
+continuation or route violations.
 
 Independently configured `reviewer`, `scout`, `security-reviewer`, and `seance`
 helpers are not issue implementation workers for class selection. This does not
