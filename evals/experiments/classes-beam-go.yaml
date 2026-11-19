@@ -1,0 +1,26 @@
+# The model-classes capability arm for Beam Free through OpenCode Go.
+#
+# Measures all six fixed merged-PR cases with Beam's published high reasoning
+# effort. Its Go route has a zero published price; the price snapshot is sourced
+# from OpenCode's public Go catalog. `make evals-run-classes MODEL=beam-go`
+# runs the five-repeat arm.
+experiment_id: classes-beam-go
+description: >-
+  Model-class capability on the six fixed merged-PR cases,
+  opencode-go/beam-free:high, in the `task` role.
+
+defaults:
+  repeats: 5
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 660
+  agent:
+    type: omp
+    model: opencode-go/beam-free:high
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+
+variants:
+  - variant_id: default
+    description: Beam Free against the model-classes suite.

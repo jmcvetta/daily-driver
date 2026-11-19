@@ -87,6 +87,9 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "evals" / "coder-eval-omp" / "src"))
+from coder_eval_omp.launch import child_env
+from coder_eval_omp.tools import select_tools
 
 # The plugin name the manifests carry. `check-manifests.py` asserts the three
 # manifests agree on it, so naming it once here is not a fourth copy to drift.
@@ -117,6 +120,26 @@ class CheckFailed(Exception):
         super().__init__(message)
         self.stderr = stderr
 
+
+
+def assert_host_github_tokens_are_not_forwarded() -> None:
+    """Fail if a fixture token can reach an evaluated agent's Bash environment."""
+    secret_names = ("GITHUB_TOKEN", "GH_TOKEN", "GH_ENTERPRISE_TOKEN", "GITHUB_ENTERPRISE_TOKEN")
+    base = {name: "synthetic-token" for name in secret_names}
+    base["PATH"] = "/usr/bin"
+    base["UNRELATED_VALUE"] = "preserved"
+    child = child_env(
+        base,
+        Path("/tmp/check-omp-home"),
+        (),
+        select_tools(["Bash"], None),
+        task_root=Path("/tmp/check-omp-task"),
+    )
+    leaked = sorted(name for name in secret_names if name in child)
+    if leaked:
+        raise CheckFailed(f"Omp child environment retained host GitHub token variables: {leaked}")
+    if child.get("UNRELATED_VALUE") != "preserved":
+        raise CheckFailed("Omp child environment dropped an unrelated caller variable")
 
 def expected_skill_commands() -> list[str]:
     """The `skill:<name>` command for every skill in the tree.
@@ -384,6 +407,7 @@ def link_plugin(omp: str, env: dict[str, str]) -> None:
 
 
 def main() -> None:
+    assert_host_github_tokens_are_not_forwarded()
     omp = shutil.which("omp")
     if omp is None:
         raise CheckFailed("omp is not on PATH; install it before `make check-omp-plugin`")
@@ -434,7 +458,8 @@ def main() -> None:
 
     print(
         f"check-omp-plugin: Omp exposes the readable local skill in this repository, "
-        f"keeps it off both plugin routes, and offers all {len(expected)} plugin skills"
+        f"keeps it off both plugin routes, offers all {len(expected)} plugin skills, "
+        "and withholds host GitHub tokens from agent children"
     )
 
 
