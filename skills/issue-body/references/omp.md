@@ -4,7 +4,11 @@
 session running in Oh My Pi. Claude Code's routes are in
 [`claude.md`](claude.md), Codex's in [`codex.md`](codex.md).
 
-- **Opening an issue with a body.** `daily_driver_gh_write({ args: ["issue", "create", "--label", <label>, "--body-file", <path>] })`.
+- **Opening an issue with a body.** Settle destination under
+  [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository)
+  and pass it in `daily_driver_gh_write({ args: ["issue", "create", "--label", <label>, "--body-file", <path>] })`,
+  adding `"--repo", "OWNER/REPO"` when the target differs from the current
+  repository.
 - **Replacing a body.** `daily_driver_gh_write({ args: ["issue", "edit", <number>, "--body-file", <path>] })`.
 
 The wrapper reads the supplied body file, applies provenance, and sends a
