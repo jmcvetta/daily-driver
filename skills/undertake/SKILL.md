@@ -420,8 +420,8 @@ Beyond the claim itself the comment always carries:
   and session under the exact `Model:` and lowercase `session:` shapes used by
   claim lookup and milestone timing. Where the serving model differs from the
   session's configured model, name both. For Omp body-bearing GitHub writes,
-  `daily_driver_gh_write` appends the block from live execution context at the
-  end of the submitted body; do not read model/session identity or format it.
+  the GitHub-write wrapper appends the block from live execution context at
+  the end of the submitted body; do not read model/session identity or format it.
 - **A brief poem, in the claiming agent's own style, last in the authored
   body** — after the work identity and, where the agent supplies it, the
   provenance block. On Omp, the wrapper appends its block after the poem. Each
@@ -434,7 +434,7 @@ Beyond the claim itself the comment always carries:
 
 Where the agent supplies a provenance block, model and session values come
 from the harness's session call, where it has one. Omp's wrapper instead reads
-live execution context for each body-bearing write; `daily_driver_get_session`
+live execution context for each body-bearing write; the session-info tool
 remains available for separate purposes such as title handling. In branch-free
 answer-only research, no branch is designated or established. Otherwise,
 without a resume or a verified primary-held designation exception, a branch

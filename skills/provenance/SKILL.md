@@ -28,7 +28,7 @@ operation below is named in words here and resolved to a route there:
 [`references/codex.md`](references/codex.md) for Codex. Read the one for the
 harness in use before the first write this skill governs.
 
-On Omp, `daily_driver_gh_write` attaches this block to every body-bearing
+On Omp, the GitHub-write wrapper attaches this block to every body-bearing
 GitHub write and applies the edit deduplication rules below. Callers provide
 the substantive body without a new block. Do not read session identity, run
 `omp --version`, or format attribution solely for an Omp GitHub write; the

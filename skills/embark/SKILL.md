@@ -321,7 +321,7 @@ describe an actual model that the harness did not report. Record planning
 defects separately, not as ships in a wave.
 
 The active route attaches `provenance` to the muster-roll comment. On Omp,
-`daily_driver_gh_write` appends it automatically using this orchestrating
+the GitHub-write wrapper appends it automatically using this orchestrating
 session, not a task session's claim identity; do not add a block to the
 authored comment.
 
