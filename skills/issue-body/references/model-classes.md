@@ -69,9 +69,11 @@ If the known family is absent from the class table, prominently warn with the
 family, requested class, and retained provider/model. Continue immediately on
 the invoking model, provider, and effort without confirmation. Class suitability
 is unverified, even if execution identity is observed. Frontier authorization
-and actual route constraints still apply. Do not use this exception for unknown
-identity or for a mapped family with a missing or cleared class, unavailable
-target, or incompatible assignment: report those configuration gaps.
+and actual route constraints still apply. A class omitted from a mapped family
+uses this same warning-and-continue, with suitability unverified. Do not use
+this exception for unknown identity or for a mapped family with an explicitly
+cleared class, unavailable target, or incompatible assignment: report those
+configuration gaps.
 
 An effective route that runs frontier requires explicit approval for that
 assignment, even when a lower-class role, configured retry fallback, prewalk
