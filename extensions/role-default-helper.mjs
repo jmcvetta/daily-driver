@@ -10,6 +10,14 @@ export const MODEL_CLASS_ROLE_DEFAULTS = Object.freeze({
 /** Family-scoped class routes, identified by a catalog model from each family. */
 export const MODEL_CLASS_ROUTES = Object.freeze([
 	Object.freeze({ referenceModel: "openai-codex/gpt-6-luna", classes: MODEL_CLASS_ROLE_DEFAULTS }),
+	// Measured for mechanical and implementation only; other classes stay unmapped.
+	Object.freeze({
+		referenceModel: "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017",
+		classes: Object.freeze({
+			mechanical: "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:low",
+			implementation: "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high",
+		}),
+	}),
 ]);
 
 const installedRoles = new WeakMap();

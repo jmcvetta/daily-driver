@@ -265,7 +265,9 @@ worker merely to obtain a mapping. If a child cannot retain the initial route,
 work in the invoking session instead. Frontier approval and route integrity
 still apply.
 
-A known mapped family with a missing or cleared class, unavailable target, or
+A class omitted from a mapped family follows the absent-family continuation:
+warn, retain the invoking route, and report suitability as unverified. A known
+mapped family with an explicitly cleared class, unavailable target, or
 incompatible assignment is a configuration gap at initial selection. Unknown
 family or execution identity is not evidence of an absent family. Report
 unsupported controls without claiming verification. Preserve provider where
