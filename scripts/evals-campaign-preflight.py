@@ -441,7 +441,11 @@ def main(argv: list[str] | None = None) -> int:
     """Print one line per check and fail the campaign on any failure."""
     args = parser().parse_args(argv)
     if args.selftest:
-        _selftest()
+        try:
+            _selftest()
+        except AssertionError as exc:
+            print(f"error: preflight self-test failed: {exc}", file=sys.stderr)
+            return 2
         print("preflight self-tests: ok")
         return 0
 

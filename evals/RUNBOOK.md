@@ -30,11 +30,11 @@ active arm.
 | --- | --- | --- | --- |
 | Install | `make evals-install && make evals-setup-omp` | free | `omp` and the pinned `coder-eval` resolve |
 | Plan | `make evals-plan-reviewer-quality` | free | every arm registers and plans |
-| Preflight | `make evals-campaign-preflight JUDGE=<id>` | free, read-only | no `fail` line |
+| Preflight | `make evals-campaign-preflight JUDGE=<id> EXPERIMENT='<experiment> <experiment>'` | free, read-only | no `fail` line |
 | Judge preflight | `make evals-judge-preflight JUDGE=<id>` | free | `evals/tasks-judged/reviewer-quality/` holds all eight cases |
 | Calibrate | `uv run --frozen python3 scripts/evals-judge.py calibrate --judge <id> --dir <labels> --output <record>` | paid, small | the calibration meets its acceptance rule |
 | Smoke | `python3 scripts/evals-reviewer-run.py --arm <arm> --phase smoke --run-dir evals/runs/<campaign>/<arm>-smoke` | paid | the collected smoke passes |
-| Collect smoke | `python3 scripts/evals-reviewer-quality.py --arm <arm> --experiment <experiment> --run-dir <smoke-dir> --repeats 1 --output evals/provenance/reviewer-quality/<arm>-smoke.json` | free | exit 0; `gate.valid` is true |
+| Collect smoke | `python3 scripts/evals-reviewer-quality.py --arm <arm> --experiment <experiment> --run-dir <smoke-dir> --case reviewer-quality-01-boundary --case reviewer-quality-05-clean-boundary --repeats 1 --output evals/provenance/reviewer-quality/<arm>-smoke.json` | free | exit 0; `gate.valid` is true |
 | Cohort | `python3 scripts/evals-reviewer-run.py --arm <arm> --phase cohort --run-dir evals/runs/<campaign>/<arm>-cohort --smoke-record evals/provenance/reviewer-quality/<arm>-smoke.json` | paid | a fresh run directory; no retry |
 | Collect cohort | `python3 scripts/evals-reviewer-quality.py --arm <arm> --experiment <experiment> --run-dir <cohort-dir> --repeats 5 --output evals/provenance/reviewer-quality/<arm>-cohort.json` | free | exit 0 on a complete cohort; exit 3 records invalid evidence |
 | Report | `make evals-render-results` and the approved report update | free | the rendered rows agree with the record |
