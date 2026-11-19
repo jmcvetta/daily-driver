@@ -12,7 +12,7 @@ Reading and writing a label
 | --------- | ---- |
 | Read the labels on one issue | `mcp__github__issue_read`, method `get`, which returns `labels` |
 | Read the labels as their own list | `mcp__github__issue_read`, method `get_labels` |
-| Label an issue being opened | `mcp__github__issue_write`, method `create`, with `labels` |
+| Label an issue being opened; settle destination under [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository) and pass it here | `mcp__github__issue_write`, method `create`, with `labels`; set `owner` and `repo` when the target differs from the current repository |
 | Label an issue that exists | `mcp__github__issue_write`, method `update`, with `labels` |
 
 **`labels` replaces the whole set; it does not add to it.** An update that
