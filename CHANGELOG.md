@@ -24,6 +24,7 @@
 
 * Preserve evidence for unchanged criteria across contract revisions while requiring fresh observations for changed criteria ([#883](https://github.com/jmcvetta/daily-driver/issues/883)).
 
+* Keep undertaking class routing within the invoking family and provider; leave session tools usable after routing and cancellation failures ([#912](https://github.com/jmcvetta/daily-driver/issues/912)).
 
 * Validate task verification declarations before grounding, bind repository evidence to the selected worktree, and retain native Omp bash terminal outcomes without treating shell output as check conclusions ([#866](https://github.com/jmcvetta/daily-driver/issues/866)).
 
@@ -44,6 +45,13 @@
 * Give the live Omp title-barrier fixture enough context for expanded skills without entering unsupported scripted-model compaction ([#726](https://github.com/jmcvetta/daily-driver/issues/726)).
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
+
+## [0.64.0](https://github.com/jmcvetta/daily-driver/compare/v0.63.0...v0.64.0) (2026-11-19)
+
+
+### Features
+
+* **undertake:** keep class routing within the invoking family ([#913](https://github.com/jmcvetta/daily-driver/issues/913)) ([56c271e](https://github.com/jmcvetta/daily-driver/commit/56c271e698dc2027e0609375b0bb88405cb8c758))
 
 ## [0.63.0](https://github.com/jmcvetta/daily-driver/compare/v0.62.1...v0.63.0) (2026-11-18)
 

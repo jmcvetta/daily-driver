@@ -9,8 +9,11 @@ const MECHANICAL = model("gpt-6-luna");
 const TERRA = model("gpt-6.1-terra");
 const REASONING = model("gpt-6.1-sol");
 const FRONTIER = model("gpt-6-astra");
+const DEEPSEEK = model("deepseek-v4.1-flash-1017", "vercel-ai-gateway", "openai-compatible");
+const DEEPSEEK_PRO = model("deepseek-v4-pro-0813", "vercel-ai-gateway", "openai-compatible");
+const BACKEND_MISMATCH = model("gpt-luna-other-api", "openai-codex", "openai-completions");
 const FOREIGN = model("claude-sonnet", "anthropic", "anthropic-messages");
-const MODELS = [MECHANICAL, TERRA, REASONING, FRONTIER, FOREIGN];
+const MODELS = [MECHANICAL, TERRA, REASONING, FRONTIER, FOREIGN, DEEPSEEK, DEEPSEEK_PRO, BACKEND_MISMATCH];
 const qualified = value => `${value.provider}/${value.id}`;
 let nextSession = 0;
 
@@ -247,20 +250,61 @@ export default function registerUndertakingRoutingChecks(check) {
 	});
 
 	for (const selector of [undefined, "", "openai-codex/missing-model:high"]) {
-		// Missing explicit mappings must not silently fall back to a different class.
-		routingCheck(`invalid class mapping ${String(selector)} fails admission`, async create => {
+		// Invalid explicit roles must fall back to a valid family route.
+		routingCheck(`invalid explicit class role ${String(selector)} falls back to family route`, async create => {
 			const s = await create({ roles: { implementation: selector } });
-			assertGap(await s.route());
+			const result = await s.route();
+			assert.notEqual(result.isError, true, JSON.stringify(result));
+			assert.equal(s.describe().undertaking.capability, "mapped");
+			assert.equal(s.describe().undertaking.selectedModel, qualified(MECHANICAL));
 			assert.deepEqual(s.calls.models, []);
-			assertBlocked(await s.tool("write", { path: "task.txt" }));
+			assertAllowed(await s.tool("write", { path: "task.txt" }));
 		});
 	}
+	// A compatible explicit role keeps the expected same-family downgrade.
+	routingCheck("same-family explicit role still downgrades", async create => {
+		const s = await create({ current: REASONING, roles: { implementation: `${qualified(MECHANICAL)}:low` } });
+		assert.notEqual((await s.route()).isError, true);
+		assert.equal(s.current(), MECHANICAL);
+		assert.equal(s.effort(), "low");
+		assert.deepEqual(s.calls.models, [MECHANICAL]);
+	});
 
-	// The initial route remains constrained to the invoking provider and family.
-	routingCheck("foreign initial class target fails admission", async create => {
+	// A cross-family explicit role falls back to the provider-scoped family route.
+	routingCheck("cross-family explicit role falls back to family route", async create => {
 		const s = await create({ roles: { implementation: qualified(FOREIGN) } });
-		assertGap(await s.route(), /provider|family/iu);
+		assert.notEqual((await s.route()).isError, true);
+		assert.equal(s.current(), MECHANICAL);
+		assert.equal(s.describe().undertaking.capability, "mapped");
 		assert.deepEqual(s.calls.models, []);
+	});
+
+	// A same-family role for another class cannot qualify a cross-family target.
+	routingCheck("no same-provider family route retains invoking model", async create => {
+		const s = await create({
+			current: DEEPSEEK,
+			roles: { integration: qualified(DEEPSEEK_PRO), implementation: qualified(MECHANICAL) },
+			family: value => value.provider === "vercel-ai-gateway" ? "deepseek" : value.provider === "anthropic" ? "claude" : "gpt",
+		});
+		const result = await s.route();
+		assert.notEqual(result.isError, true);
+		assert.match(result.content[0].text, /WARNING: Family deepseek has no implementation route for provider vercel-ai-gateway/iu);
+		assert.equal(s.current(), DEEPSEEK);
+		assert.equal(s.effort(), "high");
+		assert.equal(s.describe().undertaking.capability, "unverified");
+		assert.deepEqual(s.calls.models, []);
+	});
+
+	// Backend validation errors must leave session tools available.
+	routingCheck("backend validation failure leaves the session usable", async create => {
+		const s = await create({
+			models: [...MODELS],
+			routes: [{ referenceModel: qualified(MECHANICAL), classes: { implementation: qualified(BACKEND_MISMATCH) } }],
+		});
+		assertGap(await s.route(), /backend must remain unchanged/iu);
+		assertAllowed(await s.tool("write", { path: "task.txt" }));
+		await s.request();
+		assertAllowed(await s.tool("task", {}));
 	});
 
 	// An unmapped family must continue on the invoking model rather than adopt default roles.
@@ -289,23 +333,16 @@ export default function registerUndertakingRoutingChecks(check) {
 	});
 
 	// An unavailable authentication source must not masquerade as an admitted route.
-	routingCheck("missing initial authentication source fails admission", async create => {
+	routingCheck("missing authentication route fails without restricting the session", async create => {
 		const auth = fakeAuth();
 		auth.source = undefined;
 		const s = await create({ auth });
 		assertGap(await s.route(), /authentication/iu);
-		assert.deepEqual(s.calls.models, []);
-	});
-
-	// Admission errors remain repairable without authorizing task mutations.
-	routingCheck("failed admission permits retry after mapping repair", async create => {
-		const s = await create({ roles: { implementation: "" } });
-		assertGap(await s.route());
-		assertBlocked(await s.tool("write", { path: "task.txt" }));
-		await s.request();
-		s.roles.implementation = `${qualified(TERRA)}:high`;
-		assert.notEqual((await s.route()).isError, true);
 		assertAllowed(await s.tool("write", { path: "task.txt" }));
+		await s.command("cancel 755");
+		assertAllowed(await s.tool("task", {}));
+		auth.source = { kind: "oauth" };
+		assert.notEqual((await s.route()).isError, true);
 	});
 
 	// A host fallback list must not be treated as an undertaking model lock.
@@ -360,7 +397,9 @@ export default function registerUndertakingRoutingChecks(check) {
 				: { getApiKey: async () => undefined };
 			const s = await create(options);
 			assertGap(await s.route({ modelClass: failure === "effort" ? "mechanical" : "reasoning" }));
-			assertBlocked(await s.tool("write", { path: "task.txt" }));
+			assertAllowed(await s.tool("write", { path: "task.txt" }));
+			await s.request();
+			assertAllowed(await s.tool("task", {}));
 			assert.notEqual(s.entries.at(-1)?.data?.lifecycle, "active");
 			const resumed = await create({ entries: structuredClone(s.entries) });
 			assert.equal(resumed.describe().undertaking, null);
@@ -404,6 +443,32 @@ export default function registerUndertakingRoutingChecks(check) {
 		quiescent = true; idle.resolve();
 		await cancelling;
 		assert.equal(s.describe().undertaking, null);
+	});
+
+	// Cancellation failures must not block ordinary tools or prevent a retry.
+	routingCheck("failed cancellation leaves tools available and can retry", async create => {
+		const entered = deferred();
+		const proceed = deferred();
+		let fail = true;
+		const s = await create({ waitForIdle: async () => {
+			if (!fail) return;
+			entered.resolve();
+			await proceed.promise;
+			throw new Error("fixture cancellation failure");
+		} });
+		await s.route();
+		const cancelling = s.command("cancel 755");
+		await entered.promise;
+		assertAllowed(await s.tool("write", { path: "task.txt" }));
+		assertAllowed(await s.tool("task", {}));
+		proceed.resolve();
+		await cancelling;
+		assert.equal(s.describe().undertaking.issue, 755);
+		assertAllowed(await s.tool("write", { path: "task.txt" }));
+		fail = false;
+		await s.command("cancel 755");
+		assert.equal(s.describe().undertaking, null);
+		assertAllowed(await s.tool("write", { path: "task.txt" }));
 	});
 
 	// Agent-selected frontier models and visible fallback candidates must not evade assignment approval.
@@ -472,8 +537,8 @@ export default function registerUndertakingRoutingChecks(check) {
 		assertBlocked(await dispatch);
 	});
 
-	// Child model choice is independent, but cancellation still revokes an owned child.
-	routingCheck("child uses its own route and is retired on parent cancellation", async create => {
+	// Parent cancellation keeps ordinary child tools available but retires worker dispatch.
+	routingCheck("child ordinary tools remain usable after parent cancellation", async create => {
 		const parent = await create();
 		await parent.route();
 		const childId = `child-${++nextSession}`;
@@ -483,12 +548,11 @@ export default function registerUndertakingRoutingChecks(check) {
 		assertAllowed(await child.tool("write", { path: "task.txt" }));
 		assert.equal(child.current(), FOREIGN);
 		await parent.command("cancel 755");
-		const blocked = await child.tool("write", { path: "task.txt" });
-		assertBlocked(blocked);
-		assert.match(blocked.reason, /issue #755/u);
-		assert.match(blocked.reason, /cancelled/iu);
-		assert.match(blocked.reason, /\/undertaking status/u);
-		await assert.rejects(child.request(), /cancelled/iu);
+		assertAllowed(await child.tool("write", { path: "task.txt" }));
+		await child.request();
+		const dispatch = await child.spawn("cancelled-grandchild");
+		assertBlocked(dispatch);
+		assert.match(dispatch.reason, /cancelled/iu);
 		assert.equal(child.entries.at(-1).data.retired, true);
 	});
 
@@ -501,20 +565,8 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.deepEqual(s.auth.calls.unrestrict, []);
 	});
 
-	// A failed admission must name its issue, the condition, and a recovery route.
-	routingCheck("failed admission block names issue, condition, and recovery", async create => {
-		const s = await create({ roles: { implementation: "" } });
-		assertGap(await s.route());
-		const blocked = await s.tool("write", { path: "task.txt" });
-		assertBlocked(blocked);
-		assert.match(blocked.reason, /issue #755/u);
-		assert.match(blocked.reason, /admission failed/iu);
-		assert.match(blocked.reason, /\/undertaking status/u);
-		assertAllowed(await s.tool("read", { path: "task.txt" }));
-	});
-
-	// A pending selection must describe its condition rather than reuse the failed-admission reason.
-	routingCheck("pending selection block names the condition and recovery", async create => {
+	// Ordinary tools remain available while route admission awaits credentials.
+	routingCheck("pending selection leaves ordinary tools available", async create => {
 		const entered = deferred();
 		const proceed = deferred();
 		const s = await create({ getApiKey: async () => {
@@ -524,10 +576,8 @@ export default function registerUndertakingRoutingChecks(check) {
 		} });
 		const routing = s.route({ modelClass: "reasoning" });
 		await entered.promise;
-		const blocked = await s.tool("write", { path: "task.txt" });
-		assertBlocked(blocked);
-		assert.match(blocked.reason, /selection is in progress/iu);
-		assert.match(blocked.reason, /\/undertaking status/u);
+		assertAllowed(await s.tool("write", { path: "task.txt" }));
+		assertAllowed(await s.tool("task", {}));
 		proceed.resolve();
 		assert.notEqual((await routing).isError, true);
 	});
