@@ -11,7 +11,7 @@ The issue
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Open the issue` | Search the open issues | `mcp__github__search_issues` |
-| `Open the issue` | Open one, labelled | `mcp__github__issue_write`, method `create`, with `labels` |
+| `Open the issue` | Open one, labelled; settle destination under [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository) and pass it here | `mcp__github__issue_write`, method `create`, with `labels`; set `owner` and `repo` when the target differs from the current repository |
 | `Title the session` | Read the session's own id | `get_session` on the Claude Code Remote server, `session_id` omitted — `The session` below describes the call |
 | `Title the session` | Set the title | `set_session_title`, with that id and `session-title`'s form |
 | `Read the issue and its edges` | Read the body and the graph | `mcp__github__issue_read`, method `get` |
