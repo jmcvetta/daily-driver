@@ -1,7 +1,9 @@
 modelRoles:
-  default: vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:low
-  mechanical: vercel-ai-gateway/openai/gpt-6-luna:low
-  implementation: vercel-ai-gateway/openai/gpt-6-luna:high
+  default: vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:medium
+  #mechanical: vercel-ai-gateway/openai/gpt-6-luna:low
+  #implementation: vercel-ai-gateway/openai/gpt-6-luna:high
+  mechanical: vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:low
+  implementation: vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high
   integration: vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:high
   reasoning: vercel-ai-gateway/zai/glm-5.3:high
-  reviewer: vercel-ai-gateway/mistral/mistral-large-4:medium
+  reviewer: vercel-ai-gateway/mistral/mistral-large-4:low
