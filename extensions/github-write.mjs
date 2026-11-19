@@ -286,9 +286,12 @@ export function createGitHubWriteRunner({ spawnProcess = spawn, versionReader = 
 		if (!Array.isArray(args) || args.some((arg) => typeof arg !== "string")) {
 			throw new Error("`args` must be an array of `gh` argument strings.");
 		}
-		versionPromise ??= Promise.resolve().then(versionReader).then((version) =>
-			typeof version === "string" && version.length > 0 ? version.replace(/^omp[\/\s]+/iu, "") : "n/a",
-		).catch(() => "n/a");
+		versionPromise ??= Promise.resolve().then(versionReader).then((value) => {
+			const version = typeof value === "string"
+				? value.trim().replace(/^omp[\/\s]+/iu, "")
+				: "";
+			return version || "n/a";
+		}).catch(() => "n/a");
 		const [version, model, session] = await Promise.all([
 			versionPromise,
 			Promise.resolve(ctx?.model?.id),

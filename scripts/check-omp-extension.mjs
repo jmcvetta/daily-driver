@@ -101,8 +101,8 @@ function fakeApi(overrides = {}) {
 	const timers = fakeTimers();
 
 	// A chainable fake zod that mirrors the Omp (omptype-backed) zod surface the
-	// adapter actually targets: z.string, z.number().int().min().max(), and
-	// z.object returning the spec keyed by name. It deliberately excludes
+	// adapter actually targets: z.string, z.array, z.number().int().min().max(),
+	// and z.object returning the spec keyed by name. It deliberately excludes
 	// `z.integer` so a schema written against real Zod's alias fails here too.
 	function schemaNode(meta = {}) {
 		return {
@@ -1043,13 +1043,13 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 		const inlineBody = `issue body $(touch ${injectionPath})`;
 		const inline = await execute(["issue", "create", "--title", "title", "--body", inlineBody]);
 		assert.ok(inline.capture.body.startsWith(inlineBody));
-		assert.ok(inline.capture.body.includes("Model: model-a\\nHarness: Omp 19.4.2\\nsession: session-a"));
-		assert.equal(inline.result.details.stdout, "fake stdout\\n");
-		assert.equal(inline.result.details.stderr, "fake stderr\\n");
+		assert.ok(inline.capture.body.includes("Model: model-a\nHarness: Omp 19.4.2\nsession: session-a"));
+		assert.equal(inline.result.details.stdout, "fake stdout\n");
+		assert.equal(inline.result.details.stderr, "fake stderr\n");
 		assert.equal(existsSync(injectionPath), false, "body text was not interpreted by a shell");
 
-		const history = "Issue detail\\n\\n---\\nModel: historical\\nHarness: Omp 18.0\\nsession: old-session";
-		const duplicateBody = `${history}\\n\\n---\\nModel: historical\\nHarness: Omp 18.0\\nsession: old-session\\n\\n---\\nModel: model-a\\nHarness: Omp 19.4.2\\nsession: session-a\\n\\n---\\nModel: model-a\\nHarness: Omp 19.4.2\\nsession: session-a`;
+		const history = "Issue detail\n\n---\nModel: historical\nHarness: Omp 18.0\nsession: old-session";
+		const duplicateBody = `${history}\n\n---\nModel: historical\nHarness: Omp 18.0\nsession: old-session\n\n---\nModel: model-a\nHarness: Omp 19.4.2\nsession: session-a\n\n---\nModel: model-a\nHarness: Omp 19.4.2\nsession: session-a`;
 		const originalFile = join(root, "issue-body.md");
 		writeFileSync(originalFile, duplicateBody);
 		const fileWrite = await execute(["issue", "edit", "91", "--body-file", originalFile]);
@@ -1062,13 +1062,13 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 		model = "model-b";
 		sessionId = "session-b";
 		const prCreateFile = await execute(["pr", "create", "--draft", "--title", "title", "--body-file", originalFile]);
-		assert.ok(prCreateFile.capture.body.includes("Model: model-b\\nHarness: Omp 19.4.2\\nsession: session-b"));
+		assert.ok(prCreateFile.capture.body.includes("Model: model-b\nHarness: Omp 19.4.2\nsession: session-b"));
 		const prEdit = await execute(["pr", "edit", "7", "--body", "PR description"]);
-		assert.ok(prEdit.capture.body.includes("Model: model-b\\nHarness: Omp 19.4.2\\nsession: session-b"));
+		assert.ok(prEdit.capture.body.includes("Model: model-b\nHarness: Omp 19.4.2\nsession: session-b"));
 		const issueComment = await execute(["issue", "comment", "91", "-b", "issue comment"]);
-		assert.ok(issueComment.capture.body.includes("Model: model-b\\nHarness: Omp 19.4.2\\nsession: session-b"));
+		assert.ok(issueComment.capture.body.includes("Model: model-b\nHarness: Omp 19.4.2\nsession: session-b"));
 		const prCommentFile = await execute(["pr", "comment", "7", "--body-file", originalFile]);
-		assert.ok(prCommentFile.capture.body.includes("Model: model-b\\nHarness: Omp 19.4.2\\nsession: session-b"));
+		assert.ok(prCommentFile.capture.body.includes("Model: model-b\nHarness: Omp 19.4.2\nsession: session-b"));
 
 		const reviewFile = join(root, "review.json");
 		writeFileSync(reviewFile, JSON.stringify({
@@ -1090,10 +1090,10 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 		const failed = await execute(["pr", "comment", "7", "--body-file", originalFile]);
 		assert.equal(failed.result.isError, true);
 		assert.equal(failed.result.details.exitCode, 7);
-		assert.equal(failed.result.details.stdout, "fake stdout\\n");
-		assert.equal(failed.result.details.stderr, "fake stderr\\n");
+		assert.equal(failed.result.details.stdout, "fake stdout\n");
+		assert.equal(failed.result.details.stderr, "fake stderr\n");
 		assert.equal(existsSync(failed.capture.temporaryPath), false, "failed writes also remove private body copies");
-		assert.equal(readFileSync(versionLog, "utf8").trim().split("\\n").length, 1, "the Omp version is read once per extension instance");
+		assert.equal(readFileSync(versionLog, "utf8").trim().split("\n").length, 1, "the Omp version is read once per extension instance");
 
 		const missingVersion = makeSession({}, {
 			githubWriteDependencies: {
@@ -1122,7 +1122,7 @@ check("a context with no readable name and no recorded call is allowed, loudly",
 	const original = console.error;
 	console.error = (...args) => lines.push(args.join(" "));
 	try {
-		assert.equal(titleCall(s, "bash", { command: GH_COMMENT }, { cwd: "/tmp", ui: {} }), undefined);
+		assert.equal(titleCall(s, "task", { tasks: [] }, { cwd: "/tmp", ui: {} }), undefined);
 	} finally {
 		console.error = original;
 	}
@@ -3406,7 +3406,7 @@ function guardWithPath(binDir, target, env = {}, call = null) {
 				`const mod = await import(${JSON.stringify(pathToFileURL(EXTENSION).href)});`,
 				"const handlers = new Map();",
 				"const node = (m) => ({ describe: () => node(m), min: () => node(m), max: () => node(m), int: () => node(m), optional: () => node(m) });",
-				"const pi = { zod: { object: (s) => s, string: () => node({}), number: () => node({}) },",
+				"const pi = { zod: { object: (s) => s, string: () => node({}), array: () => node({}), number: () => node({}) },",
 				"  on: (e, h) => { const registered = handlers.get(e) ?? []; registered.push(h); handlers.set(e, registered); }, registerTool: () => {}, registerCommand: () => {}, setSessionName: async () => {},",
 				"  sendMessage: () => {}, setTimeout: () => 1, clearTimer: () => {} };",
 				"mod.default(pi);",
