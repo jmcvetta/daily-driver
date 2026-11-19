@@ -17,8 +17,12 @@ the caller.
 | The model the session is set to | `session_context.model`, `configured_model` |
 | The session id | the call's own `id`, for `https://claude.ai/code/<id>` |
 
+**The serving provider is `n/a`** — this call names no provider identity, and
+a provider inferred from the model id is not the serving provider. Record
+`Provider: n/a` unless a harness surface actually reports one.
+
 Where this call is absent, read the model from the harness's own statement of
-what is serving the turn, and record `session: n/a`.
+what is serving the turn, and record `Session: n/a`.
 
 **The harness version** is `claude --version`, where a shell is available. A
 version no surface in the session reports is `n/a`, never a guessed one.

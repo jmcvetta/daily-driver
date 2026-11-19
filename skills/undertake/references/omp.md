@@ -234,10 +234,12 @@ would put the report after the transition it must precede.
 the comments, so `Read the issue and its edges` already has them; `gh issue
 view <issue> --json comments` is the same read where that resource is not to
 hand. The claim is the comment carrying the branch link and the `Model:` and
-`session:` lines. Take its `createdAt`; where more than one comment carries
-that shape, the earliest of them is the start — a later claim does not restart
-the clock. A resumed session finds the start with the same read. An issue
-with no recoverable claim leaves the timing `n/a`, per `SKILL.md`.
+`Session:` lines; a historical block with a lowercase `session:` field is the
+same claim, not a different one. Take its `createdAt`; where more than one
+comment carries that shape, the earliest of them is the start — a later claim
+does not restart the clock. A resumed session finds the start with the same
+read. An issue with no recoverable claim leaves the timing `n/a`, per
+`SKILL.md`.
 
 **Post the report before marking ready.** Read the existing comments with
 `gh pr view <number> --json comments` and look for the fixed

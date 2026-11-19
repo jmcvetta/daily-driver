@@ -126,10 +126,10 @@ The session
 ===========
 
 **Codex exposes no session id, so the claim's `provenance` block records
-`session: n/a`** — the marker `SKILL.md` prescribes, not a diagnostic about
+`Session: n/a`** — the marker `SKILL.md` prescribes, not a diagnostic about
 the missing surface. `provenance`'s
 [`references/codex.md`](../../provenance/references/codex.md) names how the
-`Model:` line is read.
+`Model:` and `Provider:` lines are read.
 
 For branch-free answer-only research, no task worktree exists and the claim
 uses `Branch: none`. Otherwise the branch comes from the task worktree's Git
@@ -166,10 +166,11 @@ would put the report after the transition it must precede.
 **The start is the claim comment's `createdAt`.** `gh issue view <issue>
 --json comments` is the read `Read the issue and its edges` already makes —
 `comments` is in its field list — and the claim carries the branch link and
-the `Model:` and `session:` lines. Take its `createdAt`; where more than one
-comment carries that shape, the earliest is the start. A resumed session
-finds it with the same read. An issue with no recoverable claim leaves the
-timing `n/a`, per `SKILL.md`.
+the `Model:` and `Session:` lines, where a historical lowercase `session:` is
+the same field. Take its `createdAt`; where more than one comment carries
+that shape, the earliest is the start. A resumed session finds it with the
+same read. An issue with no recoverable claim leaves the timing `n/a`, per
+`SKILL.md`.
 
 **Post the report before marking ready.** Read the existing comments with
 `gh pr view <number> --json comments` and look for the fixed

@@ -9,7 +9,7 @@ const VALUE_FLAGS = new Set([
 ]);
 const BODY_COMMANDS = new Set(["create", "edit", "comment", "review"]);
 const GH_BODY_ENDPOINT = /(?:^|\/)repos\/[^/]+\/[^/]+\/(?:issues(?:\/\d+)?(?:\/comments)?|pulls(?:\/\d+)?(?:\/(?:comments(?:\/\d+\/replies)?|reviews))?)(?:\?.*)?$/iu;
-const COMPLETE_BLOCK = /(^|\r?\n)---\r?\nModel: ([^\r\n]*)\r?\nHarness: ([^\r\n]*)\r?\nsession: ([^\r\n]*)/gmu;
+const COMPLETE_BLOCK = /(^|\r?\n)---\r?\nModel: ([^\r\n]*)\r?\n(?:Provider: ([^\r\n]*)\r?\n)?Harness: ([^\r\n]*)\r?\n[Ss]ession: ([^\r\n]*)/gmu;
 
 /** Direct body-bearing `gh` calls must use the attributed wrapper. */
 export const GITHUB_WRITE_BLOCK_REASON =
@@ -131,7 +131,7 @@ function attributionBlock(body, attribution) {
 	const tuples = new Set();
 	const duplicateRanges = [];
 	for (const match of body.matchAll(COMPLETE_BLOCK)) {
-		const tuple = JSON.stringify([match[2], match[3], match[4]]);
+		const tuple = JSON.stringify([match[2], match[3] ?? "n/a", match[4], match[5]]);
 		if (tuples.has(tuple)) {
 			const start = match.index + match[1].length;
 			duplicateRanges.push([start, start + match[0].length - match[1].length]);
@@ -143,13 +143,22 @@ function attributionBlock(body, attribution) {
 	for (const [start, end] of duplicateRanges.reverse()) {
 		result = result.slice(0, start) + result.slice(end);
 	}
-	const current = JSON.stringify([attribution.model, attribution.harness, attribution.session]);
+	const current = JSON.stringify([attribution.model, attribution.provider, attribution.harness, attribution.session]);
 	if (!tuples.has(current)) {
-		const block = `---\nModel: ${attribution.model}\nHarness: ${attribution.harness}\nsession: ${attribution.session}`;
+		const block = `---\nModel: ${attribution.model}\nProvider: ${attribution.provider}\nHarness: ${attribution.harness}\nSession: ${attribution.session}`;
 		const separator = result.length === 0 ? "" : result.endsWith("\n\n") ? "" : result.endsWith("\n") ? "\n" : "\n\n";
 		result += `${separator}${block}`;
 	}
 	return result;
+}
+
+function servingProvider(ctx) {
+	try {
+		const provider = ctx?.models?.current?.()?.provider ?? ctx?.model?.provider;
+		return typeof provider === "string" && provider.length > 0 ? provider : "n/a";
+	} catch {
+		return "n/a";
+	}
 }
 
 function readOmpVersion() {
@@ -296,13 +305,15 @@ export function createGitHubWriteRunner({ spawnProcess = spawn, versionReader = 
 				: "";
 			return version || "n/a";
 		}).catch(() => "n/a");
-		const [version, model, session] = await Promise.all([
+		const [version, model, provider, session] = await Promise.all([
 			versionPromise,
 			Promise.resolve(ctx?.model?.id),
+			Promise.resolve().then(() => servingProvider(ctx)),
 			Promise.resolve().then(() => ctx?.sessionManager?.getSessionId?.()),
 		]);
 		const attribution = {
 			model: typeof model === "string" && model.length > 0 ? model : "n/a",
+			provider,
 			harness: `Omp ${version}`,
 			session: typeof session === "string" && session.length > 0 ? session : "n/a",
 		};

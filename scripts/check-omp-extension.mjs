@@ -1030,10 +1030,12 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 	const session = makeSession({}, { githubWriteDependencies });
 	const tool = session.tools.get("daily_driver_gh_write");
 	let model = "model-a";
+	let provider = "provider-a";
 	let sessionId = "session-a";
 	const ctx = {
 		cwd: root,
 		model: { id: model },
+		models: { current: () => ({ id: model, provider }) },
 		sessionManager: { getSessionId: () => sessionId },
 	};
 	const execute = async (args) => {
@@ -1046,32 +1048,45 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 		const inlineBody = `issue body $(touch ${injectionPath})`;
 		const inline = await execute(["issue", "create", "--title", "title", "--body", inlineBody]);
 		assert.ok(inline.capture.body.startsWith(inlineBody));
-		assert.ok(inline.capture.body.includes("Model: model-a\nHarness: Omp 19.4.2\nsession: session-a"));
+		assert.ok(inline.capture.body.includes("Model: model-a\nProvider: provider-a\nHarness: Omp 19.4.2\nSession: session-a"));
 		assert.equal(inline.result.details.stdout, "fake stdout\n");
 		assert.equal(inline.result.details.stderr, "fake stderr\n");
 		assert.equal(existsSync(injectionPath), false, "body text was not interpreted by a shell");
 
 		const history = "Issue detail\n\n---\nModel: historical\nHarness: Omp 18.0\nsession: old-session";
-		const duplicateBody = `${history}\n\n---\nModel: historical\nHarness: Omp 18.0\nsession: old-session\n\n---\nModel: model-a\nHarness: Omp 19.4.2\nsession: session-a\n\n---\nModel: model-a\nHarness: Omp 19.4.2\nsession: session-a`;
+		const duplicateBody = `${history}\n\n---\nModel: historical\nHarness: Omp 18.0\nsession: old-session\n\n---\nModel: model-a\nProvider: provider-a\nHarness: Omp 19.4.2\nsession: session-a\n\n---\nModel: model-a\nProvider: provider-a\nHarness: Omp 19.4.2\nsession: session-a`;
 		const originalFile = join(root, "issue-body.md");
 		writeFileSync(originalFile, duplicateBody);
 		const fileWrite = await execute(["issue", "edit", "91", "--body-file", originalFile]);
 		assert.equal((fileWrite.capture.body.match(/Model: historical/gu) ?? []).length, 1);
 		assert.equal((fileWrite.capture.body.match(/Model: model-a/gu) ?? []).length, 1);
 		assert.ok(fileWrite.capture.body.startsWith("Issue detail"));
+		assert.ok(
+			fileWrite.capture.body.includes("---\nModel: historical\nHarness: Omp 18.0\nsession: old-session"),
+			"the historical block keeps its shape and lowercase session field",
+		);
+		assert.ok(
+			fileWrite.capture.body.includes("Model: model-a\nProvider: provider-a\nHarness: Omp 19.4.2\nsession: session-a"),
+			"a capitalization-only session field is the same attribution, so nothing is appended",
+		);
+		assert.equal(
+			(fileWrite.capture.body.match(/Session: session-a/gu) ?? []).length,
+			0,
+			"a capitalization-only difference does not append a block",
+		);
 		assert.equal(readFileSync(originalFile, "utf8"), duplicateBody, "the caller's body file remains unchanged");
 		assert.equal(existsSync(fileWrite.capture.temporaryPath), false, "the private body copy was removed");
 
 		model = "model-b";
 		sessionId = "session-b";
 		const prCreateFile = await execute(["pr", "create", "--draft", "--title", "title", "--body-file", originalFile]);
-		assert.ok(prCreateFile.capture.body.includes("Model: model-b\nHarness: Omp 19.4.2\nsession: session-b"));
+		assert.ok(prCreateFile.capture.body.includes("Model: model-b\nProvider: provider-a\nHarness: Omp 19.4.2\nSession: session-b"));
 		const prEdit = await execute(["pr", "edit", "7", "--body", "PR description"]);
-		assert.ok(prEdit.capture.body.includes("Model: model-b\nHarness: Omp 19.4.2\nsession: session-b"));
+		assert.ok(prEdit.capture.body.includes("Model: model-b\nProvider: provider-a\nHarness: Omp 19.4.2\nSession: session-b"));
 		const issueComment = await execute(["issue", "comment", "91", "-b", "issue comment"]);
-		assert.ok(issueComment.capture.body.includes("Model: model-b\nHarness: Omp 19.4.2\nsession: session-b"));
+		assert.ok(issueComment.capture.body.includes("Model: model-b\nProvider: provider-a\nHarness: Omp 19.4.2\nSession: session-b"));
 		const prCommentFile = await execute(["pr", "comment", "7", "--body-file", originalFile]);
-		assert.ok(prCommentFile.capture.body.includes("Model: model-b\nHarness: Omp 19.4.2\nsession: session-b"));
+		assert.ok(prCommentFile.capture.body.includes("Model: model-b\nProvider: provider-a\nHarness: Omp 19.4.2\nSession: session-b"));
 
 		const reviewFile = join(root, "review.json");
 		writeFileSync(reviewFile, JSON.stringify({
@@ -1091,7 +1106,28 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 
 		const shortBody = await execute(["issue", "comment", "91", "-binline shorthand"]);
 		assert.ok(shortBody.capture.body.startsWith("inline shorthand"));
-		assert.ok(shortBody.capture.body.includes("Model: model-b\nHarness: Omp 19.4.2\nsession: session-b"));
+		assert.ok(shortBody.capture.body.includes("Model: model-b\nProvider: provider-a\nHarness: Omp 19.4.2\nSession: session-b"));
+
+		// The provider is part of the identity: same model, harness and
+		// session with a different provider must append, or the block that
+		// names the new serving provider is silently lost.
+		const providerFile = join(root, "provider-change.md");
+		writeFileSync(providerFile, "---\nModel: model-b\nProvider: provider-a\nHarness: Omp 19.4.2\nSession: session-b");
+		provider = "provider-b";
+		const providerChanged = await execute(["issue", "edit", "92", "--body-file", providerFile]);
+		assert.equal(
+			(providerChanged.capture.body.match(/Model: model-b/gu) ?? []).length,
+			2,
+			"a changed provider is a distinct attribution tuple",
+		);
+		assert.ok(providerChanged.capture.body.includes("Provider: provider-b\nHarness: Omp 19.4.2\nSession: session-b"));
+
+		// No harness-reported provider identity: the block still appears,
+		// with `n/a` rather than an inferred provider.
+		provider = null;
+		const missingProvider = await execute(["issue", "comment", "91", "--body", "no provider identity"]);
+		assert.ok(missingProvider.capture.body.includes("Provider: n/a\nHarness: Omp 19.4.2\nSession: session-b"));
+		provider = "provider-a";
 
 		const editFile = join(root, "issue-edit.json");
 		writeFileSync(editFile, JSON.stringify({ body: "edited issue body" }));

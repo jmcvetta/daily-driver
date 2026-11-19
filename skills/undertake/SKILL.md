@@ -416,12 +416,14 @@ Beyond the claim itself the comment always carries:
   branch identity, so the linked and local branch are the same.
 
 - **`provenance`'s block.** Where the agent supplies it, place it immediately
-  after the work identity lines. It names the serving model, harness/version,
-  and session under the exact `Model:` and lowercase `session:` shapes used by
-  claim lookup and milestone timing. Where the serving model differs from the
-  session's configured model, name both. For Omp body-bearing GitHub writes,
-  the GitHub-write wrapper appends the block from live execution context at
-  the end of the submitted body; do not read model/session identity or format it.
+  after the work identity lines. It names the serving model, provider,
+  harness/version, and session under the exact `Model:`, `Provider:`,
+  `Harness:`, and `Session:` shapes used by claim lookup and milestone timing;
+  claim lookup also accepts historical blocks whose session field is
+  lowercase. Where the serving model differs from the session's configured
+  model, name both. For Omp body-bearing GitHub writes, the GitHub-write
+  wrapper appends the block from live execution context at the end of the
+  submitted body; do not read model/session identity or format it.
 - **A brief poem, in the claiming agent's own style, last in the authored
   body** — after the work identity and, where the agent supplies it, the
   provenance block. On Omp, the wrapper appends its block after the poem. Each

@@ -218,7 +218,8 @@ whether the report may be posted. Do not wait for a post-ready `clean` read.
 **The start is the claim comment's `created_at`.** Read the issue's comments
 with `mcp__github__issue_read`, method `get_comments` — the read `Read the
 issue and its edges` already makes — find the claim by its branch link plus
-`Model:` and `session:`, and take `created_at`; where more than one comment
+`Model:` and `Session:` (a historical lowercase `session:` is the same
+field), and take `created_at`; where more than one comment
 carries that shape, the earliest is the start. The resumed sequence makes this
 read anyway; an issue with no recoverable claim leaves the timing `n/a`, per
 `SKILL.md`.
