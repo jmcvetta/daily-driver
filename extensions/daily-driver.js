@@ -41,6 +41,12 @@ import { existsSync, realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { installModelClassDefaults, readModelClassRoutes } from "./role-default-helper.mjs";
+import {
+	createGitHubWriteRunner,
+	GITHUB_WRITE_BLOCK_REASON,
+	isGitHubBodyWrite,
+	isGitHubCommentWrite,
+} from "./github-write.mjs";
 import { installUndertakingRouting } from "./undertaking-routing.mjs";
 
 /**
@@ -2093,12 +2099,38 @@ function runsGitHubComment(command) {
 	return false;
 }
 
+/** Whether a shell command runs a body-bearing GitHub write. */
+function runsGitHubBodyWrite(command) {
+	const { segments, unreadable } = shellSegments(command);
+	if (unreadable !== null) return false;
+	for (const segment of segments) {
+		const words = segment.words ?? [];
+		for (let index = 0; index < words.length; index++) {
+			const word = words[index];
+			if (!word.literal) continue;
+			const name = basename(word.text);
+			if (name === "gh" && isGitHubBodyWrite(words.slice(index + 1).map((item) => item.text))) return true;
+			if (!STRING_INTERPRETERS.has(name)) continue;
+			try {
+				const invocation = shellInvocation(name, words.slice(index + 1));
+				if (invocation.command && runsGitHubBodyWrite(invocation.command.text)) return true;
+			} catch (err) {
+				if (!(err instanceof UnreadableCommandError)) throw err;
+			}
+		}
+	}
+	return false;
+}
+
 /** The dispatch tool `skills/embark/references/omp.md` opens its sessions with. */
 const DISPATCH_TOOL = "task";
 
 /** Whether this call is one the title must precede. */
 function needsTitle(event) {
 	if (event.toolName === DISPATCH_TOOL) return true;
+	if (event.toolName === "daily_driver_gh_write") {
+		return isGitHubCommentWrite(event.input?.args);
+	}
 	return (
 		event.toolName === "bash" &&
 		typeof event.input?.command === "string" &&
@@ -2344,10 +2376,10 @@ function newTriggerId() {
 }
 
 /** The `daily-driver` Omp extension factory. */
-export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
-	const z = pi.zod;
-
-	const initializedSettings = new WeakSet();
+export default function dailyDriverExtension(pi, { modelTagsSetting, githubWriteDependencies } = {}) {
+ 	const z = pi.zod;
+	const runGitHubWrite = createGitHubWriteRunner(githubWriteDependencies);
+ 	const initializedSettings = new WeakSet();
 	const routingSettings = new Map();
 	function settingsFor(ctx) {
 		// Use the handler's live settings scope, including CLI overlays and child snapshots.
@@ -2630,7 +2662,49 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 		if (needsTitle(event) && !titleGateAllows(ctx)) {
 			return { block: true, reason: TITLE_BLOCK_REASON };
 		}
+		if (
+			event.toolName === "bash" &&
+			typeof event.input?.command === "string" &&
+			runsGitHubBodyWrite(event.input.command)
+		) {
+			return { block: true, reason: GITHUB_WRITE_BLOCK_REASON };
+		}
 		return undefined;
+	});
+	pi.registerTool({
+		name: "daily_driver_gh_write",
+		label: "Write to GitHub with attribution",
+		description:
+			"Execute a body-bearing `gh` command from an argument array, without a shell. " +
+			"The tool adds and deduplicates this session's provenance before the write. " +
+			"Use existing routes for reads and non-body operations.",
+		parameters: z.object({
+			args: z.array(z.string()).min(1).describe("Arguments passed to `gh`, excluding the `gh` executable"),
+			stdin: z.string().optional().describe("Optional standard input, used when a supported body source is `-`"),
+		}),
+		execute: async (_toolCallId, params, signal, _onUpdate, ctx) => {
+			try {
+				const result = await runGitHubWrite(params.args, params.stdin, ctx, signal);
+				const content = [];
+				if (result.stdout) content.push({ type: "text", text: result.stdout });
+				if (result.stderr) content.push({ type: "text", text: result.stderr });
+				return {
+					content,
+					details: {
+						exitCode: result.code,
+						signal: result.signal,
+						stdout: result.stdout,
+						stderr: result.stderr,
+					},
+					...(result.code === 0 ? {} : { isError: true }),
+				};
+			} catch (error) {
+				return {
+					content: [{ type: "text", text: `GitHub write failed: ${error.message}` }],
+					isError: true,
+				};
+			}
+		},
 	});
 
 	pi.registerTool({

@@ -31,8 +31,10 @@
  */
 
 import assert from "node:assert/strict";
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
 import {
+	chmodSync,
+	existsSync,
 	mkdirSync,
 	mkdtempSync,
 	readFileSync,
@@ -42,7 +44,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { MODEL_CLASS_ROLE_DEFAULTS, MODEL_CLASS_ROLE_TAGS, installModelClassDefaults } from "../extensions/role-default-helper.mjs";
-import { dirname, resolve } from "node:path";
+import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import registerUndertakingRoutingChecks from "./undertaking-routing-cases.mjs";
 
@@ -130,8 +132,9 @@ function fakeApi(overrides = {}) {
 			return spec;
 		},
 		string: () => schemaNode({ type: "string" }),
+		array: (item) => schemaNode({ type: "array", item }),
 		number: () => schemaNode({ type: "number" }),
-		// No `integer:` — intentional, so an `.integer()` misuse is caught.
+		// No `z.integer` — intentional, so an `.integer()` misuse is caught.
 	};
 
 	const pi = {
@@ -425,6 +428,7 @@ check("a tool other than ask passes through", async () => {
 const ISSUE_TITLE = "#52 Rotate the Aurora access token";
 const EPIC_TITLE = "⛵ EPIC #12 Rotate the tokens";
 const GH_COMMENT = "gh issue comment 52 -b 'Claiming it.'";
+const GH_COMMENT_ARGS = ["issue", "comment", "52", "-b", "Claiming it."];
 
 /** A tool context whose session reads `name`; `undefined` is an unnamed session. */
 function namedCtx(name) {
@@ -857,40 +861,38 @@ check("the title reason names the call, both forms, session-title and no retry",
 	}
 });
 
-check("a gh issue comment is blocked in an unnamed session", () => {
+check("the GitHub wrapper preserves the title gate for comments", async () => {
 	const s = makeSession();
-	assertTitleBlocked(titleCall(s, "bash", { command: GH_COMMENT }, namedCtx(undefined)));
-	assertTitleBlocked(titleCall(s, "bash", { command: "gh pr comment 7 --body hi" }, namedCtx(undefined)));
+	const unnamed = namedCtx(undefined);
+	assertTitleBlocked(titleCall(s, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, unnamed));
+	assertTitleBlocked(titleCall(s, "bash", { command: GH_COMMENT }, unnamed));
+	await s.tools.get("daily_driver_set_session_title").execute("t", { title: ISSUE_TITLE }, undefined, undefined, unnamed);
+	assert.equal(titleCall(s, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, unnamed), undefined);
+	assert.equal(titleCall(s, "task", { tasks: [] }, unnamed), undefined);
+	const direct = titleCall(s, "bash", { command: GH_COMMENT }, unnamed);
+	assert.equal(direct.block, true);
+	assert.match(direct.reason, /daily_driver_gh_write/u);
 });
 
-check("a gh issue comment passes after daily_driver_set_session_title", async () => {
-	const s = makeSession();
-	const ctx = namedCtx(undefined);
-	assertTitleBlocked(titleCall(s, "bash", { command: GH_COMMENT }, ctx));
-	await s.tools.get("daily_driver_set_session_title").execute("t", { title: ISSUE_TITLE }, undefined, undefined, ctx);
-	assert.equal(titleCall(s, "bash", { command: GH_COMMENT }, ctx), undefined);
-	assert.equal(titleCall(s, "task", { tasks: [] }, ctx), undefined);
-});
-
-check("the recorded call is per session", async () => {
+check("the title record is session-scoped for wrapped comments", async () => {
 	const titled = makeSession();
 	await titled.tools.get("daily_driver_set_session_title").execute("t", { title: ISSUE_TITLE }, undefined, undefined, namedCtx(undefined));
 	const other = makeSession();
-	assertTitleBlocked(titleCall(other, "bash", { command: GH_COMMENT }, namedCtx(undefined)));
+	assertTitleBlocked(titleCall(other, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, namedCtx(undefined)));
 });
 
-check("a name already in either form passes without a call", () => {
+check("an existing issue or epic title allows wrapped comments", () => {
 	for (const name of [ISSUE_TITLE, EPIC_TITLE]) {
 		const s = makeSession();
-		assert.equal(titleCall(s, "bash", { command: GH_COMMENT }, namedCtx(name)), undefined, name);
+		assert.equal(titleCall(s, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, namedCtx(name)), undefined, name);
 		assert.equal(titleCall(s, "task", {}, namedCtx(name)), undefined, name);
 	}
 });
 
-check("a name outside both forms is blocked", () => {
+check("a name outside both title forms blocks wrapped comments", () => {
 	for (const name of ["Fix the parser", "#52", "#52 ", "EPIC #12 Rotate", "", undefined]) {
 		const s = makeSession();
-		assertTitleBlocked(titleCall(s, "bash", { command: GH_COMMENT }, namedCtx(name)));
+		assertTitleBlocked(titleCall(s, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, namedCtx(name)));
 	}
 });
 
@@ -930,7 +932,6 @@ check("gh api POSTing to a comments path is gated; reads and other gh calls are 
 		"gh api -X POST repos/o/r/issues",
 		"gh api -f title=x repos/o/r/issues",
 		"gh api -X POST repos/o/r/pulls/7/comments/99/replies",
-		"gh issue create -t x -b y",
 		"echo gh-issue-comment",
 		"git commit -m 'gh issue comment'",
 	]) {
@@ -938,6 +939,183 @@ check("gh api POSTing to a comments path is gated; reads and other gh calls are 
 	}
 });
 
+check("body-bearing gh writes require the wrapper and non-body routes remain open", () => {
+	const s = makeSession();
+	const titled = namedCtx(ISSUE_TITLE);
+	for (const command of [
+		"gh issue create --title x --body y",
+		"gh issue edit 52 --body-file body.md",
+		"gh pr create --title x --body-file body.md",
+		"gh pr edit 7 --body y",
+		"gh issue comment 52 -b y",
+		"gh pr comment 7 --body-file body.md",
+		"gh pr review 7 --body approved",
+		"gh api --method POST repos/o/r/pulls/7/reviews --input review.json",
+		"gh api -X POST repos/o/r/pulls/7/comments/99/replies -f body=reply",
+	]) {
+		const denied = titleCall(s, "bash", { command }, titled);
+		assert.equal(denied?.block, true, command);
+		assert.match(denied.reason, /daily_driver_gh_write/u, command);
+	}
+	for (const command of [
+		"gh issue view 52",
+		"gh issue edit 52 --state closed",
+		"gh issue edit 52 --add-label task",
+		"gh pr edit 7 --add-label human",
+		"gh pr update-branch 7",
+	]) {
+		assert.equal(titleCall(s, "bash", { command }, titled), undefined, command);
+	}
+	assert.equal(titleCall(s, "daily_driver_gh_write", {
+		args: ["issue", "create", "--title", "x", "--body", "body"],
+	}, titled), undefined);
+});
+
+
+check("GitHub writer attributes real gh arguments and cleans temporary bodies", async () => {
+	const root = mkdtempSync(resolve(tmpdir(), "daily-driver-gh-write-check-"));
+	const bin = join(root, "bin");
+	mkdirSync(bin);
+	const capturePath = join(root, "capture.json");
+	const versionLog = join(root, "version.log");
+	const fakeGh = join(bin, "gh");
+	const fakeOmp = join(bin, "omp");
+	writeFileSync(fakeGh, `#!/usr/bin/env node
+const fs = require("node:fs");
+const args = process.argv.slice(2);
+let body = null;
+let payload = null;
+let temporaryPath = null;
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === "--body" || args[i] === "-b") body = args[++i];
+  else if (args[i] === "--body-file") {
+    temporaryPath = args[++i];
+    body = fs.readFileSync(temporaryPath, "utf8");
+  } else if (args[i] === "--input") {
+    temporaryPath = args[++i];
+    payload = JSON.parse(fs.readFileSync(temporaryPath, "utf8"));
+    body = payload.body ?? payload.comments?.map((comment) => comment.body).join("\\n") ?? null;
+  } else if (["-f", "-F", "--field", "--raw-field"].includes(args[i])) {
+    const field = args[++i];
+    if (field.startsWith("body=")) body = field.slice(5);
+  }
+}
+fs.writeFileSync(process.env.GH_CAPTURE_PATH, JSON.stringify({ args, body, payload, temporaryPath }));
+process.stdout.write("fake stdout\\n");
+process.stderr.write("fake stderr\\n");
+process.exitCode = Number(process.env.GH_EXIT_CODE || 0);
+`, { mode: 0o755 });
+	writeFileSync(fakeOmp, `#!/usr/bin/env node
+const fs = require("node:fs");
+fs.appendFileSync(process.env.OMP_VERSION_LOG, "read\\n");
+process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
+`, { mode: 0o755 });
+	chmodSync(fakeGh, 0o755);
+	chmodSync(fakeOmp, 0o755);
+	let nextExitCode = 0;
+	const env = () => ({
+		...process.env,
+		PATH: `${bin}${delimiter}${process.env.PATH ?? ""}`,
+		GH_CAPTURE_PATH: capturePath,
+		GH_EXIT_CODE: String(nextExitCode),
+		OMP_VERSION_LOG: versionLog,
+	});
+	const githubWriteDependencies = {
+		spawnProcess: (command, args, options) => spawn(command, args, { ...options, env: env() }),
+		versionReader: () => execFileSync("omp", ["--version"], { encoding: "utf8", env: env() }),
+	};
+	const session = makeSession({}, { githubWriteDependencies });
+	const tool = session.tools.get("daily_driver_gh_write");
+	let model = "model-a";
+	let sessionId = "session-a";
+	const ctx = {
+		cwd: root,
+		model: { id: model },
+		sessionManager: { getSessionId: () => sessionId },
+	};
+	const execute = async (args) => {
+		ctx.model = { id: model };
+		const result = await tool.execute("gh-write", { args }, undefined, undefined, ctx);
+		return { result, capture: JSON.parse(readFileSync(capturePath, "utf8")) };
+	};
+	try {
+		const injectionPath = join(root, "shell-injection");
+		const inlineBody = `issue body $(touch ${injectionPath})`;
+		const inline = await execute(["issue", "create", "--title", "title", "--body", inlineBody]);
+		assert.ok(inline.capture.body.startsWith(inlineBody));
+		assert.ok(inline.capture.body.includes("Model: model-a\\nHarness: Omp 19.4.2\\nsession: session-a"));
+		assert.equal(inline.result.details.stdout, "fake stdout\\n");
+		assert.equal(inline.result.details.stderr, "fake stderr\\n");
+		assert.equal(existsSync(injectionPath), false, "body text was not interpreted by a shell");
+
+		const history = "Issue detail\\n\\n---\\nModel: historical\\nHarness: Omp 18.0\\nsession: old-session";
+		const duplicateBody = `${history}\\n\\n---\\nModel: historical\\nHarness: Omp 18.0\\nsession: old-session\\n\\n---\\nModel: model-a\\nHarness: Omp 19.4.2\\nsession: session-a\\n\\n---\\nModel: model-a\\nHarness: Omp 19.4.2\\nsession: session-a`;
+		const originalFile = join(root, "issue-body.md");
+		writeFileSync(originalFile, duplicateBody);
+		const fileWrite = await execute(["issue", "edit", "91", "--body-file", originalFile]);
+		assert.equal((fileWrite.capture.body.match(/Model: historical/gu) ?? []).length, 1);
+		assert.equal((fileWrite.capture.body.match(/Model: model-a/gu) ?? []).length, 1);
+		assert.ok(fileWrite.capture.body.startsWith("Issue detail"));
+		assert.equal(readFileSync(originalFile, "utf8"), duplicateBody, "the caller's body file remains unchanged");
+		assert.equal(existsSync(fileWrite.capture.temporaryPath), false, "the private body copy was removed");
+
+		model = "model-b";
+		sessionId = "session-b";
+		const prCreateFile = await execute(["pr", "create", "--draft", "--title", "title", "--body-file", originalFile]);
+		assert.ok(prCreateFile.capture.body.includes("Model: model-b\\nHarness: Omp 19.4.2\\nsession: session-b"));
+		const prEdit = await execute(["pr", "edit", "7", "--body", "PR description"]);
+		assert.ok(prEdit.capture.body.includes("Model: model-b\\nHarness: Omp 19.4.2\\nsession: session-b"));
+		const issueComment = await execute(["issue", "comment", "91", "-b", "issue comment"]);
+		assert.ok(issueComment.capture.body.includes("Model: model-b\\nHarness: Omp 19.4.2\\nsession: session-b"));
+		const prCommentFile = await execute(["pr", "comment", "7", "--body-file", originalFile]);
+		assert.ok(prCommentFile.capture.body.includes("Model: model-b\\nHarness: Omp 19.4.2\\nsession: session-b"));
+
+		const reviewFile = join(root, "review.json");
+		writeFileSync(reviewFile, JSON.stringify({
+			event: "COMMENT",
+			body: "review summary",
+			comments: [{ path: "a.js", line: 3, body: "line comment" }],
+		}));
+		const review = await execute(["api", "--method", "POST", "repos/o/r/pulls/7/reviews", "--input", reviewFile]);
+		assert.ok(review.capture.payload.body.includes("Model: model-b"));
+		assert.ok(review.capture.payload.comments[0].body.includes("Model: model-b"));
+		assert.equal(existsSync(review.capture.temporaryPath), false, "the private review JSON was removed");
+
+		const replyFile = join(root, "reply.json");
+		writeFileSync(replyFile, JSON.stringify({ body: "thread reply" }));
+		const reply = await execute(["api", "-X", "POST", "repos/o/r/pulls/7/comments/99/replies", "--input", replyFile]);
+		assert.ok(reply.capture.payload.body.includes("Model: model-b"));
+
+		nextExitCode = 7;
+		const failed = await execute(["pr", "comment", "7", "--body-file", originalFile]);
+		assert.equal(failed.result.isError, true);
+		assert.equal(failed.result.details.exitCode, 7);
+		assert.equal(failed.result.details.stdout, "fake stdout\\n");
+		assert.equal(failed.result.details.stderr, "fake stderr\\n");
+		assert.equal(existsSync(failed.capture.temporaryPath), false, "failed writes also remove private body copies");
+		assert.equal(readFileSync(versionLog, "utf8").trim().split("\\n").length, 1, "the Omp version is read once per extension instance");
+
+		const missingVersion = makeSession({}, {
+			githubWriteDependencies: {
+				spawnProcess: (command, args, options) => spawn(command, args, { ...options, env: env() }),
+				versionReader: () => { throw new Error("Omp executable unavailable"); },
+			},
+		});
+		nextExitCode = 0;
+		const missing = await missingVersion.tools.get("daily_driver_gh_write").execute(
+			"missing-version",
+			{ args: ["pr", "comment", "7", "--body", "fallback"] },
+			undefined,
+			undefined,
+			ctx,
+		);
+		const fallback = JSON.parse(readFileSync(capturePath, "utf8"));
+		assert.ok(fallback.body.includes("Harness: Omp n/a"));
+		assert.equal(missing.isError, undefined);
+	} finally {
+		rmSync(root, { recursive: true, force: true });
+	}
+});
 check("a context with no readable name and no recorded call is allowed, loudly", () => {
 	const s = makeSession();
 	const lines = [];
