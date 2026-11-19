@@ -66,7 +66,7 @@ function guardHandler() {
 		optional: () => schema,
 	};
 	dailyDriverExtension({
-		zod: { object: (spec) => spec, string: () => schema, number: () => schema },
+		zod: { object: (spec) => spec, string: () => schema, array: () => schema, number: () => schema },
 		on(event, fn) {
 			if (event === "tool_call") handlers.push(fn);
 		},
