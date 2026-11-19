@@ -24,6 +24,7 @@
 
 * Preserve evidence for unchanged criteria across contract revisions while requiring fresh observations for changed criteria ([#883](https://github.com/jmcvetta/daily-driver/issues/883)).
 
+* Keep undertaking class routing within the invoking family and provider; leave session tools usable after routing and cancellation failures ([#912](https://github.com/jmcvetta/daily-driver/issues/912)).
 
 * Validate task verification declarations before grounding, bind repository evidence to the selected worktree, and retain native Omp bash terminal outcomes without treating shell output as check conclusions ([#866](https://github.com/jmcvetta/daily-driver/issues/866)).
 
