@@ -62,10 +62,22 @@ session call where it has one, and from the harness's own statement of the
 serving model where it does not.
 
 **`Provider:`, one line.** The provider that served the model, as the
-harness reports it — never inferred from the model id, because one model id
-can be served through more than one provider and the two are different
-attribution. A harness that exposes no provider identity records `n/a`; the
-per-harness reference names where the report comes from.
+harness reports it — never inferred from the model id or the harness name,
+because one model id can be served through more than one provider and the two
+are different attribution. Apply this precedence:
+
+1. An explicitly reported serving-provider identity.
+2. Otherwise, the model vendor's own identity for a verified first-party cloud
+   session of that vendor, or for a CLI configuration positively identified as
+   the vendor's direct API or another first-party service.
+3. Otherwise, the serving provider a CLI configuration positively identifies
+   as a third-party backend, such as Bedrock or Vertex AI.
+4. Otherwise, `n/a`.
+
+The per-harness reference names where the report comes from, the vendor
+identity to record, and what counts as verification. A model id or a harness
+name alone never proves the serving provider, and an unidentified session
+retains `n/a`.
 
 **`Harness:`, one line.** The harness's name and the version a surface in the
 session can actually read, by whatever call the reference file for the
