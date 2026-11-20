@@ -702,6 +702,14 @@ and leave it open. On completion or the by-hand stopping point, cancel the
 backstop and drop every pull-request subscription. Preserve the existing
 conditional merge and archive permissions.
 
+Use the active harness's notification route, where supported, only after
+that cleanup for the whole completed operation or by-hand stopping point.
+Do not notify for an individual child or wave. For a genuine unresolved human
+handoff, notify before the chat handoff with a stable semantic key for the
+specific action; child reports go to the orchestrator. Recoverable errors,
+CI and external waits, reminders, progress and ordinary final replies are not
+notifications. The notification does not replace the record or chat handoff.
+
 
 Waves launch without confirmation
 =================================

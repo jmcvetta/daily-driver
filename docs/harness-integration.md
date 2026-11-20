@@ -42,6 +42,32 @@ Omp uses `extensions/daily-driver.js`. It blocks the `ask` tool, holds issue and
 
 The exact calls and per-skill differences live in the active harness's reference file. The [architecture notes](notes/0011-two-harnesses-one-skill-tree.md) and [Codex integration note](notes/0016-three-harnesses-one-skill-tree.md) record why the adapters differ.
 
+### Omp notifications
+
+Daily Driver overrides Omp's generic `completion.notify` and `error.notify`
+settings to off in each live settings scope at session start, switch, branch,
+tree and before agent start. It does not edit persisted YAML. These process
+overrides are not restored on refresh (`/reload-plugins`), session end or
+cleanup; refresh is not removal. Reminder, asynchronous result, child report,
+wait and in-app feedback behavior is unchanged. This policy does not change
+other harnesses.
+
+The explicit `daily_driver_notify` tool accepts `attention_required` for an
+unresolved human action and `work_complete` for an entire completed operation.
+The undertaking finish tool sends its completion automatically after
+successful persistence and release. The skill references describe when to
+call the tool; an ordinary completion, progress update, recoverable error or
+CI wait is not a notification event.
+
+Only a main agent with UI in TUI or RPC mode can deliver. Children and
+headless sessions are suppressed, and the public Omp terminal notification
+transport may apply its own suppression. The policy records a deduplication
+entry on the active session branch before best-effort transport, without
+storing the message. It re-reads the branch and serializes requests, so a
+repeated semantic key for the same work identity and reason is not replayed,
+including after a delivery error. Delivery failure is reported, not retried
+as a fresh event.
+
 ## Standing instruction delivery
 
 The complete standing constitution is delivered directly to root and child

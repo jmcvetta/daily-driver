@@ -69,7 +69,10 @@ function fakeSession(options = {}) {
 		on(name, handler) { const list = handlers.get(name) ?? []; list.push(handler); handlers.set(name, list); },
 		registerTool: tool => tools.set(tool.name, tool),
 		registerCommand: (name, command) => commands.set(name, command),
-		appendEntry: async (customType, data) => entries.push({ type: "custom", customType, data: structuredClone(data) }),
+		appendEntry: async (customType, data) => {
+			if (options.appendEntry) await options.appendEntry(customType, data);
+			entries.push({ type: "custom", customType, data: structuredClone(data) });
+		},
 		async setModel(value) {
 			calls.models.push(value);
 			if (options.setModel) return options.setModel(value, selected => { current = selected; });
@@ -105,7 +108,7 @@ function fakeSession(options = {}) {
 	};
 	Object.defineProperty(ctx, "model", { get: () => current });
 	const api = installUndertakingRouting(pi, async () => settings, options.routes ? () => options.routes : undefined,
-		options.candidates ?? (async (_ctx, _settings, patterns) => patterns));
+		options.candidates ?? (async (_ctx, _settings, patterns) => patterns), options.onCompleted);
 	async function fire(name, payload = {}) {
 		for (const handler of handlers.get(name) ?? []) {
 			const result = await handler({ type: name, ...payload }, ctx);
@@ -500,6 +503,38 @@ export default function registerUndertakingRoutingChecks(check) {
 			assert.notEqual((await resumed.route()).isError, true);
 		});
 	}
+
+	// A completion notification must follow both durable completion and release.
+	routingCheck("completion callback runs only after persistence and owner release", async create => {
+		const callbacks = [];
+		let s;
+		s = await create({ onCompleted: async (ctx, issue) => {
+			callbacks.push({ ctx, issue, lifecycle: s.entries.at(-1)?.data?.lifecycle, owner: s.describe().undertaking });
+		} });
+		await s.route();
+		assert.notEqual((await s.finish()).isError, true);
+		assert.deepEqual(callbacks, [{ ctx: s.ctx, issue: 755, lifecycle: "completed", owner: null }]);
+	});
+
+	// Failed or cancelled ownership must never announce successful completion.
+	routingCheck("wrong owner, cancellation and failed persistence do not call completion", async create => {
+		const callbacks = [];
+		let rejectCompletion = false;
+		const s = await create({
+			onCompleted: (...args) => callbacks.push(args),
+			appendEntry: (_type, data) => {
+				if (rejectCompletion && data.lifecycle === "completed") throw new Error("completion persistence failed");
+			},
+		});
+		await s.route();
+		assertGap(await s.finish(756));
+		rejectCompletion = true;
+		await assert.rejects(() => s.finish(), /completion persistence failed/u);
+		assert.deepEqual(callbacks, []);
+		rejectCompletion = false;
+		await s.command("cancel 755");
+		assert.deepEqual(callbacks, []);
+	});
 
 	// A different issue or wrong finish must not displace the active owner.
 	routingCheck("owner rejects another issue and mismatched finish", async create => {

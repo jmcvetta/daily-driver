@@ -102,6 +102,20 @@ completed undertaking or resume the existing one before selecting another.
 A finish call with the wrong issue also returns an error and preserves the
 existing state.
 
+The successful finish persists and releases the undertaking before its
+automatic completion notification. Do not call `daily_driver_notify` again for
+that completion. A stopped or incomplete undertaking is not a completion.
+
+For a genuine unresolved human handoff, before the chat handoff call
+`daily_driver_notify({ reason: "attention_required", key: "<stable action key>",
+message: "<specific action needed>" })`. The key identifies the required
+action, not an attempt; use a different key for a different action. Keep the
+key nonblank and at most 160 characters, the message nonblank and at most 400,
+and both free of control characters. Do not put secrets in either. The
+notification does not replace the chat handoff or durable record. A child
+reports to its orchestrator instead; recoverable errors, CI waits, reminders,
+progress and ordinary final replies do not notify.
+
 **Operator choices remain in control after admission.** Request rejection or
 resume does not restore or require the initially selected model or effort.
 Operators may change model, provider, and effort at any later point; routing
