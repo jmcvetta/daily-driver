@@ -154,6 +154,9 @@ opening a PR.
 
 New CI checks add recurring execution, review, failure-triage and maintenance
 costs. More checks are not inherently better. Prefer established checks and
+necessary regression coverage. Routine CI integration for approved code is
+part of delivery, not an additional enforcement proposal.
+
 Before classifying a command as routine integration, inspect its effective
 execution chain: wrapper targets, prerequisite targets, and invoked scripts,
 including their material operations. A target named `check` or `test`, path-
