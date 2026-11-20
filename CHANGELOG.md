@@ -52,6 +52,20 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.68.0](https://github.com/jmcvetta/daily-driver/compare/v0.67.0...v0.68.0) (2026-11-20)
+
+
+### Features
+
+* add explicit Omp task notifications ([#949](https://github.com/jmcvetta/daily-driver/issues/949)) ([8eba3f4](https://github.com/jmcvetta/daily-driver/commit/8eba3f4f1f8f630bbba60a238f950cd4e4c41374))
+* **rectify-names:** add staged naming correction workflow ([#948](https://github.com/jmcvetta/daily-driver/issues/948)) ([a862aff](https://github.com/jmcvetta/daily-driver/commit/a862aff5842bf76888b1810b75aaa698d366fdf9))
+
+
+### Bug Fixes
+
+* **extension:** capitalize reviewer role display name ([#945](https://github.com/jmcvetta/daily-driver/issues/945)) ([da1d323](https://github.com/jmcvetta/daily-driver/commit/da1d3239e57742a60d5e840d0b37cf73e48da07c))
+* **provenance:** record Anthropic for verified Claude cloud sessions ([#941](https://github.com/jmcvetta/daily-driver/issues/941)) ([ac0564c](https://github.com/jmcvetta/daily-driver/commit/ac0564cfaac0600b33c8e7f41fb7b9418487c641))
+
 ## [0.67.0](https://github.com/jmcvetta/daily-driver/compare/v0.66.0...v0.67.0) (2026-11-19)
 
 
