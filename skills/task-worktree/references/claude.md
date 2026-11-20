@@ -23,6 +23,7 @@ git branch --show-current
 git remote
 git config --get remote.pushDefault
 git symbolic-ref --short refs/remotes/<remote>/HEAD
+git fetch <remote> +refs/heads/<base-branch>:refs/remotes/<remote>/<base-branch>
 git -C <primary-worktree> status --short
 source scripts/ensure-worktrunk.sh && ensure_worktrunk
 wt --config-set 'list.json-schema=2' list --format=json
@@ -38,7 +39,9 @@ git switch --track -c <task-branch> <remote>/<task-branch>
 Use the remote declared by the task or repository, then `remote.pushDefault`,
 then the only configured remote. More than one unexplained remote is a stop.
 Keep the full remote-tracking name returned by `git symbolic-ref` as the base.
-Never use the current feature branch as the base.
+Before creating a fresh task branch, fetch that branch with the explicit
+refspec above. Stop if the fetch fails; do not create from a stale local
+remote-tracking ref. Never use the current feature branch as the base.
 
 Inspect `.items[]` from schema-2 JSON. `.worktree.main` identifies the primary
 worktree; `.worktree.path` supplies its path. `wt config show` reports config
