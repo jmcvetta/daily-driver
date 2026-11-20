@@ -73,8 +73,9 @@ enabled and no `worktrunk@worktrunk` identity enabled.
 
 To synchronize this repository from a linked worktree, install Worktrunk's
 shell integration and run `wt sync`. It switches the calling shell to the
-primary worktree, pulls `master`, and uses Worktrunk to offer safe cleanup of
-branches deleted upstream:
+primary worktree, pulls `master`, and uses Worktrunk to remove every branch and
+worktree Worktrunk finds integrated into `master`, including squash-merged
+ones. Dirty or locked worktrees stay:
 
 ```sh
 wt config shell install
