@@ -11,9 +11,43 @@ description: >-
 
 # Rectify names
 
-A name is a claim about the thing it names. This skill examines the thing and
-its consumers before assessing that claim. A candidate is not a correction:
-no code changes happen during examination, recording, judging or planning.
+## Names and things
+
+This skill takes its frame from the Chinese philosophy of **Rectification of
+Names** (*zhengming*, 正名). In the *Analects*, Confucius connects correct names
+with truthful speech and effective action:
+
+> "If names be not correct, language is not in accordance with the truth of
+> things. If language be not in accordance with the truth of things, affairs
+> cannot be carried on to success."
+>
+> — *Analects* 13.3, wording preserved from
+> [Pagoda #318](https://github.com/Green-Pagoda/pagoda/issues/318).
+
+The original concern includes social roles and conduct. Here the engineering
+application is narrower: a name makes a claim about a domain concept, a
+responsibility or a behavior. When that claim and the implementation diverge,
+readers reason from the wrong model. Rectification corrects that mismatch,
+not merely the spelling or style of an identifier.
+
+The **White Horse Dialogue**, attributed to Gongsun Long and associated with
+the School of Names, offers a related but distinct lens. Its claim, "a white
+horse is not a horse," has disputed interpretations; one useful reading
+distinguishes the scope of "white horse" from that of "horse." The terms are
+not interchangeable, even though a white horse is a horse. This is not a
+teaching from the *Analects* or a reason to deny ordinary category membership.
+See [School of Names](https://plato.stanford.edu/entries/school-names/).
+
+Apply that distinction to the code: does a name denote a category, a subtype,
+an instance or a property, and does its scope match the values and behavior
+it actually covers? `metal` does not cover CPI; `measure` can cover both.
+Conversely, `gold` is more accurate than `metal` when the thing is specifically
+gold. Broader and narrower names are not inherently better. Establish the
+domain distinction from evidence rather than using philosophy to justify
+unnecessary renaming.
+
+The stages below turn this frame into reviewable decisions. No code changes
+happen during examination, recording, judging or planning.
 
 **Use the active harness routes supplied by the skills this workflow invokes.**
 Do not add a second route for an operation those skills already provide.
