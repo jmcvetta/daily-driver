@@ -862,9 +862,10 @@ it rather than waiting until ready or starting a second actor.
 When it looks
 -------------
 
-Take `pr`'s catch-up look on every turn returning to the open pull request,
-and once before `Ready for review`. Currency is the gate's first condition,
-not proof that the undertaking is complete.
+Take `pr`'s catch-up look before resuming work on the open pull request.
+Answer direct user questions first under the constitution. A catch-up look
+already taken in this turn also serves `Ready for review`; do not repeat it
+without a relevant state change. Currency is not proof of completion.
 
 After currency settles, assess CI on the resulting head through
 `review-cycle`'s `How to wait`, then continue review, the ready gate, and
@@ -931,6 +932,21 @@ Take the reads in this order. The first that does not hold is where the
 sequence stops, and the reason is stated in one line. Cite a read by its
 condition, never by its position: a read inserted ahead of it moves every
 number.
+
+**Continue from evidence, not from an old hold.** Keep each satisfied
+condition with the inputs it covers. Completed acceptance or runtime
+verification remains valid while its relevant artifact, head, configuration
+and validity conditions hold. A later turn or an old "keep draft" reminder
+does not invalidate it. Recheck dynamic PR state on return, but reuse reads
+already obtained for the same state in this turn. Changed inputs, incomplete
+evidence or a new contradictory result invalidate only the affected
+conditions; a changed head always needs current-head CI under `review-cycle`.
+Do not rerun a deployment or runtime wait solely to repeat a passed gate.
+
+When the last unmet condition clears, finish the remaining reads and execute
+the report and ready writes below. "Final gate pending" without a named unmet
+condition is not a blocker, and an earlier agent-authored hold is not user
+approval that must be renewed.
 
 1. **The head carries the whole of the issue's work.** Four parts, each a call
    or a comparison of two texts the session already holds:
