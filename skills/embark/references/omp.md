@@ -202,6 +202,20 @@ pull request for a task or bug, the evidenced answer recorded on the issue for
 research.
 An issue's closed state alone does not prove the epic outcome was met.
 
+After the whole epic operation completes or reaches its evidenced by-hand
+stopping point, and after cancelling the backstop and dropping subscriptions,
+call `daily_driver_notify({ reason: "work_complete", key: "epic-complete",
+message: "<epic outcome or by-hand action>" })`. Do not notify for a wave or
+child completion. For a genuine unresolved human handoff, call
+`daily_driver_notify({ reason: "attention_required", key: "<stable action key>",
+message: "<specific action needed>" })` before the chat handoff. Choose a
+stable key for the specific required action, not an attempt. Keys must be
+nonblank and at most 160 characters; messages must be nonblank and at most
+400 characters; neither may contain control characters or secrets. Child
+agents report to the orchestrator, not the user. Recoverable errors, CI waits,
+reminders, progress and ordinary final replies do not notify. Notifications
+do not replace the record or chat handoff.
+
 **A live subagent's result or failure arrives as a wake of its own.** The
 orchestrator ends its turn holding the job IDs returned by `task`, and each
 implementor that finishes wakes it. Inspect a job without consuming delivery

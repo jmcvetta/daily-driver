@@ -47,6 +47,7 @@ import {
 	isGitHubBodyWrite,
 	isGitHubCommentWrite,
 } from "./github-write.mjs";
+import { installNotificationPolicy } from "./notification-policy.mjs";
 import { installUndertakingRouting } from "./undertaking-routing.mjs";
 
 /**
@@ -2376,7 +2377,7 @@ function newTriggerId() {
 }
 
 /** The `daily-driver` Omp extension factory. */
-export default function dailyDriverExtension(pi, { modelTagsSetting, githubWriteDependencies } = {}) {
+export default function dailyDriverExtension(pi, { modelTagsSetting, githubWriteDependencies, notificationDependencies } = {}) {
  	const z = pi.zod;
 	const runGitHubWrite = createGitHubWriteRunner(githubWriteDependencies);
  	const initializedSettings = new WeakSet();
@@ -2391,7 +2392,19 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 		));
 		return routingSettings.get(ctx.cwd);
 	}
-	const undertakingRouting = installUndertakingRouting(pi, settingsFor, async ctx => readModelClassRoutes(await settingsFor(ctx)));
+	const notificationPolicy = installNotificationPolicy(pi, settingsFor, notificationDependencies);
+	const undertakingRouting = installUndertakingRouting(
+		pi,
+		settingsFor,
+		async ctx => readModelClassRoutes(await settingsFor(ctx)),
+		undefined,
+		async (ctx, issue) => notificationPolicy.notify(ctx, {
+			reason: "work_complete",
+			key: `undertaking-${issue}-complete`,
+			message: `Undertaking #${issue} is complete.`,
+			workIdentity: `undertaking:${issue}`,
+		}),
+	);
 	pi.on("session_start", async (_event, ctx) => {
 		invalidateStartupState();
 		if (typeof ctx?.cwd !== "string") return;

@@ -47,6 +47,7 @@ import { MODEL_CLASS_ROLE_DEFAULTS, MODEL_CLASS_ROLE_TAGS, installModelClassDefa
 import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import registerUndertakingRoutingChecks from "./undertaking-routing-cases.mjs";
+import registerNotificationPolicyChecks from "./notification-policy-cases.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(here, "..");
@@ -226,7 +227,10 @@ const {
 
 function makeSession(overrides = {}, dependencies = {}) {
 	const { pi, rec, tools, timers, fire } = fakeApi(overrides);
-	dailyDriverExtension(pi, dependencies);
+	dailyDriverExtension(pi, {
+		...dependencies,
+		notificationDependencies: { lookup: () => ({ override() {} }), ...dependencies.notificationDependencies },
+	});
 	return { rec, tools, timers, fire, pi };
 }
 
@@ -3850,6 +3854,7 @@ check("package.json wires the extension and is a module", () => {
 });
 
 registerUndertakingRoutingChecks(check);
+registerNotificationPolicyChecks(check, { makeSession });
 
 
 await Promise.all(checks);

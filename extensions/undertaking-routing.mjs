@@ -180,7 +180,7 @@ function ownedBy(state, owner) {
 }
 
 /** Install one-time undertaking model selection without changing host helper roles. */
-export function installUndertakingRouting(pi, getSettings, getRoutes = () => MODEL_CLASS_ROUTES, getCandidates = readExecutionCandidates) {
+export function installUndertakingRouting(pi, getSettings, getRoutes = () => MODEL_CLASS_ROUTES, getCandidates = readExecutionCandidates, onCompleted = () => {}) {
 	const states = new Map();
 	const selecting = new Set();
 	const admissions = new Set();
@@ -522,6 +522,11 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			};
 			await pi.appendEntry(ENTRY, { schema: 2, issue: state.issue, lifecycle: "completed" });
 			release(ctx, state);
+			try {
+				await onCompleted(ctx, state.issue);
+			} catch (error) {
+				console.error(`daily-driver: undertaking completion notification failed: ${error.message}`);
+			}
 			return { content: [{ type: "text", text: "Undertaking route finished." }], details: describe(ctx) };
 		},
 	});

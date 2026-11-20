@@ -1336,6 +1336,13 @@ observed capability gaps retain the specific handling below. Report the
 unfinished condition and actual resume path. Where an orchestrator's address
 was given, report the stop under `Reporting to an orchestrator`.
 
+For a genuine unresolved human handoff, notify through the active harness
+route before the chat handoff when that route supports it. Use a stable
+semantic key for the specific action needed, not a transient attempt. A child
+reports to its orchestrator instead of notifying the user. Recoverable errors,
+CI and external waits, reminders, progress and ordinary final replies do not
+qualify. Notification does not replace the required record or chat handoff.
+
 - **A blocked issue, an issue whose intent is genuinely ambiguous, or a
   request too vague to write an issue for.** The constitution forbids guessing
   at intent; this is that rule, at `Open the issue` and at `Read the issue and
