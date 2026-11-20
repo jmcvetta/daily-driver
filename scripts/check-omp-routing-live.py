@@ -241,7 +241,7 @@ export default function(pi) {
             session_file = next(storage.glob("*.jsonl"))
             entries = [json.loads(line) for line in session_file.read_text().splitlines()]
             routes = [entry["data"] for entry in entries if entry.get("customType") == "daily-driver-undertaking-route"]
-            assert routes[-1] == {"schema": 2, "issue": 828, "lifecycle": "cancelled"}, routes
+            assert routes[-1] == {"schema": 3, "issue": 828, "lifecycle": "cancelled"}, routes
             assert not any(route.get("completed") or route.get("lifecycle") == "completed" for route in routes)
             if not malformed:
                 assert "CONTROL_CONVERSATION_RETAINED" in session_file.read_text()
