@@ -18,6 +18,7 @@ limits; a shared skill does not imply identical capabilities on every harness.
 
 | Skill | When to use it |
 | ----- | -------------- |
+| [council](council/SKILL.md) | Compare options, risks, open questions, and disagreement for an explicitly requested planning question; stop before execution. |
 | [specification](specification/SKILL.md) | Collaborate on a canonical specification and publish it through an operator-approved, reviewed PR. |
 | [epic](epic/SKILL.md) | Coordinate discovery and specification-backed promotion, or break settled work into issues with dependencies and completion criteria. |
 | [undertake](undertake/SKILL.md) | Complete assigned issues; also read its execution policy before delegation, frontier escalation or unfinished stops without starting an issue. |
