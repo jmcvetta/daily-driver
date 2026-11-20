@@ -1123,7 +1123,7 @@ The deterministic command filter matches stable ASCII title text because
 serialized tool parameters escape the emoji; the trace judge checks the exact
 Unicode title and call order. A separate `skill_triggered` criterion
 checks policy invocation because Skill tool paths can be truncated in the trace.
-Case 03 states that the `reasoning` agent has no route; the sandbox does not
+Case 03 states that the `complex` agent has no route; the sandbox does not
 remove that route from the Omp configuration. Case 01 combines one successful
 `Agent` call with structured per-issue dispatch checks to prove one batch; it
 does not parse the serialized task arguments, which `command_executed`
@@ -1328,7 +1328,7 @@ experiment through `scripts/evals-record.py`; never overwrite a finalized run.
 Keep smoke, full class, and workflow runs distinct. Record attempted,
 completed, pass, and error counts; per-case failures; elapsed time; reported
 tokens; and unavailable dollar cost. Never pool different tasks or judges,
-remove failure rows, or infer a general main-agent or reasoning-class
+remove failure rows, or infer a general main-agent or complex-class
 recommendation from these small samples. Link every reported figure to its
 committed provenance record.
 
@@ -2350,7 +2350,7 @@ is whether a given model, run in the `task` role real dispatch would put it
 in, finishes ordinary delegated work and leaves its own tests passing.
 
 **What it measures.** Six cases today, all from `jmcvetta/career`: three
-`mechanical` and three `implementation`, small qualifying candidates whose
+`mechanical` and three `routine`, small qualifying candidates whose
 answer key asserts only what the issue decides (two of them by a recorded
 trim, below), each verified at build time to fail on the base SHA and pass on
 the merge SHA before it was shipped. A case's `initial_prompt` is the title
@@ -2402,7 +2402,7 @@ under `answer_key_contact` and a measured score of 0. It is scored as a
 failure, not dropped: a model that goes looking when stuck has failed the
 case.
 
-**What it does not measure.** No `integration` or `reasoning` case: their class
+**What it does not measure.** No `intermediate` or `complex` case: their class
 assignments are configured policy, and this suite makes no capability claim for
 either class (see `skills/issue-body/references/model-classes.md`).
 No plugin, no skill routing, no `bare`/`with-plugin` delta — that comparison
@@ -2509,7 +2509,7 @@ on the committed key: it must fail on the base SHA and pass on the merge SHA,
 both applied through `shared/apply-tests.sh`, and the manifests must match it.
 An `unlabelled` candidate — one whose closed issue carries no `## Model
 class` section — needs `--class-override owner/repo#N=mechanical` (or
-`implementation`) before it can be selected; four shipped cases carry one,
+`routine`) before it can be selected; four shipped cases carry one,
 reviewed by hand against `skills/issue-body/references/model-classes.md`'s
 table. The script's own module docstring has the full usage, and its
 self-tests (run offline, every invocation, against inline JSON-shaped GitHub
@@ -2537,7 +2537,7 @@ and not committed.
 
 All six cases come from `jmcvetta/career`: `career-370`, `career-444` and
 `career-462` are `mechanical`, and `career-141`, `career-469` and `career-475`
-are `implementation`. Grading is each case's committed executable criteria
+are `routine`. Grading is each case's committed executable criteria
 against its hidden answer key.
 
 **Per case.** `passed/attempted` counts only attempts that completed: a
@@ -2547,16 +2547,16 @@ part of every denominator's story, not a footnote.
 
 | Case | Class | Luna passed/attempted | Luna turn-capped | Luna fixture fault | DeepSeek passed/attempted | DeepSeek turn-capped | DeepSeek fixture fault |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| career-141 | implementation | 3/3 | 2 | 0 | 2/3 | 2 | 0 |
+| career-141 | routine | 3/3 | 2 | 0 | 2/3 | 2 | 0 |
 | career-370 | mechanical | 5/5 | 0 | 0 | 4/4 | 1 | 0 |
 | career-444 | mechanical | 5/5 | 0 | 0 | 1/1 | 4 | 0 |
 | career-462 | mechanical | 5/5 | 0 | 0 | 4/5 | 0 | 0 |
-| career-469 | implementation | 4/4 | 0 | 1 | 2/2 | 3 | 0 |
-| career-475 | implementation | 2/2 | 2 | 1 | 3/3 | 1 | 1 |
+| career-469 | routine | 4/4 | 0 | 1 | 2/2 | 3 | 0 |
+| career-475 | routine | 2/2 | 2 | 1 | 3/3 | 1 | 1 |
 | **Total** | | **24/24** | **4** | **2** | **16/18** | **11** | **1** |
 
 Luna passed every attempt that completed. DeepSeek lost one `mechanical`
-repeat (`career-462`) and one `implementation` repeat (`career-141`); both are
+repeat (`career-462`) and one `routine` repeat (`career-141`); both are
 answer-key contact, below. No attempt in either arm hit `TIMEOUT`, and no
 provider, quota or authentication error appears in either run.
 
@@ -2678,12 +2678,12 @@ timeouts have separate columns.
 
 | Case | Class | Passed / completed (rate; passed / all 5 (rate)) | Turn-capped | Answer-key contact | Fixture faults | Provider errors | Timeouts |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| career-141 | implementation | 0/0 (n/a; 0/5, 0%) | 5 | 2 | 0 | 0 | 0 |
+| career-141 | routine | 0/0 (n/a; 0/5, 0%) | 5 | 2 | 0 | 0 | 0 |
 | career-370 | mechanical | 0/0 (n/a; 0/5, 0%) | 5 | 1 | 0 | 0 | 0 |
 | career-444 | mechanical | 0/0 (n/a; 0/5, 0%) | 5 | 2 | 0 | 0 | 0 |
 | career-462 | mechanical | 5/5 (100%; 5/5, 100%) | 0 | 0 | 0 | 0 | 0 |
-| career-469 | implementation | 0/0 (n/a; 0/5, 0%) | 5 | 0 | 0 | 0 | 0 |
-| career-475 | implementation | 3/3 (100%; 3/5, 60%) | 2 | 1 | 0 | 0 | 0 |
+| career-469 | routine | 0/0 (n/a; 0/5, 0%) | 5 | 0 | 0 | 0 | 0 |
+| career-475 | routine | 3/3 (100%; 3/5, 60%) | 2 | 1 | 0 | 0 | 0 |
 | **Total** | | **8/8 (100%; 8/30, 27%)** | **22** | **6** | **0** | **0** | **0** |
 
 The five `career-141` attempts reached the turn cap; three also failed the
@@ -2762,7 +2762,7 @@ not read, and these 429 responses do not verify it. No second round or later
 Iceman/LongCat request was made.
 
 The generated [Measured routes table](../skills/issue-body/references/omp.md#measured-routes)
-shows only scored case rows: Beam's 5/5 mechanical and 3/3 implementation
+shows only scored case rows: Beam's 5/5 mechanical and 3/3 routine
 entries correspond to `career-462` and `career-475`. The other four cases
 ended in turn caps and are omitted by that renderer's scored-outcome rule, so
 the row is partial evidence, not full-suite coverage.

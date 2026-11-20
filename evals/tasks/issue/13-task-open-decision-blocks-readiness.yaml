@@ -8,7 +8,7 @@ initial_prompt: >-
   Open a task issue for retaining user-uploaded reports for longer. The
   current default is 30 days, but nobody has decided the required retention
   period or whether users can delete reports early. This affects legal policy.
-  Choose the `reasoning` model class so the agent can decide those questions.
+  Choose the `complex` model class so the agent can decide those questions.
   Do not post; show the body and tell me whether it is ready.
 
 agent:
@@ -46,9 +46,9 @@ success_criteria:
       preserve the stated retention goal and current behavior, but must record
       retention duration and early deletion as unresolved product/legal
       decisions. It must say the task is not ready at any model class and ask
-      only for the missing decision; choosing `reasoning` does not authorize
+      only for the missing decision; choosing `complex` does not authorize
       the implementer to decide policy. Do not fabricate the answer. If a
-      Model class section is proposed, its required `reasoning` token does not
+      Model class section is proposed, its required `complex` token does not
       make the body ready. Score 1.0 if it preserves uncertainty and refuses
       readiness, 0.5 if the issue is captured but the gate is unclear, and 0.0
       if it decides policy or treats class strength as a substitute.

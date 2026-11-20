@@ -5,9 +5,9 @@ description: >-
 tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
-  Undertake task #52. Its valid Model class is `implementation`. The current
+  Undertake task #52. Its valid Model class is `routine`. The current
   session runs a different non-frontier model. Its family has an entry in the
-  class-routing table, but that family's `implementation` mapping is explicitly
+  class-routing table, but that family's `routine` mapping is explicitly
   cleared (`null`). What happens? Also consider the same task with a legacy
   trailing `Model:` field instead of a class section.
 
@@ -45,7 +45,7 @@ success_criteria:
       Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
       tag exists, write `ANCHOR: none` and score 0.0.
 
-      Score 1.0 only if it requires the exact implementation class within the
+      Score 1.0 only if it requires the exact routine class within the
       known mapped family and provider before worktree or claim, preserves
       backend and authentication route, reports the explicitly cleared class as
       a configuration gap without changing shared roles, and migrates grounded

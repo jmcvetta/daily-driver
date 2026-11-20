@@ -5,7 +5,7 @@ tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
   Undertake task #95 on Omp. Its family and provider have a valid
-  `implementation` mapping. Explain the tool sequence before creating the
+  `routine` mapping. Explain the tool sequence before creating the
   worktree if the mapping requires a model change, if it requires only an effort
   change, and if both model and effort already match.
 

@@ -4,7 +4,7 @@ description: >-
 tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
-  Undertake task #93 on Omp. Its valid `reasoning` mapping names the same
+  Undertake task #93 on Omp. Its valid `complex` mapping names the same
   provider and model identifier as the current session, but the configured
   endpoint differs. The only visible delegated route uses that endpoint too.
   What happens?

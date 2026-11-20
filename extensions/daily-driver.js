@@ -21,8 +21,8 @@
  *    task identity and establishes or reuses its dedicated worktree; this
  *    guard makes forgetting it fail before the user's checkout is changed.
  *
- * 3. Provide runtime defaults for mechanical, implementation, integration,
- *    reasoning, and frontier model roles without overwriting operator
+ * 3. Provide runtime defaults for mechanical, routine, intermediate,
+ *    complex, and frontier model roles without overwriting operator
  *    assignments or writing configuration.
  *
  * 4. Provide session-title, scheduled-reminder, and session-info tools that

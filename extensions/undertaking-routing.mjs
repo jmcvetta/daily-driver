@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { MODEL_CLASS_ROUTES, explicitModelClassRole, readExecutionCandidates } from "./role-default-helper.mjs";
 
 const ENTRY = "daily-driver-undertaking-route";
-const CLASSES = ["mechanical", "implementation", "integration", "reasoning", "frontier"];
+const CLASSES = ["mechanical", "routine", "intermediate", "complex", "frontier"];
 const EFFORT = /:(off|minimal|low|medium|high|xhigh|max|auto|inherit)$/u;
 const INDEPENDENT_HELPERS = new Set(["reviewer", "scout", "security-reviewer", "seance"]);
 // Agent names are process-local, not globally unique. A shared auth store and
@@ -148,15 +148,19 @@ function storedState(ctx) {
 	if (!entry) return null;
 	const saved = entry.data;
 	if (saved?.schema === 1 && saved.completed === true) return null;
-	if (saved?.schema === 2 && ["completed", "cancelled"].includes(saved.lifecycle)) {
+	if ([2, 3].includes(saved?.schema) && ["completed", "cancelled"].includes(saved.lifecycle)) {
 		return saved.retired === true ? saved : null;
 	}
-	if (![1, 2].includes(saved?.schema) || saved.schema === 2 && saved.lifecycle !== "active" ||
-		!CLASSES.includes(saved.modelClass) || !Number.isSafeInteger(saved.issue) || saved.issue < 1 ||
+	// Older session records retain their original class tokens across the cutover.
+	const legacyClasses = { implementation: "routine", integration: "intermediate", reasoning: "complex" };
+	const modelClass = [1, 2].includes(saved?.schema)
+		? legacyClasses[saved.modelClass] ?? saved.modelClass : saved?.modelClass;
+	if (![1, 2, 3].includes(saved?.schema) || saved.schema >= 2 && saved.lifecycle !== "active" ||
+		!CLASSES.includes(modelClass) || !Number.isSafeInteger(saved.issue) || saved.issue < 1 ||
 		!saved.origin?.provider || !saved.selectedModel || !saved.authenticationRoute) {
 		throw new Error("Saved undertaking route is invalid; use /undertaking status for local recovery");
 	}
-	return saved;
+	return { ...saved, modelClass };
 }
 
 /** Block reasons name the owning issue where known and a concrete recovery route. */
@@ -206,7 +210,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			sessions.set(state.sessionId, {
 				agentId: ctx.agent?.id, state, ctx,
 				persistCancellation: () => pi.appendEntry(ENTRY, {
-					schema: 2, issue: state.issue, lifecycle: "cancelled", retired: true,
+					schema: 3, issue: state.issue, lifecycle: "cancelled", retired: true,
 				}),
 			});
 		}
@@ -303,7 +307,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 					record.state.reason = "The owning undertaking was cancelled; this child cannot resume execution";
 				}
 				const retired = Boolean(state.ownerState) || ctx.agent?.kind === "sub";
-				await pi.appendEntry(ENTRY, { schema: 2, issue: state.issue, lifecycle: "cancelled", ...(retired ? { retired: true } : {}) });
+				await pi.appendEntry(ENTRY, { schema: 3, issue: state.issue, lifecycle: "cancelled", ...(retired ? { retired: true } : {}) });
 				state.cancelled = true;
 				release(ctx, state);
 				if (retired) {
@@ -323,7 +327,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 
 	async function save(state) {
 		await pi.appendEntry(ENTRY, {
-			schema: 2, lifecycle: "active", issue: state.issue, modelClass: state.modelClass, selectedModel: state.selectedModel,
+			schema: 3, lifecycle: "active", issue: state.issue, modelClass: state.modelClass, selectedModel: state.selectedModel,
 			origin: state.origin, authenticationRoute: state.authenticationRoute,
 			selectedEffort: state.selectedEffort,
 			capability: state.capability ?? "mapped",
@@ -494,7 +498,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				selecting.delete(sessionId);
 				let message = error instanceof Error ? error.message : String(error);
 				if (state?.selectedModel) {
-					try { await pi.appendEntry(ENTRY, { schema: 2, issue: params.issue, lifecycle: "cancelled" }); }
+					try { await pi.appendEntry(ENTRY, { schema: 3, issue: params.issue, lifecycle: "cancelled" }); }
 					catch (cleanupError) {
 						message += `; route cleanup failed: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`;
 					}
@@ -520,7 +524,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			if (!state || state.issue !== params.issue || isCancelled(state)) return {
 				isError: true, content: [{ type: "text", text: "No matching undertaking owns this session." }], details: describe(ctx),
 			};
-			await pi.appendEntry(ENTRY, { schema: 2, issue: state.issue, lifecycle: "completed" });
+			await pi.appendEntry(ENTRY, { schema: 3, issue: state.issue, lifecycle: "completed" });
 			release(ctx, state);
 			try {
 				await onCompleted(ctx, state.issue);

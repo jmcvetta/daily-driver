@@ -230,7 +230,7 @@ otherwise grounded. A story linked before the class was required is such an
 old body: where the handoff is grounded, repair its class through `issue` under
 `issue-body`'s update rule, choosing the lowest class that can deliver the
 settled work. Otherwise a missing or invalid class, or a missing rationale, is a
-gap to report; never default it to `implementation`. A classed
+gap to report; never default it to `routine`. A classed
 `research` or `bug` keeps its kind: it uses its own readiness and completion
 tests, not the task template. A standalone `bug` or `research` with no story
 role and no class section uses its kind-specific readiness test alone. A

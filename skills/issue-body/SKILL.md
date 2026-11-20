@@ -230,7 +230,7 @@ contract remains in [`epic/SKILL.md`](../epic/SKILL.md#the-epic-body).
 A repository-answerable question is answered now by the author. An unresolved
 user decision makes the issue unready at every class. Unknown class tokens,
 multiple class sections, and a missing rationale are invalid metadata, not a
-default to `implementation`. A `frontier` assignment is not ready unless its
+default to `routine`. A `frontier` assignment is not ready unless its
 approval record and work envelope match the assignment exactly. Frontier
 research remains `research` and carries no task template.
 
@@ -266,7 +266,7 @@ worker. **Assignable is not the `task` kind.** A story is assignable when it is:
 
 An unknown token, a duplicate section, a missing section or a missing
 rationale makes the story not ready. None of them defaults to
-`implementation`. A `story` marker, a parent edge or a kind label alone proves
+`routine`. A `story` marker, a parent edge or a kind label alone proves
 no readiness.
 
 Resolve repository-answerable gaps before presenting a story as ready, and
@@ -298,7 +298,7 @@ task `Model:` field — the legacy class-metadata field below `## Human brief`, 
 a `provenance` block below the closing `---` rule, which follows `provenance`'s
 distinct-attribution rule. When selecting an old task for work, assess its body
 against the class rubric and migrate only that issue before dispatch. Map the
-former `standard` class to `implementation` and `advanced` to `reasoning`, based
+former `standard` class to `routine` and `advanced` to `complex`, based
 on the grounded handoff; do not change its rationale or capability requirement,
 and do not infer a class from the old identifier. A valid new section is
 authoritative when both forms exist.
@@ -312,7 +312,7 @@ The section is immediately below `## Human brief` and before `## Detail`:
 ```markdown
 ## Model class
 
-`implementation`
+`routine`
 
 The API contract and edge cases are fixed; implementation follows the existing
 adapter pattern.

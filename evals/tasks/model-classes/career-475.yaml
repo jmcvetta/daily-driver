@@ -1,7 +1,7 @@
 task_id: model-classes-career-475
 description: >-
   jmcvetta/career#475: fix: clean merged worktrees without upstreams
-tags: [model-classes, class:implementation, smoke]
+tags: [model-classes, class:routine, smoke]
 
 sandbox:
   template_sources:

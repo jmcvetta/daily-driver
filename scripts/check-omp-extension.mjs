@@ -405,9 +405,9 @@ check("session_start uses Omp's model-tag handle and does not restore a cleared 
 	assert.equal(state.mutations.filter(([kind]) => kind === "roles").length, 1);
 	assert.equal(state.mutations.filter(([kind]) => kind === "tags").length, 1);
 
-	state.modelRoles.implementation = "";
+	state.modelRoles.routine = "";
 	await s.fire("session_start", {}, { cwd: "/fixture" });
-	assert.equal(state.modelRoles.implementation, "", "same settings instance is not initialized twice");
+	assert.equal(state.modelRoles.routine, "", "same settings instance is not initialized twice");
 });
 
 // --- ask is blocked; another tool passes ------------------------------------
