@@ -1038,19 +1038,19 @@ approval that must be renewed.
    pauses on it; this condition is what the sequence returns to once the
    branch carries the result.
 
-**When the reads agree, publish the first-readiness report if none exists,
-then mark the pull request ready in the same turn.** The harness calls are in
-`The milestone` and the reference file; no summary, permission request or
-turn boundary comes between the gate and these actions. A failed report write
-leaves the PR draft. If marking ready fails after the report posts, preserve
-the report and revalidate the gate before retrying.
+**When the reads agree and no explicit user hold applies, publish the
+first-readiness report if none exists, then mark the pull request ready in the
+same turn.** The harness calls are in `The milestone` and the reference file;
+no summary, permission request or turn boundary comes between the gate and
+these actions. A failed report write leaves the PR draft. If marking ready
+fails after the report posts, preserve the report and revalidate the gate
+before retrying.
 
-**The user is never a gate condition.** Every stop this sequence takes is
-named under `Where it stops and waits`, and none of them is a confirmation
-that the work is ready. The reads above are the only thing that knows. The
-user did not do the work and cannot answer for it, so a question here asks
-somebody else to carry a claim this session is the one holding the evidence
-for.
+**The user is never asked to certify the gate.** A direct user hold on the
+readiness transition remains controlling: do not publish the first-readiness
+report or mark ready while the hold applies. A status question does not release
+it. An agent-authored reminder is not a user hold and does not outlive the
+condition it records.
 
 A branch behind its base, red CI, an open thread, or a human action still
 owed, or an issue item the diff does not carry, means it **stays a draft**,

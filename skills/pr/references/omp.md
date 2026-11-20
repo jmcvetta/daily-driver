@@ -118,7 +118,9 @@ Record waits as conditions and next actions, not permanent instructions to
 keep the PR draft. For example: "Runtime renewal is pending on head <sha>;
 when it passes, finish the remaining ready gate and mark ready." A reminder
 records earlier state, not new authority. Reconcile it with later evidence
-and user instructions; a satisfied condition no longer holds readiness.
+and user instructions; a satisfied condition no longer holds readiness. An
+explicit user hold remains in force until the user releases it; a status
+question does not release it.
 
 A stopped maintenance service is unfinished owner work, not a successful
 watch. Exit 3 requires conflict inspection: resolve a plain mechanical
