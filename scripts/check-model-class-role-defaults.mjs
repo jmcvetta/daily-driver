@@ -46,12 +46,14 @@ assert.deepEqual(clean.roles, {
 });
 assert.deepEqual(clean.tags.integration, { name: "Integration" });
 assert.deepEqual(clean.tags.frontier, { name: "Frontier" });
+assert.deepEqual(clean.tags.reviewer, { name: "Reviewer" });
 
-// Without this case, installing the frontier default can overwrite an operator's explicit route or tag.
+// Explicit reviewer display metadata must survive plugin installation unchanged.
 const operator = settingsFixture(
   { implementation: "operator/selected:high", frontier: "operator/frontier-route:high" },
   {
     implementation: { name: "Operator's implementation", color: "cyan" },
+    reviewer: { name: "Operator's reviewer", icon: "shield" },
     frontier: { name: "Custom frontier", color: "magenta" },
     custom: { name: "Custom" },
   },
@@ -64,6 +66,7 @@ assert.deepEqual(operator.tags.implementation, { name: "Operator's implementatio
 assert.deepEqual(operator.tags.frontier, { name: "Custom frontier", color: "magenta" });
 assert.deepEqual(operator.tags.mechanical, { name: "Mechanical" });
 assert.deepEqual(operator.tags.custom, { name: "Custom" });
+assert.deepEqual(operator.tags.reviewer, { name: "Operator's reviewer", icon: "shield" });
 const mutationCount = operator.mutations.length;
 installModelClassDefaults(operator.settings, operator.modelTagsSetting);
 assert.equal(operator.mutations.length, mutationCount, "repeated installation must not rewrite established settings");

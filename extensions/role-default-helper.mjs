@@ -69,6 +69,7 @@ export const MODEL_CLASS_ROLE_TAGS = Object.freeze({
 	integration: Object.freeze({ name: "Integration" }),
 	reasoning: Object.freeze({ name: "Reasoning" }),
 	frontier: Object.freeze({ name: "Frontier" }),
+	reviewer: Object.freeze({ name: "Reviewer" }),
 });
 
 /** Install only absent class selectors and role tags on one Omp settings instance. */
