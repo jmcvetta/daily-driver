@@ -146,7 +146,7 @@ class target to the same model identity in the invoking provider and family,
 then retains the invoking provider. Ambiguous or unavailable targets are route
 gaps. Explicit class roles remain valid only in the invoking provider and
 family. The built-in OpenAI Codex entry preserves existing defaults, and the
-DeepSeek V4.1 Flash entry maps only its measured mechanical and implementation
+DeepSeek V4.1 Flash entry maps only its measured mechanical and routine
 classes. Plugin-installed global defaults do not establish a mapping for
 unrelated families. A mapping is not measurement evidence.
 

@@ -219,14 +219,14 @@ success_criteria:
     weight: 2
 
   - type: run_command
-    description: "The routable task #990009 is assigned to the implementation agent exactly once"
-    command: python3 .fixture/check_dispatch.py --require 990009 --agent implementation
+    description: "The routable task #990009 is assigned to the routine agent exactly once"
+    command: python3 .fixture/check_dispatch.py --require 990009 --agent routine
     timeout: 30
     weight: 1
 
   - type: run_command
-    description: "The routable task #990011 is assigned to the implementation agent exactly once"
-    command: python3 .fixture/check_dispatch.py --require 990011 --agent implementation
+    description: "The routable task #990011 is assigned to the routine agent exactly once"
+    command: python3 .fixture/check_dispatch.py --require 990011 --agent routine
     timeout: 30
     weight: 1
 
