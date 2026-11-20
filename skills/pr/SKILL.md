@@ -155,15 +155,41 @@ opening a PR.
 New CI checks add recurring execution, review, failure-triage and maintenance
 costs. More checks are not inherently better. Prefer established checks and
 necessary regression coverage. Routine CI integration for approved code is
-part of delivery, not an additional enforcement proposal. Select new features,
-apps, or packages for the repository's established test, typecheck, build, and
-coverage commands; add them to existing path or package selection; and follow
-established per-component job patterns without separate approval. This remains
-routine integration when it adds recurring runner time or instantiates a
-package-specific job required by the repository's convention. Adding package
-membership to an existing package matrix does not add a matrix dimension; a
-new dimension adds a factor such as an operating system, runtime version, or
-browser.
+part of delivery, not an additional enforcement proposal.
+
+Before classifying a command as routine integration, inspect its effective
+execution chain: wrapper targets, prerequisite targets, and invoked scripts,
+including their material operations. A target named `check` or `test`, path-
+filtered execution, or placement in an existing job does not establish that
+its contents are ordinary validation. Use repository source and documented
+commands; do not run a build, smoke environment, or paid benchmark merely to
+discover its cost.
+
+Select new features, apps, or packages for the repository's established test,
+typecheck, build, and coverage commands; add them to existing path or package
+selection; and follow established per-component job patterns without separate
+approval. This remains routine integration when it adds recurring runner time
+or instantiates a package-specific job required by the repository's convention.
+Adding package membership to an existing package matrix does not add a matrix
+dimension; a new dimension adds a factor such as an operating system, runtime
+version, or browser. Ordinary tests, regression coverage, typechecks, necessary
+builds, and coverage remain routine integration.
+
+An umbrella command must not silently bring newly introduced image packaging
+or builds, or runtime smoke environments, into recurring CI under this
+exemption. When that work is not already authorized or required by the
+established validation contract, surface it as the named expansion and obtain
+approval before adding it. Approval of a feature, trial, or green CI alone
+does not authorize that expansion. Existing explicitly authorized container
+validation proceeds without renewed approval. Docker alone is not grounds to
+stop.
+
+For the expansion, use the existing **Failure caught**, **Existing coverage
+gap**, and **Recurring cost** fields. Name the effective build and smoke
+operations, selected trigger frequency, runner/matrix footprint, expected
+runtime, external charges, and replacement where applicable. Distinguish
+estimates from measurements and state unknowns. Never treat combined
+build-and-smoke timing as build-only time or infer charges from runtime.
 
 Do not add a job, workflow, tool, standalone check, or matrix dimension when
 existing tooling can catch the defect; placing a standalone check inside an
