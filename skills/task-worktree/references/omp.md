@@ -57,7 +57,8 @@ Use the remote declared by the task or repository, then `remote.pushDefault`,
 then the only configured remote. More than one unexplained remote is a stop.
 Keep the full remote-tracking name returned by `git symbolic-ref` as the base.
 Before creating a fresh task branch, fetch that branch with the explicit
-refspec above. Stop if the fetch fails; do not create from a stale local
+refspec above; `<base-branch>` is `<resolved-base>` without its leading
+`<remote>/`. Stop if the fetch fails; do not create from a stale local
 remote-tracking ref. Never use the current feature branch as the base.
 
 Inspect `.items[]` from schema-2 JSON. `.worktree.main` identifies the primary

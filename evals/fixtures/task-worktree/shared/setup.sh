@@ -70,7 +70,7 @@ if [ "${mode}" != "resume" ]; then
 	printf 'arrived on the remote default\n' >upstream-only.txt
 	git add upstream-only.txt
 	git commit -m "Advance only the remote default" >/dev/null
-	git push upstream master >/dev/null
+	git push upstream HEAD:refs/heads/master >/dev/null
 	git reset --hard "${old_base}" >/dev/null
 	git update-ref refs/remotes/upstream/master "${old_base}"
 fi
