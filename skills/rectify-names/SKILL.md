@@ -15,9 +15,8 @@ A name is a claim about the thing it names. This skill examines the thing and
 its consumers before assessing that claim. A candidate is not a correction:
 no code changes happen during examination, recording, judging or planning.
 
-**The routes are per harness, and they live beside this file.** Use the active
-harness routes supplied by the skills this workflow invokes. Do not add a
-second route for an operation they already provide.
+**Use the active harness routes supplied by the skills this workflow invokes.**
+Do not add a second route for an operation those skills already provide.
 
 ## Examine
 
