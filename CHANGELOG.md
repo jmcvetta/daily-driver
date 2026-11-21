@@ -60,6 +60,13 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.71.2](https://github.com/jmcvetta/daily-driver/compare/v0.71.1...v0.71.2) (2026-11-21)
+
+
+### Bug Fixes
+
+* **session-title:** reject serialized JSON titles ([#979](https://github.com/jmcvetta/daily-driver/issues/979)) ([f2ed7fa](https://github.com/jmcvetta/daily-driver/commit/f2ed7faa7c5030277a93ae270968cd1ad58002a1))
+
 ## [0.71.1](https://github.com/jmcvetta/daily-driver/compare/v0.71.0...v0.71.1) (2026-11-21)
 
 
