@@ -46,16 +46,13 @@ For a `task` or a classed `research` or `bug`, validate its `Model class`
 section and rationale through
 [`issue-body`'s guidance](../../issue-body/references/model-classes.md) before
 claim, repairing an old or invalid body where its handoff is otherwise
-grounded. A frontier task also needs explicit approval and its exact work
-envelope. A frontier `research` issue keeps that label and its narrow metadata
+grounded. A frontier `research` issue keeps that label and its narrow metadata
 exception; do not impose the task template.
 
 Before worktree creation or claim, call `daily_driver_route_undertaking` with
 `{ issue: <positive issue number>, modelClass: "mechanical" | "routine" |
-"intermediate" | "complex" | "frontier", frontierApproval?: <recorded approval
-and envelope> }`.
-Validate readiness and frontier approval first; the approval argument is evidence,
-not authorization by itself. Call the routing tool alone in its assistant tool
+"intermediate" | "complex" | "frontier" }`.
+Validate readiness first. Call the routing tool alone in its assistant tool
 batch. Do not batch discovery, worktree creation, claim, or other tool calls with
 it. The tool selects within the invoking family and provider without rewriting
 shared roles.
@@ -70,24 +67,17 @@ class suitability. Keep the requested class, selected model, and observed model
 separate. Do not claim verification from a selector or status alone.
 
 
-Admission snapshots the effective candidate identities and effort for the
-initial undertaking route. Visible incompatible retry and prewalk candidates
-fail before dispatch. This admission does not impose a continuing request-route
-guard. Agent-initiated worker selection and fallback remain subject to the
-class, frontier approval, and route-integrity requirements as workflow policy;
-operator model, provider, and effort changes remain permitted and must not be
-blocked or reversed.
+After initial selection, agent-initiated worker, provider, and fallback
+choices are not restricted by the undertaking router. Missing candidate
+metadata or route verification does not stop dispatch or ordinary work.
 
 If the known family is absent from the class table, a prominent warning names
 the family, class, and retained provider/model. Continue immediately on the
 invoking model, provider, and effort without confirmation. Class suitability
-remains unverified. Preserve this disposition for agent-initiated worker
-dispatch. If a child cannot retain the initial route, work in the invoking
-session. A class omitted from a mapped family follows the same
-warning-and-continue with suitability unverified. An explicitly cleared class,
-unavailable initial target, or incompatible agent assignment is a configuration
-gap; unknown identity and later operator selection are not absent-family
-continuation or route violations.
+remains unverified. A class omitted from a mapped family follows the same
+warning-and-continue with suitability unverified. An explicitly cleared class
+or unavailable initial target is a configuration gap; unknown identity and
+later operator selection are not absent-family continuation.
 
 Independently configured `reviewer`, `scout`, `security-reviewer`, and `seance`
 helpers are not issue implementation workers for class selection. This does not
@@ -116,12 +106,12 @@ notification does not replace the chat handoff or durable record. A child
 reports to its orchestrator instead; recoverable errors, CI waits, reminders,
 progress and ordinary final replies do not notify.
 
-**Operator choices remain in control after admission.** Request rejection or
+**Operator choices remain in control after selection.** Request rejection or
 resume does not restore or require the initially selected model or effort.
 Operators may change model, provider, and effort at any later point; routing
-must not block those changes. The initial selection remains the undertaking's
-assigned worker identity for agent-initiated dispatch and fallback checks.
-Native consultations and independent helper routes remain separate.
+must not block those changes. The initial selection records the class and
+model chosen at the start; later worker and fallback choices are not checked
+against it. Native consultations and independent helpers remain separate.
 
 **Operator recovery does not require a model turn.** Run `/undertaking status`
 locally to inspect the owner, selected model and effort, host selection, last
@@ -133,8 +123,8 @@ cancel unfinished routing. When status reports `cancelOwner: invalid`, use
 Cancellation aborts and waits for local work, releases only the owned lease,
 retires pending handoffs, and revokes owned children. It persists cancellation
 without completing the issue. It preserves transcript, worktree,
-branch, and approval evidence. A later undertaking requires fresh normal
-admission. Repeated cancellation with no owner is a no-op. Use the workflow's
+branch, and approval evidence. A later undertaking requires a fresh initial
+selection. Repeated cancellation with no owner is a no-op. Use the workflow's
 stop handoff separately when work must be stood down.
 
 
@@ -152,27 +142,14 @@ The implementor
 ===============
 
 Prefer the in-session route. A full `undertake #<issue>` handoff through `task`
-is permitted only if the effective child route and every visible fallback can
-be constrained to the same family, provider, backend, authentication route,
-and exact class. The receiving session verifies its own execution and owns the
-worktree, claim, implementation, and pull request. The sender stops rather
-than repeating the handoff or supervising duplicate work. If the surface cannot
-establish those constraints, stop and report the precise gap.
+is permitted. The receiving session owns the worktree, claim, implementation,
+and pull request. The sender stops rather than repeating the handoff or
+supervising duplicate work.
 
-After manual escalation of an existing task, first repair the plan under this
-skill's *Manual frontier escalation* policy. Use the route above only when
-its constraints are established; transfer the existing work and authority,
-not a new claim. Otherwise deliver the plan and report the missing return route.
-
-The adapter admits explicit top-level frontier selection and native
-`^provider/model` consultations without changing the undertaking worker.
-Consultation responses do not verify a pending worker. Its tools remain
-available for diagnosis, plan repair, and reporting; this is not a frontier
-implementation exception. Native mention dispatch pins the branch-authorized
-model and constrains the child's actual requests, including after resume.
-Retry-fallback and prewalk markers do not establish operator authorization.
-The adapter guards its routing tool and observed dispatch, not arbitrary
-trusted extensions that call Omp's top-level model setter.
+Explicit top-level frontier selection and native `^provider/model`
+consultations are ordinary model choices. They do not change the undertaking's
+recorded class or initial selection. Retry-fallback and prewalk transitions are
+automatic.
 
 
 The pull request

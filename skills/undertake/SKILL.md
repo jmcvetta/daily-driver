@@ -7,9 +7,9 @@ description: >-
   review-cycle. An invocation without an issue opens one. Ordinary coding
   requests without an issue or invocation do not start this sequence.
   Reading or discussing an issue is not an assignment. Also read the relevant
-  execution policy before delegation, manual frontier escalation or an
-  unfinished stop, even without an issue. A policy-only read does not start
-  the issue sequence or create an issue.
+  execution policy before delegation or an unfinished stop, even without an
+  issue. A policy-only read does not start the issue sequence or create an
+  issue.
 ---
 
 # Undertake
@@ -68,30 +68,9 @@ tasks stay with their owner. Avoid excess capability or workers; batch suitable
 work. Launch independent file slices together before your own work.
 Quota is the user's money.
 
-**Manual frontier escalation.** The escalation authorizes diagnosis and plan
-repair without asking again. Identify the failed approach, design, affected
-surfaces, constraints and acceptance criteria. Preserve every behavior without
-bypasses or dropped criteria. Read-only research and authorized planning or
-specification edits are allowed. Code, tests, configuration, implementation
-commits, and the implementation/review/CI loop need a separate explicit user
-exception with bounded scope. Manual selection, “fix this”, urgency, difficulty,
-or task approval is not that exception.
-
-For agent-controlled continuation, return to the lowest eligible ordinary
-class through a supported verified in-session switch or a full handoff that can
-constrain and verify that route. This policy does not force or reverse an
-operator's model, provider, or effort choice. Retain the issue, branch, worktree,
-valid changes, failure evidence, repaired plan, acceptance criteria and original
-approval sources and conditions. Do not create a competing branch or claim.
-The receiver owns execution; the sender stops without supervision. If no
-eligible agent route is available, deliver the repaired plan, capability gap
-and smallest operator action. No implementation fallback, unverified transfer,
-or completion claim. This cost boundary applies without an undertaking or
-frontier agent; it is not speculative parallel delegation.
-
 **Errors and unfinished stops.** Diagnose errors, repair within scope, revise
 the plan, and continue permitted work. A failed command or approach alone is
-not a blocker. Suspected Daily Driver defects use `issue`'s attribution and automatic-reporting route; target-repository defects use their normal route. Pause only for a contribution you cannot supply. Before an unfinished stop, finish independent permitted work unless safety requires immediate stop. Report the blocked operation, observed failure or exact prohibition, original authorization checked, permitted routes considered, smallest external contribution, completed or actionable independent work, and actual resume path. Use `Where it stops and waits` for classification, even outside an undertaking. Never probe a prohibited operation to prove a blocker.
+not a blocker. Suspected Daily Driver defects use `issue`'s attribution and automatic-reporting route; target-repository defects use their normal route. Pause only for a contribution you cannot supply. Before an unfinished stop, finish independent permitted work unless safety requires immediate stop. Report the blocked operation, observed failure or exact prohibition, original authorization checked, actions attempted, smallest external contribution, completed or actionable independent work, and actual resume path. Use `Where it stops and waits` for classification, even outside an undertaking. Never probe a prohibited operation to prove a blocker.
 
 
 The sequence
@@ -234,82 +213,56 @@ gap to report; never default it to `routine`. A classed
 `research` or `bug` keeps its kind: it uses its own readiness and completion
 tests, not the task template. A standalone `bug` or `research` with no story
 role and no class section uses its kind-specific readiness test alone. A
-research assignment using `frontier` follows `issue-body`'s narrow exception:
-it keeps the `research` label and must carry its single class section,
-rationale, explicit approval, and exact work envelope before claim or
-substantive work. The class states the capability a dispatcher such as `embark`
-selects a route for.
-
-A frontier assignment must carry explicit approval and its exact work envelope
-before execution. Frontier implementation also needs an explicit user
-exception recorded for that implementation scope.
+A research assignment using `frontier` keeps the `research` label and carries
+its single class section and rationale before claim or substantive work. The
+class states the capability a dispatcher such as `embark` selects a route for;
+it is a capability label, not an approval gate.
 
 **Select the initial route for classed undertaking work before the worktree or
 claim.** This covers classed `task`, `research` and `bug` issues alike; there is
 no second router. Resolve the exact class within the invoking model family and
-provider, including effort and visible fallbacks. Preserve backend and
-authentication route where supported. Never substitute another provider. An
-eligible account may refresh or rotate; do not change shared roles or
-credentials to make a route available. This initial selection covers
-undertaking workers, delegated issue work, and their execution fallbacks.
-Independently configured `reviewer`, `scout`, `security-reviewer`, and
-`seance` helpers are not issue implementation workers.
+provider through the existing class mapping. Preserve the existing configuration
+and effort-selection conventions; an already matching model needs no setter
+call. Do not change shared roles or credentials to make a route available. This
+initial selection covers undertaking workers, delegated issue work, and their
+execution fallbacks. Independently configured `reviewer`, `scout`,
+`security-reviewer`, and `seance` helpers are not issue implementation workers.
 
 When the known invoking family is absent from the class-routing table, issue a
 prominent WARNING naming the family, required class, and retained provider/model.
 Continue immediately on the invoking model, provider, and effort without
 confirmation. Its suitability for the class is unverified; an observed
-execution identity does not establish suitability. Keep that disposition for
-the same undertaking and its permitted workers. Do not dispatch a replacement
-worker merely to obtain a mapping. If a child cannot retain the initial route,
-work in the invoking session instead. Frontier approval and route integrity
-still apply.
+execution identity does not establish suitability. Do not dispatch a replacement
+worker merely to obtain a mapping.
 
 A class omitted from a mapped family follows the absent-family continuation:
 warn, retain the invoking route, and report suitability as unverified. A known
-mapped family with an explicitly cleared class, unavailable target, or
-incompatible assignment is a configuration gap at initial selection. Unknown
-family or execution identity is not evidence of an absent family. Report
-unsupported controls without claiming verification. Preserve provider where
-the harness supports it; state any limitation and never deliberately
-substitute another provider.
+mapped family with an explicitly cleared class or unavailable target is a
+configuration gap at initial selection. Unknown family or execution identity is
+not evidence of an absent family. Report unsupported controls without claiming
+verification. Preserve provider where the harness supports it; state any
+limitation and never deliberately substitute another provider.
 
 For a mapped family, prefer a supported in-session switch for this initial
-selection. Continue only when the worker confirms the selected execution
-identity, not merely when a setter accepts a switch. While confirmation is
-pending, show informative status and do not establish a worktree, claim, or
-implement. Sequence routing alone in its assistant tool batch and wait for the
-next worker response to verify a pending change before mutations. If an
-in-session switch is unavailable, a full handoff is allowed only on a surface
-that can constrain and verify the same initial route. The receiving session
+selection. If an in-session switch is unavailable, a full handoff is allowed on
+a surface that can establish the same initial selection. The receiving session
 owns the undertaking; the sender stops. If neither route can establish the
 initial selection, report the precise gap before work.
 
 After initial selection, an operator may change model, provider, or effort.
 Never block or reverse that operator choice, including after request rejection,
 on ordinary conversation, or when resuming an undertaking. Such changes do not
-reassign the undertaking's selected worker or issue class, and do not authorize
-agent-initiated reassignment, delegation, or automatic fallback. Agent-initiated
-routes and fallbacks remain subject to the initial route, frontier approval,
-and route-integrity requirements.
+reassign the undertaking's selected worker or issue class. Agent-initiated
+worker, provider, and fallback choices are not restricted by the undertaking
+router; missing candidate metadata or route verification does not stop dispatch
+or ordinary work.
 
 In Omp, an attempt to select another issue does not replace the existing
 undertaking owner. Finish the completed undertaking or resume the existing one
 before selecting a different issue; use the Omp reference for the finish call.
 
-An effective Astra/Fable route is frontier even through a lower-class role or
-fallback. Ordinary classes cannot fall back to frontier. Frontier execution
-requires the recorded approval and exact envelope; frontier implementation
-also requires the explicit user exception above. Concrete `Model:` lines in
-claim provenance record the observed model, not task metadata.
-
-Operator selection is different from an agent assignment. Do not reject a
-manual frontier switch or native model-mention consultation for missing
-issue-level frontier approval. Preserve the assigned worker, class, approval
-record, and verification state. Follow *Manual frontier escalation* in this
-skill's execution policy for plan repair and return to the ordinary worker; consultation
-does not authorize implementation. Agent-initiated routes and automatic
-fallbacks still require their own authorization.
+Concrete `Model:` lines in claim provenance record the observed model, not task
+metadata.
 
 **An issue carrying no label is labelled here rather than merely noted.** It
 runs through — unlabelled is not blocked. `issue` repairs an unlabelled
@@ -482,10 +435,8 @@ milestone` reports the timing as unavailable rather than guessing at one.
 5 — Implement
 -------------
 
-**The session running this sequence writes the code itself** once its effective
-route is confirmed non-frontier, or when the user explicitly authorizes the
-bounded frontier implementation exception. No implementor dispatch is used for
-ordinary undertakings.
+**The session running this sequence writes the code itself.** No implementor
+dispatch is used for ordinary undertakings.
 
 **Own the agreed result through a pause.** A review-ready pull request is the
 result when the assignment stops there; ownership does not add deployment or
@@ -510,9 +461,9 @@ run is also within the assignment; do not request a second grant for the same
 operation, target, route and bound merely because it incurs spend. Check the
 original authority and applicable limits before declaring an approval gap.
 
-Actual higher-priority restrictions, explicit scope exclusions, production
-and dangerous-operation prohibitions, and required frontier approval still
-apply. Ask only for authorization that is actually missing, including fresh
+Actual higher-priority restrictions, explicit scope exclusions, and production
+and dangerous-operation prohibitions still apply. Ask only for authorization
+that is actually missing, including fresh
 or narrower approval when an applicable instruction specifically requires it.
 The request does not authorize unrelated spend or scope expansion.
 
@@ -578,20 +529,6 @@ push`, `Verify the fix delta`, `Ready for review`, and `Keep it current`.
 Never create an empty PR or mark an incomplete result complete. Repository
 notes, code, or other repository artifacts use the normal task-worktree and PR
 route, even when research produced the recommendation.
-
-**A frontier session is the narrow exception.** For ordinary work it hands off
-the full undertaking to an eligible non-frontier session before creating a
-branch or claim, unless a supported model switch changes the verified
-execution identity to a non-frontier route. It does not implement or supervise
-that work on frontier. The receiving session owns the undertaking. This is
-routing, not parallelism across issues; `embark` still owns wave dispatch.
-
-For a manual escalation during an existing undertaking, follow this skill's
-*Manual frontier escalation*: repair the failed plan first,
-then return the existing work and its authorization to a verified eligible
-worker. Preserve the branch, worktree and claim; do not start a competing
-undertaking. If no return route is available, deliver the repaired plan and
-report the capability needed to resume.
 
 **The review round has its own dispatch.** `review-cycle`'s `Verify the fix
 delta` sends a briefed subagent because the author of a delta cannot be an
@@ -666,7 +603,7 @@ classify it: unknown route, repairable execution failure, current-session
 capability or access gap, external wait, or genuine human dependency. For an
 unknown route, inspect relevant repository instructions, documentation and
 Makefile routes, plus available tools and access without exposing secrets.
-Attempt each available, permitted route; diagnose ordinary repairable
+Attempt each available route; diagnose ordinary repairable
 failures within this task's scope and the existing workflow bounds.
 Documentation alone is not evidence that a route cannot run.
 
@@ -733,7 +670,7 @@ next permitted action without repeating unchanged approval requests.
 **Retain the stop decision, not only its conclusion.** Use the existing claim,
 orchestrator and stop-decision records to preserve the current owner, exact
 operation, failure evidence or restriction source, authorization checked,
-disposition of available permitted routes, smallest external contribution,
+actions attempted, smallest external contribution,
 independent work completed or still actionable, and concrete resumption path.
 Keep private approval and secret material out of public records. Reuse observed
 failures rather than rerunning them to populate a record. A runtime record is

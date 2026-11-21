@@ -44,25 +44,22 @@ For a `task` or a classed `research` or `bug`, validate its `Model class`
 section and rationale through
 [`issue-body`'s guidance](../../issue-body/references/model-classes.md) before
 claim, repairing an old or invalid body where its handoff is grounded. A
-frontier assignment also needs explicit approval and its exact envelope. A
 frontier `research` issue keeps that label and its narrow metadata exception;
 do not impose the task template.
 
 Before worktree creation or claim, make the initial class selection within the
-invoking family and provider. Preserve backend, authentication route, and
-fallbacks where the surface supports them; never deliberately substitute a
-provider.
+invoking family and provider. Never deliberately substitute a provider.
 If the known family is absent from the class table, prominently warn with the
 family, class, and retained provider/model, then continue immediately on the
 invoking model and effort without confirmation. Identity does not establish
-class suitability. Frontier approval and agent-route constraints still apply.
+class suitability.
 
 For a mapped family, a class omitted from the family map follows the same
-warning-and-continue with suitability unverified. An explicitly cleared class,
-unavailable target, or incompatible assignment is a gap. Unknown family or
-identity is not an absent family. This surface exposes no measured
-agent-callable in-session model switch; do not invent one. Report unsupported
-controls and do not claim verification.
+warning-and-continue with suitability unverified. An explicitly cleared class
+or unavailable target is a gap. Unknown family or identity is not an absent
+family. This surface exposes no measured agent-callable in-session model
+switch; do not invent one. Report unsupported controls and do not claim
+verification.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
@@ -81,19 +78,9 @@ The implementor
 ===============
 
 For a mapped family, prefer a verified in-session route. A full undertaking
-handoff through `multi_agent_v1` is allowed only if it can constrain and verify
-the exact class and same family, provider, backend, authentication
-route, and fallbacks. Its model selection is unmeasured; do not assume that
-constraint exists. The receiving session owns the undertaking and the sender
-stops without recursively handing off. When neither route can be established,
-report the exact gap. For an absent family, retain the invoking session if a
-child cannot retain its route; do not spawn a replacement merely to obtain a
-mapping.
-
-After manual escalation of an existing task, first repair the plan under this
-skill's *Manual frontier escalation* policy. Use the route above only when
-its constraints are established; transfer the existing work and authority,
-not a new claim. Otherwise deliver the plan and report the missing return route.
+handoff through `multi_agent_v1` is allowed. The receiving session owns the
+undertaking and the sender stops without recursively handing off. If no
+in-session switch is available, report the exact gap.
 
 
 The pull request

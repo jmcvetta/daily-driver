@@ -107,35 +107,19 @@ is the user's authentication action; it does not renew task approval.
 
 The Omp installation defines `mechanical`, `routine`, `intermediate`,
 `complex` and `frontier` task roles. Where no operator assignment exists, the
-extension supplies defaults. Frontier is limited to explicitly approved, bounded research
-or planning; ordinary implementation uses a non-frontier route unless the user
-separately authorizes that exception. The defaults require configured
-credentials. Use `/model` → Roles to assign models. Existing `omp_configs/`
-files remain process overlays; assignments present at startup take precedence,
-and later edits may require an Omp restart.
+extension supplies defaults. The roles describe capability for the initial
+selection; the defaults require configured credentials. Use `/model` → Roles
+to assign models. Existing `omp_configs/` files remain process overlays;
+assignments present at startup take precedence, and later edits may require an
+Omp restart.
 
-An operator's manual escalation during a failing task authorizes the
-consultation. Follow `undertake`'s *Manual frontier escalation* policy: repair
-the plan and return the existing work to a verified eligible non-frontier
-route. The escalation does not authorize frontier implementation or supervision.
-
-The Omp adapter admits explicit top-level frontier selection without changing
-the assigned worker, issue class, approval record, or verification state.
-Consultation tools remain available, including reporting while the worker is
-pending or recovery-only. This is not implementation authorization.
-
-Native `^provider/model` delegation uses the active branch's `model_mention`
-binding. The spawn hook pins that exact model despite model overrides; each
-child request must retain its model, backend, and authentication route.
-The binding does not authorize unrelated children or automatic fallback.
-Rewind removes branch-local permission; a resumed consultation retains its
-saved exact-model constraint without becoming an undertaking worker.
-
-Retry-fallback and prewalk journal entries remain automatic transitions, not
-operator approval. Agent-controlled undertaking selection and observed worker
-dispatch still require the configured class and bounded frontier approval.
-Omp 18.15.0 cannot identify every caller of the top-level model setter.
-This adapter is not a security boundary against arbitrary trusted extensions.
+The Omp adapter admits explicit top-level frontier selection and native
+`^provider/model` consultations as ordinary model choices. They do not change
+the assigned worker or issue class. Native `^provider/model` delegation uses
+the active branch's `model_mention` binding. Retry-fallback and prewalk journal
+entries are automatic transitions. Omp 18.15.0 cannot identify every caller of
+the top-level model setter. This adapter is not a security boundary against
+arbitrary trusted extensions.
 
 `dailyDriver.modelClassRoutes` is an array of entries with `referenceModel`
 and `classes`, for example `{ referenceModel: "provider/model", classes: {
@@ -156,7 +140,7 @@ open assignable issues across the participating repositories: change
 `reasoning` to `complex` in `## Model class`; update only rationale wording
 that uses the old names. Preserve all other content and leave closed issues
 unchanged. Update custom role and route-map keys with the same mapping. Older
-saved undertaking sessions are translated on resume; new admissions reject
+saved undertaking sessions are translated on resume; new selections reject
 the old tokens.
 
 An unset route configuration uses the registered default, including when Omp
@@ -164,26 +148,14 @@ clones settings for a task. An explicit empty array stays empty; malformed
 explicit values are rejected rather than replaced with defaults.
 
 Classed undertaking calls `daily_driver_route_undertaking` before worktree
-creation or claim. For a mapped family, initial admission resolves the selected
-class and visible automatic candidates once. It records their concrete backend,
-authentication route and effort. Dispatch and observed worker checks reuse
-that decision. Visible incompatible retry and prewalk candidates fail before
-dispatch. Independent specialist routes remain separate.
+creation or claim. For a mapped family, initial selection resolves the selected
+class and effort once. After that selection, worker, provider, effort, and
+fallback choices are not restricted by the router; missing candidate metadata
+or route verification does not stop dispatch. Independent specialist routes
+remain separate.
 
 Report the selected initial route as progress; status `selected` records
-selection, not execution identity or class suitability. The runtime reserves a
-routing response's whole tool batch before admitting sibling mutations. Visible
-incompatible retry and prewalk candidates fail before dispatch.
-
-Agent-initiated work remains subject to the class, frontier authorization, and
-route-integrity requirements as workflow policy; the runtime does not enforce a
-continuing request-route guard. Operator model, provider, and effort changes
-after admission remain permitted and must not be blocked or reversed.
-
-Provider transport can rewrite the request API model, endpoint, and headers
-without changing the selected provider/model. This is distinct from the
-operator's model choice; transport integrity belongs to the host/provider.
-Native consultations and recovery explanations remain separate.
+selection, not execution identity or class suitability.
 
 When the known family is absent from the class table, a prominent warning names
 the family, required class, and retained provider/model. Work continues
@@ -191,19 +163,17 @@ immediately on the invoking model, provider, and effort without confirmation.
 The route's execution identity can be reported separately from class suitability.
 A class omitted from a mapped family follows the same warning-and-continue:
 its absence leaves suitability unverified and retains the invoking route. An
-explicitly cleared (`null`) class, unavailable or incompatible initial target,
-unknown identity, or observed agent-route mismatch requires explanation and
-repair; later operator selections are not route violations.
-Failed preflight must permit explanation and retry without discarding an
+explicitly cleared (`null`) class, unavailable initial target, or unknown
+identity requires explanation and repair; later operator selections are not
+errors.
+Failed selection must permit explanation and retry without discarding an
 existing valid route. Route status is `selected` after initial selection;
 malformed or cancelled state can report `blocked`. Neither status alone
 establishes observed execution identity or class suitability. An absent-family
-result may also carry a `warning`. Frontier authorization and OAuth restrictions
-remain in force. Independently configured `reviewer`, `scout`,
-`security-reviewer`, and `seance` helper routes are selected separately from
-issue class routing; this does not define their cancellation ownership. A
-delegated worker must retain the undertaking route; otherwise work stays in the
-invoking session.
+result may also carry a `warning`. OAuth restrictions owned by the host remain
+in force. Independently configured `reviewer`, `scout`, `security-reviewer`,
+and `seance` helper routes are selected separately from issue class routing;
+this does not define their cancellation ownership.
 
 
 After the pull request is ready, or answer-only research is completed and
@@ -235,16 +205,14 @@ leases remain unchanged.
 Cancellation writes a schema-2 `cancelled` lifecycle record, not a completion
 record. Existing schema-1 active and completed records remain readable.
 Transcript, worktree, branch, approval evidence, and unfinished task state stay
-intact. A new undertaking requires normal admission. Repeated cancellation with
-no owner is a no-op. This command does not replace the workflow's stop handoff.
+intact. A new undertaking requires a fresh initial selection. Repeated
+cancellation with no owner is a no-op. This command does not replace the workflow's stop handoff.
 
 
-Omp prefers its extension's in-session switch. A full handoff needs a surface
-that can constrain and verify the same route and has one owner. Claude's
-host-side Agent SDK model setter is not an agent-callable tool; Codex's
-delegation model control is unmeasured. Neither is a reason to invent a switch
-tool or assume fallback and authentication constraints. Stop before ownership
-when the available surface cannot establish them.
+Omp prefers its extension's in-session switch. A full handoff needs one owner.
+Claude's host-side Agent SDK model setter is not an agent-callable tool;
+Codex's delegation model control is unmeasured. Do not invent a switch tool.
+Stop before ownership when the initial selection cannot be established.
 
 Omp does not relocate a live session when it creates a task worktree. Use the
 verified absolute task-worktree paths for shell and file-tool operations.

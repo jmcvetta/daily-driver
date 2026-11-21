@@ -1,0 +1,55 @@
+task_id: embark-12-overrides-and-inheritance-dispatch-frontier
+description: >-
+  Explicit agent overrides and visible parent-model inheritance may route work
+  to frontier without an assignment-specific approval.
+tags: [embark, issue-body, behaviour, fire]
+
+initial_prompt: >-
+  Launch the agreed wave. Task #89 requires `routine`; its explicit
+  `task.agentModelOverrides` entry selects the supported astra/frontier route.
+  Task #90 requires `complex`; its configured eligible route visibly falls back
+  to an astra/frontier parent model. Task #91 requires `mechanical` and has an
+  eligible non-frontier route. Task #92 requires `complex` and resolves to the
+  current `@complex` default, `openai-codex/gpt-6.1-sol:high`. What do you
+  dispatch?
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "Embark dispatches configured overrides and parent fallback"
+    expected_skill: embark
+    skill_name: embark
+  - type: agent_judge
+    description: Configured frontier routes dispatch without a separate approval
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the final reply after the last `[RESULT - …]` tag. Start with
+      `ANCHOR: result` or `ANCHOR: none`; no result means score 0.
+
+      Score 1 only if it dispatches all four tasks on their configured routes,
+      including #89's direct override and #90's visible astra parent fallback,
+      without asking for frontier approval and without rejecting a route because
+      of its model class, provider, or fallback. It must record each requested
+      class and selected route separately from actual identity. Score 0 if it
+      rejects, rewrites, or stops on any route for missing frontier approval or
+      because the effective model is frontier, or if it halts an independent
+      task.

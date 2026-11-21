@@ -228,15 +228,9 @@ section format, per-kind readiness tests, and routing guidance; `embark`
 resolves a concrete worker later. A missing or invalid class, or a missing
 rationale, never defaults to `routine`.
 
-When any story in a plan needs `frontier`, `Agree the plan` must explicitly
-confirm that exact assignment and its work envelope. State why the cheaper
-classes are insufficient, the question, known input scope, deliverable, and
-proposed frontier sessions or passes; separate facts from estimates and
-unknowns. Do not research the frontier question to estimate it. A general
-agreement to the epic is not frontier approval. Record the approval and
-approved scope in that story's issue; material expansion needs a new confirmation.
-If the story asks frontier to implement, the user must explicitly authorize that
-implementation exception and its bounded scope; research approval is not enough.
+When a story in a plan needs `frontier`, its rationale states why the cheaper
+classes are insufficient. The class is a capability label, not a separate
+approval event; no approval record or work envelope is required.
 
 2 — Agree the plan
 ------------------

@@ -106,27 +106,11 @@ Route assessment limits
 
 The delegation namespace has not been driven. No model or effort argument is
 measured, so do not invent either. Every epic story must pass `Take the wave`'s
-assignability gate. Resolve its required class only where the offered
-configured route and its actual capabilities can be established. Otherwise
-stop that child and report the configuration gap. The muster roll records
-each task's required class and selected implementor route, and the actual
-model as `unreported` when the surface does not report one.
-Treat an effective astra/fable route as frontier even when an override,
-fallback, or visible parent-model inheritance supplies it through a lower-class
-role. Dispatch a frontier assignment only when the issue records explicit user
-approval and its exact work envelope. Do not invent a provider identifier or
-assume an API route. Since this delegation surface does not report a measured
-model argument, stop the affected task with a configuration gap unless the
-configured route and its class can be established.
-The exact class and all visible fallbacks must retain the current family,
-provider, backend, and authentication route. If the unmeasured surface cannot
-constrain and verify them, stop that task before dispatch. Do not rewrite shared
-roles or assume that a model identifier proves the route.
-
-A frontier session may only route ordinary work to an eligible non-frontier
-implementor; it must not retain or supervise implementation on frontier.
-Frontier implementation requires a separate explicit user exception and
-bounded scope. Research approval covers only its deliverable.
+assignability gate. Resolve its required class for the initial selection.
+The muster roll records each task's required class and selected implementor
+route, and the actual model as `unreported` when the surface does not report
+one. Do not invent a provider identifier or assume an API route. After the
+initial selection, worker and fallback choices are not restricted.
 
 - **Agent-to-agent messaging.** Whether a delegated implementor can send a
   question back to the delegating session is not measured. The route this

@@ -108,7 +108,7 @@ function fakeSession(options = {}) {
 	};
 	Object.defineProperty(ctx, "model", { get: () => current });
 	const api = installUndertakingRouting(pi, async () => settings, options.routes ? () => options.routes : undefined,
-		options.candidates ?? (async (_ctx, _settings, patterns) => patterns), options.onCompleted);
+		options.onCompleted);
 	async function fire(name, payload = {}) {
 		for (const handler of handlers.get(name) ?? []) {
 			const result = await handler({ type: name, ...payload }, ctx);
@@ -255,6 +255,23 @@ export default function registerUndertakingRoutingChecks(check) {
 			assert.equal(resumed.calls.aborts, 0);
 		});
 	}
+
+	// Removed authorization fields must not be required to continue a saved route.
+	routingCheck("saved record without obsolete route fields resumes", async create => {
+		const first = await create();
+		await first.route({ modelClass: "complex" });
+		const entries = structuredClone(first.entries);
+		const saved = entries.at(-1).data;
+		delete saved.origin;
+		delete saved.authenticationRoute;
+		delete saved.frontierApproval;
+		const resumed = await create({ entries, current: FOREIGN, effort: "medium" });
+		assert.equal(resumed.describe().undertaking.issue, 755);
+		assert.equal(resumed.describe().undertaking.modelClass, "complex");
+		assertAllowed(await resumed.tool("write", { path: "task.txt" }));
+		assert.equal(resumed.current(), FOREIGN);
+		assert.equal(resumed.effort(), "medium");
+	});
 
 	// Existing session records must resume without accepting old tokens for new admissions.
 	for (const [oldClass, newClass] of [["implementation", "routine"], ["integration", "intermediate"], ["reasoning", "complex"]]) {
@@ -415,13 +432,14 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.deepEqual(s.calls.models, []);
 	});
 
-	// Backend validation errors must leave session tools available.
-	routingCheck("backend validation failure leaves the session usable", async create => {
+	// A mapped target on another backend is a model choice, not a route violation.
+	routingCheck("mapped class target may use another backend", async create => {
 		const s = await create({
 			models: [...MODELS],
 			routes: [{ referenceModel: qualified(MECHANICAL), classes: { routine: qualified(BACKEND_MISMATCH) } }],
 		});
-		assertGap(await s.route(), /backend must remain unchanged/iu);
+		assert.notEqual((await s.route()).isError, true);
+		assert.equal(s.current(), BACKEND_MISMATCH);
 		assertAllowed(await s.tool("write", { path: "task.txt" }));
 		await s.request();
 		assertAllowed(await s.tool("task", {}));
@@ -438,38 +456,30 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.deepEqual(s.calls.models, []);
 	});
 
-	// An explicit frontier assignment must not bypass its approval requirement.
-	routingCheck("frontier admission requires approval", async create => {
+	// A frontier class is an initial selection, not a separate approval event.
+	routingCheck("frontier class selection needs no approval", async create => {
 		const s = await create();
-		assertGap(await s.route({ modelClass: "frontier" }), /frontier|approval/iu);
-		assert.deepEqual(s.calls.models, []);
-	});
-
-	// Approved frontier work must still select its configured initial class.
-	routingCheck("approved frontier admission selects its target", async create => {
-		const s = await create();
-		assert.notEqual((await s.route({ modelClass: "frontier", frontierApproval: "Explicit bounded approval" })).isError, true);
+		assert.notEqual((await s.route({ modelClass: "frontier" })).isError, true);
 		assert.equal(s.current(), FRONTIER);
+		assert.equal(s.describe().undertaking.modelClass, "frontier");
 	});
 
-	// An unavailable authentication source must not masquerade as an admitted route.
-	routingCheck("missing authentication route fails without restricting the session", async create => {
+	// Authentication-source metadata is reported, never used to reject a selection.
+	routingCheck("missing authentication route metadata does not block selection", async create => {
 		const auth = fakeAuth();
 		auth.source = undefined;
 		const s = await create({ auth });
-		assertGap(await s.route(), /authentication/iu);
-		assertAllowed(await s.tool("write", { path: "task.txt" }));
-		await s.command("cancel 755");
-		assertAllowed(await s.tool("task", {}));
-		auth.source = { kind: "oauth" };
 		assert.notEqual((await s.route()).isError, true);
+		assertAllowed(await s.tool("write", { path: "task.txt" }));
+		assertAllowed(await s.tool("task", {}));
 	});
 
-	// A host fallback list must not be treated as an undertaking model lock.
-	routingCheck("initial selection does not preflight unrelated fallback candidates", async create => {
-		const s = await create({ candidates: async () => [qualified(FOREIGN)] });
+	// The router selects once and never preflights a worker or fallback list.
+	routingCheck("initial selection does not inspect fallback candidates", async create => {
+		const s = await create();
 		assert.notEqual((await s.route({ modelClass: "complex" })).isError, true);
 		assert.equal(s.current(), REASONING);
+		assertAllowed(await s.spawn("fallback-target", [qualified(FOREIGN)]));
 	});
 
 	// A selection made during asynchronous preflight must win over later setters.
@@ -623,70 +633,29 @@ export default function registerUndertakingRoutingChecks(check) {
 		assertAllowed(await s.tool("write", { path: "task.txt" }));
 	});
 
-	// Agent-selected frontier models and visible fallback candidates must not evade assignment approval.
-	for (const viaFallback of [false, true]) {
-		routingCheck(`ordinary worker rejects frontier ${viaFallback ? "fallback" : "candidate"}`, async create => {
-			const s = await create({ candidates: async (_ctx, _settings, patterns) =>
-				viaFallback ? [...patterns, qualified(FRONTIER)] : patterns });
+	// An ordinary undertaking may dispatch any configured worker, provider or fallback.
+	for (const worker of [FOREIGN, FRONTIER]) {
+		routingCheck(`ordinary undertaking dispatches ${worker.id} without route approval`, async create => {
+			const s = await create();
 			await s.route();
-			const result = await s.spawn(`frontier-${viaFallback}`, [qualified(viaFallback ? FOREIGN : FRONTIER)]);
-			assertBlocked(result);
-			assert.match(result.reason, /frontier/iu);
+			assertAllowed(await s.spawn(`worker-${worker.id}`, [qualified(worker)]));
 		});
 	}
 
-	// Approval for the undertaking does not turn an ordinary child assignment into a frontier assignment.
-	routingCheck("approved frontier undertaking cannot dispatch ordinary worker on frontier", async create => {
+	// A frontier undertaking dispatches ordinary workers the same way.
+	routingCheck("frontier undertaking dispatches an ordinary worker", async create => {
 		const s = await create();
-		await s.route({ modelClass: "frontier", frontierApproval: "Explicit bounded approval" });
-		assertBlocked(await s.spawn("ordinary", [qualified(FRONTIER)]));
-		assertAllowed(await s.spawn("approved", [qualified(FRONTIER)], "frontier", "frontier"));
+		await s.route({ modelClass: "frontier" });
+		assertAllowed(await s.spawn("ordinary", [qualified(TERRA)]));
 	});
 
-	// Host-selected non-frontier workers remain free to use another provider or model.
-	routingCheck("ordinary worker allows non-frontier alternate provider and fallback", async create => {
-		const s = await create({ candidates: async (_ctx, _settings, patterns) => [...patterns, qualified(TERRA)] });
-		await s.route();
-		s.setCurrent(REASONING);
-		const result = await s.spawn("alternate", [qualified(FOREIGN)]);
-		assertAllowed(result);
-		assert.equal(result?.model, undefined);
-	});
-
-	// A native operator mention is allowed without granting its agent-selected frontier fallback.
-	routingCheck("operator frontier mention is permitted while another frontier fallback is rejected", async create => {
-		const fable = model("claude-fable", "anthropic", "anthropic-messages");
-		let fallback = false;
-		const s = await create({ models: [...MODELS, fable], candidates: async (_ctx, _settings, patterns) =>
-			fallback ? [...patterns, qualified(fable)] : patterns });
+	// Native mentions and independently configured helpers are not route-gated.
+	routingCheck("native mention and independent helper stay unrestricted", async create => {
+		const s = await create();
 		await s.route();
 		s.entries.push({ type: "custom", customType: "model_mention", data: { agent: "m1", selector: qualified(FRONTIER), name: "Astra" } });
 		assertAllowed(await s.spawn("mention", [qualified(FRONTIER)], "m1"));
-		fallback = true;
-		assertBlocked(await s.spawn("mention-fallback", [qualified(FRONTIER)], "m1"));
-		assertBlocked(await s.spawn("unbound", [qualified(FRONTIER)], "m2"));
-	});
-
-	// Independently configured reviewer roles are not undertaking workers.
-	routingCheck("independent helper selection is not restricted by undertaking class", async create => {
-		const s = await create();
-		await s.route();
 		assertAllowed(await s.spawn("reviewer", [qualified(FRONTIER)], "reviewer", "reviewer"));
-	});
-
-	// A pending candidate lookup must not resurrect a dispatch after its owner is cancelled.
-	routingCheck("cancel during child candidate lookup prevents late dispatch", async create => {
-		const entered = deferred();
-		const proceed = deferred();
-		const s = await create({ candidates: async (_ctx, _settings, patterns) => {
-			entered.resolve(); await proceed.promise; return patterns;
-		} });
-		await s.route();
-		const dispatch = s.spawn("cancelled-child");
-		await entered.promise;
-		await s.command("cancel 755");
-		proceed.resolve();
-		assertBlocked(await dispatch);
 	});
 
 	// Parent cancellation keeps ordinary child tools available but retires worker dispatch.
