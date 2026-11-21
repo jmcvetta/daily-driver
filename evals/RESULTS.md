@@ -148,7 +148,50 @@ One row per committed record, oldest first.
 | 2026-11-07 | with-without | claude-code | claude-sonnet-5 | claude-code claude-sonnet-5 (task-pinned) | 8 | 7/8 | $1.12 | $0.16 | 4m 28s |
 | 2026-11-07 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 5 | 4/5 | subscription | subscription | 2m 59s |
 | 2026-11-07 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | subscription | subscription | 0m 25s |
+| 2026-11-07 | disclosure-omp-frozen-20261107 | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 0/4 | subscription | subscription | 0m 56s |
+| 2026-11-07 | disclosure-omp-frozen-20261107 | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 0/4 | subscription | subscription | 1m 48s |
+| 2026-11-07 | disclosure-omp-frozen-20261107 | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | subscription | subscription | 0m 59s |
+| 2026-11-07 | disclosure-omp-frozen-20261107 | omp | openai-codex/gpt-6.1-sol (requested) | claude-code claude-sonnet-5 (task-pinned) | 4 | 2/4 | subscription | subscription | 5m 59s |
+| 2026-11-07 | disclosure-omp-release-20261107 | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 0/4 | subscription | subscription | 2m 04s |
+| 2026-11-07 | disclosure-omp-release-20261107 | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | subscription | subscription | 1m 06s |
+| 2026-11-07 | disclosure-omp-release-20261107 | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | subscription | subscription | 4m 14s |
+| 2026-11-07 | disclosure-omp-release-20261107 | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 0/4 | subscription | subscription | 2m 00s |
+| 2026-11-07 | disclosure-claude-release-20261107 | claude-code | <synthetic> | not recorded | 4 | 0/4 | $0.00 | no task completed | 1m 32s |
+| 2026-11-07 | disclosure-omp-corrected-20261107 | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 0/4 | subscription | subscription | 1m 16s |
+| 2026-11-07 | disclosure-omp-corrected-20261107 | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 2/4 | subscription | subscription | 1m 10s |
+| 2026-11-07 | disclosure-omp-corrected-20261107 | omp | openai-codex/gpt-6.1-sol (requested) | not recorded | 4 | 4/4 | subscription | subscription | 1m 43s |
+| 2026-11-07 | disclosure-omp-corrected-20261107 | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | subscription | subscription | 2m 23s |
+| 2026-11-07 | disclosure-omp-corrected-20261107 | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | subscription | subscription | 1m 46s |
+| 2026-11-07 | disclosure-omp-corrected-20261107 | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 3/4 | subscription | subscription | 2m 53s |
 | 2026-11-07 | omp-reviewer-glm-5-3-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 40 | 35/40 | not recorded | not recorded | 43h 39m 47s |
+| 2026-11-09 | disclosure-codex-native-comparison-20261109 | codex-daily-driver | gpt-6.1-sol | not recorded | 4 | 0/4 | not recorded | not recorded | 0m 15s |
 | 2026-11-09 | omp-reviewer-deepseek-v4-pro-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 40 | 35/40 | not recorded | not recorded | 53m 51s |
+| 2026-11-09 | disclosure-codex-supported-model-20261109 | codex-daily-driver | gpt-5.6-sol | omp-gpt-6.1-sol (run-selected) | 4 | 0/4 | $0.26 | no task completed | 0m 59s |
+| 2026-11-09 | disclosure-codex-supported-model-20261109 | codex-daily-driver | gpt-5.6-sol | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | $0.34 | $0.08 | 1m 03s |
+| 2026-11-09 | disclosure-codex-supported-model-20261109 | codex-daily-driver | gpt-5.6-sol | omp-gpt-6.1-sol (run-selected) | 4 | 0/4 | $2.10 | no task completed | 9m 19s |
+| 2026-11-09 | disclosure-codex-supported-model-20261109 | codex-daily-driver | gpt-5.6-sol | omp-gpt-6.1-sol (run-selected) | 4 | 0/4 | $0.33 | no task completed | 1m 19s |
+| 2026-11-09 | disclosure-codex-supported-model-20261109 | codex-daily-driver | gpt-5.6-sol | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | $0.16 | $0.04 | 0m 21s |
+| 2026-11-09 | disclosure-codex-supported-model-20261109 | codex-daily-driver | gpt-5.6-sol | not recorded | 4 | 4/4 | $0.54 | $0.13 | 2m 19s |
+| 2026-11-09 | disclosure-codex-continuation-20261109 | codex-daily-driver | gpt-5.6-sol | claude-code claude-sonnet-5 (task-pinned) | 4 | 4/4 | $1.15 | $0.29 | 2m 59s |
+| 2026-11-09 | disclosure-codex-approval-cases-20261109 | codex-daily-driver | gpt-5.6-sol | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | $2.48 | $0.62 | 5m 41s |
+| 2026-11-09 | disclosure-codex-approval-cases-20261109 | codex-daily-driver | gpt-5.6-sol | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | $1.27 | $0.32 | 3m 35s |
+| 2026-11-09 | disclosure-corrected-fixtures-omp-20261109 | omp | openai-codex/gpt-6.1-sol (requested) | not recorded | 4 | 2/4 | subscription | subscription | 1m 47s |
+| 2026-11-09 | disclosure-corrected-fixtures-codex-20261109 | codex-daily-driver | gpt-5.6-sol | not recorded | 4 | 4/4 | $0.17 | $0.04 | 0m 25s |
+| 2026-11-09 | disclosure-corrected-fixtures-codex-20261109 | codex-daily-driver | gpt-5.6-sol | omp-gpt-6.1-sol (run-selected) | 4 | 3/4 | $1.60 | $0.53 | 7m 05s |
+| 2026-11-09 | disclosure-omp-private-sessions-20261109 | omp | openai-codex/gpt-6.1-sol (requested) | not recorded | 4 | 4/4 | subscription | subscription | 0m 47s |
+| 2026-11-09 | disclosure-omp-private-sessions-20261109 | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | subscription | subscription | 5m 22s |
 | 2026-11-09 | omp-reviewer-glm-5-3-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 10 | 10/10 | not recorded | not recorded | 11m 17s |
 | 2026-11-09 | omp-reviewer-deepseek-v4-pro-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 10 | 10/10 | not recorded | not recorded | 14m 36s |
+| 2026-11-09 | disclosure-claude-native-resume-20261109 | claude-code | claude-sonnet-5 | omp-gpt-6.1-sol (run-selected) | 4 | 0/4 | $0.53 | no task completed | 0m 58s |
+| 2026-11-09 | disclosure-claude-native-resume-20261109 | claude-code | claude-sonnet-5, claude-sonnet-5 (requested) | claude-code claude-sonnet-5 (task-pinned) | 4 | 3/4 | $0.34 | $0.11 | 1m 34s |
+| 2026-11-10 | disclosure-claude-native-resume-20261109 | claude-code | claude-sonnet-5 | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | $0.52 | $0.13 | 1m 20s |
+| 2026-11-10 | disclosure-claude-native-resume-20261109 | claude-code | claude-sonnet-5 | omp-gpt-6.1-sol (run-selected) | 4 | 3/4 | $1.86 | $0.62 | 5m 46s |
+| 2026-11-10 | disclosure-claude-native-continuation-20261110 | claude-code | claude-sonnet-5 | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | $0.29 | $0.07 | 1m 15s |
+| 2026-11-10 | disclosure-claude-native-continuation-20261110 | claude-code | claude-sonnet-5 | omp-gpt-6.1-sol (run-selected) | 4 | 1/4 | $0.53 | $0.53 | 0m 36s |
+| 2026-11-10 | disclosure-claude-native-continuation-20261110 | claude-code | claude-sonnet-5 | not recorded | 4 | 4/4 | $0.34 | $0.08 | 0m 51s |
+| 2026-11-10 | disclosure-claude-native-continuation-20261110 | claude-code | claude-sonnet-5 | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | $1.05 | $0.26 | 1m 32s |
+| 2026-11-10 | disclosure-claude-native-continuation-20261110 | claude-code | claude-sonnet-5 | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | $0.65 | $0.16 | 1m 42s |
+| 2026-11-10 | disclosure-claude-native-continuation-20261110 | claude-code | claude-sonnet-5 | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | $0.86 | $0.21 | 1m 58s |
+| 2026-11-10 | omp-gpt-6-1-sol-ablation | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 2/4 | subscription | subscription | 1m 50s |
+| 2026-11-10 | omp-gpt-6-luna | omp | openai-codex/gpt-6-luna (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 2/4 | subscription | subscription | 3m 44s |
+| 2026-11-10 | omp-gpt-6-1-terra | omp | openai-codex/gpt-6.1-terra (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 2/4 | subscription | subscription | 1m 09s |
