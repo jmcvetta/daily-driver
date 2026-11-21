@@ -25,12 +25,13 @@ skills and the constitution injected by runtime hooks.
 
 ## Runtime integration
 
-Claude Code and Codex use startup hooks for the shared core and chat-based
-question routing. Omp's rule provider loads the same core directly.
-
-The source is `rules/constitution.md`. Each route delivers its Markdown body
-without the `alwaysApply: true` frontmatter. Task-specific detail stays in its
-owning skill; the [existing catalog](../skills/README.md) maps those workflows.
+The complete standing constitution reaches root and child sessions on every
+harness. Claude Code and Codex use startup hooks for the shared core and
+chat-based question routing; Omp's rule provider loads the same core directly.
+The source is `rules/constitution.md`, and each route delivers its Markdown
+body without the `alwaysApply: true` frontmatter. Task-specific detail stays in
+its owning skill; the [existing catalog](../skills/README.md) maps those
+workflows.
 
 | Hook | Event | Purpose |
 | ---- | ----- | ------- |
@@ -67,16 +68,6 @@ storing the message. It re-reads the branch and serializes requests, so a
 repeated semantic key for the same work identity and reason is not replayed,
 including after a delivery error. Delivery failure is reported, not retried
 as a fresh event.
-
-## Standing instruction delivery
-
-The complete standing constitution is delivered directly to root and child
-sessions. Task-specific workflows remain in the skill catalog.
-
-The former `daily_driver_task_state` tool and Claude and Codex task-state
-commands are removed. Work directly from the user's request and issue; use
-the existing review and validation workflows to verify and report the result.
-Existing private task-state records are not read or deleted.
 
 ## Sensitive handoff examples
 
@@ -134,55 +125,25 @@ DeepSeek V4.1 Flash entry maps only its measured mechanical and routine
 classes. Plugin-installed global defaults do not establish a mapping for
 unrelated families. A mapping is not measurement evidence.
 
-For the class-name cutover, merge and release the parser first. Then migrate
-open assignable issues across the participating repositories: change
-`implementation` to `routine`, `integration` to `intermediate`, and
-`reasoning` to `complex` in `## Model class`; update only rationale wording
-that uses the old names. Preserve all other content and leave closed issues
-unchanged. Update custom role and route-map keys with the same mapping. Older
-saved undertaking sessions are translated on resume; new selections reject
-the old tokens.
-
 An unset route configuration uses the registered default, including when Omp
 clones settings for a task. An explicit empty array stays empty; malformed
 explicit values are rejected rather than replaced with defaults.
 
-Classed undertaking calls `daily_driver_route_undertaking` before worktree
-creation or claim. For a mapped family, initial selection resolves the selected
-class and effort once. After that selection, worker, provider, effort, and
-fallback choices are not restricted by the router; missing candidate metadata
-or route verification does not stop dispatch. Independent specialist routes
-remain separate.
-
-Report the selected initial route as progress; status `selected` records
-selection, not execution identity or class suitability.
-
-When the known family is absent from the class table, a prominent warning names
-the family, required class, and retained provider/model. Work continues
-immediately on the invoking model, provider, and effort without confirmation.
-The route's execution identity can be reported separately from class suitability.
-A class omitted from a mapped family follows the same warning-and-continue:
-its absence leaves suitability unverified and retains the invoking route. An
-explicitly cleared (`null`) class, unavailable initial target, or unknown
-identity requires explanation and repair; later operator selections are not
-errors.
-Failed selection must permit explanation and retry without discarding an
-existing valid route. Route status is `selected` after initial selection;
-malformed or cancelled state can report `blocked`. Neither status alone
-establishes observed execution identity or class suitability. An absent-family
-result may also carry a `warning`. OAuth restrictions owned by the host remain
-in force. Independently configured `reviewer`, `scout`, `security-reviewer`,
-and `seance` helper routes are selected separately from issue class routing;
-this does not define their cancellation ownership.
-
-
-After the pull request is ready, or answer-only research is completed and
-recorded, call `daily_driver_finish_undertaking({ issue: <positive issue number> })`
-before reusing the session for another issue. Do not finish stopped or
-incomplete work. Selecting a different issue returns an error without replacing
-the existing owner or route; finish the completed undertaking or resume the
-existing one before selecting another. A finish call with the wrong issue also
-returns an error without changing the existing state.
+Classed work selects an initial route once, before the task worktree and
+claim. For a mapped family, that selection fixes the class and effort; after
+it, worker, provider, effort and fallback choices are not restricted by the
+router, and independent specialist routes remain separate. When the known
+family is absent from the class table, Omp warns with the family, required
+class and retained model, then continues on the invoking route without
+confirmation. A class omitted from a mapped family continues the same way. In
+both cases class suitability stays unverified, and host-owned OAuth
+restrictions remain in force. An explicitly cleared (`null`) class or an
+unavailable initial target is a configuration gap that needs repair; unknown
+identity and later operator selections are not. A `selected` status records
+the initial selection, not the observed execution identity or class
+suitability. The finish call releases ownership and sends its completion
+notice; exact calls, status fields and handoff rules are in the
+[undertake reference](../skills/undertake/references/omp.md).
 
 ### Local undertaking recovery
 
@@ -208,31 +169,19 @@ Transcript, worktree, branch, and unfinished task state stay intact. A new
 undertaking requires a fresh initial selection. Repeated cancellation with no
 owner is a no-op. This command does not replace the workflow's stop handoff.
 
-
-Omp prefers its extension's in-session switch. A full handoff needs one owner.
-Claude's host-side Agent SDK model setter is not an agent-callable tool;
-Codex's delegation model control is unmeasured. Do not invent a switch tool.
-Stop before ownership when the initial selection cannot be established.
-
-Omp does not relocate a live session when it creates a task worktree. Use the
-verified absolute task-worktree paths for shell and file-tool operations.
-
-Omp 18.5.0 supports the user-initiated `/move <path>` for an idle session.
-The extension API does not provide direct relocation, so automatic
-plugin-driven movement is not available.
-
-The guard rejects primary-checkout and detached-worktree `write` and `edit`
-calls. It also denies Git commands that rewrite the primary checkout's files.
-Attached feature-worktree mutations remain available. The command parser is
-conservative: it rejects unresolved commands and unterminated quotes. A literal
-`ln` command takes pathname operands, so paths named `git` or `bash` do not
-become executable candidates. Nested substitutions and later commands still
-receive the normal checks. Unknown wrappers retain conservative scanning.
-The guard does not audit programs launched through `make`, Python or scripts,
-so those programs must also stay inside the task worktree.
-
-Use absolute task-worktree paths in file tools. Omp resolves file-tool paths
-against the session working directory, not a directory change made by a shell.
+Omp creates a task worktree without relocating the live session. The
+extension's guard rejects primary-checkout and detached-worktree `write` and
+`edit` calls, and denies Git commands that rewrite the primary checkout's
+files; attached feature-worktree mutations remain available. The command
+parser is conservative: it rejects unresolved commands and unterminated
+quotes, scans nested substitutions and unknown wrappers, and does not audit
+programs launched through `make`, Python or scripts, so those programs must
+also stay inside the task worktree. File tools resolve against the session's
+working directory rather than a shell directory change, so use absolute
+task-worktree paths. The user-initiated `/move <path>` can move an idle
+session; the extension API has no automated relocation. The
+[task-worktree reference](../skills/task-worktree/references/omp.md) owns the
+worktree and path route.
 
 ## Compatibility limits
 
