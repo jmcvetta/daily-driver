@@ -1,0 +1,230 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 8.71,
+            "findings": [
+              "TP:boundary"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "openai/gpt-6.1-sol",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "63c268a35281441484010cc471b6902b6c7d603e6b90800ade58b38dc29c30b7",
+            "rationale": "The report identifies records.py:3 and correctly explains that a positive limit with sufficient available items omits the final requested record. Its stated one-record shortfall, including an empty result for limit=1, matches the keyed boundary defect and result-loss impact.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 12503,
+              "output": 71
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "66da73d4d3446094b2fc3b04b8c103c955ec34379f82640b38213d44652d50ff"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "reviewer-quality-01-boundary",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 8.47,
+            "findings": [],
+            "index": 0,
+            "observed": {
+              "model": "openai/gpt-6.1-sol",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "0802cbd570fb005888a0b070f3a13d8c9e692064b521bd51dd2950f38ddf1fea",
+            "rationale": "The response reports a clear verdict with no actionable defects, matching the expected assessment that the change correctly normalizes negative offsets and limits before slicing.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 12410,
+              "output": 44
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "66da73d4d3446094b2fc3b04b8c103c955ec34379f82640b38213d44652d50ff"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "reviewer-quality-05-clean-boundary",
+      "variant_id": "reviewer"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": 0.04153660000000001,
+      "cost_source": "computed",
+      "elapsed_seconds": 72.45964550971985,
+      "model_requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-reviewer-luna-vercel",
+      "task_id": "reviewer-quality-01-boundary",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 107406,
+        "output_tokens": 941,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 10693
+      },
+      "tokens": 119040,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": 0.0414987,
+      "cost_source": "computed",
+      "elapsed_seconds": 64.06603169441223,
+      "model_requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-reviewer-luna-vercel",
+      "task_id": "reviewer-quality-05-clean-boundary",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 107767,
+        "output_tokens": 923,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 10746
+      },
+      "tokens": 119436,
+      "variant_id": "reviewer"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.22.2",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-18T21:32:16.362829",
+  "experiment_id": "omp-reviewer-luna-vercel",
+  "host": {
+    "hostname": "7813c362d16d",
+    "kind": "laptop",
+    "platform": "Linux-6.8.0-147-generic-x86_64-with-glibc2.41",
+    "session_id": null
+  },
+  "judge": {
+    "criterion_errors": 0,
+    "freeze_sha": "66da73d4d3446094b2fc3b04b8c103c955ec34379f82640b38213d44652d50ff",
+    "judge_id": "omp-vercel-gpt-6.1-sol",
+    "model_requested": "vercel-ai-gateway/openai/gpt-6.1-sol",
+    "models_observed": [
+      "openai/gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v2",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300,
+      "vercel_gateway_only": [
+        "openai"
+      ]
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 24913,
+      "output": 115
+    }
+  },
+  "plugin_revision": {
+    "commit": "dce67a142bf68fba9d5a85750afecfd077ad7be3",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-18T21:32:38.598583+00:00",
+  "run_id": "vercel-luna-smoke",
+  "schema_version": 5,
+  "started_at": "2026-11-18T21:29:59.817251",
+  "variants": [
+    {
+      "model_requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "reviewer-quality-01-boundary": [
+          1.0
+        ],
+        "reviewer-quality-05-clean-boundary": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "reviewer-quality-01-boundary",
+        "reviewer-quality-05-clean-boundary"
+      ],
+      "variant_id": "reviewer"
+    }
+  ]
+}

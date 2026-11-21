@@ -70,6 +70,12 @@ happen next. In every row, preserve the record and the run directory.
 | `unreported` cost | The reviewer usage or its price card is missing. | Record `unreported`. Never record zero, never use the parent's cost, and do not claim a measured-cost comparison. | `summary.reviewer_telemetry`; the price tables |
 | smoke gate failed | The smoke record does not meet the cohort conditions. | Do not dispatch the cohort. Fix the named condition and collect a new smoke. | the collector's `gate.reasons`; the runner's refusal |
 
+Historical records may predate per-attempt error details. The preserved Vercel
+DeepSeek cohort marks the 16 refusals with `provider_error`; its
+[`vercel-quota-stop.json`](provenance/reviewer-quality/vercel-quota-stop.json)
+records the campaign-level refusal text. Do not reconstruct missing per-attempt
+messages from that sidecar.
+
 ## Stop and resume
 
 - Stop new dispatch on provider pushback. The wrapper writes

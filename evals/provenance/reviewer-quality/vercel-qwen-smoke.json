@@ -1,0 +1,342 @@
+{
+  "analysis_valid": true,
+  "arm": "vercel-qwen",
+  "attempts": [
+    {
+      "arm": "vercel-qwen",
+      "artifact_sha256": "8f20b6f9850ab8eaafab76bc8a6584a24666bc6a7ded7a319853fd89d86fa48d",
+      "attempt_seconds": 78.5921037197113,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol",
+          "served": [
+            "openai/gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "reviewer": {
+          "backend_served": "alibaba",
+          "harness": "alibaba/qwen4-max",
+          "requested": "vercel-ai-gateway/alibaba/qwen4-max:low",
+          "resolved_thinking_level": "low",
+          "role_route": "vercel-ai-gateway/alibaba/qwen4-max:low"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-01-boundary"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "66da73d4d3446094b2fc3b04b8c103c955ec34379f82640b38213d44652d50ff",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": 34.712211,
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "alibaba/qwen4-max",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "alibaba",
+      "reviewer_cost_usd": 0.028310699999999998,
+      "reviewer_delivery_observed": true,
+      "reviewer_harness_model": "alibaba/qwen4-max",
+      "reviewer_peak_priced_messages": 0,
+      "reviewer_reported_identity": "alibaba/qwen4-max",
+      "reviewer_requested": "vercel-ai-gateway/alibaba/qwen4-max:low",
+      "reviewer_resolved_thinking_level": "low",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"alibaba/qwen4-max\", \"verdict\": \"defects\", \"findings\": [{\"location\": \"records.py:3\", \"trigger\": \"Any call to page(items, offset, limit): the slice end was changed from offset + limit to offset + limit - 1, so every call yields one fewer record than requested; with limit == 1 the slice items[offset:offset] is empty even when records remain.\", \"impact\": \"Violates the documented contract 'Return up to limit records beginning at offset' for the new cursor-based listing endpoint: every page silently drops its last record, so clients lose data during pagination, and a page size of 1 returns an empty page that callers can mistake for end-of-results, truncating or stalling iteration. Fix: restore return items[offset:offset + limit].\", \"severity\": \"high\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_subagent_id": "LocalReviewer",
+      "reviewer_telemetry": {
+        "attribution_problems": [],
+        "attribution_valid": true,
+        "backend_model": "vercel-ai-gateway/alibaba/qwen4-max",
+        "backend_provider": "alibaba",
+        "cost_usd": 0.028310699999999998,
+        "elapsed_ms": 34712.211,
+        "generation_ms": 34162.789,
+        "harness_models": [
+          "alibaba/qwen4-max"
+        ],
+        "message_count": 4,
+        "model_role": "review",
+        "peak_multipliers_seen": [
+          1.0
+        ],
+        "peak_priced_messages": 0,
+        "requested_model": "vercel-ai-gateway/alibaba/qwen4-max:low",
+        "resolved_model_identity": "vercel-ai-gateway/alibaba/qwen4-max@alibaba",
+        "resolved_thinking_level": "low",
+        "status": "verified",
+        "status_detail": "completed",
+        "subagent_id": "LocalReviewer",
+        "usage": {
+          "cache_read": 20736,
+          "cache_write": 0,
+          "input": 14090,
+          "output": 1249,
+          "reasoning": 589
+        }
+      },
+      "reviewer_telemetry_status": "verified",
+      "reviewer_usage": {
+        "cache_read": 20736,
+        "cache_write": 0,
+        "input": 14090,
+        "output": 1249,
+        "reasoning": 589
+      },
+      "reviewer_verdict": "defects",
+      "run_id": "vercel-qwen-smoke",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "vercel-qwen",
+      "artifact_sha256": "2be467bbf2f2141cb23f81c674cadb0b9fa12aa5226cd1da4e7409a978a7f014",
+      "attempt_seconds": 65.15860939025879,
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol",
+          "served": [
+            "openai/gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "reviewer": {
+          "backend_served": "alibaba",
+          "harness": "alibaba/qwen4-max",
+          "requested": "vercel-ai-gateway/alibaba/qwen4-max:low",
+          "resolved_thinking_level": "low",
+          "role_route": "vercel-ai-gateway/alibaba/qwen4-max:low"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "66da73d4d3446094b2fc3b04b8c103c955ec34379f82640b38213d44652d50ff",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": 34.945713000000005,
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "alibaba/qwen4-max",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "alibaba",
+      "reviewer_cost_usd": 0.0260511,
+      "reviewer_delivery_observed": true,
+      "reviewer_harness_model": "alibaba/qwen4-max",
+      "reviewer_peak_priced_messages": 0,
+      "reviewer_reported_identity": "alibaba/qwen4-max",
+      "reviewer_requested": "vercel-ai-gateway/alibaba/qwen4-max:low",
+      "reviewer_resolved_thinking_level": "low",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"alibaba/qwen4-max\", \"verdict\": \"clear\", \"findings\": []}",
+      "reviewer_status": "completed",
+      "reviewer_subagent_id": "MeanLark",
+      "reviewer_telemetry": {
+        "attribution_problems": [],
+        "attribution_valid": true,
+        "backend_model": "vercel-ai-gateway/alibaba/qwen4-max",
+        "backend_provider": "alibaba",
+        "cost_usd": 0.0260511,
+        "elapsed_ms": 34945.713,
+        "generation_ms": 34414.676,
+        "harness_models": [
+          "alibaba/qwen4-max"
+        ],
+        "message_count": 4,
+        "model_role": "review",
+        "peak_multipliers_seen": [
+          1.0
+        ],
+        "peak_priced_messages": 0,
+        "requested_model": "vercel-ai-gateway/alibaba/qwen4-max:low",
+        "resolved_model_identity": "vercel-ai-gateway/alibaba/qwen4-max@alibaba",
+        "resolved_thinking_level": "low",
+        "status": "verified",
+        "status_detail": "completed",
+        "subagent_id": "MeanLark",
+        "usage": {
+          "cache_read": 23808,
+          "cache_write": 0,
+          "input": 12421,
+          "output": 1252,
+          "reasoning": 757
+        }
+      },
+      "reviewer_telemetry_status": "verified",
+      "reviewer_usage": {
+        "cache_read": 23808,
+        "cache_write": 0,
+        "input": 12421,
+        "output": 1252,
+        "reasoning": 757
+      },
+      "reviewer_verdict": "clear",
+      "run_id": "vercel-qwen-smoke",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    }
+  ],
+  "attribution": {
+    "basis": "captured reviewer delivery, adapter child telemetry, and Omp's resolved role route, thinking level and upstream; a missing served identity is unreported",
+    "expected_model_id": "qwen4-max",
+    "expected_reviewer_selector": "vercel-ai-gateway/alibaba/qwen4-max:low",
+    "expected_reviewer_upstreams": [
+      "alibaba"
+    ],
+    "mismatches": [],
+    "reported_model_ids": [
+      "qwen4-max"
+    ],
+    "reviewer_reported_identities": [
+      "alibaba/qwen4-max"
+    ],
+    "telemetry_valid": true,
+    "valid": true
+  },
+  "cohort_complete": true,
+  "cost_comparison_valid": true,
+  "coverage_complete": true,
+  "created_at": "2026-11-18T21:44:19.467165+00:00",
+  "planned": {
+    "attempts": 2,
+    "cases": [
+      "reviewer-quality-01-boundary",
+      "reviewer-quality-05-clean-boundary"
+    ],
+    "repeats_per_case": 1
+  },
+  "runs": [
+    {
+      "run_dir": "evals/runs/906/vercel-qwen-smoke",
+      "run_id": "vercel-qwen-smoke",
+      "run_record": "evals/provenance/omp-reviewer-qwen4-max-vercel-2026-11-18-vercel-qwen-smoke.json",
+      "run_record_sha256": "1187dc0d0819bd3e84abfacc8231fa1240c2449d617d635589c12cca2ae92221"
+    }
+  ],
+  "schema_version": 1,
+  "settings": {
+    "experiment_path": "evals/experiments/omp-reviewer-qwen4-max-vercel.yaml",
+    "experiment_sha256": "65c39ef255224473edbeabf36b2e5aa4c8d7c4b088e1ba3e414db4ccce8a1022",
+    "route_overlay_path": "/workspace/daily-driver.issue-906-vercel-reviewer-benchmark/evals/fixtures/reviewer-quality/shared/routes/vercel-qwen.yml",
+    "route_overlay_sha256": "ad766853ce12ad4f97fc61c80d561bd5ec66d2db6b559a31322fc5040601c21d"
+  },
+  "summary": {
+    "attempts": 2,
+    "classification": {
+      "clean": {
+        "eligible_denominator": 1,
+        "false_alarms": 0,
+        "planned_denominator": 1
+      },
+      "delta": {
+        "accuracy": null,
+        "correct": 0,
+        "eligible_denominator": 0,
+        "planned_denominator": 0
+      },
+      "full_review": {
+        "fn": 0,
+        "fp": 0,
+        "precision": 1.0,
+        "precision_denominator": 1,
+        "recall": 1.0,
+        "recall_eligible_denominator": 1,
+        "recall_planned_denominator": 1,
+        "tp": 1
+      },
+      "unexpected_valid": []
+    },
+    "eligible": 2,
+    "harness_errors": 0,
+    "judge_errors": 0,
+    "judge_unavailable": 0,
+    "latency_attempt_seconds": {
+      "count": 2,
+      "max": 78.5921037197113,
+      "mean": 71.87535655498505,
+      "median": 71.87535655498505,
+      "min": 65.15860939025879,
+      "population_stddev": 6.716747164726257
+    },
+    "latency_reviewer_seconds": {
+      "count": 2,
+      "max": 34.945713000000005,
+      "mean": 34.828962000000004,
+      "median": 34.828962000000004,
+      "min": 34.712211,
+      "population_stddev": 0.11675100000000072
+    },
+    "per_case": {
+      "reviewer-quality-01-boundary": {
+        "eligible": 1,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 1,
+        "reviewer_errors": 0,
+        "reviewer_telemetry_verified": 1,
+        "verified_reviewer_completions": 1
+      },
+      "reviewer-quality-05-clean-boundary": {
+        "eligible": 1,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 1,
+        "reviewer_errors": 0,
+        "reviewer_telemetry_verified": 1,
+        "verified_reviewer_completions": 1
+      }
+    },
+    "provider_errors": 0,
+    "reviewer_delivery_unverified": 0,
+    "reviewer_telemetry": {
+      "ambiguous": 0,
+      "attribution_mismatch": 0,
+      "completed_attempts": 2,
+      "cost_comparison_valid": true,
+      "cost_per_rubric_correct_review_usd": 0.0271809,
+      "cost_reported_attempts": 2,
+      "cost_usd": 0.0543618,
+      "delivery_mismatch": 0,
+      "guard": 0,
+      "incomplete": 0,
+      "missing": 0,
+      "no_reviewer": 0,
+      "peak_priced_attempts": 0,
+      "peak_priced_messages": 0,
+      "rubric_correct_denominator": 2,
+      "usage": {
+        "cache_read": 44544,
+        "cache_write": 0,
+        "input": 26511,
+        "output": 2501,
+        "reasoning": 1346
+      },
+      "verified": 2
+    },
+    "unattempted": 0,
+    "verified_reviewer_completion_rate": 1.0,
+    "verified_reviewer_completions": 2
+  },
+  "winner": null
+}
