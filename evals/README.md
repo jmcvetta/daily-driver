@@ -1819,9 +1819,10 @@ row records a false negative a full run would never have produced.
 
 ## The constitution suite: reach, then compliance
 
-Every row there carries `skip:codex` and is absent from the Codex arm.
-`coder_eval`'s Codex agent links skills and installs no hooks, so the constitution never
-reaches that session and a zero there would say nothing about the constitution.
+Every row there carries `skip:codex` and is absent from the Codex arm. No run
+has shown the constitution reaching a Codex CLI session. The CLI has hooks, so
+the SDK's "links skills and installs no hooks" limitation is not carried over
+as a CLI fact; the exclusion stays until a live run proves delivery.
 See "The Codex arm" below.
 
 `subagent-reports-the-token` was `regex` on `last_message`, weight 2 — the
@@ -2273,7 +2274,6 @@ run's `environment_info`:
 | `codex_model_catalog_checked` | whether `codex debug models` answered |
 | `codex_skills_linked` | skills with a readable `SKILL.md` after linking |
 | `codex_billing_source` | `subscription`; usage is allowance, not cash |
-| `codex_session_id` | the thread resumed by later turns |
 
 A requested model the installed catalog does not list is a configuration error,
 not a provider-default fallback. On 2026-11-21, CLI 0.171.0 listed

@@ -549,8 +549,6 @@ class CodexCLIAgent(Agent[CodexCLIAgentConfig]):
             # Subscription allowance is not cash; the recorder keeps the two apart.
             "codex_billing_source": "subscription" if self._auth_mode == "subscription" else "unreported",
         }
-        if self._thread_id:
-            info["codex_session_id"] = self._thread_id
         return info
 
     # --- command construction --------------------------------------------
@@ -613,6 +611,7 @@ class CodexCLIAgent(Agent[CodexCLIAgentConfig]):
             user_input=user_input,
             model=self.config.model,
         )
+        state.thread_id = self._thread_id
         state.bind(emit)
         emit(
             AgentStartEvent(
