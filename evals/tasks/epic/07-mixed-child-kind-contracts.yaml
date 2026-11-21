@@ -64,7 +64,7 @@ success_criteria:
       diagram must not replace the textual acceptance criteria or the
       dependency graph. With no blocked-by edges, sequencing must not
       invent a dependency; any later wave is an explicit scheduling choice.
-      The settled code child is a task with an implementation class and settled
+      The settled code child is a task with an ordinary model class and settled
       acceptance. The question child is research with purpose, bounded source
       scope, evaluation and answer deliverable, not an assumed compliance
       answer or task class. The reserved approval is a human child with safe

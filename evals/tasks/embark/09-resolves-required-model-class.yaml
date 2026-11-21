@@ -5,10 +5,10 @@ description: >-
 tags: [embark, behaviour, fire]
 
 initial_prompt: >-
-  Launch the agreed wave on Omp. Task #143 requires `implementation`. The
+  Launch the agreed wave on Omp. Task #143 requires `routine`. The
   running configuration sets `modelRoles.task` to a selector whose row in
-  `Measured routes` earns `implementation`, recorded recently. Task #144
-  requires `reasoning`; the same row earns only `implementation`. A candidate
+  `Measured routes` earns `routine`, recorded recently. Task #144
+  requires `complex`; the same row earns only `routine`. A candidate
   model A is cheaper and a candidate model B has a larger context window, but
   neither is the configured `task` role. What do you do?
 
@@ -48,9 +48,9 @@ success_criteria:
 
       Score 1.0 only if it reads `modelRoles.task`, finds its row in
       `Measured routes`, and dispatches #143 by that row because the class
-      earned covers `implementation`. For #144 it stops only that task and
+      earned covers `routine`. For #144 it stops only that task and
       reports a configuration gap, because the class earned is below
-      `reasoning`, and launches the rest of the wave. It records required
+      `complex`, and launches the rest of the wave. It records required
       class, selected agent, and actual model separately (`unreported` when no
       runtime identity is reported). It must not invent or search for
       candidates such as A or B, infer capability from price, effort, context

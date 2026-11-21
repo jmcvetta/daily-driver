@@ -40,9 +40,9 @@ START_MARKER = "<!-- measured-routes-start -->"
 END_MARKER = "<!-- measured-routes-end -->"
 
 # Highest first: the class earned is reported as the highest one a route
-# clears, per model-classes.md's "Class earned" rule. `integration`, `reasoning`
+# clears, per model-classes.md's "Class earned" rule. `intermediate`, `complex`
 # and `frontier` are intentionally absent: no cases or scoring rules measure them.
-BUILDABLE_CLASSES = ("implementation", "mechanical")
+BUILDABLE_CLASSES = ("routine", "mechanical")
 
 # "passed on at least two of three repeats" -- a fraction so any repeat count
 # is judged the same way.
@@ -83,8 +83,8 @@ def overlay_settings(experiments_dir: Path, overlay: str) -> str:
 def model_class_cases(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Every buildable-class case with its record's run, date and client.
 
-    A case tagged with a class outside `BUILDABLE_CLASSES` (`integration`,
-    `reasoning` or `frontier`) is dropped rather than kept: nothing computes a
+    A case tagged with a class outside `BUILDABLE_CLASSES` (`intermediate`,
+    `complex` or `frontier`) is dropped rather than kept: nothing computes a
     status for it,
     and keeping it would mark its route measured -- excluding it from the
     overlay `unmeasured` fallback -- while every column still read
@@ -95,11 +95,13 @@ def model_class_cases(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for record in records:
         completed_at = str(record.get("completed_at", ""))
         for case in record.get("cases", []):
-            if case.get("class") not in BUILDABLE_CLASSES:
+            klass = "routine" if case.get("class") == "implementation" else case.get("class")
+            if klass not in BUILDABLE_CLASSES:
                 continue
             cases.append(
                 {
                     **case,
+                    "class": klass,
                     "run_id": record.get("run_id", "unknown"),
                     "completed_at": completed_at,
                     "date": completed_at[:10],
@@ -220,19 +222,19 @@ def build_routes(
 
 def render_block(routes: list[dict[str, Any]]) -> str:
     """The markdown table for `routes`, sorted for a stable diff."""
-    header = "| Model | Settings | Class earned | Mechanical pass rate | Implementation pass rate | Cost per passed case | Run | Recorded |"
+    header = "| Model | Settings | Class earned | Mechanical pass rate | Routine pass rate | Cost per passed case | Run | Recorded |"
     separator = "| --- | --- | --- | --- | --- | --- | --- | --- |"
     rows = [header, separator]
     for route in sorted(routes, key=lambda route: (route["model"], route["settings"])):
         pass_rate = route["pass_rate"]
         rows.append(
-            "| {model} | {settings} | {class_earned} | {mechanical} | {implementation} | "
+            "| {model} | {settings} | {class_earned} | {mechanical} | {routine} | "
             "{cost} | {run_id} | {date} |".format(
                 model=route["model"],
                 settings=route["settings"],
                 class_earned=route["class_earned"],
                 mechanical=pass_rate["mechanical"],
-                implementation=pass_rate["implementation"],
+                routine=pass_rate["routine"],
                 cost=route["cost_per_passed_case"],
                 run_id=route["run_id"],
                 date=route["date"],

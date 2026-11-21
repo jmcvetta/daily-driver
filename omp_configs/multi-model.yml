@@ -5,8 +5,8 @@ modelRoles:
   task: openai-codex/gpt-6-luna:high
   advisor: openai-codex/gpt-6.1-sol:high
   mechanical: openai-codex/gpt-6-luna:low
-  implementation: openai-codex/gpt-6-luna:high
-  reasoning: openai-codex/gpt-6.1-sol:high
+  routine: openai-codex/gpt-6-luna:high
+  complex: openai-codex/gpt-6.1-sol:high
   frontier: openai-codex/gpt-6-astra:high
   review: opencode-go/deepseek-v4-pro:high
 

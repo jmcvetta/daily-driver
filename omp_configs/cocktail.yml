@@ -1,7 +1,7 @@
 modelRoles:
   default: vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:low
   mechanical: vercel-ai-gateway/openai/gpt-6-luna:low
-  implementation: vercel-ai-gateway/openai/gpt-6-luna:high
-  integration: vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:high
-  reasoning: opencode-go/glm-5.3:high
+  routine: vercel-ai-gateway/openai/gpt-6-luna:high
+  intermediate: vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:high
+  complex: opencode-go/glm-5.3:high
   reviewer: vercel-ai-gateway/mistral/mistral-large-4:medium

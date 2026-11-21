@@ -71,12 +71,12 @@ The route an implementor runs
 
 The `task` surface selects an `agent`, not a model. Every epic story must pass
 `Take the wave`'s assignability gate before dispatch. For mapped families,
-select the agent named for its required class (`mechanical`, `implementation`,
-`integration`, `reasoning`, or `frontier`). Each batch item sets only `agent`;
+select the agent named for its required class (`mechanical`, `routine`,
+`intermediate`, `complex`, or `frontier`). Each batch item sets only `agent`;
 it carries no per-item model argument. Resolve the effective route under
 [`issue-body`'s required-class policy](../../issue-body/references/omp.md#the-required-class):
 `task.agentModelOverrides[agentName]` takes precedence over discovered agent
-frontmatter, including a tagged-role assignment such as `@implementation` or
+frontmatter, including a tagged-role assignment such as `@routine` or
 `@frontier`. Resolve configured prewalk and retry fallbacks under the same policy.
 
 For a mapped family, undertaking issue workers and every visible execution
@@ -115,8 +115,8 @@ operator cleared to make a wave launch.
 
 Treat an effective astra/fable route as frontier, regardless of whether an
 override, retry fallback, or visible parent inheritance selects it through
-`reasoning` or another lower-class role. Classify the resolved selector rather
-than its role label: the current `reasoning` default is
+`complex` or another lower-class role. Classify the resolved selector rather
+than its role label: the current `complex` default is
 `openai-codex/gpt-6.1-sol:high`, not a frontier route.
 An issue assigned `frontier` must include its explicit approval and exact
 work envelope before dispatch. Reject an unauthorized frontier fallback

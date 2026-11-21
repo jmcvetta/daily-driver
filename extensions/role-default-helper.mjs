@@ -1,21 +1,21 @@
 /** Default model selectors for Omp task capability classes. */
 export const MODEL_CLASS_ROLE_DEFAULTS = Object.freeze({
 	mechanical: "openai-codex/gpt-6-luna:low",
-	implementation: "openai-codex/gpt-6-luna:high",
-	integration: "openai-codex/gpt-6.1-terra:medium",
-	reasoning: "openai-codex/gpt-6.1-sol:high",
+	routine: "openai-codex/gpt-6-luna:high",
+	intermediate: "openai-codex/gpt-6.1-terra:medium",
+	complex: "openai-codex/gpt-6.1-sol:high",
 	frontier: "openai-codex/gpt-6-astra:high",
 });
 
 /** Family-scoped class routes, identified by a catalog model from each family. */
 export const MODEL_CLASS_ROUTES = Object.freeze([
 	Object.freeze({ referenceModel: "openai-codex/gpt-6-luna", classes: MODEL_CLASS_ROLE_DEFAULTS }),
-	// Measured for mechanical and implementation only; other classes stay unmapped.
+	// Measured for mechanical and routine only; other classes stay unmapped.
 	Object.freeze({
 		referenceModel: "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017",
 		classes: Object.freeze({
 			mechanical: "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:low",
-			implementation: "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high",
+			routine: "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high",
 		}),
 	}),
 ]);
@@ -65,9 +65,9 @@ function validateModelClassRoutes(routes) {
 /** Display metadata for task capability roles in the Omp Roles view. */
 export const MODEL_CLASS_ROLE_TAGS = Object.freeze({
 	mechanical: Object.freeze({ name: "Mechanical" }),
-	implementation: Object.freeze({ name: "Implementation" }),
-	integration: Object.freeze({ name: "Integration" }),
-	reasoning: Object.freeze({ name: "Reasoning" }),
+	routine: Object.freeze({ name: "Routine" }),
+	intermediate: Object.freeze({ name: "Intermediate" }),
+	complex: Object.freeze({ name: "Complex" }),
 	frontier: Object.freeze({ name: "Frontier" }),
 	reviewer: Object.freeze({ name: "Reviewer" }),
 });

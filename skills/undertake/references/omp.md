@@ -51,8 +51,8 @@ envelope. A frontier `research` issue keeps that label and its narrow metadata
 exception; do not impose the task template.
 
 Before worktree creation or claim, call `daily_driver_route_undertaking` with
-`{ issue: <positive issue number>, modelClass: "mechanical" | "implementation" |
-"integration" | "reasoning" | "frontier", frontierApproval?: <recorded approval
+`{ issue: <positive issue number>, modelClass: "mechanical" | "routine" |
+"intermediate" | "complex" | "frontier", frontierApproval?: <recorded approval
 and envelope> }`.
 Validate readiness and frontier approval first; the approval argument is evidence,
 not authorization by itself. Call the routing tool alone in its assistant tool

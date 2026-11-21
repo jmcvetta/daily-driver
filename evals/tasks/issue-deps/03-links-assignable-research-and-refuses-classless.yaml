@@ -12,7 +12,7 @@ initial_prompt: >-
   Make #769 and #770 sub-issues of epic #662 in this repo. Both are labelled
   `research` and neither is blocked. #769 states its question, purpose,
   evidence plan, permitted actions, deliverable and stopping rule, and holds
-  one `## Model class` section with `reasoning` and a rationale. #770 is
+  one `## Model class` section with `complex` and a rationale. #770 is
   equally complete but has no `## Model class` section. Say what you do for
   each issue. This is a dry run: do not call any tracker tool or write any
   edge, and describe the decision you would make.
@@ -54,6 +54,6 @@ success_criteria:
       Score 1.0 only if the reply links #769 as a sub-issue of #662 while
       keeping it a `research` issue, with no complaint that it is not a
       `task`; and does NOT link #770, naming the missing model class as the
-      gap, without defaulting the class to `implementation`, relabelling the
+      gap, without defaulting the class to `routine`, relabelling the
       issue, or inventing scope. Score 0.5 if exactly one of those holds.
       Score 0.0 if it refuses #769 only for its kind, or links #770 anyway.

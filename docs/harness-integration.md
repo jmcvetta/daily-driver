@@ -105,8 +105,8 @@ is the user's authentication action; it does not renew task approval.
 
 ## Omp task roles and worktrees
 
-The Omp installation defines `mechanical`, `implementation`, `integration`,
-`reasoning` and `frontier` task roles. Where no operator assignment exists, the
+The Omp installation defines `mechanical`, `routine`, `intermediate`,
+`complex` and `frontier` task roles. Where no operator assignment exists, the
 extension supplies defaults. Frontier is limited to explicitly approved, bounded research
 or planning; ordinary implementation uses a non-frontier route unless the user
 separately authorizes that exception. The defaults require configured
@@ -139,16 +139,25 @@ This adapter is not a security boundary against arbitrary trusted extensions.
 
 `dailyDriver.modelClassRoutes` is an array of entries with `referenceModel`
 and `classes`, for example `{ referenceModel: "provider/model", classes: {
-implementation: "provider/variant:high" } }`. Omp resolves the reference
+routine: "provider/variant:high" } }`. Omp resolves the reference
 through its model catalog to identify the family; that family mapping applies
 regardless of the reference model's provider. Omp resolves the configured
 class target to the same model identity in the invoking provider and family,
 then retains the invoking provider. Ambiguous or unavailable targets are route
 gaps. Explicit class roles remain valid only in the invoking provider and
 family. The built-in OpenAI Codex entry preserves existing defaults, and the
-DeepSeek V4.1 Flash entry maps only its measured mechanical and implementation
+DeepSeek V4.1 Flash entry maps only its measured mechanical and routine
 classes. Plugin-installed global defaults do not establish a mapping for
 unrelated families. A mapping is not measurement evidence.
+
+For the class-name cutover, merge and release the parser first. Then migrate
+open assignable issues across the participating repositories: change
+`implementation` to `routine`, `integration` to `intermediate`, and
+`reasoning` to `complex` in `## Model class`; update only rationale wording
+that uses the old names. Preserve all other content and leave closed issues
+unchanged. Update custom role and route-map keys with the same mapping. Older
+saved undertaking sessions are translated on resume; new admissions reject
+the old tokens.
 
 An unset route configuration uses the registered default, including when Omp
 clones settings for a task. An explicit empty array stays empty; malformed

@@ -8,7 +8,7 @@ initial_prompt: >-
   /undertake 52
 
   This is a read-only workflow scenario in the fictional repository
-  example/parser. Issue #52 is an unblocked task with a valid implementation
+  example/parser. Issue #52 is an unblocked task with a valid routine
   model class. Its existing draft PR #60 uses `issue-52-strict-parser`.
   A stand-down handoff records `Branch: issue-52-strict-parser` and that PR.
   This Claude Code web session designates `claude/fresh-52` and has this

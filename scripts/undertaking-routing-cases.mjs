@@ -123,14 +123,14 @@ function fakeSession(options = {}) {
 		setCurrent: value => { current = value; },
 		setEffort: value => { effort = value; },
 		describe: () => api.describe(ctx),
-		route: (params = {}) => tools.get("daily_driver_route_undertaking").execute("route", { issue: 755, modelClass: "implementation", ...params }, undefined, undefined, ctx),
+		route: (params = {}) => tools.get("daily_driver_route_undertaking").execute("route", { issue: 755, modelClass: "routine", ...params }, undefined, undefined, ctx),
 		finish: (issue = 755) => tools.get("daily_driver_finish_undertaking").execute("finish", { issue }, undefined, undefined, ctx),
 		command: args => commands.get("undertaking").handler(args, ctx),
 		tool: (toolName, input = {}) => fire("tool_call", { toolName, input }),
 		prompt: () => fire("before_agent_start", { prompt: "Continue" }),
 		request: () => fire("before_provider_request", { payload: { model: current.id } }),
 		assistant: () => fire("assistant_message", { message: { role: "assistant", provider: current.provider, model: current.id, content: [{ type: "text", text: "Response" }] } }),
-		spawn: (key, patterns = [qualified(FOREIGN)], agent = "implementation", modelRole = "implementation") =>
+		spawn: (key, patterns = [qualified(FOREIGN)], agent = "routine", modelRole = "routine") =>
 			fire("before_subagent_spawn", { agent, modelRole, patterns, spawnKey: key }),
 		async close() { if (!closed) { closed = true; await fire("session_shutdown"); } },
 	};
@@ -159,6 +159,15 @@ export default function registerUndertakingRoutingChecks(check) {
 		});
 	}
 
+	// Former class tokens must not select a route after the cutover.
+	for (const modelClass of ["implementation", "integration", "reasoning"]) {
+		routingCheck(`rejects former class ${modelClass}`, async create => {
+			const s = await create();
+			assertGap(await s.route({ modelClass }));
+			assert.deepEqual(s.calls.models, []);
+		});
+	}
+
 	// Re-selecting an already matching route would overwrite the operator's selection unnecessarily.
 	routingCheck("matching route performs no setter calls", async create => {
 		const s = await create();
@@ -183,7 +192,7 @@ export default function registerUndertakingRoutingChecks(check) {
 			// A pending or previously observed admission must never restore or reject the operator's route.
 			routingCheck(`${change} change ${afterResponse ? "after" : "before"} first response remains authoritative`, async create => {
 				const s = await create();
-				await s.route({ modelClass: "reasoning" });
+				await s.route({ modelClass: "complex" });
 				if (afterResponse) { await s.request(); await s.assistant(); }
 				if (change === "effort") s.setEffort("low");
 				if (change === "model") s.setCurrent(TERRA);
@@ -208,7 +217,7 @@ export default function registerUndertakingRoutingChecks(check) {
 	// Re-entry is not a new undertaking, even when the requested class changes.
 	routingCheck("same issue re-entry preserves operator selection", async create => {
 		const s = await create();
-		await s.route({ modelClass: "reasoning" });
+		await s.route({ modelClass: "complex" });
 		s.setCurrent(FOREIGN); s.setEffort("low");
 		const modelCalls = s.calls.models.length;
 		const effortCalls = s.calls.effort.length;
@@ -224,7 +233,7 @@ export default function registerUndertakingRoutingChecks(check) {
 		// Legacy recovery flags must not revive the old model or reinstall authentication restrictions.
 		routingCheck(`legacy schema ${schema} reload preserves the current route`, async create => {
 			const first = await create();
-			await first.route({ modelClass: "reasoning" });
+			await first.route({ modelClass: "complex" });
 			const entries = structuredClone(first.entries);
 			const saved = entries.at(-1).data;
 			saved.schema = schema;
@@ -247,13 +256,27 @@ export default function registerUndertakingRoutingChecks(check) {
 		});
 	}
 
+	// Existing session records must resume without accepting old tokens for new admissions.
+	for (const [oldClass, newClass] of [["implementation", "routine"], ["integration", "intermediate"], ["reasoning", "complex"]]) {
+		routingCheck(`legacy ${oldClass} session resumes as ${newClass}`, async create => {
+			const first = await create();
+			await first.route({ modelClass: newClass });
+			const entries = structuredClone(first.entries);
+			entries.at(-1).data.schema = 2;
+			entries.at(-1).data.modelClass = oldClass;
+			const resumed = await create({ entries });
+			assert.equal(resumed.describe().undertaking.modelClass, newClass);
+			assertAllowed(await resumed.tool("write", { path: "task.txt" }));
+		});
+	}
+
 	// Finishing an owner must allow the next issue to perform a fresh selection.
 	routingCheck("new issue selects its own initial route after finish", async create => {
 		const s = await create();
-		await s.route({ modelClass: "reasoning" });
+		await s.route({ modelClass: "complex" });
 		assert.notEqual((await s.finish()).isError, true);
 		s.setCurrent(MECHANICAL); s.setEffort("low");
-		assert.notEqual((await s.route({ issue: 756, modelClass: "integration" })).isError, true);
+		assert.notEqual((await s.route({ issue: 756, modelClass: "intermediate" })).isError, true);
 		assert.equal(s.current(), TERRA);
 		assert.equal(s.effort(), "medium");
 		assert.equal(s.describe().undertaking.issue, 756);
@@ -262,7 +285,7 @@ export default function registerUndertakingRoutingChecks(check) {
 	for (const selector of [undefined, "", "openai-codex/missing-model:high"]) {
 		// Invalid explicit roles must fall back to a valid family route.
 		routingCheck(`invalid explicit class role ${String(selector)} falls back to family route`, async create => {
-			const s = await create({ roles: { implementation: selector } });
+			const s = await create({ roles: { routine: selector } });
 			const result = await s.route();
 			assert.notEqual(result.isError, true, JSON.stringify(result));
 			assert.equal(s.describe().undertaking.capability, "mapped");
@@ -273,7 +296,7 @@ export default function registerUndertakingRoutingChecks(check) {
 	}
 	// A compatible explicit role keeps the expected same-family downgrade.
 	routingCheck("same-family explicit role still downgrades", async create => {
-		const s = await create({ current: REASONING, roles: { implementation: `${qualified(MECHANICAL)}:low` } });
+		const s = await create({ current: REASONING, roles: { routine: `${qualified(MECHANICAL)}:low` } });
 		assert.notEqual((await s.route()).isError, true);
 		assert.equal(s.current(), MECHANICAL);
 		assert.equal(s.effort(), "low");
@@ -282,15 +305,15 @@ export default function registerUndertakingRoutingChecks(check) {
 
 	// A cross-family explicit role falls back to the family-mapped route.
 	routingCheck("cross-family explicit role falls back to family route", async create => {
-		const s = await create({ roles: { implementation: qualified(FOREIGN) } });
+		const s = await create({ roles: { routine: qualified(FOREIGN) } });
 		assert.notEqual((await s.route()).isError, true);
 		assert.equal(s.current(), MECHANICAL);
 		assert.equal(s.describe().undertaking.capability, "mapped");
 		assert.deepEqual(s.calls.models, []);
 	});
 
-	// The measured DeepSeek mapping selects mechanical and implementation within the invoking provider.
-	for (const [modelClass, expectedEffort, effortCalls] of [["mechanical", "low", ["low"]], ["implementation", "high", []]]) {
+	// The measured DeepSeek mapping selects mechanical and routine within the invoking provider.
+	for (const [modelClass, expectedEffort, effortCalls] of [["mechanical", "low", ["low"]], ["routine", "high", []]]) {
 		routingCheck(`mapped DeepSeek family selects ${modelClass}`, async create => {
 			const s = await create({ current: DEEPSEEK_PRO, family: familyOf });
 			const result = await s.route({ modelClass });
@@ -309,7 +332,7 @@ export default function registerUndertakingRoutingChecks(check) {
 	// An already selected Flash model must change only the effort its class requires.
 	routingCheck("already selected Flash model changes only effort", async create => {
 		const s = await create({ current: DEEPSEEK, effort: "low", family: familyOf });
-		assert.notEqual((await s.route({ modelClass: "implementation" })).isError, true);
+		assert.notEqual((await s.route({ modelClass: "routine" })).isError, true);
 		assert.equal(s.current(), DEEPSEEK);
 		assert.equal(s.effort(), "high");
 		assert.deepEqual(s.calls.models, []);
@@ -317,7 +340,7 @@ export default function registerUndertakingRoutingChecks(check) {
 	});
 
 	// Unmeasured classes on a mapped family warn and continue instead of failing admission.
-	for (const modelClass of ["integration", "reasoning"]) {
+	for (const modelClass of ["intermediate", "complex"]) {
 		routingCheck(`omitted DeepSeek ${modelClass} class warns and continues`, async create => {
 			const s = await create({ current: DEEPSEEK, family: familyOf });
 			const result = await s.route({ modelClass });
@@ -334,8 +357,8 @@ export default function registerUndertakingRoutingChecks(check) {
 	// An explicitly cleared class on the DeepSeek row stays a precise configuration gap.
 	routingCheck("mapped DeepSeek family rejects an explicitly cleared class", async create => {
 		const s = await create({ current: DEEPSEEK_PRO, family: familyOf,
-			routes: [{ referenceModel: qualified(DEEPSEEK), classes: { implementation: null } }] });
-		assertGap(await s.route(), /cleared for implementation/iu);
+			routes: [{ referenceModel: qualified(DEEPSEEK), classes: { routine: null } }] });
+		assertGap(await s.route(), /cleared for routine/iu);
 		assert.equal(s.current(), DEEPSEEK_PRO);
 		assert.deepEqual(s.calls.models, []);
 	});
@@ -344,7 +367,7 @@ export default function registerUndertakingRoutingChecks(check) {
 	routingCheck("DeepSeek mapping does not manufacture a target in another provider", async create => {
 		const elsewherePro = model("deepseek-v4-pro-0813", "other-gateway", "openai-compatible");
 		const s = await create({ current: elsewherePro, models: [elsewherePro, ...MODELS], family: familyOf });
-		assertGap(await s.route({ modelClass: "implementation" }), /unavailable in the invoking provider/iu);
+		assertGap(await s.route({ modelClass: "routine" }), /unavailable in the invoking provider/iu);
 		assert.equal(s.current(), elsewherePro);
 		assert.deepEqual(s.calls.models, []);
 	});
@@ -386,8 +409,8 @@ export default function registerUndertakingRoutingChecks(check) {
 
 	// A cleared class in a mapped family is a configuration gap, not an unverified route.
 	routingCheck("mapped family rejects a cleared class", async create => {
-		const s = await create({ routes: [{ referenceModel: qualified(MECHANICAL), classes: { implementation: null } }] });
-		assertGap(await s.route(), /cleared for implementation/iu);
+		const s = await create({ routes: [{ referenceModel: qualified(MECHANICAL), classes: { routine: null } }] });
+		assertGap(await s.route(), /cleared for routine/iu);
 		assert.equal(s.current(), MECHANICAL);
 		assert.deepEqual(s.calls.models, []);
 	});
@@ -396,7 +419,7 @@ export default function registerUndertakingRoutingChecks(check) {
 	routingCheck("backend validation failure leaves the session usable", async create => {
 		const s = await create({
 			models: [...MODELS],
-			routes: [{ referenceModel: qualified(MECHANICAL), classes: { implementation: qualified(BACKEND_MISMATCH) } }],
+			routes: [{ referenceModel: qualified(MECHANICAL), classes: { routine: qualified(BACKEND_MISMATCH) } }],
 		});
 		assertGap(await s.route(), /backend must remain unchanged/iu);
 		assertAllowed(await s.tool("write", { path: "task.txt" }));
@@ -445,7 +468,7 @@ export default function registerUndertakingRoutingChecks(check) {
 	// A host fallback list must not be treated as an undertaking model lock.
 	routingCheck("initial selection does not preflight unrelated fallback candidates", async create => {
 		const s = await create({ candidates: async () => [qualified(FOREIGN)] });
-		assert.notEqual((await s.route({ modelClass: "reasoning" })).isError, true);
+		assert.notEqual((await s.route({ modelClass: "complex" })).isError, true);
 		assert.equal(s.current(), REASONING);
 	});
 
@@ -458,7 +481,7 @@ export default function registerUndertakingRoutingChecks(check) {
 			if (first) { first = false; entered.resolve(); await proceed.promise; }
 			return "offline-key";
 		} });
-		const routing = s.route({ modelClass: "reasoning" });
+		const routing = s.route({ modelClass: "complex" });
 		await entered.promise;
 		s.setCurrent(FOREIGN); s.setEffort("medium");
 		proceed.resolve();
@@ -478,7 +501,7 @@ export default function registerUndertakingRoutingChecks(check) {
 		const s = await create({ setModel: async (selected, update) => {
 			entered.resolve(); await proceed.promise; update(selected); return true;
 		} });
-		const routing = s.route({ modelClass: "reasoning" });
+		const routing = s.route({ modelClass: "complex" });
 		await entered.promise;
 		assert.equal(s.entries.some(entry => entry.data?.lifecycle === "active"), false);
 		proceed.resolve();
@@ -493,7 +516,7 @@ export default function registerUndertakingRoutingChecks(check) {
 				? { setThinkingLevel: () => { throw new Error("fixture effort failure"); } }
 				: { getApiKey: async () => undefined };
 			const s = await create(options);
-			assertGap(await s.route({ modelClass: failure === "effort" ? "mechanical" : "reasoning" }));
+			assertGap(await s.route({ modelClass: failure === "effort" ? "mechanical" : "complex" }));
 			assertAllowed(await s.tool("write", { path: "task.txt" }));
 			await s.request();
 			assertAllowed(await s.tool("task", {}));
@@ -703,7 +726,7 @@ export default function registerUndertakingRoutingChecks(check) {
 			await proceed.promise;
 			return "offline-key";
 		} });
-		const routing = s.route({ modelClass: "reasoning" });
+		const routing = s.route({ modelClass: "complex" });
 		await entered.promise;
 		assertAllowed(await s.tool("write", { path: "task.txt" }));
 		assertAllowed(await s.tool("task", {}));

@@ -635,9 +635,9 @@ def main() -> int:
             errors.append(f"{where}: frontmatter description is empty")
         expected_aliases = {
             "mechanical": "@mechanical",
-            "implementation": "@implementation",
-            "integration": "@integration",
-            "reasoning": "@reasoning",
+            "routine": "@routine",
+            "intermediate": "@intermediate",
+            "complex": "@complex",
         }
         if name in expected_aliases and fields.get("model") != expected_aliases[name]:
             actual_model = fields.get("model")

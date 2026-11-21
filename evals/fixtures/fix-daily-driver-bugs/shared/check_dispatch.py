@@ -4,7 +4,7 @@
 Reads `omp-task-dispatches.json` (written by `coder_eval_omp` when a row sets
 `record_task_dispatches`) and answers one binary question per invocation:
 
-    check_dispatch.py --require 990009 --agent implementation
+    check_dispatch.py --require 990009 --agent routine
         exactly one successful assignment of #990009, to that agent
     check_dispatch.py --forbid 990010
         no positive assignment of #990010 at all

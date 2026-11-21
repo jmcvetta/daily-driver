@@ -262,7 +262,7 @@ def count_check_reruns(check_runs: list[dict[str, Any]]) -> int:
 
 
 _MODEL_CLASS_RE = re.compile(
-    r"^##\s*Model class\s*$\s*`?(mechanical|implementation|integration|reasoning|frontier)`?(?![\w-])",
+    r"^##\s*Model class\s*$\s*`?(mechanical|routine|intermediate|complex|frontier)`?(?![\w-])",
     re.IGNORECASE | re.MULTILINE,
 )
 

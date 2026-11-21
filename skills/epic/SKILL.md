@@ -226,7 +226,7 @@ it to be true. What the epic body carries is the *reading* of it, under
 when the remaining difficulty is known. `issue-body` owns the class taxonomy,
 section format, per-kind readiness tests, and routing guidance; `embark`
 resolves a concrete worker later. A missing or invalid class, or a missing
-rationale, never defaults to `implementation`.
+rationale, never defaults to `routine`.
 
 When any story in a plan needs `frontier`, `Agree the plan` must explicitly
 confirm that exact assignment and its work envelope. State why the cheaper
