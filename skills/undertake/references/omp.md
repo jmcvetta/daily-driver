@@ -284,8 +284,9 @@ does not start another one.
 The undertaking catch-up look
 -----------------------------
 
-Take the common catch-up look first, then continue this sequence:
-
+Answer direct user questions from known evidence before tools; where state is
+unknown, say which read is needed. An explicit stop follows `The stop`.
+Otherwise take the common catch-up look, then continue this sequence:
 **Currency is not completion.** After a currency test that can move the head,
 read `gh pr view <number> --json statusCheckRollup` for the resulting
 `headRefOid`; `review-cycle`'s three-source read remains the CI verdict.
