@@ -944,7 +944,7 @@ with token buckets and records with subscription billing.
 ### The frozen cohort
 
 `experiments/cohort-695.yaml` is the protocol for the current-model rerun, not a
-description of it. It enumerates all 292 cases with the arm each one runs on,
+description of it. It enumerates all 305 cases with the arm each one runs on,
 the reason for every exclusion, and the 40 experiments with their model, effort,
 repeats, variants and exact command. `baseline.inputs_sha256` pins the
 experiment, task, fixture and judge revisions the protocol was frozen against.

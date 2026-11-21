@@ -14,13 +14,13 @@ manifest_version: 1
 issue: 695
 status: frozen
 baseline:
-  base_revision: 35267317bdda77efa76b365f51346a7ffb3b4e0e
+  base_revision: c799b001df621cf8a2ce4594cc9069b2bc187329
   inputs_sha256:
-    experiments: e384423cde36133a74fd983ad55dc0a3e1781debd12da763388e5916aaba1f2e
-    tasks: ace6fcf1494a812854d8bc4cf55e1c9aad7a529a533dc2e57eb0f2d7c5652c39
-    fixtures: fb57c90af2f82164075e29495728341c7847c41662529229e948aae0d2173322
-    judges: 402e5ac820af08dc9e2e310f6eba0bda540aed2176f401bb28e6c90a895b91f8
-  hash_definition: sha256 over sorted "path\0content\0" for every file in scope; reviewer-quality files and the comparison-helper experiments are excluded
+    experiments: cd022278bb0b90a1cb011e8334c5cae5320ca235eee4fca17117dce6b923c28f
+    tasks: 06a6d78e9898ab3710e6acc77e0fd590533a9a980fa80d2413a89c2bd1891222
+    fixtures: 68ffc110c9e94a362090aefb129f982b56fc9a8266fa7819e72cb5170347ba62
+    judges: 4765def9422ae54306ab164d96a26a9639bf5118220693ebd4d6b417765a5fcf
+  hash_definition: sha256 over sorted "path\0content\0"; scope is the experiments listed here plus codex.yaml, every non-reviewer task, non-reviewer fixtures, and judges
 protocol:
   judge: omp-gpt-6.1-sol
   judge_settings:
@@ -1778,6 +1778,29 @@ cases:
     omp: null
     codex: null
     model-classes: suite is the model-class ablation
+- id: embark/20-discovery-research-only
+  task_id: embark-20-discovery-research-only
+  suite: embark
+  cohort: ablation
+  tags:
+  - embark
+  - discovery
+  - behaviour
+  - fire
+  limits:
+    max_turns: 8
+    turn_timeout: 180
+    task_timeout: 400
+  applicable:
+    claude: true
+    omp: true
+    codex: true
+    model-classes: false
+  exclusion_reason:
+    claude: null
+    omp: null
+    codex: null
+    model-classes: suite is the model-class ablation
 - id: embark/21-blocked-cause-unresolved
   task_id: embark-21-blocked-cause-unresolved
   suite: embark
@@ -2087,6 +2110,29 @@ cases:
     omp: null
     codex: null
     model-classes: suite is the model-class ablation
+- id: epic/08-discovery-promotion
+  task_id: epic-08-discovery-promotion
+  suite: epic
+  cohort: ablation
+  tags:
+  - epic
+  - discovery
+  - behaviour
+  - fire
+  limits:
+    max_turns: 8
+    turn_timeout: 180
+    task_timeout: 400
+  applicable:
+    claude: true
+    omp: true
+    codex: true
+    model-classes: false
+  exclusion_reason:
+    claude: null
+    omp: null
+    codex: null
+    model-classes: suite is the model-class ablation
 - id: epic/08-first-delivery-scope
   task_id: epic-08-first-delivery-scope
   suite: epic
@@ -2131,6 +2177,29 @@ cases:
     omp: null
     codex: null
     model-classes: suite is the model-class ablation
+- id: epic/09-substantive-amendment
+  task_id: epic-09-substantive-amendment
+  suite: epic
+  cohort: ablation
+  tags:
+  - epic
+  - discovery
+  - behaviour
+  - fire
+  limits:
+    max_turns: 8
+    turn_timeout: 180
+    task_timeout: 400
+  applicable:
+    claude: true
+    omp: true
+    codex: true
+    model-classes: false
+  exclusion_reason:
+    claude: null
+    omp: null
+    codex: null
+    model-classes: suite is the model-class ablation
 - id: epic/10-deployment-continuity-and-state
   task_id: epic-10-deployment-continuity-and-state
   suite: epic
@@ -2143,6 +2212,28 @@ cases:
     max_turns: 10
     turn_timeout: 300
     task_timeout: 480
+  applicable:
+    claude: true
+    omp: true
+    codex: true
+    model-classes: false
+  exclusion_reason:
+    claude: null
+    omp: null
+    codex: null
+    model-classes: suite is the model-class ablation
+- id: epic/11-assigns-intermediate-class
+  task_id: epic-11-assigns-intermediate-class
+  suite: epic
+  cohort: ablation
+  tags:
+  - epic
+  - behaviour
+  - fire
+  limits:
+    max_turns: 60
+    turn_timeout: 900
+    task_timeout: 1200
   applicable:
     claude: true
     omp: true
@@ -2292,6 +2383,29 @@ cases:
     omp: null
     codex: null
     model-classes: suite is the model-class ablation
+- id: issue-deps/09-discovery-children
+  task_id: issue-deps-09-discovery-children
+  suite: issue-deps
+  cohort: ablation
+  tags:
+  - issue-deps
+  - discovery
+  - behaviour
+  - fire
+  limits:
+    max_turns: 8
+    turn_timeout: 180
+    task_timeout: 400
+  applicable:
+    claude: true
+    omp: true
+    codex: true
+    model-classes: false
+  exclusion_reason:
+    claude: null
+    omp: null
+    codex: null
+    model-classes: suite is the model-class ablation
 - id: issue-labels/01-slash-issue-labels
   task_id: issue-labels-01-slash-issue-labels
   suite: issue-labels
@@ -2414,6 +2528,29 @@ cases:
     max_turns: 5
     task_timeout: 300
     turn_timeout: 120
+  applicable:
+    claude: true
+    omp: true
+    codex: true
+    model-classes: false
+  exclusion_reason:
+    claude: null
+    omp: null
+    codex: null
+    model-classes: suite is the model-class ablation
+- id: issue-labels/07-specification-is-interactive
+  task_id: issue-labels-07-specification-is-interactive
+  suite: issue-labels
+  cohort: ablation
+  tags:
+  - issue-labels
+  - specification
+  - behaviour
+  - fire
+  limits:
+    max_turns: 8
+    turn_timeout: 180
+    task_timeout: 400
   applicable:
     claude: true
     omp: true
@@ -3001,6 +3138,29 @@ cases:
     omp: null
     codex: null
     model-classes: suite is the model-class ablation
+- id: issue/23-specification-interactive-contract
+  task_id: issue-23-specification-interactive-contract
+  suite: issue
+  cohort: ablation
+  tags:
+  - issue
+  - specification
+  - behaviour
+  - fire
+  limits:
+    max_turns: 8
+    turn_timeout: 180
+    task_timeout: 400
+  applicable:
+    claude: true
+    omp: true
+    codex: true
+    model-classes: false
+  exclusion_reason:
+    claude: null
+    omp: null
+    codex: null
+    model-classes: suite is the model-class ablation
 - id: judgement-call/01-ask-in-chat-extension-omp
   task_id: judgement-call-01-ask-in-chat-extension-omp
   suite: judgement-call
@@ -3081,7 +3241,7 @@ cases:
   cohort: model-classes
   tags:
   - model-classes
-  - class:implementation
+  - class:routine
   limits:
     max_turns: 30
     task_timeout: 780
@@ -3166,7 +3326,7 @@ cases:
   cohort: model-classes
   tags:
   - model-classes
-  - class:implementation
+  - class:routine
   limits:
     max_turns: 30
     task_timeout: 780
@@ -3187,7 +3347,7 @@ cases:
   cohort: model-classes
   tags:
   - model-classes
-  - class:implementation
+  - class:routine
   - smoke
   limits:
     max_turns: 30
@@ -4615,6 +4775,29 @@ cases:
     omp: null
     codex: carries another arm's only tag (omp-only)
     model-classes: suite is the model-class ablation
+- id: review-cycle/20-specification-allocation
+  task_id: review-cycle-20-specification-allocation
+  suite: review-cycle
+  cohort: ablation
+  tags:
+  - review-cycle
+  - discovery
+  - behaviour
+  - fire
+  limits:
+    max_turns: 8
+    turn_timeout: 180
+    task_timeout: 400
+  applicable:
+    claude: true
+    omp: true
+    codex: true
+    model-classes: false
+  exclusion_reason:
+    claude: null
+    omp: null
+    codex: null
+    model-classes: suite is the model-class ablation
 - id: reviewer-quality/01-boundary
   task_id: reviewer-quality-01-boundary
   suite: reviewer-quality
@@ -4964,6 +5147,50 @@ cases:
     claude: carries another arm's only tag (omp-only)
     omp: null
     codex: carries another arm's only tag (omp-only)
+    model-classes: suite is the model-class ablation
+- id: specification/01-interactive-draft
+  task_id: specification-01-interactive-draft
+  suite: specification
+  cohort: ablation
+  tags:
+  - specification
+  - behaviour
+  - fire
+  limits:
+    max_turns: 8
+    turn_timeout: 180
+    task_timeout: 400
+  applicable:
+    claude: true
+    omp: true
+    codex: true
+    model-classes: false
+  exclusion_reason:
+    claude: null
+    omp: null
+    codex: null
+    model-classes: suite is the model-class ablation
+- id: specification/02-approval-and-amendment
+  task_id: specification-02-approval-and-amendment
+  suite: specification
+  cohort: ablation
+  tags:
+  - specification
+  - behaviour
+  - fire
+  limits:
+    max_turns: 8
+    turn_timeout: 180
+    task_timeout: 400
+  applicable:
+    claude: true
+    omp: true
+    codex: true
+    model-classes: false
+  exclusion_reason:
+    claude: null
+    omp: null
+    codex: null
     model-classes: suite is the model-class ablation
 - id: stand-down/01-wrap-up-before-archive
   task_id: stand-down-01-wrap-up-before-archive
@@ -6737,6 +6964,28 @@ cases:
     omp: null
     codex: null
     model-classes: suite is the model-class ablation
+- id: undertake/24-explicit-user-hold-keeps-draft
+  task_id: undertake-24-explicit-user-hold-keeps-draft
+  suite: undertake
+  cohort: ablation
+  tags:
+  - undertake
+  - behaviour
+  - fire
+  limits:
+    max_turns: 30
+    turn_timeout: 600
+    task_timeout: 900
+  applicable:
+    claude: true
+    omp: true
+    codex: true
+    model-classes: false
+  exclusion_reason:
+    claude: null
+    omp: null
+    codex: null
+    model-classes: suite is the model-class ablation
 - id: undertake/24-repairable-verifier-failure
   task_id: undertake-24-repairable-verifier-failure
   suite: undertake
@@ -7035,6 +7284,52 @@ cases:
     max_turns: 60
     turn_timeout: 900
     task_timeout: 1200
+  applicable:
+    claude: true
+    omp: true
+    codex: true
+    model-classes: false
+  exclusion_reason:
+    claude: null
+    omp: null
+    codex: null
+    model-classes: suite is the model-class ablation
+- id: undertake/35-specification-stays-interactive
+  task_id: undertake-35-specification-stays-interactive
+  suite: undertake
+  cohort: ablation
+  tags:
+  - undertake
+  - specification
+  - behaviour
+  - fire
+  limits:
+    max_turns: 8
+    turn_timeout: 180
+    task_timeout: 400
+  applicable:
+    claude: true
+    omp: true
+    codex: true
+    model-classes: false
+  exclusion_reason:
+    claude: null
+    omp: null
+    codex: null
+    model-classes: suite is the model-class ablation
+- id: undertake/36-specification-revision
+  task_id: undertake-36-specification-revision
+  suite: undertake
+  cohort: ablation
+  tags:
+  - undertake
+  - discovery
+  - behaviour
+  - fire
+  limits:
+    max_turns: 8
+    turn_timeout: 180
+    task_timeout: 400
   applicable:
     claude: true
     omp: true
