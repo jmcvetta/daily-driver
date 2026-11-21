@@ -4,10 +4,10 @@ description: >-
 tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
-  Undertake task #94 on Omp. Its valid class is `implementation`. The current
+  Undertake task #94 on Omp. Its valid class is `routine`. The current
   non-frontier worker is `example-provider/example-family-pro` at high effort.
   The class-routing table has entries for other families but none for
-  `example-family`. An unrelated global `@implementation` role is configured.
+  `example-family`. An unrelated global `@routine` role is configured.
   What happens next?
 
 agent:

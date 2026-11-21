@@ -11,13 +11,19 @@ name a provider, price tier, context window, or reasoning-effort setting.
 | Class | Suitable work | Boundary |
 | --- | --- | --- |
 | `mechanical` | A bounded transformation with an explicit rule, identified scope, existing example, and direct check. | No substantive implementation choice or diagnosis remains. |
-| `implementation` | Settled design using repository patterns, routine local choices, ordinary multi-file coordination, meaningful tests, and local failure diagnosis. | The normal class for a specified feature or bug fix. |
-| `reasoning` | A settled design with sustained reasoning about interacting invariants or difficult failure modes. | State the irreducible reason, such as concurrency correctness, security boundaries, or data integrity. File count, a security filename, and missing specification are not reasons. |
+| `routine` | Ordinary settled implementation using established repository patterns. | The normal class for a specified feature or bug fix, even when several files change. |
+| `intermediate` | Work beyond routine that does not require the sustained difficult analysis of complex work. | Name the interacting components or contracts and the behavior to preserve. |
+| `complex` | Settled work involving difficult behavior, correctness, or failure modes. | State the irreducible reason, such as concurrency correctness, security boundaries, or data integrity. |
 | `frontier` | Exceptional, bounded research or planning where the cheaper classes cannot reliably settle the named question. | Requires explicit user approval for the assignment and work envelope; never a default implementation route. |
+
+For example, adding a field through an established API, state, and UI path is
+`routine`. A settled persisted-state transition affecting execution,
+recovery, hooks, and resume is `intermediate`. Making task claiming exactly-once
+under concurrent workers, retries, and stale ownership is `complex`.
 
 Frontier does not mean difficult, underspecified, unavailable, or retrying.
 Those conditions do not authorize its use. A frontier assignment states why the
-three ordinary classes are insufficient.
+four ordinary classes are insufficient.
 
 Improve the task specification before raising its class. A stronger model does
 not make an underspecified task ready.
@@ -26,7 +32,8 @@ not make an underspecified task ready.
 
 Before publishing or revising an issue into a frontier assignment ready for
 execution, stop and ask the user in chat for explicit confirmation. Explain why
-`mechanical`, `implementation`, and `reasoning` cannot reliably deliver it.
+`mechanical`, `routine`, `intermediate`, and `complex` cannot reliably
+deliver it.
 Silence, broad plan approval, or the author's own judgement is not approval.
 Approval of a plan counts only when it explicitly includes the frontier
 assignment and its work envelope.
@@ -50,20 +57,24 @@ capability needed to deliver that kind's settled handoff.
 
 ## Selection
 
-For classed undertaking, select the exact required class within the invoking
-family and provider before worktree or claim. Preserve backend and authentication
-where supported; never deliberately substitute another provider. Assess tools,
+For classed undertaking, make the initial selection within the invoking family
+and provider before worktree or claim. Preserve backend and authentication
+where supported; never deliberately substitute a provider. Assess tools,
 context, modalities, availability, and visible fallbacks. A configured mapping
 does not itself prove capability. Do not change shared roles or infer an
 eligible route from price.
+Among verified eligible routes, prefer the cheapest one that can deliver the
+assigned class. Price and model identity alone do not establish suitability.
 
 If the known family is absent from the class table, prominently warn with the
 family, requested class, and retained provider/model. Continue immediately on
 the invoking model, provider, and effort without confirmation. Class suitability
 is unverified, even if execution identity is observed. Frontier authorization
-and actual route constraints still apply. Do not use this exception for unknown
-identity or for a mapped family with a missing or cleared class, unavailable
-target, or incompatible assignment: report those configuration gaps.
+and actual route constraints still apply. A class omitted from a mapped family
+uses this same warning-and-continue, with suitability unverified. Do not use
+this exception for unknown identity or for a mapped family with an explicitly
+cleared class, unavailable target, or incompatible assignment: report those
+configuration gaps.
 
 An effective route that runs frontier requires explicit approval for that
 assignment, even when a lower-class role, configured retry fallback, prewalk
@@ -71,15 +82,21 @@ fallback, or visible parent-model inheritance selects it. Resolve the effective
 execution route, not only the requested role name. A harness-resolved
 astra/fable route is frontier for this authorization check.
 
-For a mapped family, prefer a verified in-session switch; use a full handoff
-only where the surface can constrain and verify the same route. The receiving
-session owns the undertaking and the sender stops. For an absent family, keep
-the invoking session if a child cannot retain the route. An approved frontier
-research pass returns
-only its bounded deliverable; implementation requires a separately authorized
-frontier exception or an eligible ordinary class. Frontier implementation
-requires explicit user authorization and its bounded scope; research approval
-does not cover it. Ordinary workers cannot fall back to frontier.
+For a mapped family, prefer a verified in-session switch for initial selection;
+use a full handoff only where the surface can constrain and verify that route.
+The receiving session owns the undertaking and the sender stops. For an absent
+family, keep the invoking session if a child cannot retain the initial route.
+An approved frontier research pass returns only its bounded deliverable;
+implementation requires a separately authorized frontier exception or an
+eligible ordinary class. Frontier implementation requires explicit user
+authorization and its bounded scope; research approval does not cover it.
+Ordinary workers cannot fall back to frontier.
+After initial selection, operator model, provider, and effort changes remain
+permitted and must not be blocked or reversed, including after rejection or
+resume. This does not change the assigned worker, issue class, approval record,
+or verification state, and does not authorize agent-initiated reassignment or
+fallback. Agent-initiated routes still require their own class and frontier
+authorization.
 
 For an operator's manual escalation during a failing task, apply `undertake`'s
 *Manual frontier escalation* policy: repair the plan and return the existing
@@ -96,9 +113,10 @@ hand-written `Classes` table. A missing row, or one marked `unmeasured` or
 `Recorded` date, is read the same way. An unmeasured model is unknown, and
 unknown falls to the operator's configured preference above.
 
-Record the requested class separately from the selected route and actual model.
-Use `unreported` when the harness does not report actual execution identity;
-report visible runtime fallback mismatches and reassess before continuing.
+Record the requested class separately from the initial selected route and actual
+model. Use `unreported` when the harness does not report actual execution
+identity; report visible agent-route fallback mismatches and reassess before
+agent work continues.
 
 This file stays provider-neutral by rule, so the generated measured-routes
 table that cites real routes by name lives in the harness-specific reference

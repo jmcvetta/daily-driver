@@ -21,13 +21,13 @@ from the **effective** label — the one the issue carries after the requested
 change — not the one it carried before: relabelling `proposal` to `task`
 makes it a task body from that edit onward.
 
-Each of the six managed kinds has a contract. `task`'s grounded handoff and
-fixed opening are defined below. The `research`, `bug`, `proposal`, and
-`human` contracts are in
+Each of the eight managed kinds has a contract. `task`'s grounded handoff and
+fixed opening are defined below. The `research`, `bug`, `proposal`,
+`specification`, and `human` contracts are in
 [`references/kind-contracts.md`](references/kind-contracts.md).
-`epic`'s existing body contract remains in
-[`epic/SKILL.md`](../epic/SKILL.md#the-epic-body); invoke it rather than
-copying its format here. `issue-labels` owns kind selection. `story` and
+`epic` owns the parent contracts for both `epic` and `discovery`; invoke
+[`epic/SKILL.md`](../epic/SKILL.md) rather than copying them here.
+`issue-labels` owns kind selection. `story` and
 unrelated labels add no body contract.
 
 These are information requirements, not a quota of headings. Keep small
@@ -100,10 +100,19 @@ inapplicable detail is omitted rather than manufactured into boilerplate.
    For research, frontier is the only class exception and does not add the task
    template.
 
-Execution retains these requirements in a versioned task contract. Stable
-criterion IDs belong to that runtime record; this template needs no new
-headings. Later issue edits do not silently cancel unmet criteria in an active
-contract. An issue body is a requirement source, not original user approval.
+An issue body is a requirement source, not original user approval. Later issue
+edits do not silently cancel agreed requirements for active work.
+
+**Specification-backed task variant.** Name the canonical document path, its
+exact operator-approved merge commit on `master`, and the stable requirement
+IDs allocated to this task. The issue owns allocation, explicit exclusions,
+grounded implementation map, verification route and model class. The document
+at that revision owns behavior, interfaces, constraints and acceptance; do
+not duplicate them in full. Before presenting the task as ready, read that
+revision, verify every cited ID exists and matches the parent publication
+record, and confirm its allocation and exclusions are unambiguous. Keep the
+issue as external task identity. Missing or mismatched revision or IDs route to
+`epic`, not a silent substitution of the newest document.
 
 **A task body opens in a fixed shape.** Its parts appear in this order:
 
@@ -111,10 +120,10 @@ contract. An issue body is a requirement source, not original user approval.
 2. **A haiku.** Immediately after the summary, separated by a blank line:
    three 5-7-5 lines, italicised line by line, as
    [`HAIKU.md`](../../HAIKU.md) shows.
-3. **`## Summary`.** A short paragraph or two describing the change and
+3. **`## Human brief`.** A short paragraph or two describing the change and
    reason, without duplicating `Detail`. It is human-facing, so the
    constitution's audience rule governs it.
-4. **`## Model class`.** Immediately after `Summary`, before `Detail`. Its
+4. **`## Model class`.** Immediately after `Human brief`, before `Detail`. Its
    first paragraph is exactly one backtick-wrapped lowercase class token;
    one short rationale paragraph follows.
 5. **`## Detail`.** The grounded map, settled design, acceptance, and
@@ -122,10 +131,21 @@ contract. An issue body is a requirement source, not original user approval.
    needs and is not shortened to a reading budget. Its internal headings are
    the author's choice.
 
+Where the work has nontrivial components, flow, state, or data movement,
+the `Human brief` should include one Mermaid
+diagram that reveals that structure. The diagram is optional, not a quota:
+omit it when prose is clearer or the structure is trivial. A diagram replaces
+prose that would otherwise explain the same structure — never acceptance
+criteria, never an exact contract, and never the dependency graph, which
+stays authoritative for execution ordering. Where a diagram and the text
+disagree, the text wins and the diagram is corrected in the same turn. No
+decorative or duplicate diagrams, no progress checklists, and no second
+hand-maintained dependency record.
+
 The class is implementation metadata, not authoring, review, judging, effort,
 or concrete-model provenance. A task body has no trailing `Model:` or
 `Effort:` line — that is class metadata's own shape, immediately below
-`## Summary`, and is a different thing from `provenance`'s block, which sits
+`## Human brief`, and is a different thing from `provenance`'s block, which sits
 below a `---` rule at the very end of the body and this rule does not touch.
 This shape is `task`'s alone; an `epic` body is untouched.
 Frontier authorization
@@ -133,7 +153,7 @@ Frontier authorization
 
 **Do not publish or revise an issue into a ready frontier assignment before
 approval.** When the author judges frontier necessary, stop and ask the user
-in chat for explicit confirmation. State why the three ordinary classes cannot
+in chat for explicit confirmation. State why the four ordinary classes cannot
 reliably settle the work. Give the bounded work envelope: question or decision,
 known input scope, expected deliverable, and proposed frontier sessions or
 passes. Distinguish facts, estimates, and unknowns; do not perform frontier
@@ -161,10 +181,12 @@ envelope. A task issue retains its normal body sections and puts the
 authorization record in `Detail`. Ask again before materially expanding the
 approved assignment.
 
-Every complete issue-body draft intended for a write includes the block it
-would publish. Withholding the live write does not remove the provenance
-requirement. Follow `provenance`'s placement, field, and distinct-attribution
-rules on an edited issue.
+Every complete issue-body draft follows the active harness route for
+provenance. For Omp GitHub writes, keep the authored body free of a new block;
+the wrapper attaches and deduplicates attribution. Other routes include the
+block they will publish. Withholding a live write does not remove the
+provenance requirement. Follow `provenance`'s placement, field, and
+distinct-attribution rules on an edited issue.
 
 
 **Relationships are edges, not prose.** What an issue waits on is
@@ -194,19 +216,21 @@ an unstated product or architecture decision?
   clear enough to begin bounded diagnosis. A reproduction is not mandatory.
 - For `proposal`, readiness is for discussion only, never unattended
   implementation.
+- For `specification`, readiness is for interactive collaboration, not
+  unattended execution; unresolved decisions are expected on the issue.
 - For `human`, readiness is for the responsible person to act without
   reconstructing the request. It is never agent-execution readiness.
 - For `epic`, use both existing epic decomposition gates and confirm the graph
   agrees with its rendered waves.
 
-The detailed contracts for research, bug, proposal, and human are in
+The detailed contracts for research, bug, proposal, specification, and human are in
 [`references/kind-contracts.md`](references/kind-contracts.md). The epic
 contract remains in [`epic/SKILL.md`](../epic/SKILL.md#the-epic-body).
 
 A repository-answerable question is answered now by the author. An unresolved
 user decision makes the issue unready at every class. Unknown class tokens,
 multiple class sections, and a missing rationale are invalid metadata, not a
-default to `implementation`. A `frontier` assignment is not ready unless its
+default to `routine`. A `frontier` assignment is not ready unless its
 approval record and work envelope match the assignment exactly. Frontier
 research remains `research` and carries no task template.
 
@@ -225,8 +249,8 @@ Assignable stories
 An epic's story must be assignable, so that an orchestrator can hand it to a
 worker. **Assignable is not the `task` kind.** A story is assignable when it is:
 
-1. An agent-eligible kind — `task`, `research` or `bug`. `proposal`, `human`
-   and `epic` are never assignable stories.
+1. An agent-eligible kind — `task`, `research` or `bug`. `proposal`,
+   `specification`, `human` and `epic` are never assignable stories.
 2. Ready under its own kind's readiness test above, with the kind's contract
    and completion test unchanged. A research story's unknown answer is not a
    defect. A bug story states the incorrect behavior, the expected contract,
@@ -242,7 +266,7 @@ worker. **Assignable is not the `task` kind.** A story is assignable when it is:
 
 An unknown token, a duplicate section, a missing section or a missing
 rationale makes the story not ready. None of them defaults to
-`implementation`. A `story` marker, a parent edge or a kind label alone proves
+`routine`. A `story` marker, a parent edge or a kind label alone proves
 no readiness.
 
 Resolve repository-answerable gaps before presenting a story as ready, and
@@ -270,11 +294,11 @@ still hold stay; the affected specification changes; and readiness runs again.
 Unrelated text is not reflowed and existing issues are not swept.
 
 A deliberately revised task emits the new section and removes its trailing
-task `Model:` field — the legacy class-metadata field below `## Summary`, never
+task `Model:` field — the legacy class-metadata field below `## Human brief`, never
 a `provenance` block below the closing `---` rule, which follows `provenance`'s
 distinct-attribution rule. When selecting an old task for work, assess its body
 against the class rubric and migrate only that issue before dispatch. Map the
-former `standard` class to `implementation` and `advanced` to `reasoning`, based
+former `standard` class to `routine` and `advanced` to `complex`, based
 on the grounded handoff; do not change its rationale or capability requirement,
 and do not infer a class from the old identifier. A valid new section is
 authoritative when both forms exist.
@@ -283,12 +307,12 @@ authoritative when both forms exist.
 The model class section
 =======================
 
-The section is immediately below `## Summary` and before `## Detail`:
+The section is immediately below `## Human brief` and before `## Detail`:
 
 ```markdown
 ## Model class
 
-`implementation`
+`routine`
 
 The API contract and edge cases are fixed; implementation follows the existing
 adapter pattern.
@@ -300,7 +324,8 @@ For a mapped family it selects the exact class within the invoking family and
 provider before worktree creation or claim, preserving backend and authentication
 where supported. If the known family is absent from the class table, it warns
 prominently and continues on the invoking model, provider, and effort without
-confirmation; class suitability remains unverified. Missing classes in mapped
-families, unknown identity, and actual route violations remain gaps. Any
+confirmation; class suitability remains unverified. Classes omitted from a
+mapped family follow that warning with unverified suitability; an explicitly
+cleared class, unknown identity, and actual route violations remain gaps. Any
 frontier assignment still needs explicit user approval and its exact envelope.
 Claim comments and execution records retain the observed model.

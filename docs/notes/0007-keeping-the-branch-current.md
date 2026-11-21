@@ -58,7 +58,7 @@ The return is through the existing gate — green CI, no unanswered thread,
 every finding closed — rather than through a second gate written for the
 second round.
 
-**Amended by [`0010`](0010-the-wake-slot-is-never-empty.md),
+**Amended by [`0034`](0034-the-wake-slot-is-never-empty.md),
 2026-09-09:** the two timers this note and its sibling each specify are one
 wake slot, and a turn never ends with it empty.
 

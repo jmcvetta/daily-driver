@@ -1,5 +1,5 @@
 # The regression guard for the report behind
-# `docs/notes/0010-the-wake-slot-is-never-empty.md`: a session that finished a
+# `docs/notes/0034-the-wake-slot-is-never-empty.md`: a session that finished a
 # CI wait on a ready pull request ended its turn with no timer and no
 # subscription, and slept through the green run it was waiting for.
 #

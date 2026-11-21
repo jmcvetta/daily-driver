@@ -7,7 +7,7 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/inject-constitution.py session-start",
             "timeout": 10,
-            "additionalContextLimit": 5000,
+            "additionalContextLimit": 20000,
             "statusMessage": "Loading the daily-driver constitution"
           }
         ]
@@ -20,7 +20,7 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/inject-constitution.py subagent-start",
             "timeout": 10,
-            "additionalContextLimit": 5000,
+            "additionalContextLimit": 20000,
             "statusMessage": "Handing the subagent the constitution"
           }
         ]

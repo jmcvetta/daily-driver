@@ -4,7 +4,7 @@ description: >-
 tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
-  Undertake task #92 on Omp. Its valid class is `implementation`. The routing
+  Undertake task #92 on Omp. Its valid class is `routine`. The routing
   tool returned `status: pending`, selectedModel `provider/model-b`, and
   observedModel `provider/model-a`. What happens next?
 

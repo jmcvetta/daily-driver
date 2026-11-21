@@ -1,0 +1,16 @@
+# GPT 6.1 Sol judge over the Vercel AI Gateway's first-party OpenAI endpoint.
+#
+# The reviewer cohort's parent and helpers already run this model; the judge is
+# this same fixed route, no tools, thinking off. It is separate from
+# omp-gpt-6.1-sol, which judges through openai-codex: a different billing and
+# serving path, and its earlier calibration does not transfer to this one.
+judge_id: omp-vercel-gpt-6.1-sol
+route: omp
+model: vercel-ai-gateway/openai/gpt-6.1-sol
+status: validated
+calibration: ../provenance/reviewer-quality/vercel-judge-calibration.json
+settings:
+  thinking: "off"
+  timeout_seconds: 300
+  vercel_gateway_only: [openai]
+description: No-tools GPT 6.1 Sol judge through the Vercel gateway's OpenAI upstream.

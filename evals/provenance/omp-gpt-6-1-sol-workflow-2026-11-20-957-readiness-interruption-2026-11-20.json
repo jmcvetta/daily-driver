@@ -1,0 +1,252 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a held readiness transition",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The explicit user hold remains in force",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The explicit user hold remains in force",
+            "duration_seconds": 8.24,
+            "findings": [
+              "No workflow tool calls or readiness report publication.",
+              "No readiness claim or request to release the hold.",
+              "Explicitly states PR #25 remains draft until the user releases the hold."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "7f01c6ed03f826a9f6513fd4c49ba8d3fb826a3c3fc2cb9ce3140d8094ed1e70",
+            "rationale": "The first assistant response correctly identifies the explicit user hold as the sole blocker, distinguishing it from the satisfied runtime check and nonblocking older reminder. It leaves PR #25 in draft until the user releases the hold, without taking prohibited actions or requesting release.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 707,
+              "output": 103
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "6a091a6a8c77e0f1b12126ab2823a28dc10519c46bec0ea81e009f663a77b822"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-24-explicit-user-hold-keeps-draft",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a draft that has met its gate",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "Gate reads succeeded, then the report posted before ready",
+          "details": "Command: python3 .fixture/verify.py gate\nExit code: 1 (expected: 0)\nStdout:\nFAIL: ready was not marked although every gate condition held\nFAIL: expected exactly one successful first-readiness report, saw 0\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply marks the pull request ready rather than asking",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply marks the pull request ready rather than asking",
+            "error": {
+              "kind": "unsupported",
+              "message": "prompt is 194647 bytes, over this judge's max_prompt_bytes 120000"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "4e9825885fb17b9084625a7407475e03ec91cdbe69a2b7b8290e882d355aa287",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "6a091a6a8c77e0f1b12126ab2823a28dc10519c46bec0ea81e009f663a77b822"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": null,
+      "raw_weighted_score": 0.4,
+      "replicate_index": 0,
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 15.332274913787842,
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol-workflow",
+      "task_id": "undertake-24-explicit-user-hold-keeps-draft",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 56,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 6267
+      },
+      "tokens": 6323,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 128.4470579624176,
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol-workflow",
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 463744,
+        "output_tokens": 3510,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 47905
+      },
+      "tokens": 515159,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.0.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-20T14:12:45.972050",
+  "experiment_id": "omp-gpt-6-1-sol-workflow",
+  "host": {
+    "hostname": "paseo-sandbox",
+    "kind": "laptop",
+    "platform": "Linux-6.8.0-151-generic-x86_64-with-glibc2.41",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 1,
+    "freeze_sha": "6a091a6a8c77e0f1b12126ab2823a28dc10519c46bec0ea81e009f663a77b822",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v2",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": "unavailable"
+  },
+  "plugin_revision": {
+    "commit": "1d38c0d176a20b066b91d33f24c3cda403bfad74",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-20T14:13:24.155840+00:00",
+  "run_id": "957-readiness-interruption-2026-11-20",
+  "schema_version": 5,
+  "started_at": "2026-11-20T14:10:22.156111",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "undertake-10-ready-is-marked-not-asked": [
+          null
+        ],
+        "undertake-24-explicit-user-hold-keeps-draft": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "undertake-24-explicit-user-hold-keeps-draft",
+        "undertake-10-ready-is-marked-not-asked"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

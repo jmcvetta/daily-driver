@@ -1,0 +1,31 @@
+# A merged specification alone must not promote or dispatch staged work.
+task_id: epic-08-discovery-promotion
+description: Discovery preserves lineage and gates implementation publication.
+tags: [epic, discovery, behaviour, fire]
+initial_prompt: >-
+  Use epic: parent #10 is a discovery with two completed research children and
+  an interactive specification child. The operator approved and merged the spec
+  to master. How do we publish implementation without losing parent identity?
+  Explain only; do not write or claim external actions.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 180, task_timeout: 400}
+success_criteria:
+  - type: agent_judge
+    description: Promotion follows complete staging and verification
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 4
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Score 1 only if the answer retains parent #10 and lineage, records the
+      exact merged master commit and document path, stages agreed tasks only
+      after merge with requirement IDs and SHA, verifies readiness, references,
+      parent and blocked-by edges and sequencing, and atomically swaps discovery
+      to epic only after all gates pass. Staged tasks cannot dispatch while the
+      parent is discovery. Score 0 for promotion solely on merge or prior task
+      dispatch; otherwise 0.5 for a material omission.

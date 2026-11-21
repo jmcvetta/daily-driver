@@ -58,7 +58,7 @@ in advance is what makes most of these questions answerable without asking:
 > maintainable, sane way.
 
 Where that rule picks a winner, there is nothing to ask. It applies
-`provenance`'s coding discipline at the moment of choosing: correctness, simple
+the constitution's coding discipline at the moment of choosing: correctness, simple
 code, and discussion before unavoidable workarounds. Those rules are not menu items.
 
 

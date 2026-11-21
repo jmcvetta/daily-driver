@@ -38,9 +38,10 @@ The body of a pull request, whether it is being opened or rewritten. In order:
   The section below has the format and the rule that decides whether it appears
   at all.
 - **Human-Action Blocker**: A pull request whose diff changes the
-  infrastructure Tofu stack carries its apply-and-state requirement as a
-  `Blockers` bullet and the PR `human` label while the action is outstanding.
-  The section below has the wording and the rule that decides when it appears.
+  infrastructure Tofu stack — the OpenTofu configuration, not the provider
+  lockfile alone — carries its apply-and-state requirement as a `Blockers`
+  bullet and the PR `human` label while the action is outstanding. The
+  section below has the wording and the rule that decides when it appears.
 - **Executive Summary**: Next, under heading "Summary", give a
   concise high level executive summary of the PR.  If you understand the
   importance of the PR for the larger software development or business
@@ -49,17 +50,17 @@ The body of a pull request, whether it is being opened or rewritten. In order:
   how the change was made, how it was verified, and the material risk or
   uncertainty — said once. What the opening line and `Summary` already say is
   not repeated here.
-  Where task state is available, use its current `receipt` for criterion
-  dispositions and evidence references. Keep unverified requirements, stale
-  results, risks and outstanding approvals visible. Distinguish observed
-  checks, attributed judgments and agent reports. Redact private source
-  quotes and sensitive local details. Do not repeat the receipt in another
-  summary or infer completion from rendering it.
+  Keep unverified requirements, stale results, risks and outstanding approvals
+  visible. Distinguish observed checks, attributed judgments and agent reports.
+  Do not publish private source quotes or sensitive local details.
+  For a specification-backed task, identify the document path, exact delivered
+  specification commit and requirement IDs, and distinguish evidence of
+  delivery from unverified allocation.
 - **Unopinionated**: This is a short description of the branch, NOT a code
   review. Do NOT do opine on code quality or security.
-- **Provenance**: Last, below all of the above, `provenance`'s block — the
-  model, harness and session that wrote the body — placed and retained as
-  that skill defines.
+- **Provenance**: The active harness route attaches `provenance`'s block. For
+  Omp GitHub writes, the wrapper appends it; keep the authored body free of a
+  new block. Other routes place and retain it as `provenance` defines.
 
 **The body is human-facing, and the constitution's audience rule governs
 it.** Keep every essential fact — the change, the reason, the verification
@@ -159,3 +160,13 @@ owed. When a body is revised, add a missing apply blocker if its requirement
 is still outstanding. Do not retain a blocker solely because it was present
 before: a stale blocker misstates the merge condition just as a missing one
 does.
+
+**The stack is the configuration, not the lockfile.** The stack is what the
+OpenTofu configuration declares: the `.tf` files under `infra/` and the
+resources they define. A diff that touches only the provider lockfile —
+`.terraform.lock.hcl`, wherever it sits — records which provider builds the
+next init selects for a configuration it does not change. It applies nothing
+and alters no stack resource, so it is not a change to the infrastructure Tofu
+stack: it carries no apply-and-state blocker and no PR `human` label. A diff
+that changes a `.tf` file under `infra/` is a stack change, and the blocker and
+label go on together while the apply remains owed.

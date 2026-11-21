@@ -66,7 +66,7 @@ sandbox:
                   "title": "Empty config is read as invalid YAML",
                   "state": "OPEN",
                   "labels": ["task"],
-                  "body": "Original automatic report title: [auto-filed] Empty config is read as invalid YAML\n## Model class\n\n`implementation`\n\nThe reported parser failure is reproducible from the checked-in code and has a bounded fix.\n",
+                  "body": "Original automatic report title: [auto-filed] Empty config is read as invalid YAML\n## Model class\n\n`routine`\n\nThe reported parser failure is reproducible from the checked-in code and has a bounded fix.\n",
                   "comments": [],
                   "blockedBy": {"nodes": []},
                   "blocking": {"nodes": []},

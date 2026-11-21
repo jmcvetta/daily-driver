@@ -210,19 +210,11 @@ is yours to reclaim.
   | no — residual, see the stand-down comment on the epic>.
 - Session: <link, left running or interrupted and unarchived where it could
   not be messaged — push or archive it yourself; otherwise "retired">.
-- Contract: <stable contract ID/revision, unresolved criterion IDs and native
-  source locators from existing records; or "unavailable">. Keep its contents
-  private. Stand-down cancels work; it does not revise the contract or verify it.
-- Evidence: <current receipt's criterion dispositions and evidence references,
-  unverified work, risks and outstanding approvals; or "unavailable">.
-  Reuse existing records. Do not run checks, copy private source quotes or
-  treat rendering as verification.
+- Outstanding: <unverified work, risks and outstanding approvals; or "unknown">.
+  Use existing information; do not run checks or copy private source quotes.
 - Authorization: <task-scoped operations and targets, original authority
   references and limits, including expiry or revocation; or "none recorded">.
   Do not copy private source contents into a public issue.
-- Stop evidence and corrective-continuation count: <existing record reference
-  and count, or "unavailable">. This is a user-requested stop, not a new
-  blocker claim.
 
 Work in progress was committed and pushed to the remote push branch above
 before this implementor was retired, where securing it succeeded — the origin
@@ -232,15 +224,15 @@ Where securing failed, "Secured: no" says so, and nothing beyond the last push
 survived.
 ```
 
-This comment ends with `provenance`'s block, and the stand-down comment below
-carries it just before its envoi. Both blocks name this stand-down session
-rather than any retired implementor's.
+The active route adds `provenance` to each comment. Omp's wrapper appends its
+block after the authored body, including the envoi; both blocks name this
+stand-down session rather than any retired implementor's.
 
-Carry authorization and stop records already available in the task state or
-handoff. `undertake` owns their meaning and revalidation. An agent-written
-summary does not grant permission, an unavailable private source is not
-verified authority, and resuming does not reset an exhausted correction bound.
-Do not delay stand-down to reconstruct missing records or request approval.
+Carry authorization and stop information already available in the handoff.
+`undertake` owns their meaning and revalidation. An agent-written summary
+does not grant permission, and an unavailable private source is not verified
+authority. Do not delay stand-down to reconstruct missing records or request
+approval.
 
 **One stand-down comment on the epic**, shaped like a muster roll with its
 rows marked retired. What the retired rows buy is honesty in the epic's
@@ -272,12 +264,13 @@ recovers each quiet task by reopening on the branch its claim or pull
 request names.
 ```
 
-**The stand-down comment ends with an envoi**: a brief farewell stanza for
-the watch, after `provenance`'s block, each line italicised as
-[`HAIKU.md`](../../HAIKU.md) shows. It is last so the rows and the resume
-line are found first. The handoff comments on the task issues carry none:
-each hands work to whoever reclaims it, and verse never attaches to a write
-somebody has to act on.
+**The stand-down comment ends with an envoi in its authored body**: a brief
+farewell stanza for the watch, each line italicised as
+[`HAIKU.md`](../../HAIKU.md) shows. It is last so the rows and the resume line
+are found first. Omp's wrapper appends provenance after the envoi; other
+routes place the block before it. The handoff comments on the task issues carry
+no verse: each hands work to whoever reclaims it, and verse never attaches to a
+write somebody has to act on.
 
 The landing mode is copied unchanged from the latest record into this
 superseding comment. A resumed `embark` therefore reads the same opt-out or

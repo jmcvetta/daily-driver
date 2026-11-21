@@ -15,7 +15,7 @@ The issue
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Open the issue` | Search the open issues | `gh search issues` |
-| `Open the issue` | Open one, labelled | `gh issue create --label task` |
+| `Open the issue` | Open one, labelled; settle destination under [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository) and pass it here | `gh issue create --label task [--repo OWNER/REPO when target differs from current repository]` |
 | `Read the issue and its edges` | Read the body, the graph and the comments | `gh issue view <number> --json body,labels,comments,blockedBy,subIssues,parent` |
 | `Read the issue and its edges` | Label an issue that carries none | `gh issue edit <number> --add-label task` |
 | `Claim the issue` | Comment on the issue | `gh issue comment <number> --body-file <path>` |
@@ -48,18 +48,21 @@ frontier assignment also needs explicit approval and its exact envelope. A
 frontier `research` issue keeps that label and its narrow metadata exception;
 do not impose the task template.
 
-Before worktree creation or claim, resolve classed work within the invoking
-family and provider. Preserve backend, authentication route, and fallbacks where
-the surface supports them; never deliberately substitute a provider. If the
-known family is absent from the class table, prominently warn with the family,
-class, and retained provider/model, then continue immediately on the invoking
-model and effort without confirmation. Identity does not establish class
-suitability. Frontier approval and actual route constraints still apply.
+Before worktree creation or claim, make the initial class selection within the
+invoking family and provider. Preserve backend, authentication route, and
+fallbacks where the surface supports them; never deliberately substitute a
+provider.
+If the known family is absent from the class table, prominently warn with the
+family, class, and retained provider/model, then continue immediately on the
+invoking model and effort without confirmation. Identity does not establish
+class suitability. Frontier approval and agent-route constraints still apply.
 
-For a mapped family, a missing or cleared class, unavailable target, or
-incompatible assignment is a gap. Unknown family or identity is not an absent
-family. This surface exposes no measured agent-callable in-session model switch;
-do not invent one. Report unsupported controls and do not claim verification.
+For a mapped family, a class omitted from the family map follows the same
+warning-and-continue with suitability unverified. An explicitly cleared class,
+unavailable target, or incompatible assignment is a gap. Unknown family or
+identity is not an absent family. This surface exposes no measured
+agent-callable in-session model switch; do not invent one. Report unsupported
+controls and do not claim verification.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
@@ -69,35 +72,9 @@ leaves it unchanged. Post the complete answer with `gh issue comment
 `issue-body`'s research completion test holds. Failed or incomplete research
 stays open.
 
-Authorization and unfinished stops
-----------------------------------
-
-The installed task-state hooks supply a command bound to the native session
-and actor. Run that exact command with `{action, record}` JSON on stdin.
-`record` may be a JSON object or a JSON string on this CLI route. Read `isError`
-in the JSON answer: a controller rejection exits 0. Run the call on its own, so
-its exact output matches the receipt it records and stays out of task evidence.
-Do not select another session identity. The [shared contract operations](../../../docs/harness-integration.md#task-state-operations)
-define every action and record, including `evidence`, `receipt` and
-evidence-gated `complete`. Reuse current-head CI and reviewed-SHA records.
-Codex shell observations without native exit status cannot establish a
-command pass. A recorded check response with its exact head and conclusions
-can establish check evidence; transport success cannot.
-
-Codex-specific packaging loads common hooks and `hooks/task-state-codex.json`.
-Only the latter registers `Interrupt`; Claude never reads that event.
-Trust the installed definitions through `/hooks`. The measured CLI 0.160.0
-emits no `UserPromptSubmit` for its Stop-generated continuation. Native child
-input carries `agent_id` and remains interpretation, not root user authority.
-Do not infer authority from unstable transcript fields.
-
-Private ledgers under `CODEX_HOME` (default `~/.codex`) retain contracts,
-sources, revocation/expiry conditions and correction counts through process
-resume. `SessionStart(source: compact)` restores the contract after compaction.
-`Interrupt` records cancellation without granting another turn. A resume does
-not renew an exhausted correction allowance. This adds no durable wake.
-The [runtime integration](../../../docs/harness-integration.md#hook-harness-boundary)
-records prerequisites and the bounded native-event proof.
+Retain applicable original authorization and its limits through delegation,
+resume and compaction. Copied prose grants no approval. Never publish private
+sources in issue or PR comments.
 
 
 The implementor
@@ -151,10 +128,10 @@ The session
 ===========
 
 **Codex exposes no session id, so the claim's `provenance` block records
-`session: n/a`** — the marker `SKILL.md` prescribes, not a diagnostic about
+`Session: n/a`** — the marker `SKILL.md` prescribes, not a diagnostic about
 the missing surface. `provenance`'s
 [`references/codex.md`](../../provenance/references/codex.md) names how the
-`Model:` line is read.
+`Model:` and `Provider:` lines are read.
 
 For branch-free answer-only research, no task worktree exists and the claim
 uses `Branch: none`. Otherwise the branch comes from the task worktree's Git
@@ -191,10 +168,11 @@ would put the report after the transition it must precede.
 **The start is the claim comment's `createdAt`.** `gh issue view <issue>
 --json comments` is the read `Read the issue and its edges` already makes —
 `comments` is in its field list — and the claim carries the branch link and
-the `Model:` and `session:` lines. Take its `createdAt`; where more than one
-comment carries that shape, the earliest is the start. A resumed session
-finds it with the same read. An issue with no recoverable claim leaves the
-timing `n/a`, per `SKILL.md`.
+the `Model:` and `Session:` lines, where a historical lowercase `session:` is
+the same field. Take its `createdAt`; where more than one comment carries
+that shape, the earliest is the start. A resumed session finds it with the
+same read. An issue with no recoverable claim leaves the timing `n/a`, per
+`SKILL.md`.
 
 **Post the report before marking ready.** Read the existing comments with
 `gh pr view <number> --json comments` and look for the fixed

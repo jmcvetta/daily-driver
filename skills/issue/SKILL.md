@@ -55,10 +55,11 @@ metadata; never put the label in the body. Keep the report brief, but include
 the bug contract's available core information: affected component, expected and
 observed behavior, minimal failure evidence, relevant version/context and
 impact when known. State material unknowns rather than filling them in. Redact
-secrets and private project data, and end with `provenance`'s block. This route
-establishes Daily Driver ownership; it does not acquire task sections, model
-class metadata, a task template, a haiku, an implementation map, an acceptance
-plan, or a proposed fix.
+secrets and private project data. The active route supplies `provenance`'s
+block; on Omp, leave it out of the authored body for the wrapper to append.
+This route establishes Daily Driver ownership; it does not acquire task
+sections, model class metadata, a task template, a haiku, an implementation
+map, an acceptance plan, or a proposed fix.
 
 If attribution remains uncertain, investigate only as needed to resolve it;
 do not file an asserted bug based on suspicion. Target-repository defects
@@ -85,11 +86,44 @@ it either.** A claim, a report, an answer is prose on an issue, not a change
 to one. Comments happen inside other sequences — `undertake`'s `Claim the
 issue` among them — and not through here.
 
+The target repository
+=====================
+
+Before creating an issue, settle and state its destination before the create
+call.
+
+- When the user's create request explicitly names the exact destination — for
+  example, `OWNER/REPO` or `issue://OWNER/REPO/<number>` — use that target;
+  naming it explicitly approves that create. When no other repository is
+  named, the current repository is the default.
+- A repository inferred from an installed dependency, package metadata, an
+  upstream remote, or project context is only a possible target. It is not
+  user approval. Do not silently create there or switch to it in the create
+  call.
+- If a create request does not name a repository and the possible target is
+  not the current repository, stop before the write and ask for explicit
+  approval naming its exact `OWNER/REPO`. Repository ownership or access does
+  not waive this approval. Silence, a general "go ahead", or "open an issue
+  for this" does not qualify. If the user declines, do not create the issue;
+  report the decision and continue work that does not depend on it.
+- Auto-filed Daily Driver bug reports to `jmcvetta/daily-driver` follow
+  `Automatic Daily Driver bug reports` and need no additional approval.
+- Updating an existing issue is not creation. A request naming both the
+  repository and issue, such as `update OWNER/REPO#847`, already names the
+  target for that update. This gate applies when the session would choose the
+  repository for a create.
+Every issue-create route in other workflows applies this gate and passes the
+settled target to the call; their harness references point here without
+copying the policy.
+
+
 
 The moves
 =========
 
-In order, and each only when the change needs it:
+In order, and each only when the change needs it. For a create, **the target
+repository runs first**: settle the destination under `The target repository`
+before preparing the issue body or create call.
 
 **Read what is there.** The issue's current state — body, labels, edges —
 before any edit. An update that does not start from what the issue says now is
@@ -113,12 +147,12 @@ never states in prose what an edge records; that rule is `issue-deps`'s, cited
 here rather than restated.
 
 **The close, when it is not planned.** An issue closed with `state_reason:
-not_planned` gets one comment with the state change: a line saying why the
-work will not be done, `provenance`'s block, and last a short elegy for it —
-two to four lines, each italicised as [`HAIKU.md`](../../HAIKU.md) shows.
-The reason comes first so a reader never reads past verse to learn it. A
-close as `completed` or `duplicate` carries no elegy: the work was done, or
-lives on elsewhere.
+not_planned` gets one comment with the state change: a line saying why it will
+not be done and last a short elegy for it — two to four lines, each italicised
+as [`HAIKU.md`](../../HAIKU.md) shows. The reason comes first so a reader never
+reads past verse to learn it. The active route supplies provenance; on Omp the
+wrapper appends the block after the authored comment. A close as `completed` or
+`duplicate` carries no elegy: the work was done, or lives on elsewhere.
 
 
 Reporting a newly opened issue
@@ -132,7 +166,7 @@ report the label without a model class. Do not infer or fabricate a class when
 the task body has none.
 
 For example: `Opened [#123](https://github.com/OWNER/REPO/issues/123) —
-label: task; model class: implementation.`
+label: task; model class: routine.`
 
 When a workflow creates several issues, report each issue with its own label
 and, for each classed task, its own assigned model class.

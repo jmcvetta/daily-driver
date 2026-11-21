@@ -15,6 +15,7 @@ SHELL := /bin/bash
 	check-issue-infra check-model-telemetry model-telemetry check-checkov check-zizmor \
 	evals-install evals-setup-claude evals-setup-omp evals-plan evals-judge-preflight evals-judge-calibrate \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-leaks check-evals-leaks evals-run evals-run-omp \
+	evals-campaign-preflight \
 	check-claude-dependency evals-run-codex evals-run-comparison evals-run-classes mcp-usage
 
 # The `coder_eval` release the eval suites are written against. Pinned on
@@ -71,26 +72,22 @@ export PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.bun/bin
 # installs nothing else Python: the legs sync their own environment, so the
 # laptop and CI get PyYAML from the same lock and cannot drift apart.
 
-# __git_sync_run: implementation for `wt sync`, which first switches the caller
-# to master's worktree. Offer gone-upstream branches to Worktrunk for cleanup.
-# Worktrunk decides whether each branch is integrated; it refuses dirty or
-# locked worktrees and keeps branches that still add changes.
+# __git_sync_run: implementation for the `wt sync` alias, which switches to
+# master's worktree before invoking this target. Pull the remote, prune
+# references, then let Worktrunk remove every branch and worktree it finds
+# integrated into master, including squash-merged ones. Dirty or locked
+# worktrees remain untouched.
 __git_sync_run:
 	git pull
 	git fetch --prune
-	@git branch -vv | awk '/: gone\]/ {sub(/^\+ /, ""); print $$1}' | \
-	while read -r b; do \
-		wt=$$(git worktree list --porcelain | awk -v b="$$b" '/^worktree /{p = substr($$0, 10)} /^branch /{if (substr($$0, 8) == "refs/heads/" b) {print p; exit}}'); \
-		if [ -n "$$wt" ]; then \
-			if ! wt remove --foreground "$$wt"; then \
-				printf 'WARN: worktree for gone-upstream branch %s could not be removed; kept: %s\n' "$$b" "$$wt" >&2; \
-				continue; \
-			fi; \
-			printf 'removed stale worktree: %s\n' "$$wt"; \
-		else \
-			wt remove --foreground "$$b"; \
-		fi; \
-	done
+	@remote=$$(git config --get branch.master.remote); \
+	if [ -z "$$remote" ]; then \
+		printf 'WARN: master has no remote; skipping branch cleanup\n' >&2; \
+		exit 0; \
+	fi; \
+	if ! wt step prune --foreground --min-age 0; then \
+		printf 'WARN: worktree cleanup failed\n' >&2; \
+	fi
 
 # omp-update-daily-driver: refresh this repository's installed Omp plugin
 # without deleting Omp's shared plugin state. Updating the marketplace replaces
@@ -266,11 +263,11 @@ check-scripts:
 check-pr-keep-current:
 	python3 scripts/test-pr-keep-current.py
 
-# Exercise live Omp title and task-state regressions with local providers.
+# Exercise the live Omp title barrier with a local provider.
 # The title barrier needs native issue:// access rather than the eval guard.
 check-omp-embark-title-live:
 	python3 scripts/check-omp-embark-title-live.py
-	python3 scripts/check-omp-task-state-live.py
+	python3 scripts/check-omp-routing-live.py
 
 
 
@@ -359,7 +356,7 @@ evals-install: evals-setup-claude
 evals-setup-claude:
 	git submodule update --init -- evals/dependencies/worktrunk
 
-# evals-setup-omp: everything a gateway-routed `evals-run-omp-*` target needs
+# evals-setup-omp: everything a gateway-routed `evals-run-omp` target needs
 # beyond evals-install -- `omp` installed with CI's command when missing, the
 # gateway key resolved, and each arm's pinned model proven listed by Omp. Run
 # `make evals-install && make evals-setup-omp` in a cloud session or on a fresh
@@ -368,9 +365,14 @@ evals-setup-claude:
 evals-setup-omp:
 	scripts/evals-setup-omp.sh evals/experiments/omp-*.yaml
 
-# evals-plan: validate every eval case without calling a model. It catches
-# config errors before they consume subscription allowance or metered spend.
-# Run it before every `evals-run`.
+# evals-plan: validate the REQUIRED Omp eval arms without calling a model. It
+# catches config errors before they consume subscription allowance or metered
+# spend. Run it before every `evals-run-omp*`.
+#
+# Claude Code, Codex and model-classes arms are manual and are deliberately not
+# planned here: nothing plans an arm nobody intends to run. `evals-run-classes`
+# plans the one classes arm its MODEL selects; for any other manual arm, run
+# `cd evals && $(CODER_EVAL) plan -e experiments/<arm>.yaml tasks/*/*.yaml`.
 #
 # Both eval targets `cd evals` first, and that is load-bearing twice over. The
 # plugin path in the experiment is relative and resolves against the process
@@ -398,11 +400,41 @@ evals-plan: evals-setup-claude evals-variants
 	done
 
 # The reviewer-quality cohort is opt-in and does not run workflow ablations.
+# The two OpenCode Go arms and the seven Vercel arms are validated and planned
+# together; the Vercel arms restrict both the parent and the `review` role.
+REVIEWER_EXPERIMENTS := \
+	evals/experiments/omp-reviewer-glm-5.3-go.yaml \
+	evals/experiments/omp-reviewer-deepseek-v4-pro-go.yaml \
+	evals/experiments/omp-reviewer-deepseek-v4-pro-vercel.yaml \
+	evals/experiments/omp-reviewer-luna-vercel.yaml \
+	evals/experiments/omp-reviewer-kimi-vercel.yaml \
+	evals/experiments/omp-reviewer-glm-5.3-vercel.yaml \
+	evals/experiments/omp-reviewer-qwen4-max-vercel.yaml \
+	evals/experiments/omp-reviewer-mimo-v2.6-pro-vercel.yaml \
+	evals/experiments/omp-reviewer-mistral-large-4-vercel.yaml
+# evals-campaign-preflight: refuse a paid reviewer campaign whose inputs are
+# incomplete. Read-only: it checks omp, provider balance, judge calibration
+# freshness, price cards, materialized tasks and route/arm agreement. The
+# ordered procedure and the terminal-state table are in evals/RUNBOOK.md.
+# EXPERIMENT names every arm of ONE matched cohort.
+#   make evals-campaign-preflight JUDGE=omp-gpt-6.1-sol \
+#     EXPERIMENT='evals/experiments/a.yaml evals/experiments/b.yaml'
+evals-campaign-preflight:
+	test -n "$(JUDGE)"
+	test -n "$(EXPERIMENT)"
+	uv run --frozen python3 scripts/evals-campaign-preflight.py \
+		--judge "$(JUDGE)" \
+		$(foreach experiment,$(EXPERIMENT),--experiment $(experiment)) \
+		$(if $(EXPECT_ARMS),--expect-arms $(EXPECT_ARMS),)
+
 .PHONY: evals-plan-reviewer-quality
 evals-plan-reviewer-quality: evals-setup-claude
-	uv run --frozen python3 scripts/evals-variants.py evals/experiments/omp-reviewer-glm-5.3-go.yaml evals/experiments/omp-reviewer-deepseek-v4-pro-go.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/omp-reviewer-glm-5.3-go.yaml tasks/reviewer-quality/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/omp-reviewer-deepseek-v4-pro-go.yaml tasks/reviewer-quality/*.yaml
+	uv run --frozen python3 scripts/evals-variants.py $(REVIEWER_EXPERIMENTS)
+	@set -e; for experiment in $(REVIEWER_EXPERIMENTS); do \
+		echo "plan $$experiment"; \
+		cd evals && $(CODER_EVAL) plan -e "$${experiment#evals/}" tasks/reviewer-quality/*.yaml; \
+		cd ..; \
+	done
 
 # evals-variants: refuse to start when an arm's agent kind is not registered.
 # `coder-eval plan` PRINTS "Variant 'omp': resolution failed" and then exits 0,
@@ -431,7 +463,7 @@ REPEATS ?=
 # evals/README.md. Unset, nothing changes: each task's pinned Claude Code
 # `agent_judge` runs inside `coder_eval`, from a Claude Code session.
 #
-#   make evals-run-omp-gpt-5-6-sol JUDGE=omp-glm-5.3     # a non-Claude judge, no Claude session
+#   make evals-run-omp EXPERIMENT=evals/experiments/omp-gpt-6.1-sol-ablation.yaml JUDGE=omp-glm-5.3     # a non-Claude judge, no Claude session
 #   make evals-run JUDGE=claude-code-sonnet-5            # the pinned route, named
 #
 # A non-Claude judge runs the subject over `tasks-judged/` (the same tasks with
@@ -498,6 +530,14 @@ evals-leaks:
 check-evals-leaks:
 	python3 scripts/check-evals-leaks.py --selftest
 
+# Support tier for these arms. The `omp-*.yaml` experiments run by
+# `make evals-run-omp` are the REQUIRED arms: they are the eval evidence Omp's
+# support rests on. The Claude Code arms
+# (`with-without.yaml`, `with-without-haiku-5.5.yaml`, `base-vs-candidate.yaml`)
+# and the Codex arm (`codex.yaml`) stay runnable by hand but are not required:
+# Claude Code and Codex are best effort. A fix for a Claude Code or Codex bug
+# gets a targeted eval kept in `evals/experiments/`, never a required gate.
+#
 # Each arm excludes the other two arms' forks, plus any row tagged out of it
 # with `skip:<arm>`. The tags on eval tasks and each runner's exclusion list
 # determine which arm runs each row.
@@ -506,6 +546,8 @@ check-evals-leaks:
 # `str` option that `coder_eval` splits on commas, so a second `--exclude-tags`
 # replaces the first rather than adding to it -- and the exclusions it dropped
 # come back as rows run in the wrong arm, silently, at full price.
+#
+# MANUAL ONLY: Claude Code arm. Not a required gate.
 evals-run: evals-judge-preflight evals-variants evals-preflight
 	@test -n "$(EXPERIMENT)" && test -f "$(EXPERIMENT)" || { echo "Set EXPERIMENT to a registered Claude experiment" >&2; exit 1; }
 	@test -n "$(RUN)" && test "$(RUN)" != "evals/runs/latest" || { echo "Set RUN to a unique explicit run directory" >&2; exit 1; }
@@ -517,8 +559,11 @@ evals-run: evals-judge-preflight evals-variants evals-preflight
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 # Run one explicitly named Omp experiment with an isolated, explicit run path.
-# This avoids concurrent runs racing through runs/latest and leaves task-specific
-# limits intact. EXPERIMENT is relative to the repository root.
+# These are the REQUIRED arms: every approved Omp pair is named in
+# `evals/experiments/cohort-695.yaml` with its exact command. The generic target
+# replaces the per-model aliases, which duplicated this recipe while pinning a
+# deleted experiment or racing through `runs/latest`. EXPERIMENT is relative to
+# the repository root and task-specific limits stay intact.
 evals-run-omp: evals-judge-preflight evals-variants evals-preflight
 	@test -n "$(EXPERIMENT)" && test -f "$(EXPERIMENT)" || { echo "Set EXPERIMENT to a registered Omp experiment" >&2; exit 1; }
 	@test -n "$(RUN)" && test "$(RUN)" != "evals/runs/latest" || { echo "Set RUN to a unique explicit run directory" >&2; exit 1; }
@@ -540,6 +585,8 @@ evals-run-omp: evals-judge-preflight evals-variants evals-preflight
 # does have hooks, so this is an unproven exclusion rather than an SDK fact; it
 # stays until actual CLI evidence replaces it. See
 # docs/notes/0015-the-codex-arm.md.
+#
+# MANUAL ONLY: Codex arm. Not a required gate.
 evals-run-codex: evals-judge-preflight evals-variants evals-preflight
 	@command -v codex >/dev/null || { echo "error: the codex CLI is not on PATH; install it and run 'codex login'" >&2; exit 1; }
 	@test -n "$(RUN)" && test "$(RUN)" != "evals/runs/latest" || { echo "Set RUN to a unique explicit run directory" >&2; exit 1; }
@@ -566,6 +613,8 @@ evals-run-codex: evals-judge-preflight evals-variants evals-preflight
 # run pays for both arms and measures plugin-versus-nothing.
 # Runs 16 tasks at once (`coder-eval run -j`); override with JOBS=. The 16 is
 # this target's own default, so it applies unless JOBS= is given.
+#
+# MANUAL ONLY: Claude Code comparison arm. Not a required gate.
 
 evals-run-comparison: evals-judge-preflight evals-plan evals-preflight
 	@test -d ../daily-driver-base/skills || { \
@@ -590,8 +639,11 @@ evals-run-comparison: evals-judge-preflight evals-plan evals-preflight
 # repository actually runs (`claude-only`, `omp-only`, `codex-only`); the
 # suite's own rows carry no arm tag of that shape to exclude BY, only
 # `model-classes` itself, which every other arm already excludes. Still
-# `REPEATS=2` keeps the compatibility smoke separate from the three-repeat
-# full suite.
+# `REPEATS=2` keeps the compatibility smoke separate from the full suite, whose
+# repeat count each experiment file declares.
+#
+# The selected arm is planned here with an explicit `RUN`, so a manual arm is
+# never dispatched implicitly and a concurrent run cannot share `runs/latest`.
 evals-run-classes: TASKS = tasks/model-classes/*.yaml
 evals-run-classes: evals-judge-preflight evals-variants evals-preflight
 	@test -n "$(MODEL)" && test -f "evals/experiments/classes-$(MODEL).yaml" || { echo "Set MODEL to a registered classes experiment stem" >&2; exit 1; }
@@ -603,18 +655,12 @@ evals-run-classes: evals-judge-preflight evals-variants evals-preflight
 	$(MAKE) -C .. evals-record RUN=$(RUN) EXPERIMENT=evals/experiments/classes-$(MODEL).yaml JUDGE=$(JUDGE) JOBS=$(JOBS); \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
-# mcp-usage: which GitHub MCP tools were actually called, rolled up to the
-# toolsets that supply them. Laptop-only — it reads Claude
-# Code's session transcripts, which CI does not have — and deliberately not
-# part of `check`. See docs/github-mcp.md for what the answer is for.
-mcp-usage:
-	python3 scripts/github-mcp-usage.py
-
 # model-telemetry: mine `undertake`'s claim/readiness comments and
 # `review-cycle`'s `Review verification` comments for one repository's
 # production rework, and re-render evals/provenance/production/README.md
 # over every repository's records on disk. Needs GITHUB_TOKEN or GH_TOKEN,
-# so like mcp-usage it is laptop-only and deliberately not part of `check`.
+# so like the retired `mcp-usage` target it is laptop-only and deliberately not
+# part of `check`.
 #   make model-telemetry REPO=owner/repo
 #   make model-telemetry REPO=owner/repo REFRESH=1
 model-telemetry:

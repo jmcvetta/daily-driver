@@ -11,7 +11,7 @@ The issue
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Open the issue` | Search the open issues | `mcp__github__search_issues` |
-| `Open the issue` | Open one, labelled | `mcp__github__issue_write`, method `create`, with `labels` |
+| `Open the issue` | Open one, labelled; settle destination under [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository) and pass it here | `mcp__github__issue_write`, method `create`, with `labels`; set `owner` and `repo` when the target differs from the current repository |
 | `Title the session` | Read the session's own id | `get_session` on the Claude Code Remote server, `session_id` omitted — `The session` below describes the call |
 | `Title the session` | Set the title | `set_session_title`, with that id and `session-title`'s form |
 | `Read the issue and its edges` | Read the body and the graph | `mcp__github__issue_read`, method `get` |
@@ -50,20 +50,22 @@ frontier assignment also needs explicit approval and its exact envelope. A
 frontier `research` issue keeps that label and its narrow metadata exception;
 do not impose the task template.
 
-Before worktree creation or claim, resolve classed work within the invoking
-family and provider. Preserve backend, authentication route, and fallbacks where
-the surface supports them; never deliberately substitute a provider. If the
-known family is absent from the class table, prominently warn with the family,
-class, and retained provider/model, then continue immediately on the invoking
-model and effort without confirmation. Identity does not establish class
-suitability. Frontier approval and actual route constraints still apply.
+Before worktree creation or claim, make the initial class selection within the
+invoking family and provider. Preserve backend, authentication route, and
+fallbacks where the surface supports them; never deliberately substitute a
+provider.
+If the known family is absent from the class table, prominently warn with the
+family, class, and retained provider/model, then continue immediately on the
+invoking model and effort without confirmation. Identity does not establish
+class suitability. Frontier approval and agent-route constraints still apply.
 
-For a mapped family, a missing or cleared class, unavailable target, or
-incompatible assignment is a gap. Unknown family or identity is not an absent
-family. The Claude Agent SDK's host-side `Query.setModel` is not an
-agent-callable switch tool. Do not invent one or assume that a session selector
-constrains backend, authentication, and fallbacks. Report any unsupported
-control and do not claim it is verified.
+For a mapped family, a class omitted from the family map follows the same
+warning-and-continue with suitability unverified. An explicitly cleared class,
+unavailable target, or incompatible assignment is a gap. Unknown family or
+identity is not an absent family. The Claude Agent SDK's host-side
+`Query.setModel` is not an agent-callable switch tool. Do not invent one or
+assume that a session selector constrains backend, authentication, and
+fallbacks. Report any unsupported control and do not claim it is verified.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
@@ -73,31 +75,9 @@ leaves it unchanged. Post the complete answer with
 with `mcp__github__issue_write` only when `issue-body`'s research completion
 test holds. Failed or incomplete research stays open.
 
-Authorization and unfinished stops
-----------------------------------
-
-Use `mcp__daily-driver__task_state` with `action` and an optional JSON-string
-`record`. The [shared contract operations](../../../docs/harness-integration.md#task-state-operations)
-define every action and record: `status`, `contract`, `plan`, `handoff`,
-`resume`, `authorization`, `blocker`, `evidence`, `receipt` and `complete`.
-Recover the contract before changing a resumed task's plan. `complete`
-requires criterion evidence, not a summary alone. Use `receipt` in the existing
-PR/handoff format; reuse recorded current-head checks and attributed review.
-
-This route requires Claude Code native mods support, terminal version 2.1.287
-or later; the installed-runtime proof used 2.1.316. The mod registers the tool,
-captures engine-stamped `prompt.submit.origin` and records aborted turns through
-`turn.complete.isAborted`. Settings `UserPromptSubmit` has no safe origin
-discriminator and is not used as user authority. SDK-host input is interpretation,
-not user approval.
-
-Contracts and original sources persist privately under `CLAUDE_CONFIG_DIR`
-(default `~/.claude`). The controller restores scope, criterion IDs, sources
-and correction bounds on resume and compaction. Delegation retains native
-source locators; copied prose grants no approval. Cancellation suppresses
-pending corrections. Never publish private quotes in issue or PR comments.
-The [runtime integration](../../../docs/harness-integration.md#hook-harness-boundary)
-records packaging, prerequisites and the bounded native-event proof.
+Retain applicable original authorization and its limits through delegation,
+resume and compaction. Copied prose grants no approval. Never publish private
+sources in issue or PR comments.
 
 
 The implementor
@@ -239,7 +219,8 @@ whether the report may be posted. Do not wait for a post-ready `clean` read.
 **The start is the claim comment's `created_at`.** Read the issue's comments
 with `mcp__github__issue_read`, method `get_comments` — the read `Read the
 issue and its edges` already makes — find the claim by its branch link plus
-`Model:` and `session:`, and take `created_at`; where more than one comment
+`Model:` and `Session:` (a historical lowercase `session:` is the same
+field), and take `created_at`; where more than one comment
 carries that shape, the earliest is the start. The resumed sequence makes this
 read anyway; an issue with no recoverable claim leaves the timing `n/a`, per
 `SKILL.md`.

@@ -46,6 +46,50 @@ name stays where it was put.
 [`0005`](../../docs/notes/0005-steps-are-cited-by-name.md) is the decision and
 `scripts/check-step-names.py` is what enforces it.
 
+Discovery and specification-backed delivery
+===========================================
+
+When research and a collaboratively settled specification must precede
+decomposition, open the coordinating issue as `discovery`, not an `epic`.
+Keep that issue number, comments and parent/child lineage throughout. Its body
+states the intended outcome, open research, interactive specification child,
+and sequencing; it does not pretend implementation is settled. The parent
+may have eligible `research` children and at most one active interactive
+`specification` child. Do not open implementation tasks before the operator
+has approved and merged the specification. `embark` runs eligible research
+only and returns here when it is exhausted; it never closes the discovery on
+child count or dispatches the interactive specification.
+
+After operator approval and merge to `master`, record the exact merge commit
+and canonical document path on the parent. With separately agreed
+decomposition, create implementation tasks under that same discovery, each
+allocating stable requirement IDs at that exact commit, with exclusions,
+grounded implementation map, verification and model class as `issue-body`
+requires. Write and verify every parent and blocked-by edge and sequencing.
+Read the document at the pinned commit and confirm each ID exists, every
+allocation is covered, and every task passes readiness. The discovery label
+remains the dispatch authority throughout staging: no staged implementation
+task may run. Only after all gates pass, atomically replace `discovery` with
+`epic` in one label update and report readiness for `embark`. A failed gate
+leaves the parent in discovery and identifies the defect.
+
+If the agreed outcome fits one PR, convert the same parent to a single
+specification-backed `task` only with scope agreement, rather than creating an
+artificial epic. If evidence supports not proceeding, record it and close the
+parent as not planned.
+
+For a substantive amendment, atomically demote the same `epic` to `discovery`
+before affected work proceeds. Preserve all existing issues, edges, allocations
+and provenance. Identify and pause only affected implementation; independent
+eligible implementation already in progress may continue against its existing
+contract, but discovery dispatch never starts a staged implementation task.
+Add needed research and one active interactive amendment specification child.
+`specification` owns renewed operator agreement, review and operator merge.
+After merge, reconcile affected allocations and execution contracts to the new
+exact SHA with original-user authority for material changes. Recheck all
+references, graph, readiness and coverage before the atomic re-promotion.
+An implementation PR must never silently amend its governing specification.
+
 
 The sequence
 ============
@@ -143,10 +187,11 @@ open blockers may delay dispatch without preventing inclusion in the epic.
 It does not require a GitHub assignee or an available concrete model in the
 authoring session. Do not assign anyone as part of planning.
 
-`proposal`, `human` and nested `epic` issues are not assignable stories. A
-research story whose question is not yet settled is a `proposal`, not a story.
-Do not relabel any of them to manufacture readiness. A research story's answer
-is unknown by definition; that is not a readiness defect.
+For an implementation epic, dispatchable stories exclude `proposal`,
+`specification`, `human` and nested parent issues. The closed interactive
+specification and research lineage remains attached after promotion; it is not
+a dispatch candidate or a planning defect. A discovery's active specification
+child is likewise a valid parent member, not a dispatchable story.
 
 Each story records what was asked and no more. Scope invented to round out a
 plan is scope every pull request is then measured against. A plan padded to
@@ -181,7 +226,7 @@ it to be true. What the epic body carries is the *reading* of it, under
 when the remaining difficulty is known. `issue-body` owns the class taxonomy,
 section format, per-kind readiness tests, and routing guidance; `embark`
 resolves a concrete worker later. A missing or invalid class, or a missing
-rationale, never defaults to `implementation`.
+rationale, never defaults to `routine`.
 
 When any story in a plan needs `frontier`, `Agree the plan` must explicitly
 confirm that exact assignment and its work envelope. State why the cheaper
@@ -242,12 +287,12 @@ user wrote is gone from the issue the moment it lands. Two things make that
 safe, and neither is optional. `Agree the plan` names the issue and says its
 body is replaced, so the conversion is agreed rather than done to somebody.
 And nothing in the original is dropped: what it says about the whole change
-becomes `Summary` and `Justification`, and what it says about one part goes
+becomes `Human brief` and `Justification`, and what it says about one part goes
 into that part's child issue, which is where its owner will read it.
 
 The epic first, then the children, because each child names the epic as its
 parent and the parent must exist to be named. The epic's body at this point is
-`Summary` and `Justification`, and stops there: `Sequencing` is made of issue
+`Human brief` and `Justification`, and stops there: `Sequencing` is made of issue
 numbers that do not exist yet, which is why `Fill in the epic` is a step of its
 own.
 
@@ -268,7 +313,7 @@ to each child. Do not report the epic's label or another child's class as its
 own.
 
 An issue converted into the epic is **relabelled** rather than labelled: it
-carried something before, and two of the six kinds on one issue is a stop in
+carried something before, and two of the eight kinds on one issue is a stop in
 its own right. Both harnesses make that swap awkward, in opposite ways, and the
 reference file for the one in use says how: an additive write needs the remove
 in the same call, and a replacement write needs the issue's current labels
@@ -332,7 +377,7 @@ Without an embarked fleet, a person applies the same test.
 The epic body
 =============
 
-Three sections, and no fourth. `Summary` and `Justification` are written at
+Three sections, and no fourth. `Human brief` and `Justification` are written at
 `Open the issues`; `Sequencing` waits for `Fill in the epic`, because it is
 made of issue numbers that do not exist until the tasks are open.
 
@@ -346,8 +391,8 @@ that wrote it — placed and retained as that skill defines on each body write.
 Neither the quatrain nor the attribution is a fourth section: they carry no
 heading, and the rule above is about `##` sections, not about them.
 
-Summary
--------
+Human brief
+-----------
 
 What is to be changed: how the software behaves differently once the epic is
 finished. Concise, and about the end state rather than the route to it — the
@@ -355,6 +400,17 @@ tasks are listed under `Sequencing`, and repeating them here is a second list
 to keep current.
 
 It is also the test `embark`'s `Close the epic` step closes against.
+
+Where the epic has nontrivial components, flow, state, or data movement,
+this brief should include one Mermaid diagram
+that reveals that structure. The diagram is optional, not a quota: omit it
+when prose is clearer or the structure is trivial. A diagram replaces prose
+that would otherwise explain the same structure — never acceptance criteria,
+never an exact contract, and never the dependency graph, which stays
+authoritative for execution ordering. Where a diagram and the text disagree,
+the text wins and the diagram is corrected in the same turn. No decorative
+or duplicate diagrams, no progress checklists, and no second hand-maintained
+dependency record.
 
 Justification
 -------------
@@ -457,7 +513,7 @@ Non-goals
   carries its own state, because a wave is not something the sub-issue panel
   knows about. A checkbox beside each task is, and it rots.
 - **Does not close a task.** Merging its pull request does that. `embark`
-  closes an embarked epic at `Close the epic`, against its `Summary`; without
+  closes an embarked epic at `Close the epic`, against its `Human brief`; without
   a fleet, a person applies the same test.
 - **Does not sweep the issue list.** An epic is drafted for the work in hand.
   Reading through open issues looking for a set that could be grouped under one

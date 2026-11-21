@@ -1,7 +1,7 @@
 task_id: model-classes-career-141
 description: >-
   jmcvetta/career#141: ci: release the two npm packages with release-type node
-tags: [model-classes, class:implementation]
+tags: [model-classes, class:routine]
 
 sandbox:
   template_sources:

@@ -12,7 +12,7 @@ Reading and writing a label
 | --------- | ---- |
 | Read the labels on one issue | `mcp__github__issue_read`, method `get`, which returns `labels` |
 | Read the labels as their own list | `mcp__github__issue_read`, method `get_labels` |
-| Label an issue being opened | `mcp__github__issue_write`, method `create`, with `labels` |
+| Label an issue being opened; settle destination under [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository) and pass it here | `mcp__github__issue_write`, method `create`, with `labels`; set `owner` and `repo` when the target differs from the current repository |
 | Label an issue that exists | `mcp__github__issue_write`, method `update`, with `labels` |
 
 **`labels` replaces the whole set; it does not add to it.** An update that
@@ -23,9 +23,9 @@ Reconciling the story marker
 ============================
 
 `issue-deps` supplies a verified direct-parent read. If that parent's labels
-include `epic`, include `story` in the replacement `labels` set. If no parent
-is confirmed or its labels omit `epic`, remove `story` from that set. A failed
-graph read preserves the current set and reports the limitation. The
+include `epic` or `discovery`, include `story` in the replacement `labels`
+set. If no parent is confirmed or neither kind is present, remove `story`.
+A failed graph read preserves the current set and reports the limitation. The
 replacement write includes the existing issue kind, stock labels, bot labels,
 and unrelated labels; `story` is never a substitute for a kind.
 

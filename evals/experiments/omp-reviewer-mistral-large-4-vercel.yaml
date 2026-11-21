@@ -1,0 +1,39 @@
+# The Mistral Large 4 reviewer arm.
+#
+# Same shape as omp-reviewer-deepseek-v4-pro-vercel: fixed parent, helpers and
+# judge, one reviewer route, first-party upstreams only. The overlay keeps
+# `enableEffort: false`, so Omp's own recorded `resolvedThinkingLevel: low`
+# reflects the fixed selector rather than a caller-supplied effort hint.
+experiment_id: omp-reviewer-mistral-large-4-vercel
+description: >-
+  Reviewer finding quality on eight frozen local diffs. Mistral Large 4 at low
+  effort; parent and helpers fixed to GPT-6.1 Sol.
+defaults:
+  repeats: 5
+  run_limits:
+    max_turns: 16
+    turn_timeout: 900
+    task_timeout: 900
+  agent:
+    type: omp
+    model: vercel-ai-gateway/openai/gpt-6.1-sol:low
+    vercel_gateway_only:
+      vercel-ai-gateway/openai/gpt-6.1-sol: [openai]
+      vercel-ai-gateway/mistral/mistral-large-4: [mistral]
+    record_reviewer_telemetry: true
+    permission_mode: acceptEdits
+    allowed_tools: [Read, Bash, Task, Write, wait]
+    record_task_dispatches: true
+    settle_on_async_handoff: false
+    extra_args: [--config, routes/vercel-mistral.yml]
+  post_run:
+    - command: 'cat omp-task-dispatches.json'
+    - command: 'cat omp-protocol-observations.json'
+    - command: 'cat omp-reviewer-telemetry.json'
+variants:
+  - variant_id: reviewer
+    description: Fixed plugin, parent and helpers; Mistral Large 4 reviewer on the Vercel gateway.
+    agent:
+      plugins:
+        - type: local
+          path: ".."

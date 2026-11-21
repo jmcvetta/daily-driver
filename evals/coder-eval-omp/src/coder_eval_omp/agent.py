@@ -81,8 +81,10 @@ from coder_eval.streaming.events import (
 
 from .dispatch import EVIDENCE_FILENAME as DISPATCH_EVIDENCE_FILENAME
 from .dispatch import EvidenceTooLarge, error_document, evidence_document, task_call_records
-from .home import inherited_files, restrict_model_upstreams
-from .pricing import UNREPORTED, cost_usd
+from .home import inherited_files, restrict_model_routes
+from .pricing import UNREPORTED, cost_usd, price_key as price_selector
+from .telemetry import EVIDENCE_FILENAME as REVIEWER_EVIDENCE_FILENAME
+from .telemetry import ReviewerTelemetry, artifact_document
 from .rpc import (
     AgentFinished,
     ExtensionFailed,
@@ -241,41 +243,88 @@ class OmpAgentConfig(BaseAgentConfig):
     telemetry is untouched.
     """
 
-    vercel_gateway_only: list[str] | None = None
-    """Allowed upstream provider slugs for the selected Vercel AI Gateway model.
+    record_reviewer_telemetry: bool = False
+    """Write `omp-reviewer-telemetry.json` from Omp subagent event frames.
 
-    The adapter writes them into the throwaway home's `models.yml` as
+    Off by default. On, the adapter subscribes to subagent events, keeps each
+    child's requested role route, resolved model and thinking level, per-
+    assistant-message usage and duration, and the child's elapsed wall time,
+    then prices the child's own messages. The artifact is written on every exit
+    path; a missing artifact and a `.pending` guard both mean unavailable
+    evidence, never zero.
+    """
+
+    vercel_gateway_only: list[str] | dict[str, list[str]] | None = None
+    """Allowed upstream provider slugs for Vercel AI Gateway models.
+
+    A list restricts only `model`, the parent route. A mapping restricts every
+    selector it names, which is how a reviewer arm also pins the model behind
+    `modelRoles.review`; the parent's own selector must be one of the keys, so
+    a mapping can never leave the subject unrestricted.
+
+    The adapter writes each allowlist into the throwaway home's `models.yml` as
     `providers.vercel-ai-gateway.modelOverrides.<model>.compat.
     vercelGatewayRouting.only`, which Omp sends as the request's
     `providerOptions.gateway.only`. An unavailable allowed upstream therefore
     fails instead of falling back to another provider, and a model id that
     begins with `deepseek/` is not evidence of which upstream served it.
 
-    `None` leaves routing as the caller configured it. A supplied list must be
-    non-empty, must hold provider slugs, and requires `model` to name a
-    `vercel-ai-gateway/<model>` selector; anything else is refused rather than
+    `None` leaves routing as the caller configured it. Every supplied model
+    must be a `vercel-ai-gateway/<model>` selector and every allowlist must be
+    non-empty and hold provider slugs; anything else is refused rather than
     silently running unrestricted.
     """
 
     @model_validator(mode="after")
     def _check_vercel_gateway_only(self) -> "OmpAgentConfig":
         """Refuse a route restriction the adapter could not enforce exactly."""
-        if self.vercel_gateway_only is None:
+        restriction = self.vercel_gateway_only
+        if restriction is None:
             return self
-        if not self.vercel_gateway_only:
-            raise ValueError(
-                "vercel_gateway_only must name at least one upstream provider; "
-                "omit it to leave routing unrestricted"
-            )
-        for slug in self.vercel_gateway_only:
-            if not isinstance(slug, str) or not _UPSTREAM_SLUG.fullmatch(slug):
-                raise ValueError(f"vercel_gateway_only entry {slug!r} is not a provider slug")
-        selection = model_commands(self.model or "")[0]
-        if selection.get("provider") != VERCEL_GATEWAY_PROVIDER or not selection.get("modelId"):
-            raise ValueError(
-                "vercel_gateway_only requires model to be a "
-                f"{VERCEL_GATEWAY_PROVIDER}/<model> selector"
-            )
+        if isinstance(restriction, dict):
+            if not restriction:
+                raise ValueError("vercel_gateway_only must name at least one model route; omit it to leave routing unrestricted")
+            routes = list(restriction.items())
+            parent = model_commands(self.model or "")[0]
+            parent_key = f"{parent.get('provider', '')}/{parent.get('modelId', '')}"
+            if parent.get("provider") != VERCEL_GATEWAY_PROVIDER or not parent.get("modelId"):
+                raise ValueError(
+                    "vercel_gateway_only requires model to be a "
+                    f"{VERCEL_GATEWAY_PROVIDER}/<model> selector"
+                )
+            selected = {price_selector(key) for key, _ in routes}
+            if price_selector(self.model or "") not in selected:
+                raise ValueError(
+                    "vercel_gateway_only mapping must restrict the parent model "
+                    f"{parent_key!r} as well as every role route"
+                )
+        else:
+            if not restriction:
+                raise ValueError(
+                    "vercel_gateway_only must name at least one upstream provider; "
+                    "omit it to leave routing unrestricted"
+                )
+            routes = [(self.model or "", restriction)]
+            parent = model_commands(self.model or "")[0]
+            if parent.get("provider") != VERCEL_GATEWAY_PROVIDER or not parent.get("modelId"):
+                raise ValueError(
+                    "vercel_gateway_only requires model to be a "
+                    f"{VERCEL_GATEWAY_PROVIDER}/<model> selector"
+                )
+        for selector, upstreams in routes:
+            selection = model_commands(selector)[0] if selector else {}
+            if selection.get("provider") != VERCEL_GATEWAY_PROVIDER or not selection.get("modelId"):
+                raise ValueError(
+                    f"vercel_gateway_only route {selector!r} is not a "
+                    f"{VERCEL_GATEWAY_PROVIDER}/<model> selector"
+                )
+            if not isinstance(upstreams, list) or not upstreams:
+                raise ValueError(
+                    f"vercel_gateway_only route {selector!r} must name at least one upstream provider"
+                )
+            for slug in upstreams:
+                if not isinstance(slug, str) or not _UPSTREAM_SLUG.fullmatch(slug):
+                    raise ValueError(f"vercel_gateway_only entry {slug!r} is not a provider slug")
         return self
 
     extra_args: list[str] = []
@@ -331,6 +380,10 @@ class OmpAgent(Agent[OmpAgentConfig]):
         self._cancelled_subagents: list[str] = []
         self._dispatch_calls: list[dict[str, Any]] = []
         self._dispatch_guard: Path | None = None
+        self._reviewer: ReviewerTelemetry | None = None
+        self._reviewer_attempts: list[dict[str, Any]] = []
+        self._reviewer_guard: Path | None = None
+        self._parent_thinking_level: str | None = None
         self._attempts: list[dict[str, Any]] = []
         self._attempt_overflow = 0
         self._attempt: dict[str, Any] | None = None
@@ -398,6 +451,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
             await self._spawn(binary, home)
             await self._apply_model()
             await self._record_what_loaded()
+            await self._subscribe_reviewer_events()
         except Exception:
             # A half-built session must not survive the failure. `coder_eval`
             # retries a start that raises, so an RPC process left running here
@@ -465,6 +519,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
         }
         if self._session_id:
             info["omp_session_id"] = self._session_id
+        if self._parent_thinking_level:
+            info["omp_thinking_level"] = self._parent_thinking_level
         return info
 
     def _write_protocol_evidence(self) -> None:
@@ -604,6 +660,47 @@ class OmpAgent(Agent[OmpAgentConfig]):
         self._dispatch_guard.rmdir()
         self._dispatch_guard = None
 
+    def _begin_reviewer_evidence(self) -> None:
+        """Open this attempt's child-telemetry guard before the prompt."""
+        if not self.config.record_reviewer_telemetry or self.working_directory is None:
+            return
+        if self._reviewer_guard is not None:
+            raise RuntimeError("a previous reviewer-telemetry update did not finish")
+        guard = Path(self.working_directory) / f"{REVIEWER_EVIDENCE_FILENAME}.pending"
+        # Exclusive creation rejects an interrupted prior adapter: its child
+        # frames may be lost, and a fresh adapter must not seal over that gap.
+        guard.mkdir()
+        self._reviewer_guard = guard
+        self._reviewer = ReviewerTelemetry()
+
+    def _record_reviewer_telemetry(self, attempt: int, iteration: int) -> None:
+        """Append this attempt's subagent evidence, publish it, then clear the guard.
+
+        A failure leaves the guard in place and is logged by the caller. The
+        collector treats the guard and a missing file alike: usage and cost are
+        unavailable, never the parent's aggregate and never zero.
+        """
+        if not self.config.record_reviewer_telemetry or self.working_directory is None:
+            return
+        if self._reviewer_guard is None or self._reviewer is None:
+            raise RuntimeError("reviewer telemetry was not guarded before the prompt")
+        destination = Path(self.working_directory) / REVIEWER_EVIDENCE_FILENAME
+        self._reviewer_attempts.append(
+            self._reviewer.document(attempt, iteration, self.config.model)
+        )
+        temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
+        try:
+            temporary.write_text(
+                artifact_document(self._reviewer_attempts, complete=True), encoding="utf-8"
+            )
+            temporary.replace(destination)
+        finally:
+            with contextlib.suppress(FileNotFoundError):
+                temporary.unlink()
+        self._reviewer_guard.rmdir()
+        self._reviewer_guard = None
+        self._reviewer = None
+
     # --- the turn ----------------------------------------------------------
 
     async def communicate(
@@ -620,6 +717,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
             raise RuntimeError("OmpAgent.start() must be called before communicate()")
 
         self._begin_dispatch_evidence()
+        self._begin_reviewer_evidence()
         self._begin_turn()
         collector = EventCollector()
         reducer = TurnReducer()
@@ -665,7 +763,13 @@ class OmpAgent(Agent[OmpAgentConfig]):
                         tokens=None,
                     )
                 )
-            cost = cost_usd(self.config.model, reducer.usage) if self.config.model else UNREPORTED
+            if self.config.model:
+                # Per-message, because prompt tiers and peak-hour windows are
+                # properties of each request; the aggregate token counts in the
+                # record cannot recover them.
+                cost = cost_usd(self.config.model, reducer.price_messages)
+            else:
+                cost = UNREPORTED
             emit(
                 AgentEndEvent(
                     task_id=self.task_id,
@@ -813,6 +917,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
                 if frame is None:
                     continue
 
+                if self._reviewer is not None:
+                    self._reviewer.ingest(frame)
                 for action in reducer.feed(frame):
                     if dispatch(action):
                         settled = True
@@ -914,6 +1020,14 @@ class OmpAgent(Agent[OmpAgentConfig]):
             except Exception as error:
                 logger.error("omp: could not write %s: %s", DISPATCH_EVIDENCE_FILENAME, error)
                 raise
+            if self._reviewer is not None:
+                # Child telemetry is evidence, not a grading gate: a failed
+                # write leaves the guard in place so the collector reports
+                # unavailable usage instead of pricing an unverified attempt.
+                try:
+                    self._record_reviewer_telemetry(attempt["attempt"], attempt["iteration"])
+                except Exception as error:
+                    logger.error("omp: could not write %s: %s", REVIEWER_EVIDENCE_FILENAME, error)
 
     async def _cancel_background_subagents(self, counts: dict[str, int]) -> list[str]:
         """Cancel every running background subagent; return the ids cancelled.
@@ -986,15 +1100,31 @@ class OmpAgent(Agent[OmpAgentConfig]):
                 )
 
         if self.config.vercel_gateway_only is not None:
-            selection = model_commands(self.config.model or "")[0]
-            restrict_model_upstreams(
-                agent_dir,
-                str(selection["provider"]),
-                str(selection["modelId"]),
-                self.config.vercel_gateway_only,
-            )
+            restrict_model_routes(agent_dir, self._restriction_routes())
 
         (agent_dir / "config.yml").write_text(omp_config_text(self.config.model), encoding="utf-8")
+
+    def _restriction_routes(self) -> list[tuple[str, str, list[str]]]:
+        """The `(provider, model_id, upstreams)` triples this arm pins.
+
+        The list form restricts the parent only. The mapping form names both the
+        parent and the role route (the reviewer), so one private `models.yml`
+        carries every allowlist the arm's comparison depends on.
+        """
+        restriction = self.config.vercel_gateway_only
+        if restriction is None:
+            return []
+        if isinstance(restriction, dict):
+            selectors = list(restriction.items())
+        else:
+            selectors = [(self.config.model or "", restriction)]
+        routes: list[tuple[str, str, list[str]]] = []
+        for selector, upstreams in selectors:
+            selection = model_commands(selector)[0]
+            routes.append(
+                (str(selection["provider"]), str(selection["modelId"]), list(upstreams))
+            )
+        return routes
 
     async def _link_plugins(self, binary: str, home: Path) -> None:
         """Install every `plugins:` root into the throwaway home.
@@ -1107,6 +1237,24 @@ class OmpAgent(Agent[OmpAgentConfig]):
         thinking = state.get("thinkingLevel")
         if isinstance(thinking, str):
             self._effective_thinking = thinking
+
+    async def _subscribe_reviewer_events(self) -> None:
+        """Turn on child frames and record the parent's applied route.
+
+        `set_subagent_subscription` is off by default in Omp's RPC mode, so a
+        reviewer arm that skipped it would see no child `message_end` frames and
+        could only report the parent's aggregate. The state read after
+        `set_model`/`set_thinking_level` is the parent's evidence that the arm's
+        effort was applied; the child's own resolved level rides on its progress
+        frames.
+        """
+        if not self.config.record_reviewer_telemetry:
+            return
+        await self._request("set_subagent_subscription", level="events")
+        state = await self._request("get_state")
+        level = state.get("thinkingLevel")
+        if isinstance(level, str):
+            self._parent_thinking_level = level
 
     async def _apply_model(self) -> None:
         """Pin the task's model and thinking level, where the task named one.
@@ -1238,6 +1386,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
             frame = _parse(line)
             if frame is None:
                 continue
+            if self._reviewer is not None:
+                self._reviewer.ingest(frame)
             for action in reducer.feed(frame):
                 if dispatch(action):
                     return

@@ -174,8 +174,15 @@ rule: the child must have exactly one agent-eligible kind (`task`, `research`
 or `bug`), pass `issue-body`'s readiness test for that kind, and carry exactly
 one valid `## Model class` section with a rationale before the edge is written.
 A kind label alone is insufficient, and missing or invalid class metadata is
-never defaulted. `proposal`, `human` and `epic` issues fail the gate. An open
+never defaulted. `proposal`, `specification`, `human` and `epic` issues fail the gate. An open
 legitimate blocker delays dispatch, not linking.
+
+For a `discovery` parent, apply `epic`'s discovery contract instead: eligible
+research children pass their own readiness and class gate, and at most one
+active interactive `specification` child is linked without an implementation
+class. Implementation tasks may be staged only after the approved document
+merges, and must pass the spec-backed task readiness gate before linking.
+They remain undispatchable until promotion.
 
 Leave an already-ready story unchanged. Resolve repository-answerable gaps
 through `issue`, preserving valid requirements, evidence, and provenance under
@@ -188,21 +195,17 @@ This readiness gate does not replace the relationship evidence test or
 `epic`'s plan agreement.
 
 A relationship read is not permission to migrate an existing child's body or
-kind. A non-task kind alone is not a violation. Report a child that is not
-assignable — a `proposal`, `human` or `epic` kind, or a missing handoff or class
-— as a readiness defect, and use the normal issue workflow for repair. Keep the
-edge and its derived marker truthful; never remove or manufacture an edge to
-hide the defect.
+kind. Apply the confirmed parent's gate: an interactive specification under
+discovery and the closed specification lineage retained after promotion are
+valid. Report genuine readiness defects for normal issue repair; keep edges
+and derived markers truthful. Never hide a defect by changing the graph.
 
-**The `epic` label and the parent edge are not the same statement**, and both
-are wanted. The label says an issue coordinates others, which stops `undertake`
-starting on it; the edge says *which* children it has. `story` is the derived
-list marker for a confirmed direct child of an epic. After creating,
-changing, removing, or reading a parent relationship, verify the child's
-direct parent, then invoke `issue-labels` to reconcile that marker. The label
-skill owns its write rules: preserve it when the graph read fails, and never
-write an edge to justify it. An epic with no children is a label with nothing
-behind it.
+**The parent kind and the edge are distinct statements.** Both `epic` and
+`discovery` coordinate children and stop ordinary `undertake`; the edge says
+which children. `story` is derived for a confirmed direct child of either.
+After creating, changing, removing, or reading a parent relationship, verify
+the direct parent and invoke `issue-labels` to reconcile the marker. Preserve
+it on a failed graph read. Promotion or demotion does not remove lineage.
 
 
 Which PR closes an issue

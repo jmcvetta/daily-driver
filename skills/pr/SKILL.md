@@ -107,8 +107,9 @@ Read CI for the resulting head through `review-cycle`'s wait rules. A head
 change invalidates earlier CI evidence. Fix failed checks; report unavailable
 logs as an evidence blocker, never green. Pending checks use its bounded wait.
 A process can merge without an agent turn but cannot assess review or
-readiness. Every owner turn returning to the PR takes the harness's catch-up
-look first.
+readiness. Before resuming PR work, take the harness's catch-up look. Answer
+direct user questions first under the constitution; a catch-up look is not a
+prerequisite for answering from known evidence.
 
 `undertake` invokes this maintenance and retains its review, ready gate, and
 first-readiness report. Direct PR work does not inherit those issue-specific
@@ -142,7 +143,7 @@ fixtures, paid model runs, broader triggers, or recurring checks.
 Never bypass or remove validation for cost or effort. Only explicit owner
 direction may reduce CI scope or spending: disclose lost coverage; never claim
 removed or unrun checks passed, hide failures, weaken security, or skip required
-tests. `provenance` owns the application-test and script-execution contract.
+tests. The constitution owns the application-test and script-execution contract.
 
 
 Recurring CI costs
@@ -154,21 +155,58 @@ opening a PR.
 
 New CI checks add recurring execution, review, failure-triage and maintenance
 costs. More checks are not inherently better. Prefer established checks and
-necessary regression coverage in existing suites. Do not add a job, workflow,
-tool, matrix entry or standalone check when existing tooling can catch the
-defect; placing a standalone check inside an existing job does not change this.
+necessary regression coverage. Routine CI integration for approved code is
+part of delivery, not an additional enforcement proposal.
 
-Before proposing an additional check, name the concrete failure it catches and
-the gap in existing coverage. Extra confidence, best practice or completeness
-alone is not a reason. Keep enforcement proportional to the task; do not make
-a task-local problem repository-wide or keep a one-time migration check
-permanently without a recurring need.
+Before classifying a command as routine integration, inspect its effective
+execution chain: wrapper targets, prerequisite targets, and invoked scripts,
+including their material operations. A target named `check` or `test`, path-
+filtered execution, or placement in an existing job does not establish that
+its contents are ordinary validation. Use repository source and documented
+commands; do not run a build, smoke environment, or paid benchmark merely to
+discover its cost.
 
-Paid services, recurring checks, broader triggers, or matrix dimensions need
-user approval for the named expansion, not general feature or green-CI approval.
-Do not ask again when authorized. Ordinary implementation and regression
-coverage in existing suites need no new approval.
+Select new features, apps, or packages for the repository's established test,
+typecheck, build, and coverage commands; add them to existing path or package
+selection; and follow established per-component job patterns without separate
+approval. This remains routine integration when it adds recurring runner time
+or instantiates a package-specific job required by the repository's convention.
+Adding package membership to an existing package matrix does not add a matrix
+dimension; a new dimension adds a factor such as an operating system, runtime
+version, or browser. Ordinary tests, regression coverage, typechecks, necessary
+builds, and coverage remain routine integration.
 
+An umbrella command must not silently bring newly introduced image packaging
+or builds, or runtime smoke environments, into recurring CI under this
+exemption. When that work is not already authorized or required by the
+established validation contract, surface it as the named expansion and obtain
+approval before adding it. Approval of a feature, trial, or green CI alone
+does not authorize that expansion. Existing explicitly authorized container
+validation proceeds without renewed approval. Docker alone is not grounds to
+stop.
+
+For the expansion, use the existing **Failure caught**, **Existing coverage
+gap**, and **Recurring cost** fields. Name the effective build and smoke
+operations, selected trigger frequency, runner/matrix footprint, expected
+runtime, external charges, and replacement where applicable. Distinguish
+estimates from measurements and state unknowns. Never treat combined
+build-and-smoke timing as build-only time or infer charges from runtime.
+
+Do not add a job, workflow, tool, standalone check, or matrix dimension when
+existing tooling can catch the defect; placing a standalone check inside an
+existing job does not change this. Before proposing additional enforcement,
+name the concrete failure it catches and the gap in existing coverage. Extra
+confidence, best practice, or completeness alone is not a reason. Keep
+enforcement proportional to the task; do not make a task-local problem
+repository-wide or keep a one-time migration check permanently without a
+recurring need.
+
+Paid services, broader triggers, additional matrix dimensions, new kinds of
+enforcement, and redundant or standalone checks beyond normal implementation
+validation need user approval for the named expansion, not general feature or
+green-CI approval. Do not ask again when authorized. Ordinary tests for
+approved new or changed code, bug-fix regression coverage, and their routine
+integration in established CI need no separate approval.
 Proposals use only these three short fields: **Failure caught**, **Existing
 coverage gap**, and **Recurring cost**. State trigger frequency,
 runner/matrix footprint, expected runtime, external charges and what the

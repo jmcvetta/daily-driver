@@ -1,0 +1,31 @@
+# A newer base cannot silently amend active requirements.
+task_id: undertake-36-specification-revision
+description: Specification-backed execution binds both sources and detects change.
+tags: [undertake, discovery, behaviour, fire]
+initial_prompt: >-
+  Use undertake: a task allocates REQ-1 in docs/specs/example.md at an exact
+  merged master SHA. The parent is promoted. A later base update changes REQ-1.
+  Explain the claim and update checks and what happens to active work; do not
+  perform external actions.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 180, task_timeout: 400}
+success_criteria:
+  - type: agent_judge
+    description: Both sources are pinned and changed requirements are not silently adopted
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 4
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Score 1 if the answer checks the parent, path, exact merged revision and
+      requirement ID before claim, binds issue version and spec revision in the
+      execution contract using sourced criteria, and pauses affected work and
+      routes the substantive base mismatch to epic without silently adopting
+      new behavior. Original-user authority remains necessary for material
+      amendments, and unrelated eligible work may continue. Score 0 for silent
+      substitution; otherwise 0.5 for a material omission.

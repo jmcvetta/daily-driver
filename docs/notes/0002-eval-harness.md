@@ -9,9 +9,9 @@
 without acting on it; the port it calls for landed separately in
 [#38](https://github.com/jmcvetta/daily-driver/pull/38), citing this file as already
 settled. Ratified by those merges, not by a separate call from the author.
-**Supersedes:** the harness assumptions in
-[`0001`](0001-built-in-review-surface.md) and in `evals/README.md`, both of
-which take `claude plugin eval` as given.
+**Supersedes:** the harness assumptions in note 0001
+(`docs/notes/0001-built-in-review-surface.md`, retired to Git history) and in
+`evals/README.md`, both of which take `claude plugin eval` as given.
 
 > **Read ["Corrected by the port"](#corrected-by-the-port) first.** Three claims
 > below about what `coder_eval` can and cannot do are wrong — two about
@@ -40,9 +40,9 @@ it was inherited from whatever the CLI happened to offer.
 
 Not because it is bad. Its embedded authoring doctrine (the ~190-line
 `plugin eval init` interview prompt inside the binary) is the best writing on
-eval design found anywhere during this investigation, and §"Harness findings"
-of [`0001`](0001-built-in-review-surface.md) records its schema because nothing
-else does. The problems are
+eval design found anywhere during this investigation, and the harness-findings
+section of note 0001 recorded its schema because nothing else does (the note is
+retired to Git history). The problems are
 structural:
 
 1. **It cannot be run here.** Early access, per-organisation. Every eval in this

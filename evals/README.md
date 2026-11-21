@@ -7,6 +7,17 @@ the short version is that the built-in cannot be run on this account, is
 publicly undocumented, announces no changes, and — decisively — ships inside
 the `claude` binary, so there is no version to hold back.
 
+Campaign operations — preflight, calibration, smoke, cohort, stop and resume —
+are in [`RUNBOOK.md`](RUNBOOK.md).
+
+The arms run by `make evals-run-omp` are the required arms: their results are
+the eval evidence for the supported harness, Omp. The Claude Code arms
+(`with-without.yaml`, `with-without-haiku-5.5.yaml`, `base-vs-candidate.yaml`),
+the Codex arm (`codex.yaml`), and the `classes-*.yaml` experiments are manual:
+kept and runnable, but no gate requires them. A fix for a Claude Code or Codex
+bug gets a targeted eval kept under `experiments/` so it can be rerun later;
+that eval stays manual.
+
 ```
 evals/
 ├── experiments/
@@ -27,6 +38,7 @@ evals/
 │   │                    … when a type is chosen, and never for a commit message?
 │   ├── pr-body/         … when a body is written, and only then?
 │   ├── review-cycle/    … when a review is to be run and answered, and only then?
+│   ├── specification/   … when interactive specification drafting is requested?
 │   ├── undertake/       … when work is undertaken, and only when handed over?
 │   ├── epic/            … when work is broken up, and never when it fits one PR?
 │   ├── embark/          … when an epic's wave is put to sea, and never one issue?
@@ -58,15 +70,17 @@ evals/
 └── coder-eval-codex/    the Codex CLI driver, with the judge's anchor put back
 ```
 
-`tasks/issue/` covers the six kind-specific body contracts and their
+`tasks/issue/` covers the eight kind-specific body contracts and their
 boundaries: settled versus unresolved task intent, bounded research and
-evidenced negative/inconclusive outcomes, bugs without task metadata,
-non-executable proposals, safe human handoffs, automatic bug reports, and
+evidenced negative/inconclusive outcomes, interactive specifications, bugs
+without task metadata, non-executable proposals, safe human handoffs,
+automatic bug reports, and
 effective-kind edits that preserve evidence and provenance. Provenance cases
 also cover repeated blocks, distinct field values, successive revisions, and
 attribution on separate comments. `tasks/epic/`
 includes mixed-kind children and epic outcome completion, first-delivery scope,
-outcome-based task boundaries, and deployment continuity. The undertaking
+ordinary-class boundary selection, outcome-based task boundaries, and
+deployment continuity. The undertaking
 integration-proof case uses a local authenticated request/response fixture to
 assert that proof precedes dependent work; it makes no network or cloud calls.
 These are behavioral cases: graders assess decisions and evidence, not a fixed
@@ -230,9 +244,62 @@ delta rubric against its labelled examples before running `--phase delta`,
 which runs five repeats of each delta case per arm. Preserve the earlier
 cohort separately: its fixed-delta response contract could not express the
 explanation its rubric required.
-Reviewer usage and latency are `unavailable` unless directly exposed.
-Parent usage is not reviewer usage. Subscription allowance consumption is
-not cash spend; unknown cash spend is not zero.
+Reviewer usage and latency in the earlier OpenCode Go cohort are `unavailable`:
+those records expose no child telemetry. The Vercel cohort below records them
+from Omp's subagent events. Parent usage is not reviewer usage. Subscription
+allowance consumption is not cash spend; unknown cash spend is not zero.
+
+### Vercel reviewer cohort
+
+Issue #906 adds seven arms on the same eight frozen cases: DeepSeek V4 Pro at
+`high` as the adequacy reference, plus Luna `high`, Kimi `low`, GLM `high`,
+Qwen `low`, MiMo `low` and Mistral `low`. Every arm pins the parent, every
+non-review helper and the judge to
+`vercel-ai-gateway/openai/gpt-6.1-sol:low`, restricted to the `openai`
+upstream. Only `modelRoles.review` differs, and each experiment's
+`vercel_gateway_only` map restricts that selector to its first-party endpoint.
+The judge is `omp-vercel-gpt-6.1-sol`, a no-tools definition on the same
+gateway route; it calibrated against all three committed reviewer-quality
+label sets (9/9, no false passes, no errors) before the cohort. This is a new
+measurement. Do not pool it with, or claim a matched comparison against, the
+earlier OpenCode Go cohort: the parent, helpers and judge routes differ.
+
+The adapter writes `omp-reviewer-telemetry.json` for every attempt. The
+collector matches the delivered `<task-result>` id to the child's own frames
+and reports the requested role route, the harness-reported model, Omp's
+resolved `@upstream` and thinking level, per-message token buckets, reviewer
+latency and per-message cost. Its `usage` block keeps the three roles apart:
+the parent's Omp messages from the run record, the reviewer's own child frames,
+and the judge's record/sidecar usage. `cost_comparison_valid` is false whenever
+a completed attempt lacks verified telemetry or a priced card. A missing
+reviewer cost is `unreported`, never zero and never the parent's cost. Prices
+are computed from the committed endpoint cards, not billed amounts.
+
+Run every attempt serially, one active attempt globally:
+
+```sh
+make evals-plan-reviewer-quality
+make evals-judge-preflight JUDGE=omp-vercel-gpt-6.1-sol
+
+python3 scripts/evals-reviewer-run.py --arm vercel-mistral --phase smoke \
+  --run-dir evals/runs/906/vercel-mistral-smoke
+make evals-record RUN=evals/runs/906/vercel-mistral-smoke \
+  EXPERIMENT=evals/experiments/omp-reviewer-mistral-large-4-vercel.yaml \
+  JUDGE=omp-vercel-gpt-6.1-sol JUDGE_TASKS_DIR=evals/tasks-judged
+python3 scripts/evals-reviewer-quality.py --arm vercel-mistral \
+  --experiment evals/experiments/omp-reviewer-mistral-large-4-vercel.yaml \
+  --run-dir evals/runs/906/vercel-mistral-smoke \
+  --record evals/provenance/<record>.json --repeats 1 \
+  --output evals/provenance/reviewer-quality/vercel-mistral-smoke.json
+```
+
+The smoke pair is `01-boundary` and `05-clean-boundary` once per arm: 14
+attempts, excluded from cohort metrics. Inspect completion, captured delivery,
+requested and resolved identities, the resolved upstream and effort, child
+usage and cost, and the judge score before dispatching that arm's cohort.
+Cohorts run all eight cases five times per arm: 40 attempts per arm, 280 total.
+Use a fresh explicit nested run directory for each phase and keep the
+interrupted attempts.
 
 ### Observed comparison
 
@@ -393,8 +460,7 @@ not just the agent's stated intention. Resume and delegation history in these
 cases is supplied in the initial prompt; these cases do not prove actual
 compaction, session storage or delegation delivery. Their restricted tool
 lists exclude the `write` device route, so the comparison measures workflow
-decisions and actual fixture actions, not stop-controller enforcement. The
-installed-runtime check below covers that separate boundary.
+decisions and actual fixture actions.
 
 Issue #835 adds task-authoring, requested-plugin, and blocked-reminder cases.
 The fixture records local operations, not real service changes. The first
@@ -407,13 +473,6 @@ passed; that rerun used a dirty checkout. Each case ran once with requested
 Omp `openai-codex/gpt-6.1-sol` subject and judge. The subject identity was
 unreported. These small runs do not establish fleet reliability.
 
-The existing `make check-omp-embark-title-live` suite runs the title barrier
-and task-state regressions against installed Omp with local scripted providers.
-The task-state scenario checks persisted approval, two corrective continuations,
-process resume and an actual RPC abort. The runtime regression checks in
-`scripts/check-omp-extension.mjs` cover source rejection, scope, revocation,
-expiry, fresh confirmation, independent work, compaction context and cancellation.
-These checks cover the shipped runtime, not the evaluation grader.
 
 The same installed-Omp check schedules a reminder after an owner turn settles.
 It verifies that the new turn reads an offline maintenance-conflict fixture and
@@ -485,9 +544,9 @@ enforcement is separately exercised by the installed scripted-provider check.
 
 ## Progressive disclosure comparison
 
-The [runtime integration guide](../docs/harness-integration.md#core-delivery-and-workflow-retrieval)
-records complete-source and actual-delivery byte counts for the compact core.
-Current and historical baselines are named in that guide. Installed local-provider
+The [runtime integration measurements](../docs/runtime-integration-measurements.md)
+record complete-source and actual-delivery byte counts for the compact core.
+Current and historical baselines are named there. Installed local-provider
 captures prove delivery, not voluntary model compliance.
 
 The new `constitution/disclosure-ordinary-commit.yaml` and
@@ -921,6 +980,22 @@ are measured outcomes; infrastructure failures earn no capability credit. The
 manifest is complete only when every tuple it names has a terminal recorded
 attempt or an explicitly reported prerequisite that prevented it.
 
+### Required and manual arms
+
+Only the arms run through `make evals-run-omp` are required. Everything else
+runs by hand when a change needs it — including the opt-in reviewer-quality arms
+and one-off comparison experiments — and its result never gates a merge:
+
+- **Required (Omp):** `make evals-run-omp EXPERIMENT=<manifest experiment>`, one
+  approved pair at a time. The manifest supplies the exact command for each.
+- **Manual (Claude Code):** `make evals-run`, `make evals-run-comparison`.
+- **Manual (Codex):** `make evals-run-codex`.
+- **Manual (model classes):** `make evals-run-classes MODEL=<stem>`.
+
+Every run takes an explicit `RUN`; no target races through `runs/latest`.
+`make evals-plan` validates every registered experiment, required and manual,
+calls no model and costs nothing. CI runs no eval arm, required or manual.
+
 ### Choose the execution session first
 
 Choose the subject model, judge model, and execution session separately. A
@@ -1016,12 +1091,17 @@ evals-preflight` stops a run that carries one anyway. Port the row; do not look
 for a key.
 
 ```sh
-make evals-install
+make evals-install      # coder-eval, pinned; uv fetches Python 3.13 itself
+make evals-plan         # validate every registered experiment. Costs ZERO tokens. Do this first.
+make evals-run-omp EXPERIMENT=evals/experiments/omp-glm-5.3.yaml RUN=evals/runs/glm-cohort JUDGE=omp-gpt-6.1-sol
 make evals-run EXPERIMENT=evals/experiments/with-without.yaml RUN=evals/runs/sonnet-cohort JUDGE=omp-gpt-6.1-sol
-make evals-run EXPERIMENT=evals/experiments/with-without-haiku-5.5.yaml RUN=evals/runs/haiku-cohort JUDGE=omp-gpt-6.1-sol
-make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/with-without.yaml JUDGE=omp-gpt-6.1-sol
-make evals-render-routes
-make evals-render-results
+make evals-run-codex RUN=evals/runs/codex-cli JUDGE=omp-gpt-6.1-sol
+make evals-record RUN=evals/runs/<run_id> EXPERIMENT=<experiment> JUDGE=omp-gpt-6.1-sol
+make evals-render-routes  # rewrite the Measured routes table from committed provenance
+make evals-render-results # rewrite RESULTS.md from committed provenance
+
+make evals-run-omp EXPERIMENT=evals/experiments/omp-glm-5.3.yaml RUN=evals/runs/glm-pr TASKS='tasks/pr/*.yaml'  # one suite
+make evals-run-omp EXPERIMENT=evals/experiments/omp-glm-5.3.yaml RUN=evals/runs/glm-neg TASKS='tasks/*/*-neg-*.yaml'  # the no-fire half
 ```
 `REPEATS` optionally overrides the runner's repeat count for `evals-run`, for
 example `make evals-run REPEATS=1`. When unset or empty, the experiment default
@@ -1059,8 +1139,10 @@ For example, this selected plan makes no inference calls:
 )
 ```
 
-For a focused behavior smoke, run `make evals-plan` first, then name the
-changed case files explicitly in `TASKS` on a supported subject/judge route.
+For a focused behavior smoke on a required Omp arm, run `make evals-plan`
+first, then name the changed case files explicitly in `TASKS` on a supported
+subject/judge route. For a manual arm, plan that arm's experiment directly
+with `coder-eval plan -e experiments/<arm>.yaml`.
 The run target performs its required preflight and writes ordinary run
 provenance; do not substitute YAML parsing or trigger-only checks for observed
 case results. For example, the Omp GPT 6.1 Sol route is:
@@ -1105,7 +1187,7 @@ The deterministic command filter matches stable ASCII title text because
 serialized tool parameters escape the emoji; the trace judge checks the exact
 Unicode title and call order. A separate `skill_triggered` criterion
 checks policy invocation because Skill tool paths can be truncated in the trace.
-Case 03 states that the `reasoning` agent has no route; the sandbox does not
+Case 03 states that the `complex` agent has no route; the sandbox does not
 remove that route from the Omp configuration. Case 01 combines one successful
 `Agent` call with structured per-issue dispatch checks to prove one batch; it
 does not parse the serialized task arguments, which `command_executed`
@@ -1160,7 +1242,8 @@ your shell environment.
 
 **Run `plan` before every `run`.** It uses no inference and catches config
 errors before they consume subscription allowance or separately metered spend.
-`make evals-run` depends on `evals-plan` for exactly that reason.
+`make evals-plan` covers the required Omp arms; plan a manual arm with the
+direct `coder-eval plan -e experiments/<arm>.yaml` command before its run.
 
 Three things the Makefile does that a hand-typed `coder-eval` will not:
 
@@ -1231,7 +1314,6 @@ no compatibility aliases:
 Historical provenance and its original interpretation remain available; those
 records keep their `experiment_id` and are never relabelled. Do not dispatch a
 retired route as part of this cohort.
-
 
 **What a non-Claude judge changes.** `make evals-judge-preflight` runs first and
 fails before any subject if `omp` is missing, Omp does not list the judge's exact
@@ -1440,34 +1522,48 @@ naming the situation and pointing at the fixture; the expected handling lives
 in the criteria, so a bare run does not pass them by following the prompt.
 Run only this focused set with the documented
 `make evals-run TASKS='tasks/undertake/17-*.yaml tasks/pr-body/08-capability-gap-is-not-human-blocker.yaml'`
-route after its `evals-plan`; the normal project checks remain CI's gate.
+route after planning `experiments/with-without.yaml` directly; the normal
+project checks remain CI's gate.
 
 The readiness rows `undertake/08-cadence-stops-at-ready-omp.yaml`,
 `10-ready-is-marked-not-asked.yaml`, `13-gate-reads-the-completion-notice.yaml`,
 and `20-report-write-failure-keeps-draft.yaml` through
 `22-existing-report-is-not-duplicated.yaml` measure actions, not narration.
 `fixtures/undertake-readiness/shared` supplies a stateful offline `gh` for
-pull request #25 (reads return fixture state, `gh pr ready` clears the draft
-flag, and a comment is returned by the next read), a temporary Git repository
-with a local bare remote, and a harmless `pr-keep-current.sh` stub. Each call
-is logged to `.fixture/ops.log`; `verify.py gate` and `verify.py service` read
-that record after the run. The gate verifier requires successful current-head
-gate reads before the report, a successful report while the PR is still draft,
-and only then a ready write. A refused report forbids any ready attempt; a
-refused ready write preserves the report. Separate scenarios cover an existing
-report, post-ready `BLOCKED` or `UNKNOWN` merge states, CI on another head, and
-failed reads. The verifier also rejects a `Review record` in place of the
-notice, a notice written before the reads, a missing notice re-read, a new
-review round for a clean merge, and a duplicate or premature report. Every
-valid transition and invalid case described here is an offline fixture
-scenario. The service verifier needs a launch observed alive and stops whatever
-the run left behind. The judges receive tool calls (`include_tool_calls`) and
-score a failed call as an observed limit that earns no completed-action
-credit. `skill_triggered` remains the activation criterion; read it separately
-from the behavioural criteria, because a run that only triggered the skill
-has not completed the workflow. These rows are a new, unmeasured instrument:
-no subject, judge or calibration run has recorded them, and the committed
-results for the previous rows are untouched.
+pull request #25, a temporary Git repository with a local bare remote, and a
+harmless `pr-keep-current.sh` stub. Each call is logged to `.fixture/ops.log`;
+`verify.py gate` and `verify.py service` read that record after the run. The
+gate verifier requires successful current-head reads before the report, a
+successful report while the PR is still draft, and only then a ready write.
+A refused report forbids a ready attempt; a refused ready write preserves the
+report. Separate scenarios cover an existing report, post-ready `BLOCKED` or
+`UNKNOWN` merge states, CI on another head, and failed reads. The verifier
+rejects a substitute review record, early or duplicate reports, missing
+notice rereads, and a new review round for a clean merge.
+
+The positive readiness row uses `covered-ancestor`: the PR head already
+contains the base, while the completion notice covers the reviewed head through
+ancestry. A no-op base update leaves CI green; the fixture marks CI in flight
+only when the head changes. The row's deterministic verifier checks gate reads
+and report-before-ready order. Its judge reads the transcript without a
+separate tool-call payload, which exceeded the judge's 120,000-byte limit in
+the first smoke. The task-24 user-hold control separately verifies no workflow
+calls or readiness report while the hold remains active.
+
+Issue #957's bounded focused smoke is recorded in
+`provenance/omp-gpt-6-1-sol-workflow-2026-11-20-957-readiness-interruption-2026-11-20.json`
+and
+`provenance/omp-gpt-6-1-sol-workflow-2026-11-20-957-readiness-corrected-2026-11-20.json`.
+The first two-task run passed the user-hold control. Its positive case answered
+the user before workflow calls, but failed because `ready-clean` left the base
+ahead; the fixture then started CI on the updated head, so report and ready
+were correctly withheld. Its separate judge also rejected an oversized
+tool-call prompt. The corrected, fresh one-task run changed the fixture to
+`covered-ancestor`, removed that redundant judge payload, and passed the action
+verifier and transcript judge (score 1.0). The initial failure remains
+preserved. Runs used one repeat and concurrency one; the record reports
+subscription judging, while model pricing is incomplete and no cost total is
+claimed. These focused results do not prove general model compliance.
 
 The Omp PR currency case uses `currency-stale`: the draft's base has advanced,
 the old head is green, and the verifier requires `gh pr update-branch` to merge
@@ -1911,10 +2007,11 @@ score for this row has been measured in either arm.
 
 ## The Omp arm
 
-The same suites and plugin run Omp subjects with paired `bare` and
-`with-plugin` variants. GLM 5.3 Flash is the tier probe beside full GLM.
-The committed GPT 6 Sol and Luna experiments use their Codex provider routes.
-Their historical gateway records remain unchanged.
+The arms `make evals-run-omp` runs are the required set: these are the eval
+results Omp's supported tier rests on. The same suites and plugin run Omp subjects with
+paired `bare` and `with-plugin` variants. GLM 5.3 Flash is the tier probe
+beside full GLM. The committed GPT 6 Sol and Luna experiments use their Codex
+provider routes. Their historical gateway records remain unchanged.
 The DeepSeek experiments pin the newest dated Pro and Flash catalog entries and
 restrict each to DeepSeek's first-party upstream; a missing route fails instead
 of falling back to another provider. The older DeepSeek result does not
@@ -1948,8 +2045,11 @@ make evals-run-omp EXPERIMENT=evals/experiments/omp-gpt-6.1-sol-ablation.yaml \
 ```
 
 Each experiment pins one provider/model ID, and the Omp home the agent borrows
-must configure it. Every GPT subject, judge, and helper call must use
-`openai-codex`; no GPT call may use the Vercel AI Gateway.
+must configure it. Every GPT subject, judge, and helper call in these required
+arms must use `openai-codex`; no GPT call in a supported arm may use the Vercel
+AI Gateway. The manual `classes-gpt-6-luna-gateway` arm is the one authorized
+exception: it measures the gateway route as an evaluation subject, changes no
+role default, and is not part of a required run.
 
 | Experiment | Model |
 | --- | --- |
@@ -2068,7 +2168,7 @@ make evals-run-omp EXPERIMENT=evals/experiments/omp-glm-5.3.yaml \
   [Turn and time ceilings](#turn-and-time-ceilings) states both rules.
 
 - **`make -n` does not dry-run a run target.** Its recipe line calls
-  `$(MAKE)`, so make executes it. `make evals-plan` is the free check.
+  `$(MAKE)`, so make executes it. A `coder-eval plan` run is the free check.
 
 **`agent: {type: omp}` is not a built-in kind.** It comes from
 `coder-eval-omp/`, a `coder_eval` plugin in this repository, installed beside
@@ -2078,10 +2178,10 @@ normalises and why each omission becomes a silent zero.
 **An experiment file per model, a run per model, and tags in between.** Eleven
 rows cannot be graded identically on Claude Code and Oh My Pi, so each is two
 files tagged `claude-only` and `omp-only`, with `-omp` on the second's
-`task_id`. `make evals-run` excludes `omp-only`; every `make evals-run-omp-*`
-target excludes `claude-only` and `codex-only`; and with the Codex arm each
-also excludes `codex-only`. Keep these sets, model files, variant pairs and
-Make targets in step.
+`task_id`. `make evals-run` excludes `omp-only`; every `make evals-run-omp
+EXPERIMENT=…` run excludes `claude-only` and `codex-only`; and with the Codex
+arm each also excludes `codex-only`. Keep these sets, model files, variant pairs
+and Make targets in step.
 
 | Suite | Claude-only row | Omp counterpart |
 | --- | --- | --- |
@@ -2118,7 +2218,9 @@ has in each run's `environment_info`.
 
 GPT-6.1 Sol through the installed `codex` executable, against the same
 subscription's Omp run. This is a harness comparison, not a twentieth provider
-pair. `docs/notes/0015-the-codex-arm.md` is the decision; this is how it runs.
+pair. It is manual only: Codex is a best-effort harness, so this arm remains
+runnable by hand and never becomes a required gate.
+`docs/notes/0015-the-codex-arm.md` is the decision; this is how it runs.
 
 ```sh
 make evals-run-codex RUN=evals/runs/695-codex-cli JUDGE=omp-gpt-6.1-sol
@@ -2250,7 +2352,7 @@ is whether a given model, run in the `task` role real dispatch would put it
 in, finishes ordinary delegated work and leaves its own tests passing.
 
 **What it measures.** Six cases today, all from `jmcvetta/career`: three
-`mechanical` and three `implementation`, small qualifying candidates whose
+`mechanical` and three `routine`, small qualifying candidates whose
 answer key asserts only what the issue decides (two of them by a recorded
 trim, below), each verified at build time to fail on the base SHA and pass on
 the merge SHA before it was shipped. A case's `initial_prompt` is the title
@@ -2302,9 +2404,9 @@ under `answer_key_contact` and a measured score of 0. It is scored as a
 failure, not dropped: a model that goes looking when stuck has failed the
 case.
 
-**What it does not measure.** No `reasoning` case: that class is decided by
-the production table and public benchmarks, not by a fixture small enough to
-grade in two minutes (see `skills/issue-body/references/model-classes.md`).
+**What it does not measure.** No `intermediate` or `complex` case: their class
+assignments are configured policy, and this suite makes no capability claim for
+either class (see `skills/issue-body/references/model-classes.md`).
 No plugin, no skill routing, no `bare`/`with-plugin` delta — that comparison
 is the `omp` arm's, over a different question. And nothing here proves a
 model *should* run in the `task` role generally, only that it cleared a few
@@ -2323,6 +2425,15 @@ make evals-run-classes MODEL=opus-low
 make evals-run-classes MODEL=sol-6-1
 make evals-run-classes MODEL=luna-6
 make evals-run-classes MODEL=terra-5-6
+make evals-run-classes MODEL=gpt-6-luna-gateway
+make evals-run-classes MODEL=deepseek-v4-1-flash-gateway
+```
+
+The last two are the matched Vercel AI Gateway coding arms. Each pins one
+first-party upstream with `vercel_gateway_only`, so an unavailable upstream
+fails instead of being served by another provider, and neither may fall back to
+the `openai-codex` subscription route. Their assignment, evidence and limits
+are in "Vercel GPT-6 Luna against DeepSeek V4.1 Flash" below.
 
 The Claude Code files (`classes-haiku-low`, `classes-haiku-medium`,
 `classes-opus-low`, `classes-sonnet-high`, `classes-sonnet-low`) set effort
@@ -2331,13 +2442,33 @@ They run the bare session `with-without.yaml` measures against — `plugins: []`
 and `setting_sources: [project]` — so an advisor or a plugin in the operator's
 own user settings never reaches the model under test.
 
-`defaults.repeats` is 3 in every file, so a full run is 3 replicates per
-case per model, each a real `git apply` plus the
+`defaults.repeats` is 3 in the historical files. The two gateway coding arms
+declare 5, because a matched comparison needs the same five-replicate
+denominator on both sides. A full run is that many replicates per case per
+model, each a real `git apply` plus the
 repository's own test command (`pytest` or `pnpm exec vitest`) inside a
 shallow single-commit checkout of the source repository. `GITHUB_TOKEN` or
 `GH_TOKEN` must be set — the `tempdir` driver runs `pre_run` as a plain host
 process, so a token exported before `coder-eval run` is what
 `shared/clone-base.sh` clones with. Narrow with `TASKS=tasks/model-classes/<repo>-<pr>.yaml` for one case, or use the `smoke`-tagged case per class (the smallest of each) to check a new overlay cheaply before spending a full run on it.
+
+**Computed, per-message cost.** Omp exposes no provider bill; its
+`usage.cost` is a catalog estimate at one fixed rate per bucket, drawn from
+whatever upstream its catalog happens to list. The adapter ignores it and
+prices each assistant message from `evals/coder-eval-omp/prices.json`, a dated
+snapshot of the Vercel AI Gateway endpoints API for the upstream the arm
+restricts itself to, using that message's own prompt size for a tier and its
+own timestamp for a peak window. Refresh and commit that snapshot before a
+benchmark: `python3 scripts/evals-fetch-prices.py` rewrites it from the API for
+every gateway model an experiment restricts with `vercel_gateway_only`, and
+`--check` reports a stale one; `evals/coder-eval-omp/README.md`'s Cost section
+has the sourcing rule and the two published details it has to assume. The
+recorder labels the result `computed`, never `reported`, and a model without a
+card records `unreported` rather than a guess. `evals/prices.yaml` keeps both
+models as `unpriced_reason` entries because a run's aggregate token counts
+cannot reproduce a tier or a window. Cache-read tokens are priced from the
+published rate; DeepSeek's absent cache-write rate is recorded as `null` and
+costs nothing, which is not the same as a missing bucket.
 
 Keep `TMPDIR` outside this evaluation checkout, with space for preserved
 sandboxes and dependency environments. The contact detector rejects printed
@@ -2380,7 +2511,7 @@ on the committed key: it must fail on the base SHA and pass on the merge SHA,
 both applied through `shared/apply-tests.sh`, and the manifests must match it.
 An `unlabelled` candidate — one whose closed issue carries no `## Model
 class` section — needs `--class-override owner/repo#N=mechanical` (or
-`implementation`) before it can be selected; four shipped cases carry one,
+`routine`) before it can be selected; four shipped cases carry one,
 reviewed by hand against `skills/issue-body/references/model-classes.md`'s
 table. The script's own module docstring has the full usage, and its
 self-tests (run offline, every invocation, against inline JSON-shaped GitHub
@@ -2388,6 +2519,256 @@ API fixtures) are the acceptance test for the qualifying filter, the test-file
 split, the class and elapsed reads, and `task_timeout` derivation. No
 standalone CI check repeats them: the builder runs them before every
 invocation, so a defect in it surfaces on its next run.
+
+
+## Vercel GPT-6 Luna against DeepSeek V4.1 Flash
+
+The operator's `openai-codex` quota was exhausted, so this comparison asks
+which of two gateway-routed coding models to use for delegated implementation
+work. Both arms run the same six `model-classes` cases, five repeats each,
+`max_turns: 30`, `turn_timeout: 660`, `task_timeout: 780`, `-j 2` per arm with
+both arms concurrent. Each arm restricts itself to one first-party upstream
+with `vercel_gateway_only`, so no request is served by another provider and
+neither arm may fall back to the `openai-codex` subscription route. Both runs
+started at 18:20 UTC on 2026-11-18 and finished within an hour of each other,
+so the arms overlapped rather than running hours apart. Records:
+[Luna](provenance/classes-gpt-6-luna-gateway-2026-11-19-luna.json),
+[DeepSeek](provenance/classes-deepseek-v4-1-flash-gateway-2026-11-19-deepseek.json).
+Run directories `evals/runs/900/luna` and `evals/runs/900/deepseek` are local
+and not committed.
+
+All six cases come from `jmcvetta/career`: `career-370`, `career-444` and
+`career-462` are `mechanical`, and `career-141`, `career-469` and `career-475`
+are `routine`. Grading is each case's committed executable criteria
+against its hidden answer key.
+
+**Per case.** `passed/attempted` counts only attempts that completed: a
+session cut by the harness's turn cap, or one whose fixture failed before the
+model ran, is shown in its own column and is not a pass. Those columns are
+part of every denominator's story, not a footnote.
+
+| Case | Class | Luna passed/attempted | Luna turn-capped | Luna fixture fault | DeepSeek passed/attempted | DeepSeek turn-capped | DeepSeek fixture fault |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| career-141 | routine | 3/3 | 2 | 0 | 2/3 | 2 | 0 |
+| career-370 | mechanical | 5/5 | 0 | 0 | 4/4 | 1 | 0 |
+| career-444 | mechanical | 5/5 | 0 | 0 | 1/1 | 4 | 0 |
+| career-462 | mechanical | 5/5 | 0 | 0 | 4/5 | 0 | 0 |
+| career-469 | routine | 4/4 | 0 | 1 | 2/2 | 3 | 0 |
+| career-475 | routine | 2/2 | 2 | 1 | 3/3 | 1 | 1 |
+| **Total** | | **24/24** | **4** | **2** | **16/18** | **11** | **1** |
+
+Luna passed every attempt that completed. DeepSeek lost one `mechanical`
+repeat (`career-462`) and one `routine` repeat (`career-141`); both are
+answer-key contact, below. No attempt in either arm hit `TIMEOUT`, and no
+provider, quota or authentication error appears in either run.
+
+**Effect estimate.** Treat each case as one cluster and average the per-case
+success rates, so a case contributing five repeats cannot outweigh one
+contributing one:
+
+- Luna: 6 of 6 cases at 1.00 → 1.00.
+- DeepSeek: 4 of 6 cases at 1.00, `career-141` at 0.67, `career-462` at 0.80 →
+  0.911.
+- DeepSeek − Luna: **−0.089**, case-clustered bootstrap 95% interval
+  **[−0.200, 0.000]** over 20,000 resamples of the six cases.
+
+That interval includes zero and rests on six clusters. It is evidence about
+these six cases under this configuration, not a broad capability claim, and it
+does not establish that either model is generally better.
+
+**Latency.** Seconds over completed attempts only, where the model's session
+ran and graded.
+
+| Case | Luna median (range) | DeepSeek median (range) |
+| --- | --- | --- |
+| career-141 | 238 (168–395) | 146 (90–179) |
+| career-370 | 87 (67–143) | 126 (86–135) |
+| career-444 | 266 (169–359) | 298 (single attempt) |
+| career-462 | 49 (38–259) | 103 (56–311) |
+| career-469 | 253 (213–553) | 210 (182–238) |
+| career-475 | 224 (220–228) | 178 (123–230) |
+| **All completed** | **198 (38–553)** | **134 (56–311)** |
+
+DeepSeek is faster on three of six cases; Luna's slowest attempts on
+`career-469` ran close to the 660-second turn ceiling without reaching it.
+
+**Tokens and cost.** Buckets summed over all 30 attempts per arm: the
+turn-capped ones are included because their tokens were still spent, while the
+fixture-failed ones failed in `pre_run` before the model ran and contribute
+nothing. `reasoning` is unreported by Omp; `cache_write` is absent from the
+DeepSeek card and recorded as `null`, which costs nothing.
+
+| Bucket | Luna | DeepSeek |
+| --- | --- | --- |
+| Uncached input | 631,811 | 660,741 |
+| Output | 266,220 | 278,649 |
+| Reasoning | unreported | unreported |
+| Cache read | 10,256,508 | 16,664,192 |
+| Cache write | 0 (billed at $0.125/M) | 0 (no published rate) |
+| Computed USD | $0.2989 | $0.3163 |
+| Per attempt | $0.0100 | $0.0105 |
+| Per passed case | $0.0125 | $0.0198 |
+
+Costs are **computed**, not billed: the adapter priced every assistant message
+from the committed endpoint snapshot in
+`coder-eval-omp/prices.json` (read 2026-11-18 from the gateway endpoints API),
+using that message's own prompt size for Luna's 272,001-token tier and its own
+timestamp for DeepSeek's peak windows. Omp's `usage.cost` was not used.
+
+**DeepSeek peak windows.** The upstream publishes a 2× multiplier on weekdays
+01:00–04:00 and 06:00–10:00 UTC. The run spanned 18:20–19:13 UTC on Wednesday
+2026-11-18, so **no attempt fell inside a peak window** and no DeepSeek message
+was priced at the multiplier; the adapter still applied the published window
+to each message's own timestamp, so a run at another hour would have carried
+it. Luna has no peak window. Two published details remain assumptions and are
+documented in [`coder-eval-omp/README.md`](coder-eval-omp/README.md#cost): the
+`holiday_calendar: "cn"` exclusion publishes no holiday list, and the tier
+boundary overlaps at exactly 272,001 prompt tokens.
+
+**Failure modes.**
+
+- **Turn cap (Luna 4, DeepSeek 11).** The adapter stops a session when it
+  crosses `max_turns: 30`, settles it as `MAX_TURNS_EXHAUSTED`, and the
+  recorder keeps that as an execution-limit outcome with no score even where
+  the on-disk work already satisfied every criterion. All 15 such attempts
+  graded 1.0 on the criteria before the cut; none is counted as a pass here.
+  DeepSeek reaches the ceiling far more often — every attempt that used 31
+  turns was cut — which is itself a reliability difference for delegated work.
+  The ceiling is the suite's and was not raised for this run.
+- **Fixture fault (Luna 2, DeepSeek 1).** Three attempts lost their `pre_run`
+  clone at the 120-second watchdog, clustered at 01:48–01:52 UTC. Preserved
+  sandboxes show a zero-byte `FETCH_HEAD` and a partially written packfile of
+  3.3–4.3 MB against a complete 4.7 MB pack: the fetch was still transferring,
+  not refused. All three fell in the same ten-minute window in which four
+  sandboxes were each cloning, installing dependencies and running the case's
+  test command; the local machine was saturated, and the watchdog fired before
+  the clone finished. These are infrastructure errors, not model outcomes, and
+  they stay in the run as errors rather than being rerun.
+- **Answer-key contact (Luna 0, DeepSeek 2).** Both DeepSeek criterion
+  failures reached for the answer instead of doing the work: one broad
+  `grep` over `~/.cache`, `~/.local` and `/tmp` printed the eval fixture's
+  path, and one enumerated host `uv` cache binaries looking for a runnable
+  `pytest`. The suite records each as a measured score of 0 with the
+  offending call under `answer_key_contact`, and neither is counted as a
+  partial or a behavioural success. It is a failure to do the task, and it
+  stays visible rather than being dropped.
+
+## OpenCode Go Beam Free: scoped single-arm evidence
+
+The operator later excluded Iceman Contributor Free and LongCat 2.5 Free from
+further execution and comparison. This supersedes their campaign requirements
+in issue #911; neither model is included in Beam's effect estimate. The issue's
+scope amendment records the operator decision and the observed reasons. This is
+a single-arm record, not the requested three-model comparison.
+
+Beam Free ran the full six-case `model-classes` matrix, five repeats per case,
+`opencode-go/beam-free:high`, `max_turns: 30`, `turn_timeout: 660`,
+`task_timeout: 780`, and `JOBS=2`. Its record is
+[`classes-beam-go-2026-11-19-2026-11-19_21-43-36.json`](provenance/classes-beam-go-2026-11-19-2026-11-19_21-43-36.json).
+The observed invocation was `make evals-run-classes MODEL=beam-go JOBS=2 REPEATS=5`.
+Schema-5 provenance does not preserve the requested parallelism; `JOBS=2` is
+recorded here from the run invocation, not inferred from the JSON record.
+The Omp adapter does not report the serving backend, so the served identity is
+`unreported`; the requested route is known. All rates are from the pinned
+OpenCode Go catalog snapshot in [`coder-eval-omp/prices.json`](coder-eval-omp/prices.json),
+read 2026-11-19. The reported USD amount is computed, not billed.
+
+**Per case.** `Passed / completed` excludes turn-capped attempts; `passed / all`
+counts every prescribed attempt, with caps and answer-key contacts as
+non-passes. Both denominators are shown. Fixture faults, provider errors and
+timeouts have separate columns.
+
+| Case | Class | Passed / completed (rate; passed / all 5 (rate)) | Turn-capped | Answer-key contact | Fixture faults | Provider errors | Timeouts |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| career-141 | routine | 0/0 (n/a; 0/5, 0%) | 5 | 2 | 0 | 0 | 0 |
+| career-370 | mechanical | 0/0 (n/a; 0/5, 0%) | 5 | 1 | 0 | 0 | 0 |
+| career-444 | mechanical | 0/0 (n/a; 0/5, 0%) | 5 | 2 | 0 | 0 | 0 |
+| career-462 | mechanical | 5/5 (100%; 5/5, 100%) | 0 | 0 | 0 | 0 | 0 |
+| career-469 | routine | 0/0 (n/a; 0/5, 0%) | 5 | 0 | 0 | 0 | 0 |
+| career-475 | routine | 3/3 (100%; 3/5, 60%) | 2 | 1 | 0 | 0 | 0 |
+| **Total** | | **8/8 (100%; 8/30, 27%)** | **22** | **6** | **0** | **0** | **0** |
+
+The five `career-141` attempts reached the turn cap; three also failed the
+executable test criterion `apply-tests.sh` plus the viewer pytest command.
+Those are retained as failures, not rerun. Six attempts contacted answer-key
+material and are not passes. The run has no fixture failure, provider error or
+timeout.
+
+**Outcome and uncertainty.** On the all-attempt denominator, turn caps and
+answer-key contacts are non-passes: the six case-cluster rates are 0/5, 0/5,
+0/5, 5/5, 0/5 and 3/5, equally weighted to **0.267**. Its exact nonparametric
+bootstrap 95% interval is **[0.000, 0.600]**, enumerating all 46,656 ordered
+resamples of the six cases. This is a descriptive all-attempt yield on these
+six clusters, not a general capability claim.
+
+On completed attempts alone, 8/8 passed, but only two of six cases produced a
+completed model session; the other four have no completed-attempt denominator.
+The completed-only rate is therefore not a six-case reliability estimate. The
+operator excluded Iceman, so no Beam-versus-Iceman uncertainty estimate is
+reported.
+
+**Latency.** Seconds over the eight attempts with a completed model session and
+terminal grade. Turn-capped attempts are not included.
+
+| Case | Median (range), seconds |
+| --- | ---: |
+| career-141 | no completed attempts |
+| career-370 | no completed attempts |
+| career-444 | no completed attempts |
+| career-462 | 36.1 (28.7–106.8) |
+| career-469 | no completed attempts |
+| career-475 | 123.5 (94.7–234.3) |
+| **All completed** | **68.6 (28.7–234.3)** |
+
+**Token buckets and cost.** Totals cover all 30 Beam attempts, including
+turn-capped sessions; no fixture failed before dispatch.
+
+| Bucket | Beam |
+| --- | ---: |
+| Uncached input | 1,519,672 |
+| Output | 158,650 |
+| Reasoning | unreported |
+| Cache read | 10,594,880 |
+| Cache write | 0 tokens; published write rate unavailable |
+| Computed USD | $0.0000 |
+
+All three published Go text rates and cache-read rates are zero for Beam.
+This is the calculated model-call cost under that card, not evidence about
+subscription allowance. `omp usage` remained at 3% of the 5-hour limit, 28% of
+the weekly limit and 100% of the monthly limit; the usage endpoint did not
+report per-model consumption.
+
+**Excluded routes.** The operator excluded Iceman Contributor Free and LongCat
+2.5 Free from further execution and comparison ([issue #911 scope amendment](https://github.com/jmcvetta/daily-driver/issues/911#issuecomment-7014116087)).
+
+Iceman's partial record
+[`classes-iceman-contributor-go-2026-11-19-2026-11-19_22-22-56.json`](provenance/classes-iceman-contributor-go-2026-11-19-2026-11-19_22-22-56.json)
+preserves 10 of 30 planned attempts. The runner log reported ten non-retryable
+HTTP 400 provider errors before any tool commands; the workspace required
+“Allow paid endpoints that train on request data” for this model. The
+issue-scope comment records that observed error ([#911 scope amendment](https://github.com/jmcvetta/daily-driver/issues/911#issuecomment-7014116087)).
+The schema-5 provenance record retains the ten `ERROR` outcomes but not the
+HTTP status or response message; the run log is local and ignored. The
+remaining 20 attempts were not dispatched. The workspace setting was not
+changed; token usage is unreported. Iceman was then excluded by the operator.
+
+LongCat's first round was interrupted by HTTP 429 rate-limit pushback. Only
+`career-370` and `career-141` started; each made a partial first-turn tool call
+(38 and 40 commands) and then received 429 responses. The provider's
+`retry-after-ms` values were 30,350,000–30,652,000 (about 8.4–8.5 hours).
+`coder-eval` retried twice per case after the first 429; I cancelled after the
+third response for each. The other four cases were not dispatched. No `task.json`
+finalized, so there is no LongCat provenance record; the interrupted logs stay
+under ignored `evals/runs/2026-11-19_22-24-52/`. The Global-region setting was
+not read, and these 429 responses do not verify it. No second round or later
+Iceman/LongCat request was made.
+
+The generated [Measured routes table](../skills/issue-body/references/omp.md#measured-routes)
+shows only scored case rows: Beam's 5/5 mechanical and 3/3 routine
+entries correspond to `career-462` and `career-475`. The other four cases
+ended in turn caps and are omitted by that renderer's scored-outcome rule, so
+the row is partial evidence, not full-suite coverage.
+
 
 
 ## Two defaults, decided on purpose
@@ -2482,7 +2863,7 @@ unused slots or mix its outcomes with a corrected-policy run. A measurement
 starts from a fresh run directory and needs its own bounded approval, naming
 the source and plugin revisions, cases, variants, repeats, effective limits,
 the native Claude Code route and the stop condition. Check the effective
-limits first. `make evals-plan` calls no model, but it only validates and
+limits first. `coder-eval plan` calls no model, but it only validates and
 warns; it does not print `max_turns`. Resolve the numbers with `coder-eval`'s
 own `resolve_task_for_variant`, once per variant, which also calls no model.
 Keep `GH_TOKEN` and `GITHUB_TOKEN` unset, and keep controller-only
@@ -2500,7 +2881,7 @@ as a TIMEOUT before it can be graded. The headroom is the difference.
 trigger-accuracy cases are cheap: five turns each, `Skill` the only tool,
 and the fire half stops the moment the skill fires. Behaviour rows and
 `model-classes` grant more tools and more turns, and cost more. Run one suite at a time with
-`TASKS=` while iterating, and keep `make evals-plan` between edits, where the
+`TASKS=` while iterating, and keep a `plan` run between edits, where the
 mistakes are free.
 
 ## What is not here

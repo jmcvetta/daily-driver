@@ -2,13 +2,10 @@
  * Omp runtime adapter for daily-driver.
  *
  * This is the Oh My Pi half of the daily-driver plugin. The common guards
- * correspond to `hooks/hooks.json`. Native Omp session events, Claude mods
- * and Codex-specific hooks share the task-contract controller while retaining
- * their own input-origin, persistence and cancellation adapters.
- * The harnesses share the skills and marketplace catalog
+ * correspond to `hooks/hooks.json`. The harnesses share the skills and marketplace catalog
  * (`.claude-plugin/marketplace.json`); there is no separate Omp catalog.
  *
- * Five jobs:
+ * Four jobs:
  *
  * 1. Block Omp's `ask` tool, the way Claude Code denies `AskUserQuestion`.
  *    The model is told not to retry and to ask the question in chat instead,
@@ -24,9 +21,9 @@
  *    task identity and establishes or reuses its dedicated worktree; this
  *    guard makes forgetting it fail before the user's checkout is changed.
  *
- * 3. Provide runtime defaults for mechanical, implementation, reasoning, and
- *    frontier model roles without overwriting operator assignments or writing
- *    configuration.
+ * 3. Provide runtime defaults for mechanical, routine, intermediate,
+ *    complex, and frontier model roles without overwriting operator
+ *    assignments or writing configuration.
  *
  * 4. Provide session-title, scheduled-reminder, and session-info tools that
  *    Omp's `ExtensionAPI` makes natural. `daily_driver_set_session_title`,
@@ -34,13 +31,9 @@
  *    `daily_driver_get_session` is part of the runtime surface consumed by
  *    harness-portable skills.
  *
- * 5. Retain private task and authorization evidence and correct unsupported
- *    unfinished stops through the bounded task-state controller.
- *
  * This file has no third-party dependencies: it runs as a plain `.js` module
  * under Omp, with no build step and no package install between this repo and
- * a user's `~/.omp`. Trigger maps stay in the factory closure; durable task
- * evidence stays on the active session branch. Neither is process-global.
+ * a user's `~/.omp`. Trigger maps stay in the factory closure.
  */
 
 import { execFileSync } from "node:child_process";
@@ -48,8 +41,14 @@ import { existsSync, realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { installModelClassDefaults, readModelClassRoutes } from "./role-default-helper.mjs";
+import {
+	createGitHubWriteRunner,
+	GITHUB_WRITE_BLOCK_REASON,
+	isGitHubBodyWrite,
+	isGitHubCommentWrite,
+} from "./github-write.mjs";
+import { installNotificationPolicy } from "./notification-policy.mjs";
 import { installUndertakingRouting } from "./undertaking-routing.mjs";
-import { installTaskState } from "./task-state.mjs";
 
 /**
  * What the model is told when it calls Omp's `ask` tool. Mirrors the wording
@@ -2101,12 +2100,38 @@ function runsGitHubComment(command) {
 	return false;
 }
 
+/** Whether a shell command runs a body-bearing GitHub write. */
+function runsGitHubBodyWrite(command) {
+	const { segments, unreadable } = shellSegments(command);
+	if (unreadable !== null) return false;
+	for (const segment of segments) {
+		const words = segment.words ?? [];
+		for (let index = 0; index < words.length; index++) {
+			const word = words[index];
+			if (!word.literal) continue;
+			const name = basename(word.text);
+			if (name === "gh" && isGitHubBodyWrite(words.slice(index + 1).map((item) => item.text))) return true;
+			if (!STRING_INTERPRETERS.has(name)) continue;
+			try {
+				const invocation = shellInvocation(name, words.slice(index + 1));
+				if (invocation.command && runsGitHubBodyWrite(invocation.command.text)) return true;
+			} catch (err) {
+				if (!(err instanceof UnreadableCommandError)) throw err;
+			}
+		}
+	}
+	return false;
+}
+
 /** The dispatch tool `skills/embark/references/omp.md` opens its sessions with. */
 const DISPATCH_TOOL = "task";
 
 /** Whether this call is one the title must precede. */
 function needsTitle(event) {
 	if (event.toolName === DISPATCH_TOOL) return true;
+	if (event.toolName === "daily_driver_gh_write") {
+		return isGitHubCommentWrite(event.input?.args);
+	}
 	return (
 		event.toolName === "bash" &&
 		typeof event.input?.command === "string" &&
@@ -2352,11 +2377,10 @@ function newTriggerId() {
 }
 
 /** The `daily-driver` Omp extension factory. */
-export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
-	const z = pi.zod;
-	installTaskState(pi);
-
-	const initializedSettings = new WeakSet();
+export default function dailyDriverExtension(pi, { modelTagsSetting, githubWriteDependencies, notificationDependencies } = {}) {
+ 	const z = pi.zod;
+	const runGitHubWrite = createGitHubWriteRunner(githubWriteDependencies);
+ 	const initializedSettings = new WeakSet();
 	const routingSettings = new Map();
 	function settingsFor(ctx) {
 		// Use the handler's live settings scope, including CLI overlays and child snapshots.
@@ -2368,7 +2392,19 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 		));
 		return routingSettings.get(ctx.cwd);
 	}
-	const undertakingRouting = installUndertakingRouting(pi, settingsFor, async ctx => readModelClassRoutes(await settingsFor(ctx)));
+	const notificationPolicy = installNotificationPolicy(pi, settingsFor, notificationDependencies);
+	const undertakingRouting = installUndertakingRouting(
+		pi,
+		settingsFor,
+		async ctx => readModelClassRoutes(await settingsFor(ctx)),
+		undefined,
+		async (ctx, issue) => notificationPolicy.notify(ctx, {
+			reason: "work_complete",
+			key: `undertaking-${issue}-complete`,
+			message: `Undertaking #${issue} is complete.`,
+			workIdentity: `undertaking:${issue}`,
+		}),
+	);
 	pi.on("session_start", async (_event, ctx) => {
 		invalidateStartupState();
 		if (typeof ctx?.cwd !== "string") return;
@@ -2531,7 +2567,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 				],
 			};
 		}
-		if (!metadata.labels.some((label) => label.toLowerCase() === "epic")) {
+		if (!metadata.labels.some((label) => ["epic", "discovery"].includes(label.toLowerCase()))) {
 			saveStartupState(ctx, { status: "inactive" });
 			return undefined;
 		}
@@ -2639,7 +2675,49 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 		if (needsTitle(event) && !titleGateAllows(ctx)) {
 			return { block: true, reason: TITLE_BLOCK_REASON };
 		}
+		if (
+			event.toolName === "bash" &&
+			typeof event.input?.command === "string" &&
+			runsGitHubBodyWrite(event.input.command)
+		) {
+			return { block: true, reason: GITHUB_WRITE_BLOCK_REASON };
+		}
 		return undefined;
+	});
+	pi.registerTool({
+		name: "daily_driver_gh_write",
+		label: "Write to GitHub with attribution",
+		description:
+			"Execute a body-bearing `gh` command from an argument array, without a shell. " +
+			"The tool adds and deduplicates this session's provenance before the write. " +
+			"Use existing routes for reads and non-body operations.",
+		parameters: z.object({
+			args: z.array(z.string()).min(1).describe("Arguments passed to `gh`, excluding the `gh` executable"),
+			stdin: z.string().optional().describe("Optional standard input, used when a supported body source is `-`"),
+		}),
+		execute: async (_toolCallId, params, signal, _onUpdate, ctx) => {
+			try {
+				const result = await runGitHubWrite(params.args, params.stdin, ctx, signal);
+				const content = [];
+				if (result.stdout) content.push({ type: "text", text: result.stdout });
+				if (result.stderr) content.push({ type: "text", text: result.stderr });
+				return {
+					content,
+					details: {
+						exitCode: result.code,
+						signal: result.signal,
+						stdout: result.stdout,
+						stderr: result.stderr,
+					},
+					...(result.code === 0 ? {} : { isError: true }),
+				};
+			} catch (error) {
+				return {
+					content: [{ type: "text", text: `GitHub write failed: ${error.message}` }],
+					isError: true,
+				};
+			}
+		},
 	});
 
 	pi.registerTool({

@@ -9,13 +9,13 @@ than once. The answer was chosen by an agent in
 that carries the change it justifies.
 **Resolves:** [#310](https://github.com/jmcvetta/daily-driver/issues/310).
 **Amends:** [`0011`](0011-two-harnesses-one-skill-tree.md), which scoped
-`0010`'s never-empty wake slot to Claude Code and left Omp's watch to
-catch-up looks; and [`0017`](0017-the-catch-up-look.md), which rejected a
+`0034`'s never-empty wake slot to Claude Code and left Omp's watch to
+catch-up looks; and [`0035`](0035-the-catch-up-look.md), which rejected a
 watcher process for the base branch.
 
 `Keep it current`'s cadence had one actor everywhere: the session. On Omp the
 actor lived only as long as the session — `daily_driver_schedule` is cleared
-at `session_shutdown` — and note 0017's catch-up look fires only on turns
+at `session_shutdown` — and note 0035's catch-up look fires only on turns
 that land back on the pull request, of which a user who has walked away makes
 none. On Claude Code the actor survived, but only behaviourally: every wake
 turn had to remember to re-arm the slot and recall why it fired, and the wake
@@ -43,11 +43,11 @@ narrower and enough: the merge was never an agent turn.
 
 **On Claude Code the wake carries its own instructions.** The prompt given to
 `send_later` states the whole check-in — re-arm first, then the
-base-currency read, then act on what it finds — so the one-slot rule of 0010
+base-currency read, then act on what it finds — so the one-slot rule of 0034
 is enforced at the start of every wake instead of wherever the turn remembers
 it.
 
-**`0017`'s rejection is overturned on its reason.** It rejected "a polling
+**`0035`'s rejection is overturned on its reason.** It rejected "a polling
 loop or a second watcher process" because a process "cannot perform the agent
 turn that merges". The conflation is the defect: the merge is a call the
 process can perform, and the turns it cannot perform are exactly the turns
@@ -63,7 +63,7 @@ slot and gives it back at `End the wait`.
 ## Rejected
 
 **Keeping the timer as the Omp cadence while the session lives.** That is the
-arrangement 0017's catch-up look already patched, and the operator's report
+arrangement 0035's catch-up look already patched, and the operator's report
 is that it still fails: the failure is precisely the session that is not
 alive, and the catch-up look does not run in one.
 

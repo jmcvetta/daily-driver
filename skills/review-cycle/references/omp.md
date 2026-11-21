@@ -34,7 +34,8 @@ callers. It reports only whether each implemented finding is solved and any
 concrete regressions in that delta. It must not perform a full-PR audit or offer
 style improvements.
 
-The author records the result with `gh pr comment <number> --body-file <path>`:
+The author records the result with `daily_driver_gh_write({ args: ["pr",
+"comment", <number>, "--body-file", <path>] })`:
 
 ```text
 Review verification
@@ -50,19 +51,22 @@ usage: unavailable
 
 The task agent's result is independent evidence. The author writes this record
 only after receiving it; it must not invent a verdict. Omp exposes no reviewer
-token-usage value, so `usage: unavailable` is required.
+token-usage value, so `usage: unavailable` is required. The wrapper adds
+provenance; do not add a block to the record.
 
 Review-cycle completion notice
 ==============================
 
 After a non-standalone round meets `SKILL.md`'s completion conditions and
 `Does it go again?` starts no new full review, read the current head and
-existing conversation comments with `gh pr view <number> --json headRefOid,comments`. If no existing comment
-starts with `## Review cycle complete! 🎉` and names that head, write the
-separate notice with `gh pr comment <number> --body-file <path>`. The body
-starts with that heading, gives a short factual completion status, and names
-the completed SHA. Re-read the head immediately before writing; a changed head
-does not inherit the notice. A failed write is reported, never claimed.
+existing conversation comments with `gh pr view <number> --json headRefOid,comments`.
+If no existing comment starts with `## Review cycle complete! 🎉` and names
+that head, write the separate notice with `daily_driver_gh_write({ args:
+["pr", "comment", <number>, "--body-file", <path>] })`. The body starts with
+that heading, gives a short factual completion status, and names the completed
+SHA. Re-read the head immediately before writing; a changed head does not
+inherit the notice. A failed write is reported, never claimed. The wrapper
+appends provenance.
 
 
 The wait
@@ -239,21 +243,25 @@ review:
 }
 ```
 
-Run `gh api --method POST /repos/{owner}/{repo}/pulls/{n}/reviews --input
-review.json`. Use `start_side` and `start_line` for a valid range. A clean or
-unanchorable review has no `comments` entry and uses the submitted summary.
-Never invent an anchor. On changed head, invalid anchor, absent `gh`, or GitHub
-failure, retain the findings and report publication as incomplete.
+Run `daily_driver_gh_write({ args: ["api", "--method", "POST",
+"/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"] })`.
+The wrapper attributes the summary and every inline comment in the JSON body.
+Use `start_side` and `start_line` for a valid range. A clean or unanchorable
+review has no `comments` entry and uses the submitted summary. Never invent an
+anchor. On changed head, invalid anchor, absent `gh`, or GitHub failure, retain
+the findings and report publication as incomplete.
 
 | Operation | Call |
 | --------- | ---- |
 | Read reviews | `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews` |
 | Read threads | paginated `gh api graphql` query of `PullRequest.reviewThreads` |
-| Publish review | `gh api --method POST /repos/{owner}/{repo}/pulls/{n}/reviews --input review.json` |
-| Reply on a thread | `gh api -X POST /repos/{owner}/{repo}/pulls/{n}/comments/{comment_id}/replies` |
+| Publish review | `daily_driver_gh_write({ args: ["api", "--method", "POST", "/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"] })` |
+| Reply on a thread | `daily_driver_gh_write({ args: ["api", "-X", "POST", "/repos/{owner}/{repo}/pulls/{n}/comments/{comment_id}/replies", "--input", "reply.json"] })` |
 | Resolve a thread | `gh api graphql` with the `resolveReviewThread` mutation |
 
 The identifier trap `SKILL.md` states applies to the last two: the mutation
 takes the thread's `PRRT_…` node ID, while reply takes the comment's numeric
 ID. The review REST endpoint returns a review ID; record it with the reviewed
-SHA and dispositions so later rounds have a stable duplicate check.
+SHA and dispositions so later rounds have a stable duplicate check. The wrapper
+adds and deduplicates provenance for review and reply bodies; do not add a new
+block to `review.json` or `reply.json`.

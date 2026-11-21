@@ -19,7 +19,7 @@
 # graded content is the hand-off and the refusal to claim a watch.
 #
 # Why the Claude sibling could not be reused: it grades a wake left armed before
-# the turn ends — `0010`'s never-empty slot, which `0011` scopes to Claude Code.
+# the turn ends — `0034`'s never-empty slot, which `0011` scopes to Claude Code.
 # A Codex run against that rubric would fail for correctly refusing to claim a
 # watch its harness cannot keep.
 #

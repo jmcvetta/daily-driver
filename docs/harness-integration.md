@@ -2,6 +2,23 @@
 
 Daily Driver shares skill instructions and a marketplace catalog across Omp, Claude Code and Codex. Tool calls live in each skill's `references/` directory. Runtime adapters handle the differences between harnesses.
 
+## Support levels
+
+Omp is the supported harness. The required eval arms are the `omp-*.yaml`
+experiments that `make evals-run-omp` runs, and the live runtime checks in CI
+cover Omp alone.
+
+Claude Code and Codex are best effort. Their plugins, hooks and per-skill
+`references/claude.md` and `references/codex.md` routes are written and
+maintained on each change, and their eval arms stay in `evals/` for manual use,
+but nothing gates on them. A Claude Code or Codex bug is accepted and fixed
+best effort; the fix gets a targeted eval kept under `evals/experiments/` so it
+can be rerun later, and that eval never joins the required set.
+
+CI keeps its static checks: they cover the shared skill tree and the Omp and
+Claude plugin manifests. The Codex manifest is not validated. The live runtime
+checks remain Omp-only.
+
 Claude Code repository instructions live in `.claude/CLAUDE.md`, which imports
 the root `AGENTS.md`. This project context is distinct from plugin-delivered
 skills and the constitution injected by runtime hooks.
@@ -21,238 +38,45 @@ owning skill; the [existing catalog](../skills/README.md) maps those workflows.
 | `ask-in-chat.py` | `PreToolUse` on `AskUserQuestion`/`request_user_input` | Blocks the question widget and directs questions to chat. |
 | `title-gate.py` | Issue-comment and session-creation events | On Claude Code cloud sessions, holds the first issue comment and dispatch until the session is titled. |
 
-Omp uses `extensions/daily-driver.js`. It blocks the `ask` tool, holds issue and pull-request comments and task dispatch until the session is titled, and provides session-title, reminder and session-info tools. Explicit `embark` requests require a canonical issue read before dispatch. Omp loads constitution files with `alwaysApply: true` frontmatter.
+Omp uses `extensions/daily-driver.js`. It blocks the `ask` tool, holds issue and pull-request comments and task dispatch until the session is titled, and provides session-title, reminder, session-info, and attributed GitHub-write tools. `daily_driver_gh_write` attaches live provenance — model, harness-reported provider, harness/version and session — to body-bearing `gh` writes and denies direct Bash writes that bypass it; read-only and non-body GitHub calls keep their existing routes. Explicit `embark` requests require a canonical issue read before dispatch. Omp loads constitution files with `alwaysApply: true` frontmatter.
 
 The exact calls and per-skill differences live in the active harness's reference file. The [architecture notes](notes/0011-two-harnesses-one-skill-tree.md) and [Codex integration note](notes/0016-three-harnesses-one-skill-tree.md) record why the adapters differ.
 
-## Core delivery and workflow retrieval
+### Omp notifications
 
-The always-loaded core retains production and dangerous-command prohibitions,
-approval authority, cancellation, isolation, evidence, and execution boundaries.
-Coding, testing, script and commit discipline live in `provenance`. Validation
-and recurring CI policy live in `pr`. Delegation, manual frontier return and
-unfinished-stop detail live in `undertake`'s execution policy. Policy-only reads
-do not create an issue or PR. `task-worktree` and `issue` retain their existing
-isolation and bug-reporting responsibilities. The core and skill descriptions
-require retrieval before action, including ordinary work without slash commands.
-Reuse context still present; reassess after transitions, resume and compaction.
-Delegated workers retrieve their own required workflows.
+Daily Driver overrides Omp's generic `completion.notify` and `error.notify`
+settings to off in each live settings scope at session start, switch, branch,
+tree and before agent start. It does not edit persisted YAML. These process
+overrides are not restored on refresh (`/reload-plugins`), session end or
+cleanup; refresh is not removal. Reminder, asynchronous result, child report,
+wait and in-app feedback behavior is unchanged. This policy does not change
+other harnesses.
 
-`SubagentStart` supplies standing context on both hook harnesses. The obsolete
-`PreToolUse` prompt rewrite is removed; it duplicated Claude child context and
-did not reach the former Codex delegation route. Native Codex 0.160.0 child
-delivery is now observed with a local scripted Responses provider. Its function
-call uses `namespace: "multi_agent_v1"` and `name: "spawn_agent"`.
+The explicit `daily_driver_notify` tool accepts `attention_required` for an
+unresolved human action and `work_complete` for an entire completed operation.
+The undertaking finish tool sends its completion automatically after
+successful persistence and release. The skill references describe when to
+call the tool; an ordinary completion, progress update, recoverable error or
+CI wait is not a notification event.
 
-### Initial measurement (superseded)
+Only a main agent with UI in TUI or RPC mode can deliver. Children and
+headless sessions are suppressed, and the public Omp terminal notification
+transport may apply its own suppression. The policy records a deduplication
+entry on the active session branch before best-effort transport, without
+storing the message. It re-reads the branch and serializes requests, so a
+repeated semantic key for the same work identity and reason is not replayed,
+including after a delivery error. Delivery failure is reported, not retried
+as a fresh event.
 
-Offline installed-runtime captures used Omp 18.15.0, Claude Code 2.1.267, and
-Codex 0.160.0. Providers listened on loopback only and used disposable homes
-with no external credentials. Scripted replies exercised actual native tools
-and request construction; they do not establish model compliance or behavioral
-parity.
+## Standing instruction delivery
 
-The recorded base is `42b5bddb42cffffeab14678b446eed52a3c6bb23`.
-UTF-8 byte counts, not tokenizer counts, are used:
+The complete standing constitution is delivered directly to root and child
+sessions. Task-specific workflows remain in the skill catalog.
 
-| Complete source/delivery unit | Base | Candidate |
-| --- | ---: | ---: |
-| Constitution file, including frontmatter | 13,913 | 8,429 |
-| Omp body, excluding frontmatter | 13,883 | 8,399 |
-| Rendered hook core, including standing-authority header | 14,197 | 8,713 |
-
-Actual delivery differs from the complete-source comparison:
-
-- Omp main and native child requests each contained one complete core in both
-  arms. Candidate native task completion, task transition, manual RPC compaction,
-  and a new resumed process were observed. The resumed request retained the
-  complete core and executed the CI-policy read.
-- Claude baseline startup supplied a roughly 2 KB preview of a persisted hook
-  output, not the full core. Its startup hook wrapper occupied 2,532 UTF-8 bytes
-  in the recorded request; candidate complete delivery occupied 8,770 bytes.
-  Baseline child requests carried a full prompt-prepended core plus another
-  startup preview. Candidate child requests carried one complete core and the
-  original delegated prompt without a rewrite. Startup delivery grows when the
-  missing safety instructions are restored; source reduction does not satisfy
-  a literal decrease in actual startup bytes.
-- Codex baseline main and child requests each carried one truncated hook block
-  of 10,107 bytes. Candidate main and child requests each carried the complete
-  8,713-byte core once. Its default `additionalContext` threshold is 2,500
-  approximate tokens; the manifest explicitly uses a finite 5,000-token budget.
-
-The delivery suite bounds the rendered core to 9,000 UTF-8 bytes. Do not raise
-that budget or lengthen the core without a new installed-runtime proof of
-complete delivery. Reintroducing a preview is not a context saving. Restore or
-relocate any control needed by a failing comparison; do not weaken the rubric.
-
-### Reconciled measurement — 2026-11-07 (superseded)
-
-The current baseline is `f053d4ce63b97ee51abec43da0a86d1df4f8bc6a`.
-The reconciled candidate retains the baseline's headless execution, protected
-handoff, CI-scope, and bounded-experiment requirements. Measurements use UTF-8
-bytes, not estimated tokens. The earlier measurements above remain historical.
-That reconciled candidate core has SHA-256
-`39075eb1cd25647ebc32b84f94ceb10e46251f16a37f263199991ea25ccb1076`.
-
-| Delivered unit | Current base | Reconciled candidate |
-| --- | ---: | ---: |
-| Constitution file | 18,502 | 8,761 |
-| Omp core body, main and child | 18,474 | 8,733 |
-| Claude raw startup hook wrapper | 2,564, preview only | 8,955, complete |
-| Codex startup/child hook block | 10,107, truncated | 8,880, complete |
-
-Loopback providers and disposable credential-free homes exercised Omp 18.18.0,
-Claude Code 2.1.267, and Codex CLI 0.160.0. Candidate captures contain one
-complete core on main and native child subject requests, task switching, and
-Omp/Claude resume after compaction. Codex resume retains two complete hook
-blocks (17,760 bytes); after native compaction both remain. Baseline Codex also
-accumulates two truncated blocks. This is actual repeated delivery, not a
-single-copy measurement. Summarizer and skill-preparation requests are not
-subject-core delivery. Scripted providers prove delivery and workflow access,
-not autonomous compliance; their fabricated usage counters are not inference
-cost evidence.
-Task-private `disclosure_omp_probe.py`, `disclosure_claude_probe.py`, and
-`disclosure_probe.py` produced the captures under ignored `evals/runs/`.
-The candidate runs used 35, 11, and 12 local provider requests respectively.
-Their main, child, switch, compact, and resume phases completed. These are
-request-construction experiments, not inference-cost or model-behavior results.
-
-The opt-in `codex-daily-driver` adapter was also exercised through its actual SDK
-and bundled Codex 0.154.0, with reviewed native hook trust. That measured the
-retired SDK execution path; issue #695 replaced it with a driver for the
-installed `codex` executable, and these captures are not CLI evidence. Its five parent/child
-requests each contained one complete 8,880-byte core. Read-only and
-workspace-write confinement, blocked network access, and disabled shell/child
-tools were observed. Injected HTTP errors and broken streams each produced a
-crashed partial record rather than a false success. Native zero-retry provider
-settings made one request per injected failure, but the unchanged runner made
-four HTTP-error attempts and three broken-stream attempts. Its maximum is six
-communication attempts for rate-limit errors, not an API-request cap.
-The final task-private proof is
-`evals/runs/disclosure-codex-adapter-final-core-isolated/proof-evidence.json`;
-earlier overlapping-home captures are preserved but excluded.
-
-At that checkpoint, the hook payload had 120 bytes below the 9,000-byte ceiling.
-Claude's raw startup grew when the missing safety core was restored. The literal
-startup-decrease criterion was not met. Those captures remain historical; the
-later relocation below addresses the original criterion without an amendment.
-
-
-### Compact delivery — 2026-11-07
-
-The final relocated core has SHA-256
-`ba084cdc07418d019805603a536431e1a0d5f4f286480802248ea7dd7d6c169b`.
-The baseline remains `f053d4ce63b97ee51abec43da0a86d1df4f8bc6a`.
-Counts are UTF-8 bytes from actual request strings, not token estimates:
-
-| Delivered unit | Base | Compact candidate |
-| --- | ---: | ---: |
-| Constitution source | 18,502 | 2,473 |
-| Omp main/child core body | 18,474 | 2,445 |
-| Claude PATH CLI 2.1.267 startup wrapper | 2,568, preview | 2,557, complete |
-| Claude SDK CLI 2.1.273 startup wrapper | 2,570, preview | 2,557, complete |
-| Codex CLI 0.160.0 / SDK 0.154.0 startup/child block | 10,107, truncated | 2,482, complete |
-| Codex CLI 0.160.0 resumed/compacted blocks | 20,214, truncated | 4,964, complete |
-
-The Claude startup reduction is small, but the candidate delivers the full core.
-The earlier baseline wrapper was 2,564 bytes; the candidate is also smaller
-than that capture. Persisted-output paths affect preview overhead. Both controlled
-Claude sandboxes are empty Git repositories; native system text is identical in
-length. Do not count an inherited repository's conflict status as an instruction
-saving.
-
-New credential-free loopback captures are `disclosure-{omp,claude,codex}-release-proof`
-under ignored `evals/runs/`. They exercised startup, native children, task
-switching, compaction and resume on Omp 18.18.0, Claude Code 2.1.267 and Codex
-CLI 0.160.0. They used 35, 11 and 12 local requests. Subject requests retain
-one complete core, except Codex resume's two observed blocks. Omp preparation
-and summarizer requests, and Claude/Codex summarizer/title requests, are not
-subject delivery. These captures prove access, not autonomous policy compliance.
-
-The actual Claude subject SDK selects its bundled 2.1.273 binary, not PATH's
-2.1.267. A separate loopback lifecycle capture used that binary with the SDK's
-empty system-prompt and project-setting options: 11 candidate requests and ten
-baseline requests. Candidate subject requests, including native children and
-post-compaction resume, retained one complete core. The captures are
-`disclosure-claude-sdk-proof-{base,cand}` under ignored `evals/runs/`.
-
-The actual Codex SDK/bundled 0.154.0 baseline was also measured with reviewed
-frozen hooks: five parent/child requests each contained one 10,107-byte truncated
-block, not its complete 18,786-byte rendered core. Its proof is
-`disclosure-release-20261107/codex-preparation/base-sdk-parent-child-delivery/`.
-
-Retrieval is not free. Current full source sizes are 8,493 bytes for `provenance`,
-8,033 for `pr`, and 82,361 for `undertake`. Read only the relevant policy when
-the issue sequence is not needed; retain retrieved context instead of repeating
-reads. Report actual returned context, truncation and repeated reads in behavioral
-records. Lower always-loaded bytes do not establish lower total cost or better
-reliability. Scripted usage counters are not inference-cost evidence.
-
-The [valid Omp comparison retrieval record](progressive-disclosure-retrieval.json)
-contains all 36 slots, their input hashes, returned bytes, tool duration and task
-wall time. It counts successful skill results, including repeated reads and
-returned wrappers, not complete source files or hidden preparation:
-
-| Across nine cases and two replicates per arm | Base | Candidate |
-| --- | ---: | ---: |
-| Successful skill reads | 20 | 45 |
-| Returned UTF-8 bytes | 416,941 | 631,617 |
-
-Some `undertake` results were truncated. The increased explicit retrieval is
-not hidden by the smaller standing core; these counts establish no total-cost
-or latency improvement. Per-slot token usage and separate judge usage remain
-in the linked behavioral records.
-
-The actual SDK/bundled Codex 0.154.0 adapter also delivered the 2,482-byte core
-once in each of five parent/child loopback requests. Two containment requests
-confirmed read access and denied writes and shell network access. All 16 invalid
-reviewed-payload cases failed as non-retryable configuration errors before any
-provider request. Unrelated host hooks and MCP processes stayed absent, without
-requiring a native-home `hooks.json` or changing shared configuration.
-The frozen `bd089b6` proof is under
-`disclosure-release-20261107/codex-preparation/compact-core-adapter-proof-bd089b6/`
-in ignored `evals/runs/`. It does not prove Git-write capability or model behavior.
-
-The later Omp discovery repair was exercised through the actual `omp/18.18.0`
-RPC executable: nine native traversal cases and 68 guarded cases passed
-(27 admitted, 41 refused), including a real virtual environment. This supersedes
-module-only traversal evidence from a separately installed 18.13.3 package.
-The proof is `omp-executable-discovery-proof-cerftbik/evidence.json` under ignored
-`evals/runs/`. Link names are directory metadata, not permission to read targets.
-
-A later Codex adapter proof exercised the official runner's `DIRECT_WRITE`
-layout with the opt-in owned fixture envelope. Native Worktrunk created an
-initially absent sibling, staged a named file, committed it, and ran the
-canonical verifier. The scripted run passed its two deterministic criteria.
-The native home configuration stayed byte-identical and no hook file appeared.
-The exact-cwd project trust is derived per thread; this prevents native
-workspace-write startup from persisting project trust to the shared account
-configuration. Inherited permission-profile additions fail before inference.
-The owned-envelope and trust proof used adapter SHA-256
-`20e3a3c5c165785486db8660d6c5c05366c0d4ab0db4cd70fdc8eef11852e99c`.
-Proofs are under
-`disclosure-release-20261107/codex-preparation/task-trust-repair-report.json`
-and `official-runner-task-trust-fixed/` in ignored `evals/runs/`.
-These credential-free scripted proofs establish integration behavior, not
-model compliance or inference cost.
-
-The subsequent native comparison exposed genuine visible-tool caps despite
-upstream deterministic `SUCCESS` statuses. The adapter now marks capped partial
-output with an `ERROR` result anchor; it does not erase the cap or change the
-criteria. A replay through the changed wrapper checked preserved capped and
-completed records without starting a native runtime. The adapter SHA-256 is
-`78d93eff434f44bb3928c0139f6b031688603a90df1f59b0ea0166c0eae53ab5`.
-The [native attempt inventory](progressive-disclosure-native-attempts.json)
-keeps the original statuses and per-slot context/latency limits.
-
-The Omp adapter now supplies `--session-dir` inside its private home by
-default, while honoring explicit separated and inline options. This avoids
-native startup failure when the encoded task path exceeds one directory
-component. The actual Omp 18.18.3 executable returned ready and state frames
-for all three forms at a long cwd, without a model turn or provider request.
-The proof is `disclosure-omp-private-session-proof-20261109/report.json` under
-ignored `evals/runs/`; its Omp adapter SHA-256 is
-`fe414c50222423c3bbb9fcacf68e9b6f12741fa4da35369448817ac3d6205334`.
+The former `daily_driver_task_state` tool and Claude and Codex task-state
+commands are removed. Work directly from the user's request and issue; use
+the existing review and validation workflows to verify and report the result.
+Existing private task-state records are not read or deleted.
 
 ## Sensitive handoff examples
 
@@ -279,310 +103,11 @@ build contexts and published artifacts. Paths are illustrative, not deliveries.
 These notices disclose neither credentials nor device codes. Device approval
 is the user's authentication action; it does not renew task approval.
 
-## Task contracts, continuation and approval evidence
-
-`extensions/task-state.mjs` owns task transitions for all three harnesses.
-`extensions/task-contract.mjs` owns the versioned contract representation.
-Adapters bind native input, persistence, tools, compaction and cancellation to
-that controller. They do not implement separate approval policies.
-
-Clear repository work captures a contract without asking for approval again.
-An ordinary question creates none. User requirements, workflow instructions,
-tool observations and agent interpretations remain separate source classes.
-An issue body, a delegated prompt or a copied approval is not user authority.
-
-### Contract and execution state
-
-Schema version 1 contains:
-
-- `contractId`, `taskId` and monotonic `revision`.
-- `objective`, `scope`, `exclusions` and `constraints`.
-- `criteria`, each with a stable `id`, `description` and original `sourceRefs`.
-- `requiredEvidenceKinds`, `requiredReviewKinds` and `approvalRequirements`.
-- `sourceRefs` with the retained `sourceId`, exact quote, canonical source
-  class, native origin and captured source version or observation fingerprint.
-- Optional criterion `verification`: `{kinds, toolName, input, subject}`.
-  Supported kinds are `command`, `check`, `judgment`, `approval` and `report`.
-  `subject` declares `{kind: "repository", root}` or
-  `{kind: "artifact", path}`. Ground the verification operation in the
-  requirement before it runs. An unknown verification contract cannot pass.
-
-Unknown fields are `null`. They do not mean empty, approved or fulfilled.
-Initial capture retains the request as criterion `request`. Ground the
-remaining fields and criteria in the issue/request version actually read.
-Keep the original request criterion when adding detailed issue acceptance.
-The issue's observation fingerprint identifies the captured version; a later
-issue read is another source, not a replacement for that contract.
-
-`contractHistory` retains each prior revision, its change and applicable
-source references. `plan` is separate mutable execution state. Updating a plan,
-retrying or compacting does not create a contract revision. Material amendments
-require a later applicable original user decision. Removing a criterion also
-requires its ID and the user-authorized reason. An issue edit alone cannot
-delete an unmet criterion.
-
-The first explicit `begin` may bind execution labels to the captured request.
-It does not infer unknown scope. A later `begin` cannot rewrite that binding or
-the contracted scope. Starting another task requires `newTask: true` and a
-fresh original user source. `resume` selects an existing contract by
-`contractId` when needed and preserves its correction allowance.
-
-### Task-state operations
-
-All routes accept `action` and an optional JSON-string `record`. `status`
-returns current state, retained task identities and bounded source previews.
-`status` with `{sourceId}` retrieves the retained original source or bounded
-tool observation. It does not recover omitted tool-output bytes.
-
-- `contract`: `{expectedRevision, change, sourceRefs, contract: {...}}`.
-  Supply only changed contract fields. A material amendment also supplies
-  `authoritySource`. A removal supplies `removedCriteria: [{id, reason}]`.
-  Changing bound `operation` or `target` belongs to this amendment, not `begin`.
-- `plan`: `{summary, ...executionDetails}`. This changes no contract revision.
-- `handoff`: returns the contract, history, current plan, unresolved criterion
-  IDs, authority locators and correction identity/count. It grants no approval.
-- `resume`: `{source: {sourceId, quote}, contractId?}`. A cancelled task needs
-  fresh original user input. Resume does not renew an exhausted allowance.
-- `authorization`: `{id, kind: "user" | "workflow", operation, target,
-  source: {sourceId, quote}, limits, conditions, expiresAt?, supersedes?,
-  revokes?, freshConfirmation?}`. The source must resolve to original user
-  input or workflow instructions of the same kind.
-- `blocker`: `{operation, target, kind: "external" | "authorization" |
-  "safety" | "execution", evidence: [{sourceId, quote}], authorizationIds: [],
-  routes: [{route, disposition: "failed" | "prohibited" | "unavailable",
-  evidence: {sourceId, quote}}], externalContribution,
-  independentWork: {pending: [], completed: []}, resume}`.
-- `evidence`: `{id, taskId, criterionId, contractRevision, subject, source,
-  kind, result, judgment?, requirement?, supersedes?}`. `source` is a retained
-  observation reference. Copy `subject` from its execution binding, not from
-  the current head. Results are `passed`, `failed` or `unresolved`.
-  A judgment carries `{reviewer, rationale, artifacts}`. An approval also
-  names its contract `requirement`. An explicit supersession retains the old
-  evidence for audit and replaces only the same criterion, kind and subject.
-- `receipt`: renders current criterion dispositions, supporting references,
-  artifact identities, unknowns, decisions, risks and outstanding approvals.
-  Rendering does not publish, approve or complete the task.
-- `complete`: `{summary}`. Requires current evidence for every criterion and
-  declared evidence/review/approval requirement. It records `verified-complete`
-  only when evidence accounting passes. It does not prove arbitrary semantics.
-
-References establish provenance, not the meaning of arbitrary approval prose.
-Read the original scope, conditions, revocations, expiry and fresh-confirmation
-requirements before acting. The records do not replace harness permissions or
-safety restrictions.
-
-On Omp, read `xd://daily_driver_task_state` for the action records, defaults,
-source discovery, exact-quote limits and an example sequence. Tool
-input/output payloads have bounded previews, truncation metadata and a
-fingerprint; the adapter does not persist a second full copy of every file or
-command result.
-
-Execution bindings capture task, session, contract revision and subject before
-the operation starts. A late result retains that binding. Repository evidence
-names the exact commit and dirty-state distinction. Dirty repository evidence
-cannot establish completion. File artifacts use SHA-256 content identities.
-Contract revisions and changed subjects make old evidence stale without
-deleting it. Check responses must include actual conclusions and the exact
-checked `headRefOid`, or `artifactDigest` for a file. A successful tool
-transport is not a check pass. Commands require a native exit status; shell
-output that merely prints a success claim is not an exit status.
-
-Subjective acceptance uses attributed judgments with rationale and inspected
-artifact references retained in the review observation. Each artifact reference
-must contain the captured commit or content digest. An agent cannot invent
-attribution or rationale that the source does not contain. Attribution and
-prose sufficiency still need review against that observation. Agent reports
-remain a separate evidence kind and cannot establish a pass. Receipt consumers
-must distinguish these kinds and redact sensitive commentary and local paths.
-Do not publish retained source quotes. Reuse the receipt inside existing
-PR details and handoffs instead of maintaining a second evidence ledger.
-
-`status` with a source ID can recover a truncated Omp observation from its
-existing native tool-result entry when the full-output fingerprint matches.
-It does not replay the tool or create another transcript store. If the native
-entry or decisive result is unavailable, the criterion remains unresolved.
-Hook ledgers retain bounded observations and cannot recover omitted bytes.
-
-The native stop gate also rejects omitted completion calls. A summary or
-printed “done” does not settle a task. Rejected completion leaves it active.
-The existing two-correction bound still applies. Explicit cancellation, abort,
-an evidenced external wait and correction exhaustion remain possible without
-recording verified completion. Historical `reported-complete` records retain
-their original status; they are never upgraded by migration.
-
-### Persistence and delegation
-
-Omp uses private, active-branch native session entries. Claude Code and Codex
-use `hooks/task-state.py` and `hooks/task-state.mjs` with the same controller.
-Their private ledgers live under `CLAUDE_CONFIG_DIR` or `CODEX_HOME`, falling
-back to `~/.claude` or `~/.codex`, in `daily-driver-task-contracts/`.
-Directory and ledger permissions are private. Native session/actor identities
-select separate ledgers. A process lock serializes updates; staged writes,
-`fsync` and atomic replacement preserve concurrent updates and crash recovery.
-No ledger or transcript is written to the repository.
-
-Native child adapters inherit contract identity, revision, criterion IDs and
-authority locators. Delegated input remains an interpretation. Hook-harness
-children resolve original sources from the parent's private ledger, not from
-copied prose. On Claude Code the mod reads the engine's `parentId`, so a
-nested child adopts its direct parent's revision and still resolves the root
-session's original sources; Codex children use the root session's ledger. An
-Omp `task` call strips contract tags from model-written input, and a child
-adopts a contract only from exactly one tag. An Omp handoff retains native session/source locators; a source
-unavailable on the child's branch remains `source-unavailable`, not approved.
-The existing workflow handoffs carry those locators across sessions. Never
-publish private quotes in a GitHub handoff.
-
-Legacy Omp records migrate explicitly on first access. Existing ledger entries,
-authorizations, cancellation and correction history remain. Missing contract
-fields stay unknown until sourced. Historical completion stays reported, not
-verified.
-
-An unsupported unfinished stop receives at most two corrective continuations
-per unchanged observed condition. Process restart, duplicate native events,
-record relabelling, plan changes and delegation do not renew that allowance.
-Cancellation suppresses corrections. Exhaustion records an execution failure
-without another model turn. A missing task-state tool is a capability limit,
-not missing user approval; adapters do not expand tool permissions.
-
-### Hook-harness boundary
-
-Claude Code requires native mods support: terminal version 2.1.287 or later.
-The measured version is 2.1.316. `.claude-plugin/plugin.json` adds
-`hooks/task-state-claude.json`; Claude still loads common `hooks/hooks.json`.
-The mod uses engine-stamped `prompt.submit.origin`, native tool registration,
-`classic.SessionStart`, `classic.SubagentStart`, `classic.Stop` and
-`turn.complete.isAborted`. Native classic handlers return `additionalContext`
-arrays or a `block` reason, not settings-hook response envelopes. A settings
-`UserPromptSubmit` hook alone cannot distinguish user, scheduler and peer
-input. The adapter does not use that unsafe classification.
-SDK-host requests can create interpreted contracts, but are not user approval.
-
-Codex uses `.codex-plugin/plugin.json` to load the common hooks and
-`hooks/task-state-codex.json`. Only the Codex file registers `Interrupt`.
-Claude never parses that event. The model receives a task-state command bound
-to its native session and actor; it supplies `{action, record}` on stdin.
-That command carries `--tool`, which accepts only `{action, record}` and
-rejects hook events. The hook entry rejects actions. A command hook cannot
-prove its caller, so this split protects the advertised route only. A model
-with unrestricted shell access to `task-state.py` or the private ledger is
-outside this boundary.
-The model's own task-state calls are bookkeeping, not task evidence. A
-controller answer exits 0 even when it reports `isError`, so a call can never
-register as a failed tool result, reset the correction allowance or support an
-execution blocker. Only protocol and runtime faults exit nonzero. Each Codex
-call also records a receipt: a digest of its exact output in the private
-ledger. `PostToolUse` drops a non-failing result whose output equals a pending
-receipt and consumes that receipt. Nothing parses the shell command, so a call
-chained with other work, or wrapped in other output, stays ordinary evidence.
-Codex sends a Bash `PostToolUse` result as the captured output string, with no
-exit status (`codex-rs/core/src/tools/context.rs`,
-`ExecCommandToolOutput::post_tool_use_response`). A Codex shell observation
-therefore never records a failure: a failed command does not change the
-correction condition and cannot support an `execution` blocker on Codex. The
-two-correction bound still applies to an unchanged condition.
-The implementation requires Python 3, POSIX process locks and Node.js.
-Trust the installed hooks through Codex's supported hook review.
-
-In the measured Codex CLI 0.160.0, a blocked `Stop` creates another model
-request and retains `stop_hook_active`, but does **not** emit
-`UserPromptSubmit`. The adapter does not read unstable transcript fields.
-Native delegated prompt events carry `agent_id`/`agent_type` and retain the
-root `session_id`; they are interpretations, not fresh user authority.
-After compaction, the documented `SessionStart(source: compact)` route
-restores the contract before the next request. `PostCompact` has no supported
-additional-context output and is not used as a substitute.
-
-Codex app-server clients must request the supported lifecycle explicitly:
-`thread/start` with `sessionStartSource: "startup"` (Python SDK
-`session_start_source=ThreadStartSource.startup`). The default `None` source
-can execute model and tool requests without these lifecycle hooks, even when
-`hooks/list` reports trusted definitions. A bounded native app-server run
-with the startup source observed root and child hooks.
-
-### Installed-runtime capability checkpoint
-
-The bounded checkpoint on 2026-11-02 used no external model:
-
-| Harness | Registration and local response route | Observed native events |
-| --- | --- | --- |
-| Omp 18.15.0 | Installed/linked extension, scripted loopback provider, RPC | The live task-state probe passed original approval/tool-source recovery, two-correction bounds and native abort. A separate shipped-extension run retained equal parent/child contracts, zero child user sources, criteria and correction counts through native compaction and process resume. |
-| Claude Code 2.1.316 | Task-private npm installation; shipped `--plugin-dir` mod; local `turn.step` response fixture and loopback compaction provider | Genuine terminal `composer` input and a separate plugin's non-user input remained distinct. The shipped tool ran. Actual process resume and `/compact` preserved the contract and criterion IDs. Esc cancelled a pending correction with `turn.complete.isAborted: true`; cancellation and count 2 persisted. |
-| Codex CLI 0.160.0 | Task-private native marketplace/plugin installation and private CLI hook fixtures; local Responses provider | The unchanged shipped manifest captured one original user source and stopped at two corrections after three local requests. The shipped-controller lifecycle run exercised native tool access, child delegation with zero child user sources, SIGINT/`Interrupt`, process resume and `/compact`; contract, criteria, cancellation and count 2 survived. |
-
-On 2026-11-07 a Claude Code 2.1.319 cloud session loaded the shipped mod
-unchanged as a session dev mod and exercised delegation with genuine runtime
-events. A `composer` prompt became the only `user` source; a
-`task-notification` and the subagent's `peer` hand-back stayed
-`interpretation`. One `agent.spawn` gave the child the same contract ID,
-revision and criterion IDs in a separate private ledger with zero `user`
-sources. The child's authorization citing the parent's user source was
-rejected, and the parent recorded no authorization.
-
-The workstation's Claude Code 2.1.267 is too old for the mod route. The
-task-private 2.1.316 install did not change shared configuration or credentials.
-A separate Codex 0.160.0 app-server checkpoint used trusted hooks and the
-explicit startup source. Six local Responses requests exercised
-`SessionStart`, `UserPromptSubmit`, `PreToolUse`, `SubagentStart` and `Stop`.
-The earlier default-source attempt omitted lifecycle hooks; it did not
-establish an unsupported capability.
-
-These native-event observations establish the adapter route. Offline
-controller/adapter regressions run in the existing `check-omp-extension`
-suite. They do not replace installed-runtime evidence or prove that a model
-will honor arbitrary approval prose.
-
-### Completion-evidence scenarios
-
-The optional `--completion-harness` mode of the existing live task-state
-script exercises the installed runtime with a private HOME, local Git
-fixture and loopback scripted provider. It makes no external inference or
-GitHub fixture requests. Each process has a 120-second deadline and a
-24-request bound. It does not add a recurring CI job or install a shared
-runtime.
-
-```sh
-python3 scripts/check-omp-task-state-live.py --completion-harness omp
-WORKTRUNK_PLUGIN_ROOT=/path/to/installed/worktrunk-plugin \
-  python3 scripts/check-omp-task-state-live.py --completion-harness claude
-python3 scripts/check-omp-task-state-live.py --completion-harness codex
-```
-
-Claude loads the unchanged shipped manifest and its declared Worktrunk
-dependency. Omitting that dependency can omit Daily Driver's tool while an
-unrelated fixture plugin still loads. Codex installs the unchanged plugin
-through a private local marketplace. Its fixture explicitly permits the
-reviewed local hooks through the CLI's automation hook-trust option; it does
-not bypass the task completion gate. The private Codex configuration sets
-`tool_output_token_limit = 20000` so the native status response is not
-truncated before the scripted provider can read it. A truncated status is
-not evidence of a controller pass.
-
-Observed on 2026-11-10:
-
-| Harness | Local provider requests | Completion and abort result |
-| --- | --- | --- |
-| Omp 18.18.6 | 16 | Rejected summary-only completion and a failed check inside successful transport. Current check evidence plus a source-backed scripted judgment completed. A dirty subject reopened the task; correction count stopped at two. The existing live suite also exercised native RPC abort without completion. |
-| Claude Code 2.1.321 | 18 | The same completion and dirty-subject cases passed. A second process received SIGINT during corrective request 1. It stopped without completion or another provider request; its private task remained `active`. |
-| Codex CLI 0.160.0 | 18 | The same completion and dirty-subject cases passed. SIGINT during corrective request 1 stopped further requests and persisted `cancelled`, without completion. |
-
-Claude print-mode SIGINT did not persist a cancellation record in this
-scenario. Do not describe that state as cancelled or completed. Its unfinished
-contract remains available for a supported resume. The native mod's
-`turn.complete.isAborted` route and the shared explicit-cancellation tests
-remain separate coverage.
-
-These fixtures establish runtime transitions and evidence-kind accounting.
-Their scripted judgments do not establish independent semantic correctness.
-The existing runtime suite also covers missing, unrelated, truncated, stale,
-wrong-task, changed-revision and non-code-artifact evidence, required approvals,
-contradictory results, exact native-source recovery and historical reports.
-
 ## Omp task roles and worktrees
 
-The Omp installation defines `mechanical`, `implementation`, `reasoning` and
-`frontier` task roles. Where no operator assignment exists, the extension
-supplies defaults. Frontier is limited to explicitly approved, bounded research
+The Omp installation defines `mechanical`, `routine`, `intermediate`,
+`complex` and `frontier` task roles. Where no operator assignment exists, the
+extension supplies defaults. Frontier is limited to explicitly approved, bounded research
 or planning; ordinary implementation uses a non-frontier route unless the user
 separately authorizes that exception. The defaults require configured
 credentials. Use `/model` → Roles to assign models. Existing `omp_configs/`
@@ -614,95 +139,72 @@ This adapter is not a security boundary against arbitrary trusted extensions.
 
 `dailyDriver.modelClassRoutes` is an array of entries with `referenceModel`
 and `classes`, for example `{ referenceModel: "provider/model", classes: {
-implementation: "provider/variant:high" } }`. Omp resolves the reference
-through its model catalog to identify the family and provider. A family entry
-does not authorize a different provider. The built-in OpenAI Codex entry
-preserves the existing defaults; explicit same-family class roles remain
-operator assignments. Plugin-installed global defaults do not establish a
-mapping for unrelated families. A mapping is not measurement evidence.
+routine: "provider/variant:high" } }`. Omp resolves the reference
+through its model catalog to identify the family; that family mapping applies
+regardless of the reference model's provider. Omp resolves the configured
+class target to the same model identity in the invoking provider and family,
+then retains the invoking provider. Ambiguous or unavailable targets are route
+gaps. Explicit class roles remain valid only in the invoking provider and
+family. The built-in OpenAI Codex entry preserves existing defaults, and the
+DeepSeek V4.1 Flash entry maps only its measured mechanical and routine
+classes. Plugin-installed global defaults do not establish a mapping for
+unrelated families. A mapping is not measurement evidence.
+
+For the class-name cutover, merge and release the parser first. Then migrate
+open assignable issues across the participating repositories: change
+`implementation` to `routine`, `integration` to `intermediate`, and
+`reasoning` to `complex` in `## Model class`; update only rationale wording
+that uses the old names. Preserve all other content and leave closed issues
+unchanged. Update custom role and route-map keys with the same mapping. Older
+saved undertaking sessions are translated on resume; new admissions reject
+the old tokens.
 
 An unset route configuration uses the registered default, including when Omp
 clones settings for a task. An explicit empty array stays empty; malformed
 explicit values are rejected rather than replaced with defaults.
 
 Classed undertaking calls `daily_driver_route_undertaking` before worktree
-creation or claim. For a mapped family, admission resolves the selected class
-and visible automatic candidates once. It records their concrete backend,
+creation or claim. For a mapped family, initial admission resolves the selected
+class and visible automatic candidates once. It records their concrete backend,
 authentication route and effort. Dispatch and observed worker checks reuse
 that decision. Visible incompatible retry and prewalk candidates fail before
 dispatch. Independent specialist routes remain separate.
 
-Call routing alone and report pending verification as normal progress. These
-are workflow instructions, not conversation-wide runtime failures. The runtime
-still reserves a routing response's whole tool batch before admitting sibling
-mutations. A selected model or effort change stays `pending` until a successful
-response follows an admitted request from that worker. Rejected requests,
-consultations, error responses and cancelled responses do not verify it.
+Report the selected initial route as progress; status `selected` records
+selection, not execution identity or class suitability. The runtime reserves a
+routing response's whole tool batch before admitting sibling mutations. Visible
+incompatible retry and prewalk candidates fail before dispatch.
 
-Omp 18.16.0 exposes expanded child patterns at `before_subagent_spawn`. It does
-not expose a veto before every retry or prewalk model transition. The adapter
-therefore retains a final request guard for transitions that dispatch cannot
-guarantee. Agent-definition prewalk targets and later configuration changes
-also require this guard. It rejects unauthorized inference, not host controls.
-Local inspection, cancellation and model restoration do not require worker
-verification.
+Agent-initiated work remains subject to the class, frontier authorization, and
+route-integrity requirements as workflow policy; the runtime does not enforce a
+continuing request-route guard. Operator model, provider, and effort changes
+after admission remain permitted and must not be blocked or reversed.
 
-The request guard validates the captured live catalog selection against the
-admitted route. Providers can rewrite the request model's API, endpoint and
-headers without changing its provider/model selector. Comparing that transport
-model with the catalog snapshot caused false rejections, including Kimi's
-Anthropic shim. The guard no longer makes that comparison. Catalog backend,
-model, effort and authentication checks remain; request transport integrity
-belongs to the host/provider. The same split applies to native consultations
-and recovery explanations.
-
-An Omp 18.18.6 loopback proof exercises the built-in Kimi shim. Seven
-requests reached the local Anthropic endpoint while the catalog retained its
-OpenAI-compatible model. The proof covers unmapped-family warning and
-continuation, ordinary prompts, rejected model drift, automatic recovery and
-process reload without external inference.
-
-A disposable loopback-provider experiment on Omp 18.16.0 distinguished the
-selected route, the resolved retry fallback and actual HTTP requests. The host
-reported `retry_fallback_applied` for an incompatible model; its request never
-reached the provider. Local `get_state`, `abort` and `set_model` remained
-available. A restored turn and a reloaded session completed on the original
-route. This is boundary evidence, not evidence of model-class suitability.
-
-Rejecting a request does not replace the stored selected route with a blocked
-disposition. A partially applied selection whose restoration failed remains
-recovery-only; an ordinary response cannot certify it.
-
-Before the next ordinary prompt, Omp restores the admitted worker model and
-effort automatically. The target must still match the admitted backend and
-authentication route and have available credentials. No manual cancellation,
-model selection, request replay or autonomous inference is required. Pending
-workers still need a successful admitted response before task work.
-Cancellation and newer selections invalidate a waiting restoration.
-Model selection may refresh metadata and apply host effort defaults.
-Restoration compares the admitted origin, not object identity, then reapplies
-the admitted effort.
-
-A disposable Omp 18.18.3 loopback proof rejected late model drift without an
-unauthorized HTTP request. The next user prompt completed on the admitted
-worker without manual recovery, both before and after process resume.
-Unavailable targets or credentials remain explicit recovery failures, not
-permission to select a replacement route.
+Provider transport can rewrite the request API model, endpoint, and headers
+without changing the selected provider/model. This is distinct from the
+operator's model choice; transport integrity belongs to the host/provider.
+Native consultations and recovery explanations remain separate.
 
 When the known family is absent from the class table, a prominent warning names
 the family, required class, and retained provider/model. Work continues
 immediately on the invoking model, provider, and effort without confirmation.
-The route's execution identity can be verified while class suitability remains
-unverified. A missing or cleared class in a mapped family, unavailable or
-incompatible target, unknown identity, or actual route violation remains a
-configuration gap. Failed preflight must permit explanation and retry without
-discarding an existing valid route. The public route `status` remains `pending`,
-`verified`, or `blocked`; `capability` separately reports `mapped` or
-`unverified`. An absent-family result may also carry a `warning`. Frontier
-authorization and OAuth restrictions remain
-in force. Independently configured `reviewer`, `scout`, `security-reviewer`,
-and `seance` helpers retain their routes. A delegated worker must retain the
-undertaking route; otherwise work stays in the invoking session.
+The route's execution identity can be reported separately from class suitability.
+A class omitted from a mapped family follows the same warning-and-continue:
+its absence leaves suitability unverified and retains the invoking route. An
+explicitly cleared (`null`) class, unavailable or incompatible initial target,
+unknown identity, or observed agent-route mismatch requires explanation and
+repair; later operator selections are not route violations.
+Failed preflight must permit explanation and retry without discarding an
+existing valid route. Route status is `selected` after initial selection;
+malformed or cancelled state can report `blocked`. Neither status alone
+establishes observed execution identity or class suitability. An absent-family
+result may also carry a `warning`. Frontier authorization and OAuth restrictions
+remain in force. Independently configured `reviewer`, `scout`,
+`security-reviewer`, and `seance` helper routes are selected separately from
+issue class routing; this does not define their cancellation ownership. A
+delegated worker must retain the undertaking route; otherwise work stays in the
+invoking session.
+
 
 After the pull request is ready, or answer-only research is completed and
 recorded, call `daily_driver_finish_undertaking({ issue: <positive issue number> })`
@@ -716,8 +218,7 @@ returns an error without changing the existing state.
 
 Omp registers `/undertaking status` and `/undertaking cancel <issue>` as host
 commands. They do not send a model request. They remain available after a
-rejected inference request or a saved-route restoration error.
-
+rejected inference request or an operator model, provider, or effort change.
 Status separates configured model and effort from the host selection and
 last observed execution identity. It reports the authentication route category,
 ownership, state, and last rejection reason without credential identities.

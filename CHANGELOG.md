@@ -4,6 +4,14 @@
 
 ### Changed
 
+* Limit Omp desktop notifications to explicit human handoffs and completed operations, suppress generic completion and error notifications in live settings, and deduplicate delivery across session resumes ([#946](https://github.com/jmcvetta/daily-driver/issues/946)).
+
+* Route DeepSeek V4.1 Flash's measured mechanical and implementation classes through a provider-neutral family mapping; a class omitted from a mapped family warns and continues with unverified suitability instead of failing admission, while an explicitly cleared class remains a configuration gap ([#927](https://github.com/jmcvetta/daily-driver/issues/927)).
+
+* Route body-bearing Omp GitHub writes through `daily_driver_gh_write`, which attaches live provenance and deduplicates historical attribution ([#916](https://github.com/jmcvetta/daily-driver/issues/916)).
+
+* Remove epic #800's task-contract and completion-evidence machinery and restore direct standing-instruction delivery across supported harnesses ([#895](https://github.com/jmcvetta/daily-driver/issues/895)).
+
 * Require criterion-level completion evidence and render current change receipts across Omp, Claude Code and Codex; retain unresolved requirements, stale identities and attributed judgments instead of accepting summary-only completion, and preserve startup failures and case-normalized failed check outcomes in receipts ([#801](https://github.com/jmcvetta/daily-driver/issues/801)).
 * Preserve source-anchored, versioned task contracts and separate execution plans across Omp, Claude Code native mods and Codex CLI hooks; retain criterion IDs, amendment history, authority references and cancellation bounds through resume and delegation ([#802](https://github.com/jmcvetta/daily-driver/issues/802)).
 * Consolidate undertaking admission and worker checks around concrete route decisions; remove redundant routing-procedure injection while retaining same-batch mutation protection, truthful worker verification and the final unauthorized-request guard ([#829](https://github.com/jmcvetta/daily-driver/issues/829)).
@@ -15,10 +23,22 @@
 * Report a newly opened task issue's assigned model class beside its issue-kind label ([#783](https://github.com/jmcvetta/daily-driver/issues/783)).
 * Route classed undertaking work to the exact configured class before ownership, preserving its provider, backend, family, and authentication route; retain independent specialist helper routes and finish completed undertakings before session reuse ([#755](https://github.com/jmcvetta/daily-driver/issues/755)).
 * Select undertaking classes within the invoking family and provider; warn and continue on the invoking model when its family has no mapping, with suitability unverified ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
+* Select the issue's model class at undertaking admission while leaving later operator model, provider, and effort changes in control, including after rejection and resume; retain agent-initiated route authorization ([#860](https://github.com/jmcvetta/daily-driver/issues/860)).
 * Require assignable task issues for all new and reused epic stories, with task readiness checked before linking and dispatch ([#723](https://github.com/jmcvetta/daily-driver/issues/723)).
 
 ### Fixed
 
+* Answer readiness interruptions before workflow reads and retain completed evidence until its inputs change; treat satisfied agent reminders as expired, not as user holds ([#957](https://github.com/jmcvetta/daily-driver/issues/957)).
+
+* Preserve evidence for unchanged criteria across contract revisions while requiring fresh observations for changed criteria ([#883](https://github.com/jmcvetta/daily-driver/issues/883)).
+
+* Keep undertaking class routing within the invoking family and provider; leave session tools usable after routing and cancellation failures ([#912](https://github.com/jmcvetta/daily-driver/issues/912)).
+
+* Validate task verification declarations before grounding, bind repository evidence to the selected worktree, and retain native Omp bash terminal outcomes without treating shell output as check conclusions ([#866](https://github.com/jmcvetta/daily-driver/issues/866)).
+
+* Name the owning issue, the block condition and a `/undertaking status` recovery route in remaining undertaking guard blocks; a manual model or effort difference is never a block reason ([#864](https://github.com/jmcvetta/daily-driver/issues/864)).
+
+* Recover a failed initial task-contract grounding with explicit retain-request guidance in the amendment error, the Omp device description and the undertaking skill; keep the material-amendment and evidence guards unchanged ([#862](https://github.com/jmcvetta/daily-driver/issues/862)).
 * Deliver compact complete standing instructions through pre-action workflow retrieval without rewriting delegated prompts; support safe fixture discovery, private Omp sessions and confined Codex worktrees; preserve complete judge evidence and mark capped native output incomplete ([#804](https://github.com/jmcvetta/daily-driver/issues/804)).
 * Admit legitimate provider transport rewrites without rejecting the unchanged undertaking model, including unmapped Kimi continuation, native consultations and recovery explanations ([#842](https://github.com/jmcvetta/daily-driver/issues/842)).
 * Restore the admitted undertaking route before the next user prompt after rejected inference, without requiring manual cancellation or model selection ([#822](https://github.com/jmcvetta/daily-driver/issues/822)).
@@ -33,6 +53,157 @@
 * Give the live Omp title-barrier fixture enough context for expanded skills without entering unsupported scripted-model compaction ([#726](https://github.com/jmcvetta/daily-driver/issues/726)).
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
+
+## [0.70.0](https://github.com/jmcvetta/daily-driver/compare/v0.69.0...v0.70.0) (2026-11-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* Custom `modelRoles` and `dailyDriver.modelClassRoutes` keys named `implementation`, `integration`, or `reasoning` must be renamed to `routine`, `intermediate`, or `complex`, respectively. Existing invocations of the old agent names must use the new names.
+
+### Features
+
+* rename model classes by task difficulty ([#956](https://github.com/jmcvetta/daily-driver/issues/956)) ([9956523](https://github.com/jmcvetta/daily-driver/commit/995652399e2d6905d9f7338572571b8a5113d1e0))
+
+## [0.69.0](https://github.com/jmcvetta/daily-driver/compare/v0.68.0...v0.69.0) (2026-11-21)
+
+
+### Features
+
+* preserve readiness evidence across turns ([#958](https://github.com/jmcvetta/daily-driver/issues/958)) ([1c84d65](https://github.com/jmcvetta/daily-driver/commit/1c84d65df79cc943e7f0c2db2fe7f220a5630f28))
+
+
+### Bug Fixes
+
+* inspect effective CI costs ([#952](https://github.com/jmcvetta/daily-driver/issues/952)) ([55b7833](https://github.com/jmcvetta/daily-driver/commit/55b78339b44048f4be08ca7832ec002d73d94e30))
+* **task-worktree:** refresh the default base before branch creation ([#953](https://github.com/jmcvetta/daily-driver/issues/953)) ([022784b](https://github.com/jmcvetta/daily-driver/commit/022784b492b486fb7be149771812c8385df43087))
+
+## [0.68.0](https://github.com/jmcvetta/daily-driver/compare/v0.67.0...v0.68.0) (2026-11-20)
+
+
+### Features
+
+* add explicit Omp task notifications ([#949](https://github.com/jmcvetta/daily-driver/issues/949)) ([8eba3f4](https://github.com/jmcvetta/daily-driver/commit/8eba3f4f1f8f630bbba60a238f950cd4e4c41374))
+* **rectify-names:** add staged naming correction workflow ([#948](https://github.com/jmcvetta/daily-driver/issues/948)) ([a862aff](https://github.com/jmcvetta/daily-driver/commit/a862aff5842bf76888b1810b75aaa698d366fdf9))
+
+
+### Bug Fixes
+
+* **extension:** capitalize reviewer role display name ([#945](https://github.com/jmcvetta/daily-driver/issues/945)) ([da1d323](https://github.com/jmcvetta/daily-driver/commit/da1d3239e57742a60d5e840d0b37cf73e48da07c))
+* **provenance:** record Anthropic for verified Claude cloud sessions ([#941](https://github.com/jmcvetta/daily-driver/issues/941)) ([ac0564c](https://github.com/jmcvetta/daily-driver/commit/ac0564cfaac0600b33c8e7f41fb7b9418487c641))
+
+## [0.67.0](https://github.com/jmcvetta/daily-driver/compare/v0.66.0...v0.67.0) (2026-11-19)
+
+
+### Features
+
+* **provenance:** add provider and capitalize Session ([#931](https://github.com/jmcvetta/daily-driver/issues/931)) ([eaa13be](https://github.com/jmcvetta/daily-driver/commit/eaa13bebb3ea283faed5635176bf3fc30cdec506))
+* qualify DeepSeek Flash for mechanical and implementation routes ([#928](https://github.com/jmcvetta/daily-driver/issues/928)) ([e4212b1](https://github.com/jmcvetta/daily-driver/commit/e4212b18158f64186e40e0bcbd40b2bbfc509ba6))
+
+
+### Bug Fixes
+
+* finish routine tool migration and clear lockfile-only blockers ([#930](https://github.com/jmcvetta/daily-driver/issues/930)) ([0fa9418](https://github.com/jmcvetta/daily-driver/commit/0fa941895f9f5c55cdb688a2c027a4bd17b5031e))
+
+## [0.66.0](https://github.com/jmcvetta/daily-driver/compare/v0.65.1...v0.66.0) (2026-11-19)
+
+
+### Features
+
+* **omp:** attach provenance to GitHub writes ([#923](https://github.com/jmcvetta/daily-driver/issues/923)) ([4f3742f](https://github.com/jmcvetta/daily-driver/commit/4f3742f74ac18a86fb2ac54163487d796415160e))
+
+## [0.65.1](https://github.com/jmcvetta/daily-driver/compare/v0.65.0...v0.65.1) (2026-11-19)
+
+
+### Bug Fixes
+
+* **issue:** require approval for third-party issue creation ([#922](https://github.com/jmcvetta/daily-driver/issues/922)) ([fb83a34](https://github.com/jmcvetta/daily-driver/commit/fb83a34046c564084b239165872798bb258a8e85))
+
+## [0.65.0](https://github.com/jmcvetta/daily-driver/compare/v0.64.0...v0.65.0) (2026-11-19)
+
+
+### Features
+
+* **undertaking:** route classes by family ([#917](https://github.com/jmcvetta/daily-driver/issues/917)) ([d724774](https://github.com/jmcvetta/daily-driver/commit/d724774a58a330030c1e6cd384a425f149583810))
+
+## [0.64.0](https://github.com/jmcvetta/daily-driver/compare/v0.63.0...v0.64.0) (2026-11-19)
+
+
+### Features
+
+* **undertake:** keep class routing within the invoking family ([#913](https://github.com/jmcvetta/daily-driver/issues/913)) ([56c271e](https://github.com/jmcvetta/daily-driver/commit/56c271e698dc2027e0609375b0bb88405cb8c758))
+
+## [0.63.0](https://github.com/jmcvetta/daily-driver/compare/v0.62.1...v0.63.0) (2026-11-18)
+
+
+### Features
+
+* prune merged branches during wt sync ([#904](https://github.com/jmcvetta/daily-driver/issues/904)) ([cfc1008](https://github.com/jmcvetta/daily-driver/commit/cfc1008c83fcee291110f92760d63bcfb2390720))
+
+## [0.62.1](https://github.com/jmcvetta/daily-driver/compare/v0.62.0...v0.62.1) (2026-11-18)
+
+
+### Bug Fixes
+
+* reclassify Claude Code and Codex as best-effort harnesses ([#899](https://github.com/jmcvetta/daily-driver/issues/899)) ([0d10f3c](https://github.com/jmcvetta/daily-driver/commit/0d10f3cfeb8b6fced8c9f36875eafeabb504af5d))
+
+## [0.62.0](https://github.com/jmcvetta/daily-driver/compare/v0.61.2...v0.62.0) (2026-11-17)
+
+
+### Features
+
+* remove task contract enforcement and restore standing instructions ([#896](https://github.com/jmcvetta/daily-driver/issues/896)) ([5507753](https://github.com/jmcvetta/daily-driver/commit/550775394db845b143bdfbb7187623ba113dc233))
+
+
+### Bug Fixes
+
+* **ci:** clarify routine validation approval ([#892](https://github.com/jmcvetta/daily-driver/issues/892)) ([ca211e2](https://github.com/jmcvetta/daily-driver/commit/ca211e2158ce328e2cb048276f1e8f21338054f3))
+
+## [0.61.2](https://github.com/jmcvetta/daily-driver/compare/v0.61.1...v0.61.2) (2026-11-15)
+
+
+### Bug Fixes
+
+* **task-state:** explain safe judgment evidence recovery ([#888](https://github.com/jmcvetta/daily-driver/issues/888)) ([7724b35](https://github.com/jmcvetta/daily-driver/commit/7724b3590bba9e02e121c7c4de6386d4cd5759cb))
+
+## [0.61.1](https://github.com/jmcvetta/daily-driver/compare/v0.61.0...v0.61.1) (2026-11-15)
+
+
+### Bug Fixes
+
+* preserve evidence for unchanged criteria across revisions ([#884](https://github.com/jmcvetta/daily-driver/issues/884)) ([9055798](https://github.com/jmcvetta/daily-driver/commit/90557982454303abd35a0b28cb5c7bc64db4017a))
+
+## [0.61.0](https://github.com/jmcvetta/daily-driver/compare/v0.60.1...v0.61.0) (2026-11-13)
+
+
+### Features
+
+* add human briefs with encouraged diagrams to task and epic bodies ([#877](https://github.com/jmcvetta/daily-driver/issues/877)) ([c1310e0](https://github.com/jmcvetta/daily-driver/commit/c1310e07caba4a9f6c5429bd7d5d69b13ee997c5))
+* add interactive specification workflow ([#875](https://github.com/jmcvetta/daily-driver/issues/875)) ([f9d9ce7](https://github.com/jmcvetta/daily-driver/commit/f9d9ce706037efb4a2105dce6d8a115df335f787))
+* integrate discovery and specification-backed execution ([#879](https://github.com/jmcvetta/daily-driver/issues/879)) ([96cb47a](https://github.com/jmcvetta/daily-driver/commit/96cb47ac0cc00930044d124b4ad39f990af51e5c))
+
+
+### Bug Fixes
+
+* bind task verification to native worktree outcomes ([#880](https://github.com/jmcvetta/daily-driver/issues/880)) ([76f032a](https://github.com/jmcvetta/daily-driver/commit/76f032ac74ad411f7374d74534784e9e014a89c4))
+* retire stale docs and separate guidance from historical records ([#876](https://github.com/jmcvetta/daily-driver/issues/876)) ([5b8da61](https://github.com/jmcvetta/daily-driver/commit/5b8da61ae0e70a12f4d7ff259ea9ec0d06e32c63))
+
+## [0.60.1](https://github.com/jmcvetta/daily-driver/compare/v0.60.0...v0.60.1) (2026-11-10)
+
+
+### Bug Fixes
+
+* allow model changes during undertakings ([#861](https://github.com/jmcvetta/daily-driver/issues/861)) ([961035d](https://github.com/jmcvetta/daily-driver/commit/961035dd7ef1bbc4258bdbd603a2e5478f743ec4))
+* guide incomplete task-contract grounding toward retaining the captured request ([#867](https://github.com/jmcvetta/daily-driver/issues/867)) ([df4cc3e](https://github.com/jmcvetta/daily-driver/commit/df4cc3ef9b8a73ef59fc796b2344cd8a89d65b7e))
+* name issue and recovery route in undertaking guard blocks ([#868](https://github.com/jmcvetta/daily-driver/issues/868)) ([402e7b7](https://github.com/jmcvetta/daily-driver/commit/402e7b76c2fdbaf0d52385f003d35fcbc545cd21))
+
+## [0.60.0](https://github.com/jmcvetta/daily-driver/compare/v0.59.1...v0.60.0) (2026-11-10)
+
+
+### Features
+
+* add integration model class ([#858](https://github.com/jmcvetta/daily-driver/issues/858)) ([3aa73cb](https://github.com/jmcvetta/daily-driver/commit/3aa73cb9e5c749b4a4e571bc49cfaffb834ca43c))
+* enforce criterion evidence and render change receipts ([#849](https://github.com/jmcvetta/daily-driver/issues/849)) ([3526731](https://github.com/jmcvetta/daily-driver/commit/35267317bdda77efa76b365f51346a7ffb3b4e0e))
 
 ## [0.59.1](https://github.com/jmcvetta/daily-driver/compare/v0.59.0...v0.59.1) (2026-11-10)
 

@@ -136,8 +136,9 @@ Minimisation
 When a fresh review supersedes an earlier one, the earlier comment is
 collapsed rather than left to pad the conversation. **The GitHub MCP has no
 tool for this** — `minimizeComment` is a GraphQL mutation and nothing in the
-MCP surface reaches it. Verified by absence, not assumed; see
-`docs/planning/plugin-replaces-global-memory.md` (D3).
+MCP surface reaches it. Verified by absence, not assumed; the retired
+planning note `plugin-replaces-global-memory.md` (D3, Git history) recorded
+the survey.
 
 That gap is what the scripts in `scripts/` are for, and the only thing they
 are for. Each one's header says why it exists and what deletes it.

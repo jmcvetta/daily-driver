@@ -15,6 +15,7 @@ coder-eval-omp/
 └── src/coder_eval_omp/
     ├── rpc.py                     the command builder and frame reduction — pure, and tested
     ├── pricing.py                 prices.json lookup — pure, and tested
+    ├── telemetry.py               reviewer-child event reduction — pure, and tested
     ├── home.py                    borrowed provider files and the private routing merge — pure
     ├── agent.py                   the process, the events, and what loaded
     └── plugin.py                  register(registry)
@@ -71,20 +72,24 @@ the bare arm. The list is `coder_eval_omp/home.py`'s `PROVIDER_FILES`.
 `models.yml` as `providers.vercel-ai-gateway.modelOverrides.<model>.compat.
 vercelGatewayRouting.only`. Omp turns that into the request's
 `providerOptions.gateway.only`, so an unavailable upstream fails instead of
-falling back. The merge preserves every other provider and setting, replaces
-rather than unions the selected allowlist, drops the model's `order`
-preference, and replaces the borrowed symlink instead of writing through it.
+falling back. A mapping form names several selectors and restricts each of
+them — the parent and the `modelRoles.review` model — and must include the
+parent's own selector. `home.restrict_model_routes` performs the merge once,
+so a reviewer arm has one private file with both allowlists. The merge
+preserves every other provider and setting, replaces rather than unions each
+selected allowlist, drops the model's `order` preference, and replaces the
+borrowed symlink instead of writing through it.
 Because Omp's catalog transport for these models (`anthropic-messages`) never
 serializes the routing block, a restricted model also selects
 `api: openai-completions`, the transport that applies
 `providerOptions.gateway`. A malformed file, an empty or invalid allowlist, a
-non-Vercel selector, a model that names a compaction or context-promotion
-fallback in its override or its `models:` definition, or an inherited
-`compat.extraBody` that sets `model` or `providerOptions` is refused: Omp
-applies the extra body after the routing, so either key would replace the
-enforced value. The agent also clears `PI_CONFIG_DIR`, `OMP_PROFILE`,
-`PI_PROFILE` and `PI_CODING_AGENT_DIR` for the child: each relocates Omp's
-configuration or agent directory away from the throwaway home.
+non-Vercel selector, a duplicate route, a model that names a compaction or
+context-promotion fallback in its override or its `models:` definition, or an
+inherited `compat.extraBody` that sets `model` or `providerOptions` is
+refused: Omp applies the extra body after the routing, so either key would
+replace the enforced value. The agent also clears `PI_CONFIG_DIR`,
+`OMP_PROFILE`, `PI_PROFILE` and `PI_CODING_AGENT_DIR` for the child: each
+relocates Omp's configuration or agent directory away from the throwaway home.
 
 **A row's tool lists must hold.** `tools.select_tools` maps a row's
 `allowed_tools` and `disallowed_tools` to Omp's tool names, and the agent
@@ -110,6 +115,13 @@ Provider files, sibling results and host evaluation definitions are not inputs.
 The adapter sets `CODER_EVAL_OMP_READ_POLICY`; do not supply it from an experiment.
 This is a file-tool guard, not OS isolation. A row granting Bash can still read
 the host through the shell. Concurrent filesystem mutation is not isolated.
+
+**Host GitHub credentials stay out of model agents.** A fixture's host-side
+`pre_run` may use `GITHUB_TOKEN`, `GH_TOKEN`, `GH_ENTERPRISE_TOKEN` or
+`GITHUB_ENTERPRISE_TOKEN` to fetch a public base commit. `launch.child_env`
+removes those variables before Omp starts, so an evaluated agent's Bash tool
+cannot read or send them to its provider. Other caller environment settings
+remain available; this is not OS isolation.
 
 **A thinking suffix is a separate RPC setting.** Experiments name a model as
 `provider/model:level`, but Omp's `set_model` accepts only the provider and
@@ -206,26 +218,111 @@ and with a count matching the launch. Other suffixes, or extra launch-like
 lines after it, stay unknown and cannot pass. Captured dispatch examples live
 under `fixtures/fix-daily-driver-bugs/dispatch-evidence/`.
 
+## Reviewer-child telemetry
+
+A row that measures a child reviewer sets `record_reviewer_telemetry: true`
+(default off). At startup the adapter sends `set_subagent_subscription` with
+`level: "events"` and reads `thinkingLevel` from `get_state`, which is the
+parent's applied effort. During each turn it reduces the `subagent_event`
+frames Omp emits for a child and writes `omp-reviewer-telemetry.json` in the
+task sandbox on every exit path. A `.pending` directory created before the
+prompt is removed only after the atomic write; its presence, a missing file,
+an incomplete document or an unreadable one all mean the reviewer's usage is
+unavailable.
+
+The artifact (version 1) holds one fragment per attempt. Each subagent record
+carries the agent name, the parent tool-call id, its terminal status, the
+requested selectors and role from `subagent_progress.modelOverride` and
+`modelRole`, Omp's `resolvedModelIdentity` (including its `@upstream`),
+`resolvedThinkingLevel` and `resolvedModel`, any child
+`thinking_level_changed` frames, the child's wall time between its lifecycle
+frames, the sum of its per-message generation durations, and every completed
+assistant message with its own `responseId`, timestamp, model, provider,
+upstream fields, duration, TTFB and the four usage buckets plus
+`reasoningTokens`.
+
+`cost_usd` is computed per message from the committed endpoint cards using
+that message's own prompt size and timestamp. It is `unreported` when a
+message has no complete usage object, when the requested selector has no card,
+or when a peak-priced message has no timestamp. Parent usage, whole-attempt
+duration and allowance consumption are never substituted.
+
+The reviewer-quality collector matches a subagent id to the `<task-result>`
+the parent actually received, so a completed child that was not delivered
+cannot lend its usage to the parent's answer. A reported `resolvedThinkingLevel`
+that differs from the arm's fixed suffix, a harness model that differs, or an
+upstream outside the arm's allowlist is an attribution mismatch: the evidence
+is kept, but the attempt does not enter a measured cost comparison.
+
 ## Cost
 
-`pricing.py` prices a run from `prices.json`, a hand-maintained table of USD
-per million input/output tokens keyed by model identifier — the same spelling
-`omp_configs/*.yml` and an experiment's `agent.model` use
-(`vercel-ai-gateway/zai/glm-5.3`, not a bare model name). Nothing fetches a
-price at run time: the table is a dated snapshot, sourced from
-`@oh-my-pi/pi-catalog@18.4.2`'s bundled model catalog, of the models the
-current `evals/experiments/omp-*.yaml` files actually run. A model with no row
-prices `total_cost_usd` as `None` (`coder_eval`'s own "unreported", not
-`0.0`) — adding a new Omp model to an experiment means adding its row here
-too. `pricing.py` is pure, like `rpc.py`; it prices recorded token usage without
-a `coder_eval` install.
+**Rates come from the pinned provider catalog, not from a person and not from Omp.**
+`prices.json` is a dated snapshot with `source` and `read_on` on every row.
+Vercel models remain sourced from
+`https://ai-gateway.vercel.sh/v1/models/<provider>/<model>/endpoints`, selecting
+the one endpoint named by `vercel_gateway_only`. A `vercel_gateway_only`
+mapping contributes every route it names, so a reviewer arm that pins both
+the parent and the `review` role prices both. OpenCode Go models are read
+from `https://opencode.ai/inference/go/v1/models` by their exact `id`. For the
+free Go arms, the generator requires numeric zero text input, output and cache
+read rates; a missing model, changed required shape or any published nonzero
+rate fails rather than guessing. A cache-write rate the catalog does not
+publish stays `null`.
+
+`python3 scripts/evals-fetch-prices.py` refreshes both sources, and `--check`
+reports a stale snapshot. Vercel rows for models no restricted experiment pins
+are dropped, because an unrestricted gateway model has one card per upstream
+and nothing here can choose between them.
+
+Two things must not be used as a price:
+
+- **Omp's `usage.cost`.** Omp prices from its bundled catalog, which stores one
+  rate per model id no matter how many upstreams serve it, and applies neither
+  tiers nor peak windows. For `deepseek/deepseek-v4.1-flash-1017` the catalog
+  says 0.3/1.2/0.007 USD per million — the gateway's *baseten* card — even
+  under a `deepseek`-only restriction, whose published rates are 0.15/0.6/0.003.
+  It is an estimate about an upstream the arm may not have used.
+- **A hand-typed row.** Hand-keying is how the baseten figure came to sit under
+  a restricted DeepSeek arm in the first place.
+
+Rows are keyed by the model identifier exactly as `omp_configs/*.yml` and an
+experiment's `agent.model` spell it (`vercel-ai-gateway/zai/glm-5.3`, not a
+bare model name); a trailing `:<level>` thinking suffix is stripped before
+lookup. A model with no row prices `total_cost_usd` as `None`
+(`coder_eval`'s own "unreported", not `0.0`).
+
+**A card prices each message, not each run.** `pricing.cost_usd` prices every
+assistant message using that message's own prompt size for a `tier` and its own
+`timestamp` for a `peak` window, because both are properties of one request and
+`run.json` keeps only run-level aggregates. A row may add
+`cache_read_usd_per_million` and `cache_write_usd_per_million`; `null` records
+a bucket the upstream does not bill, which is not the same as a missing rate.
+Without a timestamp on a peak-priced row, or without a row at all, the turn is
+reported as unreported rather than completed at a flat rate. The recorder marks
+an Omp figure `computed`, never `reported`.
+
+**Two published details the endpoints API does not settle, recorded as
+assumptions rather than resolved silently:**
+
+- `peak_pricing.holiday_calendar: "cn"` excludes Chinese public holidays from a
+  peak window, and no holiday list is published with it. Holidays inside a
+  window are priced as peak, which overstates cost on those days.
+- A tier publishes `max: 272001` on the low card and `min: 272001` on the high
+  one, overlapping at exactly that value, and does not say whether the tier is
+  chosen by total prompt tokens including cached input. The card applies the
+  higher tier at `>= prompt_tokens_at_least`, counted over uncached input plus
+  cache read plus cache write.
+
+`pricing.py` is pure, like `rpc.py`: it reads the committed snapshot, makes no
+network call, and prices recorded token usage without a `coder_eval` install.
 
 ## What is tested, and what is not
 
-`rpc.py`, `pricing.py`, `home.py` and `tools.py` import nothing — not
-`coder_eval`, not `omp`. They hold the protocol, pricing, borrowed-home and
-tool-list behavior described above, including token-usage and cost math and the
-private model-routing merge.
+`rpc.py`, `pricing.py`, `home.py`, `telemetry.py` and `tools.py` import
+nothing — not `coder_eval`, not `omp`. They hold the protocol, pricing,
+borrowed-home, reviewer-child and tool-list behavior described above,
+including token-usage and cost math, the private model-routing merge, and
+subagent frame reduction.
 
 `agent.py` cannot be reached without a `coder-eval` install and an `omp`
 binary, and CI here has neither. What it holds is process lifecycle and the

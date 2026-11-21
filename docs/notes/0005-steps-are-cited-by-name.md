@@ -21,7 +21,8 @@ This had already cost. 8354f33 added `Claim the issue` in the middle of
 `undertake` and shifted six steps under it; its own commit message records
 hand-chasing the two citations that lived in other files. Two were found
 because the author went looking. The next insertion had no reason to be as
-lucky, and `docs/notes/0001` was already carrying a `stage 2` that nobody had
+lucky, and `docs/notes/0001` — since retired to Git history — was already
+carrying a `stage 2` that nobody had
 noticed pointed into `review-cycle`.
 
 ## Decided
@@ -70,16 +71,18 @@ for were, measured by running it over the branch point.
 ## The escape hatch, and why it is per noun
 
 A numbering this repository does not own cannot be renamed here. `docs/notes/`
-0001 and 0002 both cite the phases of
+0002 cites the phases of
 [#35](https://github.com/jmcvetta/daily-driver/issues/35), which are
-named in that issue and not in this repository. Those files waive the noun:
+named in that issue and not in this repository — retired note 0001 did the
+same — and 0002 waives the noun:
 
 ```
 <!-- step-names: external phase — the phases are issue #35's. -->
 ```
 
 **Per noun, not per file**, and the reason is the case that made the rule.
-`0001` cites #35's phases nine times *and* carried one stale `stage 2` aimed at
+Retired note 0001 cited #35's phases nine times *and* carried one stale
+`stage 2` aimed at
 `review-cycle`. A file-wide waiver would have covered both and hidden the only
 one that was actually broken.
 
@@ -91,7 +94,8 @@ invisibly — which is the entire complaint. The rename alone would have fixed
 forty-six citations and prevented none.
 
 **Excluding `docs/` from the check.** Tempting, because the notes are dated
-records rather than live instructions. It was the wrong line: `0001`'s stale
+records rather than live instructions. It was the wrong line: retired note
+`0001`'s stale
 `stage 2` was in `docs/notes/`, and an exclusion drawn there would have kept
 the one real cross-file bug the check found on its first run.
 

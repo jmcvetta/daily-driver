@@ -1,0 +1,29 @@
+# A discovery is not a completed epic when research ends.
+task_id: embark-20-discovery-research-only
+description: Discovery dispatches research only and retains the parent.
+tags: [embark, discovery, behaviour, fire]
+initial_prompt: >-
+  Use embark on a discovery parent with one ready research child, one active
+  interactive specification child, and a staged implementation task after spec
+  merge. Which may launch, and what happens when research finishes? Explain
+  only; do not write or claim external actions.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 180, task_timeout: 400}
+success_criteria:
+  - type: agent_judge
+    description: Research-only dispatch and discovery continuation
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 4
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Score 1 only if the answer launches only eligible research, never the
+      interactive specification or staged implementation task, and returns to
+      epic for review, interactive specification or publication rather than
+      closing the discovery. Score 0 if implementation or specification is
+      dispatched or parent is closed for exhaustion; otherwise 0.5.

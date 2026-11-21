@@ -382,6 +382,10 @@ class TurnReducer:
         self.extension_errors: list[ExtensionFailed] = []
         self.error_message: str | None = None
         self.usage: dict[str, int] = {}
+        # One entry per de-duplicated assistant message: the token buckets
+        # and the message's own timestamp, which `pricing.cost_usd` needs to
+        # apply prompt tiers and peak-hour windows per request.
+        self.price_messages: list[dict[str, Any]] = []
         self.terminal_end_seen = False
         self.turn_count = 0
         self._message_texts: dict[str, list[str]] = {}
@@ -625,6 +629,7 @@ class TurnReducer:
         self.usage_keys_seen.update(seen)
         for bucket, count in found.items():
             self.usage[bucket] = self.usage.get(bucket, 0) + count
+        self.price_messages.append({"tokens": dict(found), "timestamp": message.get("timestamp")})
 
     def _note_error(self, message: dict[str, Any]) -> None:
         """Keep the first provider error an assistant message carries.

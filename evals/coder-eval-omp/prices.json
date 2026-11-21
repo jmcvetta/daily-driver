@@ -1,42 +1,189 @@
 {
-  "vercel-ai-gateway/deepseek/deepseek-v4-pro": {
-    "input_usd_per_million": 0.66,
-    "output_usd_per_million": 1.98,
-    "recorded": "2026-09-28"
+  "opencode-go/beam-free": {
+    "input_usd_per_million": 0.0,
+    "output_usd_per_million": 0.0,
+    "cache_read_usd_per_million": 0.0,
+    "cache_write_usd_per_million": null,
+    "source": "https://opencode.ai/inference/go/v1/models",
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
+  },
+  "opencode-go/iceman-contributor-free": {
+    "input_usd_per_million": 0.0,
+    "output_usd_per_million": 0.0,
+    "cache_read_usd_per_million": 0.0,
+    "cache_write_usd_per_million": null,
+    "source": "https://opencode.ai/inference/go/v1/models",
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
+  },
+  "opencode-go/longcat-2.5-free": {
+    "input_usd_per_million": 0.0,
+    "output_usd_per_million": 0.0,
+    "cache_read_usd_per_million": 0.0,
+    "cache_write_usd_per_million": null,
+    "source": "https://opencode.ai/inference/go/v1/models",
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
+  },
+  "vercel-ai-gateway/alibaba/qwen4-max": {
+    "input_usd_per_million": 1.5,
+    "output_usd_per_million": 4.5,
+    "cache_read_usd_per_million": 0.075,
+    "cache_write_usd_per_million": 1.875,
+    "source": "https://ai-gateway.vercel.sh/v1/models/alibaba/qwen4-max/endpoints",
+    "read_on": "2026-11-18",
+    "recorded": "2026-11-18"
   },
   "vercel-ai-gateway/deepseek/deepseek-v4-pro-0813": {
     "input_usd_per_million": 0.66,
     "output_usd_per_million": 1.98,
-    "recorded": "2026-10-30"
+    "cache_read_usd_per_million": 0.022,
+    "cache_write_usd_per_million": null,
+    "peak": {
+      "multiplier": 2.0,
+      "windows": [
+        {
+          "start_minute_utc": 60,
+          "end_minute_utc": 240,
+          "days_of_week": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "start_minute_utc": 360,
+          "end_minute_utc": 600,
+          "days_of_week": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      ],
+      "holiday_calendar": "cn"
+    },
+    "source": "https://ai-gateway.vercel.sh/v1/models/deepseek/deepseek-v4-pro-0813/endpoints",
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
   },
   "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017": {
     "input_usd_per_million": 0.15,
     "output_usd_per_million": 0.6,
-    "recorded": "2026-10-30"
+    "cache_read_usd_per_million": 0.003,
+    "cache_write_usd_per_million": null,
+    "peak": {
+      "multiplier": 2.0,
+      "windows": [
+        {
+          "start_minute_utc": 60,
+          "end_minute_utc": 240,
+          "days_of_week": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "start_minute_utc": 360,
+          "end_minute_utc": 600,
+          "days_of_week": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      ],
+      "holiday_calendar": "cn"
+    },
+    "source": "https://ai-gateway.vercel.sh/v1/models/deepseek/deepseek-v4.1-flash-1017/endpoints",
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
   },
-  "vercel-ai-gateway/zai/glm-5.3": {
-    "input_usd_per_million": 1.4,
-    "output_usd_per_million": 4.4,
-    "recorded": "2026-09-28"
+  "vercel-ai-gateway/mistral/mistral-large-4": {
+    "input_usd_per_million": 0.7,
+    "output_usd_per_million": 2.1,
+    "cache_read_usd_per_million": 0.07,
+    "cache_write_usd_per_million": null,
+    "source": "https://ai-gateway.vercel.sh/v1/models/mistral/mistral-large-4/endpoints",
+    "read_on": "2026-11-18",
+    "recorded": "2026-11-18"
   },
-  "vercel-ai-gateway/zai/glm-5.3-flash": {
-    "input_usd_per_million": 0.15,
-    "output_usd_per_million": 0.5,
-    "recorded": "2026-09-28"
-  },
-  "openai-codex/gpt-5.6-sol": {
-    "input_usd_per_million": 4,
-    "output_usd_per_million": 20,
-    "recorded": "2026-09-28"
+  "vercel-ai-gateway/moonshotai/kimi-k3.1-pro": {
+    "input_usd_per_million": 2.0,
+    "output_usd_per_million": 10.0,
+    "cache_read_usd_per_million": 0.2,
+    "cache_write_usd_per_million": 2.0,
+    "source": "https://ai-gateway.vercel.sh/v1/models/moonshotai/kimi-k3.1-pro/endpoints",
+    "read_on": "2026-11-18",
+    "recorded": "2026-11-18"
   },
   "vercel-ai-gateway/openai/gpt-6-luna": {
     "input_usd_per_million": 0.1,
     "output_usd_per_million": 0.5,
-    "recorded": "2026-10-01"
+    "cache_read_usd_per_million": 0.01,
+    "cache_write_usd_per_million": 0.125,
+    "tier": {
+      "prompt_tokens_at_least": 272001,
+      "input_usd_per_million": 0.2,
+      "output_usd_per_million": 0.75,
+      "cache_read_usd_per_million": 0.02,
+      "cache_write_usd_per_million": 0.25
+    },
+    "source": "https://ai-gateway.vercel.sh/v1/models/openai/gpt-6-luna/endpoints",
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
   },
-  "vercel-ai-gateway/openai/gpt-6-sol": {
-    "input_usd_per_million": 2,
-    "output_usd_per_million": 10,
-    "recorded": "2026-10-01"
+  "vercel-ai-gateway/openai/gpt-6.1-sol": {
+    "input_usd_per_million": 2.0,
+    "output_usd_per_million": 10.0,
+    "cache_read_usd_per_million": 0.1,
+    "cache_write_usd_per_million": 2.5,
+    "tier": {
+      "prompt_tokens_at_least": 272001,
+      "input_usd_per_million": 4.0,
+      "output_usd_per_million": 15.0,
+      "cache_read_usd_per_million": 0.2,
+      "cache_write_usd_per_million": 5.0
+    },
+    "source": "https://ai-gateway.vercel.sh/v1/models/openai/gpt-6.1-sol/endpoints",
+    "read_on": "2026-11-18",
+    "recorded": "2026-11-18"
+  },
+  "vercel-ai-gateway/xiaomi/mimo-v2.6-pro": {
+    "input_usd_per_million": 0.435,
+    "output_usd_per_million": 0.87,
+    "cache_read_usd_per_million": 0.0036,
+    "cache_write_usd_per_million": null,
+    "source": "https://ai-gateway.vercel.sh/v1/models/xiaomi/mimo-v2.6-pro/endpoints",
+    "read_on": "2026-11-18",
+    "recorded": "2026-11-18"
+  },
+  "vercel-ai-gateway/zai/glm-5.3": {
+    "input_usd_per_million": 1.4,
+    "output_usd_per_million": 4.4,
+    "cache_read_usd_per_million": 0.26,
+    "cache_write_usd_per_million": null,
+    "source": "https://ai-gateway.vercel.sh/v1/models/zai/glm-5.3/endpoints",
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
+  },
+  "vercel-ai-gateway/zai/glm-5.3-flash": {
+    "input_usd_per_million": 0.15,
+    "output_usd_per_million": 0.5,
+    "cache_read_usd_per_million": 0.03,
+    "cache_write_usd_per_million": null,
+    "source": "https://ai-gateway.vercel.sh/v1/models/zai/glm-5.3-flash/endpoints",
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
   }
 }

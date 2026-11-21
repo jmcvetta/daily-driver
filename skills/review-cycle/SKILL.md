@@ -44,6 +44,13 @@ including the return to draft while a later round runs. This skill borrows the
 watch's CI wake but owns neither base maintenance nor readiness. Nothing here
 marks a draft ready or merges anything.
 
+For a specification-backed task, review the implementation against both the
+task's allocation and exclusions and the referenced requirement IDs in the
+document at its exact recorded commit. Check the delivered revision and
+evidence in the PR body. A changed governing specification or mismatched
+allocation is a finding routed to `epic`, not implicit approval to change
+the contract or amend the specification in an implementation PR.
+
 
 The round
 =========
@@ -259,8 +266,8 @@ a record.
 pull request.** That record defines the scope, links the summary and threads,
 and gives a resumed session the evidence it needs to enforce the bound. The
 harness route names the durable format. Where the record is posted as its own
-comment rather than folded into the submitted review, it carries
-`provenance`'s block.
+comment rather than folded into the submitted review, the active route adds
+`provenance`'s block. Omp's wrapper appends it to the comment automatically.
 
 
 2 — Fix, answer, resolve, push
@@ -294,11 +301,11 @@ The reply
 
 Verdict-first, concise, technical. A reader skimming twenty threads should
 never have to parse a paragraph to learn whether the finding was implemented or
-rejected. No thanks, no apologies, no restating the finding back at the
-reviewer, and no poetry — verse attaches to the writes that name it, never to a
-finding somebody has to act on. `provenance`'s block follows the same rule: it
-attaches to the submitted review and the completion notice below, never to an
-individual finding reply.
+rejected. No thanks, no apologies, no restating the finding, and no poetry in
+an actionable reply. The active route supplies `provenance` for every
+body-bearing write, including individual finding replies. On Omp, the wrapper
+appends and deduplicates the block on each review, reply, and completion notice;
+do not format it in those bodies. Other routes follow `provenance`'s block rules.
 
 A rejection carries its reason and stops. *"Rejected — `n` is bounded by the
 caller's `len(items)` check at `loader.go:88`"* is a complete reply; softening
@@ -405,8 +412,8 @@ Review-cycle completion notice
 **Post a separate top-level PR conversation comment only when a non-standalone
 round is complete.** Keep the normal submitted `COMMENT` review and every
 `Review verification` record unchanged. The notice starts with
-`## Review cycle complete! 🎉`, states that the round completed, names the
-completed head SHA, and ends with `provenance`'s block.
+completed head SHA. The active route supplies `provenance`; Omp's wrapper
+appends it automatically, so the notice body carries no new block.
 
 Completion requires green CI for that head, every finding's required
 disposition and resolved thread, and a clean required independent verification

@@ -154,7 +154,7 @@ def run_task_ids(run: dict[str, Any], variant_id: str) -> list[str]:
     return task_ids
 
 
-_CLASS_TAG_RE = re.compile(r"^class:(mechanical|implementation|reasoning)$")
+_CLASS_TAG_RE = re.compile(r"^class:(mechanical|routine|intermediate|complex|frontier)$")
 
 # Mirrors coder_eval's FinalStatus.category -- this script never imports
 # coder_eval, so the mapping is kept here rather than read from the enum.
@@ -226,6 +226,83 @@ def price_key(model: str) -> str:
     return model.rsplit(":", 1)[0] if ":" in model.rsplit("/", 1)[-1] else model
 
 
+_ADAPTER_SRC = Path(__file__).resolve().parent.parent / "evals" / "coder-eval-omp" / "src"
+if str(_ADAPTER_SRC) not in sys.path:
+    sys.path.insert(0, str(_ADAPTER_SRC))
+
+
+def _run_cost_self_tests() -> None:
+    """Exercise the per-message price path offline before a run is recorded.
+
+    The failures this prevents are silent: a run priced from aggregate token
+    counts misses Luna's prompt tier, a DeepSeek message inside a peak window
+    would be billed at half rate, and an assistant message that arrives twice
+    would be charged twice. These cases need no `coder_eval`, no `omp`, and no
+    network.
+    """
+    from coder_eval_omp.pricing import UNREPORTED, cost_usd, load_prices, price_key  # noqa: PLC0415
+    from coder_eval_omp.rpc import TurnReducer  # noqa: PLC0415
+
+    table = load_prices(_ADAPTER_SRC.parent / "prices.json")
+    deepseek = "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high"
+    luna = "vercel-ai-gateway/openai/gpt-6-luna:high"
+    off_peak = int(datetime(2026, 11, 18, 14, 0, tzinfo=timezone.utc).timestamp() * 1000)
+    peak = int(datetime(2026, 11, 18, 2, 0, tzinfo=timezone.utc).timestamp() * 1000)
+
+    def message(input_tokens=1000, output_tokens=10, cache_read=400, cache_write=0, timestamp=off_peak):
+        return {
+            "tokens": {
+                "uncached_input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+                "cache_read_input_tokens": cache_read,
+                "cache_creation_input_tokens": cache_write,
+            },
+            "timestamp": timestamp,
+        }
+
+    expected = (1000 * 0.15 + 10 * 0.6 + 400 * 0.003) / 1_000_000
+    cached = cost_usd(deepseek, [message()], table)
+    assert isinstance(cached, float) and abs(cached - expected) < 1e-12, "cache-read tokens must be priced"
+
+    doubled = cost_usd(deepseek, [message(timestamp=peak)], table)
+    assert isinstance(doubled, float) and abs(doubled - expected * 2) < 1e-12, "a peak-window message pays the multiplier"
+
+    no_cache_write = cost_usd(deepseek, [message(cache_write=1000)], table)
+    assert isinstance(no_cache_write, float) and abs(no_cache_write - expected) < 1e-12, "an unpriced cache-write bucket is inapplicable, not missing"
+
+    assert cost_usd(deepseek, [message(timestamp=None)], table) == UNREPORTED, "peak pricing without a timestamp is unreported"
+    assert cost_usd(deepseek, [], table) == UNREPORTED, "missing usage is unreported, never zero"
+    assert cost_usd("vercel-ai-gateway/openai/unknown:high", [message()], table) == UNREPORTED, "an unknown model is unreported"
+
+    tiered = cost_usd(luna, [message(input_tokens=300000, cache_read=0)], table)
+    expected_tier = (300000 * 0.2 + 10 * 0.75) / 1_000_000
+    assert isinstance(tiered, float) and abs(tiered - expected_tier) < 1e-12, "a prompt at Luna's tier uses the higher card"
+    assert price_key(deepseek) == "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017", "the thinking suffix is not rate-bearing"
+
+    def reducer_message(response_id: str) -> dict[str, Any]:
+        return {
+            "role": "assistant",
+            "responseId": response_id,
+            "timestamp": off_peak,
+            "usage": {"input": 1000, "output": 10, "cacheRead": 400, "cacheWrite": 0},
+        }
+
+    reducer = TurnReducer()
+    reducer._accumulate_usage(reducer_message("a"))
+    reducer._accumulate_usage(reducer_message("a"))
+    assert len(reducer.price_messages) == 1, "a message repeated on agent_end must be priced once"
+
+    row = {"task_id": "t", "variant_id": "v", "replicate_index": 0, "status": "SUCCESS",
+           "duration": 1.0, "input_tokens": 1000, "output_tokens": 10,
+           "agent_cost_usd": 0.000109, "total_cost_usd": 0.000109}
+    cost, source = case_price(row, deepseek, {}, "omp")
+    assert (cost, source) == (0.000109, "computed"), "an Omp adapter figure is computed from published rates"
+
+    missing = {"task_id": "t", "variant_id": "v", "replicate_index": 0, "status": "ERROR", "duration": 1.0}
+    cost, source = case_price(missing, luna, {}, "omp")
+    assert (cost, source) == (None, "unreported"), "missing usage must leave cost unreported"
+
+
 def _number(value: Any) -> bool:
     """Whether `value` is a real number rather than a bool or a sentinel."""
     return isinstance(value, (int, float)) and not isinstance(value, bool)
@@ -271,7 +348,11 @@ def case_price(
         return None, "unreported"
     if _number(row.get("agent_cost_usd")):
         total = row.get("total_cost_usd")
-        return (float(total) if _number(total) else float(row["agent_cost_usd"])), "reported"
+        figure = float(total) if _number(total) else float(row["agent_cost_usd"])
+        # Omp never sees a provider bill: its adapter applies a dated rate card
+        # (per message, for tiers and peak windows), so the figure is computed.
+        # Claude Code and Codex report what the harness charged.
+        return figure, ("computed" if client_name == "omp" else "reported")
     if not _number(row.get("input_tokens")) or not _number(row.get("output_tokens")):
         return None, "unreported"
     key = price_key(model)
@@ -1293,6 +1374,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     """Record one run, or validate an existing record when requested."""
     args = parse_args()
+    _run_cost_self_tests()
     if args.validate:
         errors = validate_record(json.loads(args.run.read_text()))
         if errors:

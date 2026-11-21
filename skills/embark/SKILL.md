@@ -52,6 +52,26 @@ stays where it was put.
 [`0005`](../../docs/notes/0005-steps-are-cited-by-name.md) is the decision and
 `scripts/check-step-names.py` is what enforces it.
 
+Discovery dispatch and specification coverage
+=============================================
+
+Accept a `discovery` parent as well as an `epic`. Read its kind and graph
+again at each wave and before each dispatch. For discovery, dispatch only
+ready, unblocked `research` children with valid class metadata. Never dispatch
+its interactive `specification` child or any staged implementation task.
+When no eligible research remains, do not close the parent: return to `epic`
+for research review, interactive specification or publication, reporting
+blocked research separately. Existing independent implementation already in
+progress during amendment may continue under its unchanged contract; affected
+work pauses. Discovery itself never starts implementation.
+
+For a promoted specification-backed epic, before dispatch confirm each task's
+document path, exact merged `master` SHA and requirement IDs match the parent
+publication record and exist at that revision. Route mismatches to `epic`;
+continue unrelated eligible work. At closure, require evidenced delivery of
+every allocated requirement at the recorded revision, not only closed children.
+Ordinary issue-backed epics retain their existing dispatch and closure rules.
+
 
 The sequence
 ============
@@ -88,9 +108,9 @@ the ordinary skill and title-gate behavior.
 The epic's body, its sub-issues, and the blocked-by edges among them. Reading
 the graph is free and needs no confirmation; `issue-deps` says so.
 
-**An issue with no sub-issues is not an epic**, and that is the stop of that
-name below. A task issue handed over is `undertake`'s, and work not decomposed
-yet is `epic`'s.
+An `epic` with no sub-issues is not an epic. A discovery may await research or
+its interactive specification; return it to `epic`, never close it for that.
+An undecomposed task goes to `undertake` or `epic` as appropriate.
 
 Read the epic's comments too, because `Take the wave` needs to know which tasks
 are at sea already. On Omp, an explicit request reads them only after
@@ -118,8 +138,8 @@ sequence's: say so in a line and go on to `Take the wave`.
 2 — Take the wave
 -----------------
 
-The batch that sails together: every open agent-eligible child issue of this
-epic whose blockers are all closed, less the ones already at sea.
+The batch that sails together: eligible open children whose blockers are
+closed, less those already at sea. Under discovery this means research only.
 
 **The graph decides what can run; the epic's `Sequencing` decides what does.**
 The two are not the same question, and `epic` writes both on purpose:
@@ -130,16 +150,12 @@ The two are not the same question, and `epic` writes both on purpose:
   disagreement. It is the scheduling choice `epic` requires that child line
   to state, and it is honoured: the child waits for its wave.
 
-**Every story must be assignable.** Apply `epic`'s assignable-story rule and
-`issue-body`'s `Assignable stories` test before dispatch: an agent-eligible kind
-(`task`, `research` or `bug`), ready under that kind's own readiness test, with
-exactly one valid `## Model class` section and rationale. A non-task kind alone
-is not a defect. Report a child that is a `proposal`, `human` or `epic`, or that
-lacks a complete handoff or valid class, as a planning defect; repair it through
-`issue` only where the intent is settled and the gaps are repository-answerable.
-Do not dispatch it, silently relabel it, default its class, or change its edge
-or marker to conceal the defect. Continue other assignable stories, but do not
-claim the epic is ready while a story fails the gate.
+**Every dispatch candidate must be assignable.** Apply `epic`'s
+assignable-story rule and `issue-body` readiness and class tests. An epic's
+invalid child is a planning defect. A discovery's interactive specification
+and staged implementation tasks are valid children but never dispatch
+candidates. Do not silently relabel or change edges or markers to conceal a
+defect; repair grounded gaps through `issue` and continue eligible work.
 
 **Already at sea is read from the record, never assumed.** A child is at sea
 when a muster roll on the epic names a session for it, or when its own issue
@@ -163,8 +179,9 @@ and is still not a reason to launch a second one. That collision is the thing
 This step is the router, and the wave that comes in at `Watch the wave` returns
 here to be routed again:
 
-- **No open child issue left.** Go to `Close the epic`, which checks the
-  coordinated outcome rather than child count alone.
+- **Discovery research is exhausted and none is at sea.** Return to `epic`;
+  do not close the parent. With no open child under an epic, go to `Close the
+  epic` and check its coordinated outcome rather than child count alone.
 - **Every agent-eligible child still open is at sea.** The fleet is out and
   this session has nothing to launch — which is exactly the state a watcher
   resumed after the last one died finds. Go to `Watch the wave`, over the
@@ -185,14 +202,9 @@ undertake it, a `session-title` title where the surface supports one, and
 inherited permissions. The issue is the work statement; do not copy its scope
 into the prompt.
 
-For a resumed task, also carry its retained contract ID/revision, unresolved
-criterion IDs and native original-source locators. Do not substitute the epic's
-contract for the child's contract. Let `undertake` ground a new child's contract
-in the authoritative issue version. A copied dispatch prompt is interpretation,
-not user approval; preserve applicable original authority references and limits.
-Carry the current receipt's criterion dispositions, evidence references,
-unverified work, risks and outstanding approvals in that same handoff.
-Do not copy private source quotes or treat a rendered receipt as completion.
+For a resumed task, carry its outstanding work, risks, applicable original
+authority references and limits. A copied dispatch prompt is interpretation,
+not user approval. Do not copy private source quotes.
 
 The harness denies the first dispatch until this session is titled, as
 `session-title`'s `When to set it` says; `Title the session` precedes this step.
@@ -202,7 +214,7 @@ The harness denies the first dispatch until this session is titled, as
 migrate a legacy or invalid task only on that issue and only when its grounded
 handoff is otherwise ready. A missing or invalid class on a research or bug
 story is a planning defect, never defaulted. A bare `story` marker does not
-pass this gate. `proposal`, `human` and `epic` issues are not dispatch
+pass this gate. `proposal`, `specification`, `human` and `epic` issues are not dispatch
 candidates. A story with an open blocker is not dispatched early, and an
 unavailable route stops only that story.
 
@@ -224,7 +236,7 @@ frontier assignment may dispatch only when its issue carries explicit
 user approval and the exact approved work envelope. Review agent overrides,
 configured prewalk and retry fallbacks, and visible parent-model inheritance;
 an effective astra/fable execution route is frontier even when selected through
-a lower-class role. The stale Omp helper's astra-backed `reasoning` selector
+a lower-class role. A stale Omp helper's astra-backed lower-class selector
 does not bypass this check. If a fallback would move ordinary work to frontier
 without approval, reject that route before dispatch and choose an eligible
 non-frontier route; if none exists, report the configuration gap for that task
@@ -289,8 +301,8 @@ Landing: orchestrator
 
 | Task | Implementor | Required class | Selected route | Actual model |
 | ---- | ----------- | -------------- | -------------- | ------------ |
-| #144 — Validate against the schema. | session `session_01AbC` | `implementation` | `route-standard` | `model-standard` |
-| #145 — Add the retry loop. | session `session_01DeF` | `implementation` | `route-standard` | `model-standard` |
+| #144 — Validate against the schema. | session `session_01AbC` | `routine` | `route-standard` | `model-standard` |
+| #145 — Add the retry loop. | session `session_01DeF` | `routine` | `route-standard` | `model-standard` |
 | #147 — Document the format. | subagent `agent://abc` | `mechanical` | `sonic` | `unreported` |
 ```
 
@@ -308,14 +320,17 @@ to. Reachability is read from the send, never assumed or recorded here. Do not
 describe an actual model that the harness did not report. Record planning
 defects separately, not as ships in a wave.
 
-The comment carries `provenance`'s block after the table, naming this
-orchestrating session — never a task session's, which names its own at its
-own claim.
+The active route attaches `provenance` to the muster-roll comment. On Omp,
+the GitHub-write wrapper appends it automatically using this orchestrating
+session, not a task session's claim identity; do not add a block to the
+authored comment.
 
-**A sailing couplet follows the block, last.** Two rhymed lines as the wave
-puts to sea, each italicised as [`HAIKU.md`](../../HAIKU.md) shows. It comes
-after the table and the block, so a reader who wants the rows never reads past
-verse to reach them — the order `undertake`'s claim comment keeps.
+**A sailing couplet follows the table, last in the authored body.** Two
+rhymed lines as the wave puts to sea, each italicised as
+[`HAIKU.md`](../../HAIKU.md) shows. On Omp, the wrapper appends provenance
+after the couplet. On other routes, the authored block precedes it, so a reader
+who wants the rows never reads past verse to reach them — the order
+`undertake`'s claim comment keeps.
 
 **The wave headings carry state, and nothing else moves it.** `epic` writes
 that state into the epic's `Sequencing` at decomposition time and never
@@ -444,7 +459,7 @@ orchestrator resolving a conflict in code it never wrote is the wrong hand on
 the tiller.
 
 **One wake slot, and a turn never ends with it empty** while a wave is at sea.
-[`0010`](../../docs/notes/0010-the-wake-slot-is-never-empty.md) is the rule.
+[`0034`](../../docs/notes/0034-the-wake-slot-is-never-empty.md) is the rule.
 This orchestrator owns its own slot for the wave watch; each implementor's
 `pr` watch has its own slot, which `review-cycle` may borrow during a CI wait.
 Keep each slot by the identifier its call returned, and fill it before that
@@ -687,6 +702,14 @@ and leave it open. On completion or the by-hand stopping point, cancel the
 backstop and drop every pull-request subscription. Preserve the existing
 conditional merge and archive permissions.
 
+Use the active harness's notification route, where supported, only after
+that cleanup for the whole completed operation or by-hand stopping point.
+Do not notify for an individual child or wave. For a genuine unresolved human
+handoff, notify before the chat handoff with a stable semantic key for the
+specific action; child reports go to the orchestrator. Recoverable errors,
+CI and external waits, reminders, progress and ordinary final replies are not
+notifications. The notification does not replace the record or chat handoff.
+
 
 Waves launch without confirmation
 =================================
@@ -736,7 +759,7 @@ Each pause has a specific cause; missing evidence alone is not one.
   wave`. The graph wins, so the wave is not in doubt; the body is wrong, and
   fixing it is `epic`'s `Fill in the epic` rather than an edit made in passing
   here.
-- **An unsupported `Summary` claim**, at `Close the epic`. Diagnose and route
+- **An unsupported `Human brief` claim**, at `Close the epic`. Diagnose and route
   it under that step. Ask a person only for a genuinely missing decision or
   contribution; an exhausted bound is an execution failure, not a request to
   take over the work.
@@ -750,7 +773,7 @@ Each pause has a specific cause; missing evidence alone is not one.
 Everything else runs through. No permission is asked to open a session, to
 comment on the epic, to subscribe to a pull request, or to launch the next
 wave. Where the harness classifier applies, a gated merge and session archive
-require the user's recorded authorization; closing an epic whose `Summary` is
+require the user's recorded authorization; closing an epic whose `Human brief` is
 delivered needs no separate confirmation.
 
 
@@ -778,7 +801,7 @@ Non-goals
   base; `pr`'s `Keep it current` maintains each sibling PR's head.
 - **Does not close the epic in `Landing: by hand` mode.** It reports the epic
   ready and stops there. The default `Landing: orchestrator` mode closes it
-  only after `Close the epic` reads every `Summary` claim as delivered.
+  only after `Close the epic` reads every `Human brief` claim as delivered.
 - **Does not fire on one issue.** A single task uses `undertake`, not an epic,
   muster roll, or wave watch. Non-frontier undertakers implement in their
   session; `undertake`'s narrow frontier exception hands ordinary work to an

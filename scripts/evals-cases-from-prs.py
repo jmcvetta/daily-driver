@@ -38,11 +38,11 @@ USAGE
     An `unlabelled` candidate (no `Model class` on the issue it closed) needs
     a class before it can be selected:
 
-    Historical issue metadata uses `standard` and `advanced`; explicitly map
-    those to `implementation` and `reasoning` with `--class-override` when
-    mining old pull requests. Overrides accept only buildable `mechanical` or
-    `implementation`; old names are not canonical input. The `frontier` token
-    is preserved by metadata reads but is not a benchmark class.
+    Historical issue metadata uses older class names; explicitly map those to
+    `routine` with `--class-override` when mining old pull requests. Overrides
+    accept only buildable `mechanical` or `routine`; old names are not
+    canonical input. The `intermediate`, `complex`, and `frontier` tokens are
+    preserved by metadata reads but are not benchmark classes.
 
 Needs `GITHUB_TOKEN` or `GH_TOKEN` for the REST API, `git`, and whatever the
 resolved test command needs (`uv`, `pnpm`) already on PATH. No third-party
@@ -87,9 +87,9 @@ DEFAULT_CANDIDATES_FILE = FIXTURES_DIR / "candidates.json"
 
 API_ROOT = "https://api.github.com"
 
-# The suite builds only mechanical/implementation cases. `reasoning` and
-# `frontier` are valid metadata but do not have a supported benchmark contract.
-BUILDABLE_CLASSES = ("mechanical", "implementation")
+# The suite builds only mechanical/routine cases. `intermediate`,
+# `complex`, and `frontier` have no supported benchmark contract.
+BUILDABLE_CLASSES = ("mechanical", "routine")
 
 class BuildError(Exception):
     """Something the builder cannot recover from -- a bad CLI argument, a
@@ -204,7 +204,7 @@ def qualifying_reason(
 
 
 _MODEL_CLASS_RE = re.compile(
-    r"^##\s*Model class\s*$\s*`?(mechanical|implementation|reasoning|frontier)`?(?![\w-])",
+    r"^##\s*Model class\s*$\s*`?(mechanical|routine|intermediate|complex|frontier)`?(?![\w-])",
     re.IGNORECASE | re.MULTILINE,
 )
 
@@ -267,7 +267,7 @@ def parse_class_override(raw: str) -> tuple[str, str]:
     if not sep or token.lower() not in BUILDABLE_CLASSES:
         raise BuildError(
             f"--class-override {raw!r} must be 'owner/repo#N=mechanical' or "
-            "'owner/repo#N=implementation'"
+            "'owner/repo#N=routine'"
         )
     return slug, token.lower()
 
@@ -1114,7 +1114,7 @@ def main(argv: list[str]) -> int:
         action="append",
         default=[],
         metavar="owner/repo#N=token",
-        help="classify an `unlabelled` candidate as mechanical or implementation (repeatable)",
+        help="classify an `unlabelled` candidate as mechanical or routine (repeatable)",
     )
     parser.add_argument("--select", action="store_true", help="build fixtures + task YAMLs from candidates.json")
     parser.add_argument("--per-class", type=int, default=3, help="cases to select per buildable class")
@@ -1329,10 +1329,10 @@ def _test_qualifying_reason() -> None:
 
 
 def _test_read_model_class() -> None:
-    # Without this check, a frontier assignment is silently mined as unlabelled.
-    for token in ("mechanical", "implementation", "reasoning", "frontier"):
+    # Without this check, valid class assignments are silently mined as unlabelled.
+    for token in ("mechanical", "routine", "intermediate", "complex", "frontier"):
         assert read_model_class(f"## Model class\n`{token}`\n") == token
-    for token in ("standard", "advanced", "implementation-suffix", "reasoning_suffix", "frontier-extra"):
+    for token in ("standard", "advanced", "implementation", "integration", "reasoning", "routine-suffix", "intermediate-extra", "complex_suffix", "frontier-extra"):
         assert read_model_class(f"## Model class\n`{token}`\n") == "unlabelled"
     assert read_model_class("## Model class\nmechanical-extra\n") == "unlabelled"
     assert read_model_class("no such section here") == "unlabelled"
@@ -1342,11 +1342,11 @@ def _test_read_model_class() -> None:
         "jmcvetta/career#511",
         "mechanical",
     )
-    assert parse_class_override("jmcvetta/career#511=implementation") == (
+    assert parse_class_override("jmcvetta/career#511=routine") == (
         "jmcvetta/career#511",
-        "implementation",
+        "routine",
     )
-    for token in ("reasoning", "frontier", "standard", "advanced", "implementation-extra"):
+    for token in ("intermediate", "complex", "frontier", "standard", "advanced", "implementation", "routine-extra"):
         try:
             parse_class_override(f"jmcvetta/career#511={token}")
         except BuildError:
@@ -1556,7 +1556,7 @@ def _test_candidate_pool() -> None:
         "o/r#1": {"qualifies": True, "class": "mechanical", "additions": 5, "deletions": 5},
         "o/r#2": {"qualifies": True, "class": "mechanical", "additions": 1, "deletions": 0, "excluded": "key asserts an open name"},
         "o/r#4": {"qualifies": False, "class": "mechanical", "additions": 1, "deletions": 0},
-        "o/r#5": {"qualifies": True, "class": "implementation", "additions": 1, "deletions": 0},
+        "o/r#5": {"qualifies": True, "class": "routine", "additions": 1, "deletions": 0},
     }
     # Smallest first; an excluded candidate never returns, however small.
     assert candidate_pool(candidates, "mechanical") == ["o/r#1", "o/r#3"], candidate_pool(candidates, "mechanical")

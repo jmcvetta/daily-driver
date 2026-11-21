@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Mine per-model rework from `undertake`'s claim and readiness comments.
 
-`undertake` posts a claim comment on a task issue with a `Model:`/`session:`
+`undertake` posts a claim comment on a task issue with a `Model:`/`Session:`
 provenance line pair, and a `First-readiness report` comment on the pull
 request that closes it, carrying elapsed time and `provenance`'s
-`Model:`/`Harness:`/`session:` block. `review-cycle` posts `Review
+`Model:`/`Provider:`/`Harness:`/`Session:` block. `review-cycle` posts `Review
 verification` comments on the same pull request with `pass:`, `findings:`
 and `outcome:` lines. Together these are the only production evidence of how
 a model performed on real work -- not a benchmark score, but what it actually
@@ -48,8 +48,10 @@ task issue's own prose, which predates pull request #418 and describes an
 older readiness-report shape (`Claimed`/`Ready`/`Elapsed`/`Model`/`Harness`/
 `Session`/`Head` as separate lines) that no longer matches what `undertake`
 actually posts. Both the old claim shape (`Model:`/`session:` with no
-`Harness:` line or leading `---`) and the new one parse, because a repository
-walked with `--since` unset sees both eras.
+`Harness:` line or leading `---`), the historical three-field block
+(`Model:`/`Harness:`/`session:`), and the current provider-inclusive block
+(`Model:`/`Provider:`/`Harness:`/`Session:`) parse, because a repository
+walked with `--since` unset sees every era.
 """
 
 from __future__ import annotations
@@ -82,26 +84,34 @@ class TelemetryError(Exception):
 # `scripts/check-model-telemetry.py` against fixture text.
 # ---------------------------------------------------------------------------
 
-# `Model: ...` then optionally `Harness: ...` then `session: ...`, each on its
-# own line. The `Harness:` line is optional so this one pattern parses both
-# the pre-`provenance`-skill claim shape (`Model:`/`session:` only) and the
-# current one (`provenance`'s block, with `Harness:` between them and a
-# leading `---` this pattern does not require -- it is found wherever it
-# falls, the way `skills/provenance/SKILL.md` says the claim lookup must).
+# `Model: ...` then an optional `Provider: ...` and `Harness: ...`, then
+# `Session:`/`session: ...`, each on its own line. The `Provider:` and
+# `Harness:` lines are optional so this one pattern parses the oldest claim
+# shape (`Model:`/`session:` only), the historical `provenance` block
+# (`Model:`/`Harness:`/`session:`), and the current provider-inclusive block
+# (`Model:`/`Provider:`/`Harness:`/`Session:`) -- the leading `---` is not
+# required, since it is found wherever it falls, the way
+# `skills/provenance/SKILL.md` says the claim lookup must. The provider is
+# consumed but not returned: telemetry's output schema does not aggregate by
+# provider.
 _PROVENANCE_RE = re.compile(
-    r"^Model: ?(?P<model>\S.*)$\n(?:^Harness: ?(?P<harness>\S.*)$\n)?^session: ?(?P<session>\S.*)$",
+    r"^Model: ?(?P<model>\S.*)$\n"
+    r"(?:^Provider: ?\S.*$\n)?"
+    r"(?:^Harness: ?(?P<harness>\S.*)$\n)?"
+    r"^[Ss]ession: ?(?P<session>\S.*)$",
     re.MULTILINE,
 )
 # A standalone fallback for `harness:` lines that fall outside the `Model:`/
-# `Harness:`/`session:` sequence above -- the oldest readiness-report shape
+# `Harness:`/`Session:` sequence above -- the oldest readiness-report shape
 # (PR #405's own, pre-dating even the pre-`provenance`-skill claim shape)
 # writes `Model:`, then `session:`, then a trailing lowercase `harness:` line.
 _HARNESS_LINE_RE = re.compile(r"^harness: ?(?P<harness>\S.*)$", re.MULTILINE | re.IGNORECASE)
 
 
 def parse_provenance_block(body: str) -> dict[str, str | None] | None:
-    """The `model`, `harness` (or None) and `session` a `Model:`/`session:`
-    pair names, or None where the text carries no such pair.
+    """The `model`, `harness` (or None) and `session` a `Model:`/`Session:`
+    pair names, or None where the text carries no such pair. The provider
+    line, when present, is accepted and not returned.
     """
     match = _PROVENANCE_RE.search(body)
     if not match:
@@ -252,7 +262,7 @@ def count_check_reruns(check_runs: list[dict[str, Any]]) -> int:
 
 
 _MODEL_CLASS_RE = re.compile(
-    r"^##\s*Model class\s*$\s*`?(mechanical|implementation|reasoning|frontier)`?(?![\w-])",
+    r"^##\s*Model class\s*$\s*`?(mechanical|routine|intermediate|complex|frontier)`?(?![\w-])",
     re.IGNORECASE | re.MULTILINE,
 )
 

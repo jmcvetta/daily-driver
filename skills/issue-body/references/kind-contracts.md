@@ -115,6 +115,29 @@ Convert the issue in place only under the existing label policy. Acceptance is
 not delivery. Deferral alone is not delivery; a `not planned` closure follows
 the existing disposition rules.
 
+## Specification — closes on an approved, merged document
+
+Carry the problem, intended outcome, known context and constraints, references,
+and the questions or decisions that remain open. The issue is the interactive
+workspace for research references, alternatives, operator decisions and draft
+revisions. It carries no implementation model class.
+
+**Ready for collaboration** means the purpose and initial context are clear
+enough to start elicitation; unresolved product decisions are expected. The
+agent investigates and drafts, while the operator decides unresolved intent.
+This is neither a `human` issue nor an unattended assignment.
+
+**Ready for approval** means the canonical document meets `specification`'s
+document contract and has no omission preventing implementation. Open
+questions and research remain on the issue or research issues, not in the
+document. Independent review does not replace explicit operator approval.
+
+**Complete** means the operator approved and merged the specification PR and
+the handoff is recorded on the issue. Approval of a proposed decomposition is
+separate. Rejection or abandonment follows the existing disposition rules.
+Unlike a `proposal`, whose acceptance records a decision or handoff, a
+specification completes only with the approved, merged document and handoff.
+
 ## Human — closes on a person's observable action or decision
 
 Carry the exact action or decision; why an agent cannot perform it; the

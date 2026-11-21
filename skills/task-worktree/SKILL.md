@@ -67,8 +67,12 @@ Establish the task root
    repository, then `remote.pushDefault`, then the only configured remote.
    More than one unexplained remote is a stop. Use the task/repository base
    when declared; otherwise keep the full remote-tracking default branch name
-   from `git symbolic-ref --short refs/remotes/<remote>/HEAD`. Never branch
-   from whichever feature branch happens to be checked out.
+   from `git symbolic-ref --short refs/remotes/<remote>/HEAD`. Before creating
+   a fresh task branch, fetch that base into its remote-tracking ref, where
+   `<base-branch>` is `<resolved-base>` without its leading `<remote>/`:
+   `git fetch <remote> +refs/heads/<base-branch>:refs/remotes/<remote>/<base-branch>`.
+   A failed fetch stops creation; never silently use the stale local ref.
+   Never branch from whichever feature branch happens to be checked out.
 3. **Choose the task identities.** A recorded resume branch has precedence.
    Otherwise use exactly one branch designated by the harness. The exception
    is narrow: when the active harness-specific route's schema-2 Worktrunk

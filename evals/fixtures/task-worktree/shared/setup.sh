@@ -63,6 +63,18 @@ if [ "${mode}" = "resume" ]; then
 	git branch -D issue-52-strict-parser >/dev/null
 fi
 
+if [ "${mode}" != "resume" ]; then
+	# Advance the remote default without advancing its local tracking ref. A
+	# fresh task branch must fetch this commit instead of using the stale base.
+	old_base="$(git rev-parse upstream/master)"
+	printf 'arrived on the remote default\n' >upstream-only.txt
+	git add upstream-only.txt
+	git commit -m "Advance only the remote default" >/dev/null
+	git push upstream HEAD:refs/heads/master >/dev/null
+	git reset --hard "${old_base}" >/dev/null
+	git update-ref refs/remotes/upstream/master "${old_base}"
+fi
+
 # Make the current local branch the wrong start point. A correct task branch
 # starts from the remote default and therefore never contains this commit.
 printf 'not part of the remote base\n' >local-only.txt

@@ -1,0 +1,169 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The draft body is a grounded task handoff with model class metadata",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "b21d3957fb46d1d1df14164b554d84ab00ef334cfe1fe3614527714759a2fc07",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "096f4c08341219387670d8b09249942ba5127ac8c3cce9910845dc32e50b02db"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "issue-01-open-a-task-issue",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Mixed child bodies use each kind's contract and preserve epic completion gate",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 1,
+            "pass_threshold": 0.7,
+            "prompt_sha": "95de4cfeb4e09372bf8cce104a3f6d32018165246fb90c7d12203ba2904e4598",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "096f4c08341219387670d8b09249942ba5127ac8c3cce9910845dc32e50b02db"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "epic-07-mixed-child-kind-contracts",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 28.516172170639038,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-01-open-a-task-issue",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 38.51685428619385,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "epic-07-mixed-child-kind-contracts",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.18.8",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-11T18:00:09.097229",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 2,
+    "freeze_sha": "096f4c08341219387670d8b09249942ba5127ac8c3cce9910845dc32e50b02db",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": "unavailable",
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v2",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": "unavailable"
+  },
+  "plugin_revision": {
+    "commit": "a24468249ab86cb12587cd9b78545c4506a09fca",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-11T11:00:10.282638+00:00",
+  "run_id": "2026-11-11_17-59-02",
+  "schema_version": 5,
+  "started_at": "2026-11-11T17:59:02.056777",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "epic-07-mixed-child-kind-contracts": [
+          null
+        ],
+        "issue-01-open-a-task-issue": [
+          null
+        ]
+      },
+      "task_ids": [
+        "issue-01-open-a-task-issue",
+        "epic-07-mixed-child-kind-contracts"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

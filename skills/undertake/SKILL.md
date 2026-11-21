@@ -33,7 +33,7 @@ restate**. The task branch and execution root live in `task-worktree`, the
 title convention in `pr-title`, the pull request itself in `pr`, the review
 round in `review-cycle`, the model, harness and session record every write
 carries in `provenance`, what is worth asking the user in `judgement-call`,
-and coding discipline in `provenance`. Where a step below names a
+and coding discipline in the constitution. Where a step below names a
 rule one of those owns, it names it as a pointer and cites the owner — a rule
 that acquires a second home here is one whose copy goes stale, and a citation
 is what makes the drift visible. There is no exception.
@@ -77,27 +77,21 @@ commits, and the implementation/review/CI loop need a separate explicit user
 exception with bounded scope. Manual selection, “fix this”, urgency, difficulty,
 or task approval is not that exception.
 
-Return to the lowest eligible ordinary class through a supported verified
-in-session switch or a route-enforced verified full handoff. Retain the issue,
-branch, worktree, valid changes, failure evidence, repaired plan, acceptance
-criteria and original approval sources and conditions. Do not create a competing
-branch or claim. The receiver owns execution; the sender stops without
-supervision. Without a return route, deliver the repaired plan, capability gap
+For agent-controlled continuation, return to the lowest eligible ordinary
+class through a supported verified in-session switch or a full handoff that can
+constrain and verify that route. This policy does not force or reverse an
+operator's model, provider, or effort choice. Retain the issue, branch, worktree,
+valid changes, failure evidence, repaired plan, acceptance criteria and original
+approval sources and conditions. Do not create a competing branch or claim.
+The receiver owns execution; the sender stops without supervision. If no
+eligible agent route is available, deliver the repaired plan, capability gap
 and smallest operator action. No implementation fallback, unverified transfer,
 or completion claim. This cost boundary applies without an undertaking or
 frontier agent; it is not speculative parallel delegation.
 
 **Errors and unfinished stops.** Diagnose errors, repair within scope, revise
 the plan, and continue permitted work. A failed command or approach alone is
-not a blocker. Suspected Daily Driver defects use `issue`'s attribution and
-automatic-reporting route; target-repository defects use their normal route.
-Pause only for a contribution you cannot supply. Before an unfinished stop,
-finish independent permitted work unless safety requires immediate stop.
-Report the blocked operation, observed failure or exact prohibition, original
-authorization checked, permitted routes considered, smallest external
-contribution, completed or actionable independent work, and actual resume path.
-Use `Where it stops and waits` for classification, even outside an undertaking.
-Never probe a prohibited operation to prove a blocker.
+not a blocker. Suspected Daily Driver defects use `issue`'s attribution and automatic-reporting route; target-repository defects use their normal route. Pause only for a contribution you cannot supply. Before an unfinished stop, finish independent permitted work unless safety requires immediate stop. Report the blocked operation, observed failure or exact prohibition, original authorization checked, permitted routes considered, smallest external contribution, completed or actionable independent work, and actual resume path. Use `Where it stops and waits` for classification, even outside an undertaking. Never probe a prohibited operation to prove a blocker.
 
 
 The sequence
@@ -194,15 +188,19 @@ skipped in the common case where the issue was handed over. `epic` sizes it,
 decomposes it, and each task issue it opens comes back here as the issue this
 sequence takes in. **An epic itself is a stop**, under `Where it stops and
 waits`.
+An issue labelled `discovery` also stops ordinary undertaking; route its
+research orchestration and interactive specification to `embark` and `epic`.
 
 The label too, because it states the kind's agent eligibility, and
 `issue-labels` says what each one means. The `epic` label is that stop arriving
 as one word. **A `proposal` is a stop as well** — its shape is still open, so
-decomposing it is `epic`'s work and agreeing the plan is the user's. **A
-`human` is a stop as well** — there is no agent execution route for the reserved
-action. **Two of the six on one issue is a stop too**: the label answers the
-readiness question twice. `task`, `bug` and `research`, one of them and no
-other, are eligible to proceed, subject to their body readiness tests.
+decomposing it is `epic`'s work and agreeing the plan is the user's. A
+**`specification` is a stop**: route it to the interactive `specification`
+skill, without creating an implementation undertaking. **A `human` is a stop
+as well** — there is no agent execution route for the reserved action. **Two
+of the eight on one issue is a stop too**: the label answers the readiness
+question twice. `task`, `bug` and `research`, one of them and no other, are
+eligible to proceed, subject to their body readiness tests.
 
 **Eligibility is not body sufficiency.** Before claiming or starting work,
 apply `issue-body`'s readiness test for the effective kind. Repair only gaps
@@ -215,6 +213,13 @@ when its agreed deliverable is answer-only. Bounded inconclusive research is
 complete only with the evidence, limitation, and resolution path required by
 `issue-body`; failed access or abandoned work is not completion.
 
+For a specification-backed task, before claim read the parent publication
+record and the document at its exact merged `master` SHA. Confirm the task's
+path and requirement IDs match that record and exist at that revision. A
+discovery parent never authorizes a new implementation dispatch, including a
+staged task. Report mismatches and route affected scope to `epic`; do not
+silently select a newer revision.
+
 **A `task`, and any classed `research` or `bug`, carries a required model
 class.** A `task` always does. A `research` or `bug` does when it is an epic
 story (it carries the `story` marker or is a child of an epic), when it carries
@@ -225,7 +230,7 @@ otherwise grounded. A story linked before the class was required is such an
 old body: where the handoff is grounded, repair its class through `issue` under
 `issue-body`'s update rule, choosing the lowest class that can deliver the
 settled work. Otherwise a missing or invalid class, or a missing rationale, is a
-gap to report; never default it to `implementation`. A classed
+gap to report; never default it to `routine`. A classed
 `research` or `bug` keeps its kind: it uses its own readiness and completion
 tests, not the task template. A standalone `bug` or `research` with no story
 role and no class section uses its kind-specific readiness test alone. A
@@ -239,17 +244,16 @@ A frontier assignment must carry explicit approval and its exact work envelope
 before execution. Frontier implementation also needs an explicit user
 exception recorded for that implementation scope.
 
-**Route classed undertaking work before the worktree or claim.** This covers a
-classed `task`, `research` and `bug` alike, by the same route; there is no
-second router. Branch-free answer-only research keeps its route after routing.
-Resolve the
-exact class within the invoking model family and provider, including effort and
-visible fallbacks. Preserve backend and authentication route where supported.
-Never substitute another provider. An eligible account may refresh or rotate;
-do not change shared roles or credentials to make a route available. This
-policy covers undertaking workers, delegated issue work, and their execution
-fallbacks. Independently configured `reviewer`, `scout`, `security-reviewer`,
-and `seance` helpers are not issue implementation workers.
+**Select the initial route for classed undertaking work before the worktree or
+claim.** This covers classed `task`, `research` and `bug` issues alike; there is
+no second router. Resolve the exact class within the invoking model family and
+provider, including effort and visible fallbacks. Preserve backend and
+authentication route where supported. Never substitute another provider. An
+eligible account may refresh or rotate; do not change shared roles or
+credentials to make a route available. This initial selection covers
+undertaking workers, delegated issue work, and their execution fallbacks.
+Independently configured `reviewer`, `scout`, `security-reviewer`, and
+`seance` helpers are not issue implementation workers.
 
 When the known invoking family is absent from the class-routing table, issue a
 prominent WARNING naming the family, required class, and retained provider/model.
@@ -257,25 +261,37 @@ Continue immediately on the invoking model, provider, and effort without
 confirmation. Its suitability for the class is unverified; an observed
 execution identity does not establish suitability. Keep that disposition for
 the same undertaking and its permitted workers. Do not dispatch a replacement
-worker merely to obtain a mapping. If a child cannot retain the route, work in
-the invoking session instead. Frontier approval and route integrity still apply.
+worker merely to obtain a mapping. If a child cannot retain the initial route,
+work in the invoking session instead. Frontier approval and route integrity
+still apply.
 
-A known mapped family with a missing or cleared class, unavailable target, or
-incompatible assignment is a configuration gap. Unknown family or execution
-identity is not evidence of an absent family. Report actual route violations
-and unsupported controls without claiming verification. Preserve provider where
-the harness supports it; state any limitation and never deliberately substitute
-another provider.
+A class omitted from a mapped family follows the absent-family continuation:
+warn, retain the invoking route, and report suitability as unverified. A known
+mapped family with an explicitly cleared class, unavailable target, or
+incompatible assignment is a configuration gap at initial selection. Unknown
+family or execution identity is not evidence of an absent family. Report
+unsupported controls without claiming verification. Preserve provider where
+the harness supports it; state any limitation and never deliberately
+substitute another provider.
 
-For a mapped family, prefer a supported in-session switch. Continue only when
-the worker confirms the selected execution identity, not merely when a setter
-accepts a switch. While confirmation is pending, show informative status, not
-an error, and do not establish a worktree, claim, or implement. Sequence routing
-alone in its assistant tool batch and wait for the next worker response to verify
-a pending change before mutations. If an in-session switch is unavailable, a
-full handoff is allowed only on a surface that can constrain and verify the
-same route. The receiving session owns the undertaking; the sender stops.
-If neither route can enforce the invariant, report the precise gap before work.
+For a mapped family, prefer a supported in-session switch for this initial
+selection. Continue only when the worker confirms the selected execution
+identity, not merely when a setter accepts a switch. While confirmation is
+pending, show informative status and do not establish a worktree, claim, or
+implement. Sequence routing alone in its assistant tool batch and wait for the
+next worker response to verify a pending change before mutations. If an
+in-session switch is unavailable, a full handoff is allowed only on a surface
+that can constrain and verify the same initial route. The receiving session
+owns the undertaking; the sender stops. If neither route can establish the
+initial selection, report the precise gap before work.
+
+After initial selection, an operator may change model, provider, or effort.
+Never block or reverse that operator choice, including after request rejection,
+on ordinary conversation, or when resuming an undertaking. Such changes do not
+reassign the undertaking's selected worker or issue class, and do not authorize
+agent-initiated reassignment, delegation, or automatic fallback. Agent-initiated
+routes and fallbacks remain subject to the initial route, frontier approval,
+and route-integrity requirements.
 
 In Omp, an attempt to select another issue does not replace the existing
 undertaking owner. Finish the completed undertaking or resume the existing one
@@ -401,40 +417,42 @@ Beyond the claim itself the comment always carries:
   branch as the branch GitHub will carry. Ordinary and resume paths have one
   branch identity, so the linked and local branch are the same.
 
-- **`provenance`'s block**, immediately after the work identity lines:
-  the model that served the turn, the harness and its version, and the session
-  reading each field — never a name recalled instead of read, and where the
-  model the session was *set* to run disagrees with the one that served, both
-  are named. The `Model:` and lowercase `session:` line shapes are what the
-  claim lookup below and `The milestone` match on, so they are never varied
-  here.
-- **A brief poem, in the claiming agent's own style, placed last** — after
-  the work identity, model and session, so that a reader looking for them
-  finds them in a fixed place and is never made to read past verse to reach
-  them. Each line is written in italics — wrapped in asterisks, line by line,
-  as `HAIKU.md` at the repo root shows — because italics designate the verse
-  as poetry, so a reader never mistakes a line of it for part of the claim
-  data: the work identity, model or session. The style is the agent's own,
-  and deliberately so: a pull request's salutation is classical and a task
-  issue's opening verse is a haiku, but a claim is the agent's voice at the
-  moment it takes the work.
+- **`provenance`'s block.** Where the agent supplies it, place it immediately
+  after the work identity lines. It names the serving model, provider,
+  harness/version, and session under the exact `Model:`, `Provider:`,
+  `Harness:`, and `Session:` shapes used by claim lookup and milestone timing;
+  claim lookup also accepts historical blocks whose session field is
+  lowercase. Where the serving model differs from the session's configured
+  model, name both. For Omp body-bearing GitHub writes, the GitHub-write
+  wrapper appends the block from live execution context at the end of the
+  submitted body; do not read model/session identity or format it.
+- **A brief poem, in the claiming agent's own style, last in the authored
+  body** — after the work identity and, where the agent supplies it, the
+  provenance block. On Omp, the wrapper appends its block after the poem. Each
+  line is written in italics — wrapped in asterisks, line by line, as
+  `HAIKU.md` at the repo root shows — because italics designate the verse as
+  poetry, so a reader never mistakes it for claim data. The style is the
+  agent's own: a pull request's salutation is classical and a task issue's
+  opening verse is a haiku, but a claim is the agent's voice at the moment it
+  takes the work.
 
-The model and session come from the harness's session call, where it has one —
-the call `session-title` documents. In branch-free answer-only research, no
-branch is designated or established. Otherwise, without a resume or a
-verified primary-held designation exception, a branch designated by that call
-must be the branch `task-worktree` established; disagreement is a collision,
-not a choice between two branch sources. With a resume, the remote push branch
-is the adopted branch and outranks the designation. In the exception, the
-local execution branch may differ from the designation only as
-`task-worktree` verified; the designated branch remains the push/PR head.
-Other paths retain one branch identity.
+Where the agent supplies a provenance block, model and session values come
+from the harness's session call, where it has one. Omp's wrapper instead reads
+live execution context for each body-bearing write; the session-info tool
+remains available for separate purposes such as title handling. In branch-free
+answer-only research, no branch is designated or established. Otherwise,
+without a resume or a verified primary-held designation exception, a branch
+designated by the relevant harness call must be the branch `task-worktree`
+established; disagreement is a collision, not a choice between two branch
+sources. With a resume, the remote push branch is the adopted branch and
+outranks the designation. In the exception, the local execution branch may
+differ from the designation only as `task-worktree` verified; the designated
+branch remains the push/PR head. Other paths retain one branch identity.
 
-**The comment never goes up with the work identity alone.** For repository
-work, the branch comes from the task worktree's Git state, never from a fresh
-naming decision in this step. For branch-free research, the identity is
-explicitly `Branch: none`; the model and session lines follow the rules above
-whatever the harness supplies.
+**The comment never goes up with the work identity alone.** The active route
+supplies provenance. On Omp, the wrapper appends it automatically, so the
+authored claim contains the branch identity and poem but no new attribution
+block. Other routes include the model and session lines under the rules above.
 
 **Once per session, not once per run.** A sequence re-entered — its blocker
 cleared, the issue handed over again — does not claim what it has claimed
@@ -471,24 +489,19 @@ ordinary undertakings.
 
 **Own the agreed result through a pause.** A review-ready pull request is the
 result when the assignment stops there; ownership does not add deployment or
-first-use acceptance. A component worker may finish its own contract before an
+first-use acceptance. A component worker may finish its own work before an
 epic's outcome is evidenced. A genuine pause retains responsibility for
 diagnosis, outstanding requirements and the next executable action; it does
 not make the user responsible for finishing the work or imply completion.
 
-**Retain the task contract before implementation.** Use the active harness's
-task-state route to ground the captured request in the issue version actually
-read. Preserve objective, scope, exclusions, constraints, stable criterion IDs,
-evidence/review kinds and approval requirements. Unknown fields stay unknown.
-Keep plans separate. A revised issue cannot silently delete an unmet criterion.
-Material amendments retain the prior revision and applicable original user
-decision; retries and compaction need no new approval.
+For specification-backed work, retain the exact specification revision and
+allocated requirements. On every base update, compare the governing document
+and allocated IDs against the pinned revision and parent record before affected
+work continues. Report and route a substantive mismatch to `epic`; do not
+silently change requirements. Independent unaffected work may continue.
 
-On resume, recover the existing contract identity and revision before changing
-the plan. Delegation and stop handoffs carry criterion IDs and original-source
-locators, not copied prose presented as approval. The
-[shared runtime contract](../../docs/harness-integration.md#contract-and-execution-state)
-defines the representation. The active harness reference names the tool.
+On resume or delegation, preserve the original scope, constraints and applicable
+authority. Copied handoff prose is not itself approval.
 
 **A direct request authorizes its scoped work and normal verification.** This
 includes focused behavioral evaluation through the configured subscription.
@@ -548,12 +561,13 @@ Gather the evidence and prepare the agreed answer. If follow-on issue
 specifications are required, create those through `issue` or `epic` under
 their existing gates and include their links in the result. If a required
 issue cannot be created, leave the research issue open and report the failure.
-Post the complete findings to the issue with `provenance`'s block. If that
-write fails, leave the issue open. Close the research issue as completed only
-when `issue-body`'s completion test holds and the answer was recorded. A
-supported no is a result. Inconclusive work is complete only under
-`issue-body`'s bounded-report rule. Failed access, unresolved blocking intent,
-or abandoned work stays open and follows `Where it stops and waits`.
+Post complete findings with provenance supplied by the active route; Omp's
+wrapper attaches it automatically. If that write fails, leave the issue open.
+Close the research issue as completed only when `issue-body`'s completion test
+holds and the answer was recorded. A supported no is a result. Inconclusive
+work is complete only under `issue-body`'s bounded-report rule. Failed access,
+unresolved blocking intent, or abandoned work stays open and follows `Where it
+stops and waits`.
 
 After completion, finish the Omp undertaking through its harness route before
 reusing the session for another issue. Do not finish a stopped or incomplete
@@ -588,7 +602,7 @@ worked at once, that skill opens a session or a subagent per task, and each of
 them runs this sequence in its own context. Delegation there is what buys the
 parallelism; delegation here duplicates a session that is already on the work.
 
-`provenance` governs coding and commit discipline. `pr` governs validation and
+The constitution governs coding and commit discipline. `pr` governs validation and
 CI execution. This skill owns execution sequencing and operational escalation.
 
 **Architecture documentation is part of implementation.** Before changing the
@@ -634,11 +648,13 @@ common currency maintenance. The undertaking retains assessment of CI, review,
 harness reference names the continuation and any owner-resume limitation.
 
 **The body is `pr-body`'s, and so are blockers that go with a Tofu diff.**
-Where the branch changes the infrastructure Tofu stack, the body carries
-`pr-body`'s apply-and-state blocker and the pull request the `human` label
-while that action remains outstanding. A plan is a separate operation: it is
-not a human action by default, and `Implement`'s escalation gate decides
-whether its target, route and restrictions permit this session to run it.
+Where the branch changes the infrastructure Tofu stack — `pr-body`'s test, the
+OpenTofu configuration under `infra/` rather than a provider-lockfile-only
+diff — the body carries `pr-body`'s apply-and-state blocker and the pull
+request the `human` label while that action remains outstanding. A plan is a
+separate operation: it is not a human action by default, and `Implement`'s
+escalation gate decides whether its target, route and restrictions permit this
+session to run it.
 `issue-labels`' `human` kind remains an issue classification, not this
 temporary pull-request state.
 
@@ -774,15 +790,9 @@ independent verification that the gate consumes. The completion notice is one
 of the gate's reads, so a round that closed without posting it is not yet
 ready.
 
-Read the current task receipt before reporting completion. Every required
-criterion must have current evidence of its declared kind, including required
-review and approval. Reuse the existing current-head CI and reviewed-SHA
-observations. Record attributed judgments separately from command/check
-outcomes and agent reports. Stale, failed, missing and truncated evidence
-cannot pass. Use the receipt in the existing report, with essential risks
-and unknowns, not a second hand-written ledger. Keep private sources out of
-public text. The runtime `complete` transition enforces evidence accounting;
-it does not prove arbitrary semantics or replace this readiness gate.
+Before reporting completion, confirm the requested work and required review
+and approval are complete. Report checks, attributed judgments, failures,
+risks and unknowns accurately; keep private sources out of public text.
 
 Once the pull request is ready, finish the Omp undertaking through its harness
 route before reusing the session for another issue.
@@ -852,9 +862,10 @@ it rather than waiting until ready or starting a second actor.
 When it looks
 -------------
 
-Take `pr`'s catch-up look on every turn returning to the open pull request,
-and once before `Ready for review`. Currency is the gate's first condition,
-not proof that the undertaking is complete.
+Take `pr`'s catch-up look before resuming work on the open pull request.
+Answer direct user questions first under the constitution. A catch-up look
+already taken in this turn also serves `Ready for review`; do not repeat it
+without a relevant state change. Currency is not proof of completion.
 
 After currency settles, assess CI on the resulting head through
 `review-cycle`'s `How to wait`, then continue review, the ready gate, and
@@ -921,6 +932,21 @@ Take the reads in this order. The first that does not hold is where the
 sequence stops, and the reason is stated in one line. Cite a read by its
 condition, never by its position: a read inserted ahead of it moves every
 number.
+
+**Continue from evidence, not from an old hold.** Keep each satisfied
+condition with the inputs it covers. Completed acceptance or runtime
+verification remains valid while its relevant artifact, head, configuration
+and validity conditions hold. A later turn or an old "keep draft" reminder
+does not invalidate it. Recheck dynamic PR state on return, but reuse reads
+already obtained for the same state in this turn. Changed inputs, incomplete
+evidence or a new contradictory result invalidate only the affected
+conditions; a changed head always needs current-head CI under `review-cycle`.
+Do not rerun a deployment or runtime wait solely to repeat a passed gate.
+
+When the last unmet condition clears, finish the remaining reads and execute
+the report and ready writes below. "Final gate pending" without a named unmet
+condition is not a blocker, and an earlier agent-authored hold is not user
+approval that must be renewed.
 
 1. **The head carries the whole of the issue's work.** Four parts, each a call
    or a comparison of two texts the session already holds:
@@ -1012,19 +1038,19 @@ number.
    pauses on it; this condition is what the sequence returns to once the
    branch carries the result.
 
-**When the reads agree, publish the first-readiness report if none exists,
-then mark the pull request ready in the same turn.** The harness calls are in
-`The milestone` and the reference file; no summary, permission request or
-turn boundary comes between the gate and these actions. A failed report write
-leaves the PR draft. If marking ready fails after the report posts, preserve
-the report and revalidate the gate before retrying.
+**When the reads agree and no explicit user hold applies, publish the
+first-readiness report if none exists, then mark the pull request ready in the
+same turn.** The harness calls are in `The milestone` and the reference file;
+no summary, permission request or turn boundary comes between the gate and
+these actions. A failed report write leaves the PR draft. If marking ready
+fails after the report posts, preserve the report and revalidate the gate
+before retrying.
 
-**The user is never a gate condition.** Every stop this sequence takes is
-named under `Where it stops and waits`, and none of them is a confirmation
-that the work is ready. The reads above are the only thing that knows. The
-user did not do the work and cannot answer for it, so a question here asks
-somebody else to carry a claim this session is the one holding the evidence
-for.
+**The user is never asked to certify the gate.** A direct user hold on the
+readiness transition remains controlling: do not publish the first-readiness
+report or mark ready while the hold applies. A status question does not release
+it. An agent-authored reminder is not a user hold and does not outlive the
+condition it records.
 
 A branch behind its base, red CI, an open thread, or a human action still
 owed, or an issue item the diff does not carry, means it **stays a draft**,
@@ -1115,10 +1141,12 @@ What the report carries
   unavailable. If posting fails, publish no milestone; revalidate the gate and
   capture a new time before retrying.
 
-- **`provenance`'s block, under `Claim the issue`'s rules for it.** One
-  session did the work, so one model and one session are named; where a
-  resume moved the work to another session, both are named in the order they
-  ran, and attribution nobody reported is not reconstructed.
+- **`provenance`'s block.** The active route supplies attribution. Omp's
+  wrapper attaches the current write's live model/harness/session tuple; do
+  not perform identity reads or format a block for it. Each claim or report is
+  its own comment, so attribution on an earlier claim remains there rather
+  than being copied into this report. Other routes follow the agent-supplied
+  block rules above.
 
 - **The head it binds to.** The pull request's head SHA and the report
   timestamp. The comment is a statement about that head: a later head — after
@@ -1242,9 +1270,6 @@ In order:
    - Reached: <the last step of the sequence completed>.
    - Outstanding: <what is blocked, failing, or unverified — failed checks,
      open review threads, a human action owed — or "nothing known">.
-   - Contract: <stable contract ID and revision, unresolved criterion IDs, and
-     private native source locators; or "unavailable">. Retain the full contract
-     privately. This comment does not amend it or verify acceptance.
    - Environment: <each tool or credential the outstanding work needs, with
      the repository route that sets it up, e.g. "`omp`: `make evals-install
      && make evals-setup-omp`" — or "the checkout alone">.
@@ -1254,15 +1279,14 @@ In order:
    - Stop evidence: <blocked operation and evidence reference, route
      disposition, independent work remaining, and smallest external
      contribution; or "user-requested stop — no blocker claimed">.
-   - Corrective continuations: <unchanged-condition identity and count, or
-     "unavailable">. A resume does not reset an exhausted bound.
    - Resume: <the concrete next action, e.g. "run `/undertake #N`; it resumes
      on the branch above">.
    ```
 
-   It ends with `provenance`'s block and carries no verse: somebody acts on
-   it, the reason `stand-down`'s task handoffs carry none. A push that fails
-   is stated here: `Pushed head:` names the last head that reached origin,
+   The active route appends `provenance`'s block; on Omp the wrapper handles
+   it, so the handoff body must not format or include one. A user-action
+   handoff carries no verse, because somebody acts on it. A push that fails is
+   stated here: `Pushed head:` names the last head that reached origin,
    `Outstanding:` names the failure, and the handoff is still written.
    **The handoff is filled from what this session already knows**, plus the
    git read the reference names for `Pushed head:`. No test or CI check is
@@ -1328,6 +1352,13 @@ observed capability gaps retain the specific handling below. Report the
 unfinished condition and actual resume path. Where an orchestrator's address
 was given, report the stop under `Reporting to an orchestrator`.
 
+For a genuine unresolved human handoff, notify through the active harness
+route before the chat handoff when that route supports it. Use a stable
+semantic key for the specific action needed, not a transient attempt. A child
+reports to its orchestrator instead of notifying the user. Recoverable errors,
+CI and external waits, reminders, progress and ordinary final replies do not
+qualify. Notification does not replace the required record or chat handoff.
+
 - **A blocked issue, an issue whose intent is genuinely ambiguous, or a
   request too vague to write an issue for.** The constitution forbids guessing
   at intent; this is that rule, at `Open the issue` and at `Read the issue and
@@ -1338,9 +1369,9 @@ was given, report the stop under `Reporting to an orchestrator`.
   the stop and the wording, and the `epic` label is what says so in one word.
 - **An issue whose label does not clear it for work**, at `Read the issue and
   its edges`. A `proposal`'s shape is not yet decided, so deciding it is the
-  user's and decomposing it is `epic`'s; a `human` names work no agent can
-  do, so the person it waits on is the answer; an issue carrying two of the
-  six answers the readiness question twice and answers it neither way.
+  user's and decomposing it is `epic`'s; `specification` routes to interactive
+  `specification`; a `human` names work no agent can do, so the person it
+  waits on is the answer; two of the eight kinds answer the question twice.
   `issue-labels` is what each label claims, and what a contradiction between
   two of them costs.
 - **More than one distinct existing task branch** on the issue's record, or a

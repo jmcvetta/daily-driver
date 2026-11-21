@@ -13,8 +13,8 @@ portable and set the shape this follows.
 below.
 
 **Current delivery:** this note preserves the original measurements. The
-[runtime integration guide](../harness-integration.md#core-delivery-and-workflow-retrieval)
-records the later native Codex child proof, compact core, and removal of the
+[runtime integration measurements](../runtime-integration-measurements.md)
+record the later native Codex child proof, compact core, and removal of the
 duplicate prompt rewrite. The unobserved-subagent limitation and deliberate
 duplicate below describe the historical implementation, not the current one.
 
@@ -134,7 +134,7 @@ each says so in its own file rather than degrading quietly:
   itself cannot wait*, which until now had none.
 
 `0011` set this shape when it made
-[`0010`](0010-the-wake-slot-is-never-empty.md)'s never-empty wake slot Claude
+[`0034`](0034-the-wake-slot-is-never-empty.md)'s never-empty wake slot Claude
 Code only rather than softening it for Omp. **That amendment now holds against two
 harnesses rather than one**: neither Omp nor Codex has a timer that outlives its
 session, so `undertake`'s `Keep it current` cadence stops at `Ready for review`
