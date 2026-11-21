@@ -14,7 +14,7 @@ export const MODEL_CLASS_ROUTES = Object.freeze([
 	Object.freeze({
 		referenceModel: "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017",
 		classes: Object.freeze({
-			mechanical: "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:low",
+			mechanical: "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:medium",
 			routine: "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high",
 		}),
 	}),

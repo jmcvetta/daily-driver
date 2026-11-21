@@ -330,7 +330,7 @@ export default function registerUndertakingRoutingChecks(check) {
 	});
 
 	// The measured DeepSeek mapping selects mechanical and routine within the invoking provider.
-	for (const [modelClass, expectedEffort, effortCalls] of [["mechanical", "low", ["low"]], ["routine", "high", []]]) {
+	for (const [modelClass, expectedEffort, effortCalls] of [["mechanical", "medium", ["medium"]], ["routine", "high", []]]) {
 		routingCheck(`mapped DeepSeek family selects ${modelClass}`, async create => {
 			const s = await create({ current: DEEPSEEK_PRO, family: familyOf });
 			const result = await s.route({ modelClass });
