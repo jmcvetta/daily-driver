@@ -1,0 +1,338 @@
+{
+  "analysis_valid": true,
+  "arm": "vercel-deepseek-pro",
+  "attempts": [
+    {
+      "arm": "vercel-deepseek-pro",
+      "artifact_sha256": "84681fa008ab036748adb918acc6c61af0d9e56c79c28bd0365248b04673f8c7",
+      "attempt_seconds": 60.26798677444458,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol",
+          "served": [
+            "openai/gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "reviewer": {
+          "backend_served": "deepseek",
+          "harness": "deepseek/deepseek-v4-pro-0813",
+          "requested": "vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:high",
+          "resolved_thinking_level": "high",
+          "role_route": "vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:high"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-01-boundary"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "66da73d4d3446094b2fc3b04b8c103c955ec34379f82640b38213d44652d50ff",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": 18.025147,
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "deepseek/deepseek-v4-pro-0813",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "deepseek",
+      "reviewer_cost_usd": 0.009781464,
+      "reviewer_delivery_observed": true,
+      "reviewer_harness_model": "deepseek/deepseek-v4-pro-0813",
+      "reviewer_peak_priced_messages": 0,
+      "reviewer_reported_identity": "deepseek/deepseek-v4-pro-0813",
+      "reviewer_requested": "vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:high",
+      "reviewer_resolved_thinking_level": "high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"deepseek/deepseek-v4-pro-0813\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3\",\"trigger\":\"Calling page(items, offset, limit) with limit > 0 slices items[offset:offset + limit - 1] instead of items[offset:offset + limit].\",\"impact\":\"The function returns at most limit - 1 records, contradicting its docstring 'up to limit records'. A cursor-based client receiving fewer than limit results treats the page as final, so the last record of each full page is silently omitted; with limit = 1 it returns an empty list.\",\"severity\":\"P1\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_subagent_id": "LocalReviewer",
+      "reviewer_telemetry": {
+        "attribution_problems": [],
+        "attribution_valid": true,
+        "backend_model": "vercel-ai-gateway/deepseek/deepseek-v4-pro-0813",
+        "backend_provider": "deepseek",
+        "cost_usd": 0.009781464,
+        "elapsed_ms": 18025.147,
+        "generation_ms": 17309.003,
+        "harness_models": [
+          "deepseek/deepseek-v4-pro-0813"
+        ],
+        "message_count": 3,
+        "model_role": "review",
+        "peak_multipliers_seen": [],
+        "peak_priced_messages": 0,
+        "requested_model": "vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:high",
+        "resolved_model_identity": "vercel-ai-gateway/deepseek/deepseek-v4-pro-0813@deepseek",
+        "resolved_thinking_level": "high",
+        "status": "verified",
+        "status_detail": "completed",
+        "subagent_id": "LocalReviewer",
+        "usage": {
+          "cache_read": 16512,
+          "cache_write": 0,
+          "input": 8327,
+          "output": 1981,
+          "reasoning": 1497
+        }
+      },
+      "reviewer_telemetry_status": "verified",
+      "reviewer_usage": {
+        "cache_read": 16512,
+        "cache_write": 0,
+        "input": 8327,
+        "output": 1981,
+        "reasoning": 1497
+      },
+      "reviewer_verdict": "defects",
+      "run_id": "vercel-deepseek-pro-smoke",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "vercel-deepseek-pro",
+      "artifact_sha256": "9279447da9f37bad7610f82561f35739de9b6f2965bc685460a1fd0b2fd6f410",
+      "attempt_seconds": 55.06688141822815,
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol",
+          "served": [
+            "openai/gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "reviewer": {
+          "backend_served": "deepseek",
+          "harness": "deepseek/deepseek-v4-pro-0813",
+          "requested": "vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:high",
+          "resolved_thinking_level": "high",
+          "role_route": "vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:high"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "66da73d4d3446094b2fc3b04b8c103c955ec34379f82640b38213d44652d50ff",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": 16.340989,
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "deepseek/deepseek-v4-pro-0813",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "deepseek",
+      "reviewer_cost_usd": 0.009675468,
+      "reviewer_delivery_observed": true,
+      "reviewer_harness_model": "deepseek/deepseek-v4-pro-0813",
+      "reviewer_peak_priced_messages": 0,
+      "reviewer_reported_identity": "deepseek/deepseek-v4-pro-0813",
+      "reviewer_requested": "vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:high",
+      "reviewer_resolved_thinking_level": "high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"deepseek/deepseek-v4-pro-0813\",\"verdict\":\"clear\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_subagent_id": "DullTurtle",
+      "reviewer_telemetry": {
+        "attribution_problems": [],
+        "attribution_valid": true,
+        "backend_model": "vercel-ai-gateway/deepseek/deepseek-v4-pro-0813",
+        "backend_provider": "deepseek",
+        "cost_usd": 0.009675468,
+        "elapsed_ms": 16340.989,
+        "generation_ms": 15764.139,
+        "harness_models": [
+          "deepseek/deepseek-v4-pro-0813"
+        ],
+        "message_count": 4,
+        "model_role": "review",
+        "peak_multipliers_seen": [],
+        "peak_priced_messages": 0,
+        "requested_model": "vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:high",
+        "resolved_model_identity": "vercel-ai-gateway/deepseek/deepseek-v4-pro-0813@deepseek",
+        "resolved_thinking_level": "high",
+        "status": "verified",
+        "status_detail": "completed",
+        "subagent_id": "DullTurtle",
+        "usage": {
+          "cache_read": 27264,
+          "cache_write": 0,
+          "input": 9023,
+          "output": 1576,
+          "reasoning": null
+        }
+      },
+      "reviewer_telemetry_status": "verified",
+      "reviewer_usage": {
+        "cache_read": 27264,
+        "cache_write": 0,
+        "input": 9023,
+        "output": 1576,
+        "reasoning": null
+      },
+      "reviewer_verdict": "clear",
+      "run_id": "vercel-deepseek-pro-smoke",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    }
+  ],
+  "attribution": {
+    "basis": "captured reviewer delivery, adapter child telemetry, and Omp's resolved role route, thinking level and upstream; a missing served identity is unreported",
+    "expected_model_id": "deepseek-v4-pro-0813",
+    "expected_reviewer_selector": "vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:high",
+    "expected_reviewer_upstreams": [
+      "deepseek"
+    ],
+    "mismatches": [],
+    "reported_model_ids": [
+      "deepseek-v4-pro-0813"
+    ],
+    "reviewer_reported_identities": [
+      "deepseek/deepseek-v4-pro-0813"
+    ],
+    "telemetry_valid": true,
+    "valid": true
+  },
+  "cohort_complete": true,
+  "cost_comparison_valid": true,
+  "coverage_complete": true,
+  "created_at": "2026-11-18T21:44:18.363255+00:00",
+  "planned": {
+    "attempts": 2,
+    "cases": [
+      "reviewer-quality-01-boundary",
+      "reviewer-quality-05-clean-boundary"
+    ],
+    "repeats_per_case": 1
+  },
+  "runs": [
+    {
+      "run_dir": "evals/runs/906/vercel-deepseek-pro-smoke",
+      "run_id": "vercel-deepseek-pro-smoke",
+      "run_record": "evals/provenance/omp-reviewer-deepseek-v4-pro-vercel-2026-11-18-vercel-deepseek-pro-smoke.json",
+      "run_record_sha256": "829fb92e693c9b31993775148d753101a71c050b8614c8bea88ddff9667a602f"
+    }
+  ],
+  "schema_version": 1,
+  "settings": {
+    "experiment_path": "evals/experiments/omp-reviewer-deepseek-v4-pro-vercel.yaml",
+    "experiment_sha256": "84bac3c500eae1a118a2912305a2869a8bbf059aa7036c23892ba8b9f6f0e6bd",
+    "route_overlay_path": "/workspace/daily-driver.issue-906-vercel-reviewer-benchmark/evals/fixtures/reviewer-quality/shared/routes/vercel-deepseek-v4-pro.yml",
+    "route_overlay_sha256": "d2ba648694d8b1c397fb79ee7166ac6f15c9b2820923dea4624ae2e260adc0c5"
+  },
+  "summary": {
+    "attempts": 2,
+    "classification": {
+      "clean": {
+        "eligible_denominator": 1,
+        "false_alarms": 0,
+        "planned_denominator": 1
+      },
+      "delta": {
+        "accuracy": null,
+        "correct": 0,
+        "eligible_denominator": 0,
+        "planned_denominator": 0
+      },
+      "full_review": {
+        "fn": 0,
+        "fp": 0,
+        "precision": 1.0,
+        "precision_denominator": 1,
+        "recall": 1.0,
+        "recall_eligible_denominator": 1,
+        "recall_planned_denominator": 1,
+        "tp": 1
+      },
+      "unexpected_valid": []
+    },
+    "eligible": 2,
+    "harness_errors": 0,
+    "judge_errors": 0,
+    "judge_unavailable": 0,
+    "latency_attempt_seconds": {
+      "count": 2,
+      "max": 60.26798677444458,
+      "mean": 57.667434096336365,
+      "median": 57.667434096336365,
+      "min": 55.06688141822815,
+      "population_stddev": 2.6005526781082153
+    },
+    "latency_reviewer_seconds": {
+      "count": 2,
+      "max": 18.025147,
+      "mean": 17.183068,
+      "median": 17.183068,
+      "min": 16.340989,
+      "population_stddev": 0.842079
+    },
+    "per_case": {
+      "reviewer-quality-01-boundary": {
+        "eligible": 1,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 1,
+        "reviewer_errors": 0,
+        "reviewer_telemetry_verified": 1,
+        "verified_reviewer_completions": 1
+      },
+      "reviewer-quality-05-clean-boundary": {
+        "eligible": 1,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 1,
+        "reviewer_errors": 0,
+        "reviewer_telemetry_verified": 1,
+        "verified_reviewer_completions": 1
+      }
+    },
+    "provider_errors": 0,
+    "reviewer_delivery_unverified": 0,
+    "reviewer_telemetry": {
+      "ambiguous": 0,
+      "attribution_mismatch": 0,
+      "completed_attempts": 2,
+      "cost_comparison_valid": true,
+      "cost_per_rubric_correct_review_usd": 0.009728466,
+      "cost_reported_attempts": 2,
+      "cost_usd": 0.019456932,
+      "delivery_mismatch": 0,
+      "guard": 0,
+      "incomplete": 0,
+      "missing": 0,
+      "no_reviewer": 0,
+      "peak_priced_attempts": 0,
+      "peak_priced_messages": 0,
+      "rubric_correct_denominator": 2,
+      "usage": {
+        "cache_read": 43776,
+        "cache_write": 0,
+        "input": 17350,
+        "output": 3557,
+        "reasoning": null
+      },
+      "verified": 2
+    },
+    "unattempted": 0,
+    "verified_reviewer_completion_rate": 1.0,
+    "verified_reviewer_completions": 2
+  },
+  "winner": null
+}
