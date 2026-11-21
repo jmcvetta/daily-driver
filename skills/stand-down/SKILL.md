@@ -25,14 +25,9 @@ through GitHub; this skill is what ends that watch when the user must stop —
 the laptop going to sleep is the common case — before the last wave has come
 in.
 
-It is an orchestrator, in the same shape as `embark`: **it invokes, it does
-not restate**. What the fleet is, how it was dispatched, and how a
-replacement is opened are `embark`'s; the muster-roll format and the
-latest-entry-wins read are `embark`'s; the epic's body states are `epic`'s;
-the graph reads are `issue-deps`'; the model, harness and session record
-every write carries is `provenance`'s. What this skill owns is the ending:
-the wrap-up that secures the work, the handoff record, the stop and archive,
-the watch cancellations, and the banner.
+This skill owns watch cancellation, securing work, handoffs, fleet retirement,
+and the banner; `embark`, `epic`, `issue-deps`, and `provenance` own their
+respective dispatch, state, graph, and attribution contracts.
 
 **Speed is the design constraint, amended by one wait.** The user asked to
 stop, not to orchestrate a stop. The steps below run in parallel batches,
@@ -67,9 +62,7 @@ the steps below need is named in words here and resolved to a route there:
 harness in use before `Read the fleet`. Where a surface has no primitive a
 step needs, its file says so in words — silence would read as oversight.
 
-**Every step has a name, and the name is how it is cited.**
-[`0005`](../../docs/notes/0005-steps-are-cited-by-name.md) is the decision
-and `scripts/check-step-names.py` is what enforces it.
+**Cite steps by their stable names**, not their sequence numbers.
 
 
 The sequence
@@ -216,12 +209,6 @@ is yours to reclaim.
   references and limits, including expiry or revocation; or "none recorded">.
   Do not copy private source contents into a public issue.
 
-Work in progress was committed and pushed to the remote push branch above
-before this implementor was retired, where securing it succeeded — the origin
-tip is what it left, not what a cloud workspace held. Where a mapped local
-execution branch differs, that identity is recorded separately for resume.
-Where securing failed, "Secured: no" says so, and nothing beyond the last push
-survived.
 ```
 
 The active route adds `provenance` to each comment. Omp's wrapper appends its
@@ -308,16 +295,8 @@ not archived**: it was interrupted only, and stays a residual with its link. If 
 is still running, one retry after the interruption's result is in; a second
 refusal is reported as a residual, not retried in a loop.
 
-**A harness-local subagent was already cancelled at `Secure the work`**,
-along with the commit and the push into its worktree. There is nothing left
-to stop here: this step is a no-op for that fleet member, and the handoff
-already named its branch and worktree path.
-
-Nothing is stopped without first being told to push and given a bounded
-chance to: that is `Secure the work`'s job, done before this step runs. What
-survives an implementor that missed its wrap-up window is exactly what
-reached origin by then — named as a residual, never softened into an
-accepted loss.
+**A harness-local subagent needs no second stop:** `Secure the work` already
+attempted cancellation and securing before the handoff.
 
 5 — Print the banner
 --------------------
@@ -351,24 +330,10 @@ re-armed, and the next turn on this work is a resumed `embark`.
 Where it stops and waits
 ========================
 
-Nowhere, by design, past the one bounded wait `Secure the work` takes for
-the wrap-up. The invocation is a stop instruction, and every stop below it
-runs through: no permission is asked to secure, to comment, to archive, to
-cancel, or to print the banner. The two things that look like stops are
-reports instead:
-
-- **Nothing is at sea** — at `Read the fleet`. The banner prints with a
-  zero count and the reason; if the invocation named an issue that is not
-  an embarked epic, the report says which skill takes it — `undertake` for
-  a task issue, `embark` for an epic still to work. A stop instruction for a
-  single undertaking is `undertake`'s `The stop`.
-- **A residual** — at `Print the banner`. Named in the banner, one line
-  each, and left for the person reading it. Nothing here retries a
-  residual twice.
-
-Past the wrap-up, the one wait this skill never takes is the one `embark`'s
-own ends take: `Close the epic` is `embark`'s, and a stand-down is not asked
-for when the last wave comes in.
+No additional wait: `Secure the work` owns the bounded wrap-up wait.
+Nothing at sea routes to `Read the fleet`; residuals route to
+`Print the banner`. A single undertaking stops through `undertake`'s
+`The stop`; a completed epic closes through `embark`.
 
 
 Non-goals
