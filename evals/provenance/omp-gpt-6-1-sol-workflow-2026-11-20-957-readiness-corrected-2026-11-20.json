@@ -1,0 +1,173 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a draft that has met its gate",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "Gate reads succeeded, then the report posted before ready",
+          "details": "Command: python3 .fixture/verify.py gate\nExit code: 0 (expected: 0)\nStdout:\nok: gate invariants held\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply marks the pull request ready rather than asking",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply marks the pull request ready rather than asking",
+            "duration_seconds": 13.01,
+            "findings": [
+              "Current-head CI and review conditions were freshly queried.",
+              "First-readiness report preceded the ready call.",
+              "No runtime re-verification or PR-body edit was performed."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "63b41551817057156bdd170af8e0795f23c76cf990ff85e979004c9178499db2",
+            "rationale": "ANCHOR: result. The first response clears the satisfied runtime reminder and reserves dynamic status for fresh reads; the transcript then shows gate reads, report publication, and marking ready in that order, with the final reply reporting completion without asking the user.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 3521,
+              "output": 181
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d553325e72e4aad918d3f2c6797d4cb18a560e76d8edb48376e8e86f0bb47287"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 138.34077548980713,
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol-workflow",
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 750208,
+        "output_tokens": 3506,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 61595
+      },
+      "tokens": 815309,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.0.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-20T14:26:30.746748",
+  "experiment_id": "omp-gpt-6-1-sol-workflow",
+  "host": {
+    "hostname": "paseo-sandbox",
+    "kind": "laptop",
+    "platform": "Linux-6.8.0-151-generic-x86_64-with-glibc2.41",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "d553325e72e4aad918d3f2c6797d4cb18a560e76d8edb48376e8e86f0bb47287",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v2",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 3521,
+      "output": 181
+    }
+  },
+  "plugin_revision": {
+    "commit": "82f3dac5f8fa29529689ccc18b98740eff753f6e",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-20T14:27:17.621560+00:00",
+  "run_id": "957-readiness-corrected-2026-11-20",
+  "schema_version": 5,
+  "started_at": "2026-11-20T14:24:12.390065",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "undertake-10-ready-is-marked-not-asked": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "undertake-10-ready-is-marked-not-asked"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

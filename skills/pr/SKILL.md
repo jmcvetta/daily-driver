@@ -107,8 +107,9 @@ Read CI for the resulting head through `review-cycle`'s wait rules. A head
 change invalidates earlier CI evidence. Fix failed checks; report unavailable
 logs as an evidence blocker, never green. Pending checks use its bounded wait.
 A process can merge without an agent turn but cannot assess review or
-readiness. Every owner turn returning to the PR takes the harness's catch-up
-look first.
+readiness. Before resuming PR work, take the harness's catch-up look. Answer
+direct user questions first under the constitution; a catch-up look is not a
+prerequisite for answering from known evidence.
 
 `undertake` invokes this maintenance and retains its review, ready gate, and
 first-readiness report. Direct PR work does not inherit those issue-specific

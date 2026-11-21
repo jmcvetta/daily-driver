@@ -862,9 +862,10 @@ it rather than waiting until ready or starting a second actor.
 When it looks
 -------------
 
-Take `pr`'s catch-up look on every turn returning to the open pull request,
-and once before `Ready for review`. Currency is the gate's first condition,
-not proof that the undertaking is complete.
+Take `pr`'s catch-up look before resuming work on the open pull request.
+Answer direct user questions first under the constitution. A catch-up look
+already taken in this turn also serves `Ready for review`; do not repeat it
+without a relevant state change. Currency is not proof of completion.
 
 After currency settles, assess CI on the resulting head through
 `review-cycle`'s `How to wait`, then continue review, the ready gate, and
@@ -931,6 +932,21 @@ Take the reads in this order. The first that does not hold is where the
 sequence stops, and the reason is stated in one line. Cite a read by its
 condition, never by its position: a read inserted ahead of it moves every
 number.
+
+**Continue from evidence, not from an old hold.** Keep each satisfied
+condition with the inputs it covers. Completed acceptance or runtime
+verification remains valid while its relevant artifact, head, configuration
+and validity conditions hold. A later turn or an old "keep draft" reminder
+does not invalidate it. Recheck dynamic PR state on return, but reuse reads
+already obtained for the same state in this turn. Changed inputs, incomplete
+evidence or a new contradictory result invalidate only the affected
+conditions; a changed head always needs current-head CI under `review-cycle`.
+Do not rerun a deployment or runtime wait solely to repeat a passed gate.
+
+When the last unmet condition clears, finish the remaining reads and execute
+the report and ready writes below. "Final gate pending" without a named unmet
+condition is not a blocker, and an earlier agent-authored hold is not user
+approval that must be renewed.
 
 1. **The head carries the whole of the issue's work.** Four parts, each a call
    or a comparison of two texts the session already holds:
@@ -1022,19 +1038,19 @@ number.
    pauses on it; this condition is what the sequence returns to once the
    branch carries the result.
 
-**When the reads agree, publish the first-readiness report if none exists,
-then mark the pull request ready in the same turn.** The harness calls are in
-`The milestone` and the reference file; no summary, permission request or
-turn boundary comes between the gate and these actions. A failed report write
-leaves the PR draft. If marking ready fails after the report posts, preserve
-the report and revalidate the gate before retrying.
+**When the reads agree and no explicit user hold applies, publish the
+first-readiness report if none exists, then mark the pull request ready in the
+same turn.** The harness calls are in `The milestone` and the reference file;
+no summary, permission request or turn boundary comes between the gate and
+these actions. A failed report write leaves the PR draft. If marking ready
+fails after the report posts, preserve the report and revalidate the gate
+before retrying.
 
-**The user is never a gate condition.** Every stop this sequence takes is
-named under `Where it stops and waits`, and none of them is a confirmation
-that the work is ready. The reads above are the only thing that knows. The
-user did not do the work and cannot answer for it, so a question here asks
-somebody else to carry a claim this session is the one holding the evidence
-for.
+**The user is never asked to certify the gate.** A direct user hold on the
+readiness transition remains controlling: do not publish the first-readiness
+report or mark ready while the hold applies. A status question does not release
+it. An agent-authored reminder is not a user hold and does not outlive the
+condition it records.
 
 A branch behind its base, red CI, an open thread, or a human action still
 owed, or an issue item the diff does not carry, means it **stays a draft**,

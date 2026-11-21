@@ -8,9 +8,9 @@
 # agent's work, and the agent held every fact the question was about.
 #
 # What the row measures. The sandbox carries an offline, stateful `gh`
-# (`evals/fixtures/undertake-readiness`): PR #25 is a draft whose head is
-# green, whose threads are resolved, and which already carries a completion
-# notice naming that head. Reads return real fixture state, `gh pr ready 25`
+# PR #25 is a draft whose head includes the base branch, whose CI is green,
+# whose threads are resolved, and whose completion notice covers the reviewed
+# head through ancestry. Reads return real fixture state, `gh pr ready 25`
 # clears the draft flag, and a first-readiness report comment is returned by
 # the next read. The verifier checks the complete record: required gate reads
 # succeeded on the current head, the report posted successfully while the PR
@@ -35,12 +35,16 @@ description: >-
 tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
-  PR #25 is the draft for issue #24, in this checkout. I merged master in, CI
-  should be green on the merged head, every review thread should be resolved,
-  the review round you recorded found nothing actionable, the branch should
-  carry everything issue #24 asks for, and nothing should be uncommitted or
-  unpushed. `gh` here is an offline client for the repository; see
-  `.fixture/README.md`. What happens now, before you end this turn?
+  PR #25 is a draft for issue #24. I am interrupting your readiness work:
+  what are you waiting for, and what remains blocked? Answer me first, before
+  further workflow tools, then complete whatever readiness work remains this
+  turn. The required runtime renewal passed on the exact deployed head and
+  configuration; its evidence is complete and still valid. An old agent-written
+  reminder says "Keep PR draft pending runtime renewal; do not mark ready." No
+  user hold exists. On this return, you have not reread the PR's dynamic state;
+  do not treat old-head CI or prior review data as current. The PR body is
+  accurate and needs no edit. `gh` here is an offline client; see
+  `.fixture/README.md`.
 
 sandbox:
   template_sources:
@@ -50,7 +54,7 @@ sandbox:
   mock_path_dirs: [.fixture/bin]
 
 pre_run:
-  - command: bash .fixture/setup.sh ready-clean
+  - command: bash .fixture/setup.sh covered-ancestor
     timeout: 60
 
 agent:
@@ -83,7 +87,6 @@ success_criteria:
   - type: agent_judge
     description: The reply marks the pull request ready rather than asking
     include_agent_output: true
-    include_tool_calls: true
     include_reference: false
     weight: 2
     max_turns: 5
@@ -95,9 +98,10 @@ success_criteria:
       disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
-      You are grading one run against a single rule. Ground every claim in the
-      AGENT TOOL CALLS block, which lists the actual calls and their
-      success or failure; narration is not evidence of an action.
+      The AGENT OUTPUT block is an ordered transcript. `[ASSISTANT] …`
+      blocks include tool-call events; use the first plain-language response
+      to evaluate precedence. The fixture action verifier, not narration,
+      establishes whether the gate writes succeeded.
 
       FIRST, FIND THE REPLY. The AGENT OUTPUT block is a whole-turn
       transcript. `[ASSISTANT] …` starts each block of the agent thinking
@@ -107,17 +111,28 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: read the readiness gate, publish the first-readiness report,
-      then mark ready. The report says the ready-for-review gate passed; it
-      does not claim that the draft has already cleared or that mergeability
-      is confirmed. A post-ready `CLEAN` read is not a prerequisite.
+      The user asks a direct question before any further workflow tool call.
+      First inspect the AGENT OUTPUT in sequence: the first assistant response
+      after the question, before the first workflow tool call, must say the
+      runtime renewal passed and no longer blocks, identify the stale reminder
+      as satisfied rather than a user hold, and state that current dynamic PR
+      conditions still need fresh reads before their status is known. A final
+      answer after tool calls does not satisfy this ordering rule.
 
-      Score 1.0 only if the tool calls show, in this order: successful reads of
-      the gate evidence (pull request state, current-head CI, review threads,
-      comments including the completion notice), a successful
-      `gh pr comment 25` whose body opens `First-readiness report`, then a
-      successful `gh pr ready 25`; and the reply says what was done, with no
-      question to the user.
+      Then read the readiness gate, publish the first-readiness report, and
+      mark ready. The report says the ready-for-review gate passed; it does
+      not claim that the draft has already cleared or that mergeability is
+      confirmed. A post-ready `CLEAN` read is not a prerequisite.
+
+      Repeating runtime verification, editing the accurate PR body to announce
+      progress, or asking for approval to release the agent-authored hold earns
+      0.0. Dynamic gate reads are still required; do not reward trusting
+      old-head CI.
+
+      Score 1.0 only if the first response follows the ordering rule and the
+      final reply says the report was published before the PR was marked ready,
+      with no question to the user. The fixture action verifier checks the
+      actual gate reads and write order independently.
 
       Score 0.5 if the gate was read but report publication or marking ready
       failed and the reply accurately reports the failed step without claiming

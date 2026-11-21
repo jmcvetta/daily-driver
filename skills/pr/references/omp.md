@@ -114,6 +114,14 @@ work. A timeout is not a handoff to the user. During a CI wait,
 turn. A reminder does not restart a live watcher. Coalesce a reminder and a
 service completion by rereading state, not by launching duplicate work.
 
+Record waits as conditions and next actions, not permanent instructions to
+keep the PR draft. For example: "Runtime renewal is pending on head <sha>;
+when it passes, finish the remaining ready gate and mark ready." A reminder
+records earlier state, not new authority. Reconcile it with later evidence
+and user instructions; a satisfied condition no longer holds readiness. An
+explicit user hold remains in force until the user releases it; a status
+question does not release it.
+
 A stopped maintenance service is unfinished owner work, not a successful
 watch. Exit 3 requires conflict inspection: resolve a plain mechanical
 conflict under the existing policy; ask only for a semantic decision. Other
@@ -132,13 +140,28 @@ and does no work; it must not rearm itself.
 The catch-up look
 -----------------
 
-A stale wake after a user stop does no work. Otherwise every owner turn
-returning to the PR first reads `proc://keep-current-<number>` and inspects
-failures, then runs the `Base currency checkpoint`. Assess current-head CI
-through `review-cycle`'s three-source read and renewable bounded wait.
-Continue diagnosis, review, and readiness as applicable. Known-running CI
-retains a real reminder or supervised wait; a detached service alone is not
-an owner continuation. Rearm the single slot before ending an unfinished turn.
+Check user interruptions before catch-up: answer a direct question from known
+evidence before tools, and obey a stop through the workflow's stop procedure.
+A stale wake after a user stop does no work.
+
+Before resuming PR work, read `proc://keep-current-<number>` and inspect
+failures, then run the `Base currency checkpoint`. Assess current-head CI
+through `review-cycle`'s three-source read and renewable bounded wait. Reuse
+these results in the ready gate in the same turn; do not start another
+catch-up look merely because the next action is marking ready.
+
+Continue from the first unmet condition, not the start of the workflow.
+Retain completed acceptance and runtime evidence with its artifact, head,
+configuration and other relevant inputs. Rerun it only when those inputs
+change or the evidence is incomplete, failed, expired under its contract, or
+contradicted. Dynamic GitHub state still needs current reads: a changed head
+needs its own CI, and new checks, comments, threads or blockers need assessment.
+Do not edit an accurate PR body merely to narrate a gate pass or refresh a
+reminder; such edits can trigger new checks.
+
+Known-running CI retains a real reminder or supervised wait; a detached
+service alone is not an owner continuation. Rearm the single slot before
+ending an unfinished turn.
 
 For an undertaking, continue its review, ready gate, and milestone through
 [`undertake`'s route](../../undertake/references/omp.md). A direct PR has no

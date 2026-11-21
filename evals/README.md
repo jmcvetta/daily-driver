@@ -1546,27 +1546,40 @@ The readiness rows `undertake/08-cadence-stops-at-ready-omp.yaml`,
 and `20-report-write-failure-keeps-draft.yaml` through
 `22-existing-report-is-not-duplicated.yaml` measure actions, not narration.
 `fixtures/undertake-readiness/shared` supplies a stateful offline `gh` for
-pull request #25 (reads return fixture state, `gh pr ready` clears the draft
-flag, and a comment is returned by the next read), a temporary Git repository
-with a local bare remote, and a harmless `pr-keep-current.sh` stub. Each call
-is logged to `.fixture/ops.log`; `verify.py gate` and `verify.py service` read
-that record after the run. The gate verifier requires successful current-head
-gate reads before the report, a successful report while the PR is still draft,
-and only then a ready write. A refused report forbids any ready attempt; a
-refused ready write preserves the report. Separate scenarios cover an existing
-report, post-ready `BLOCKED` or `UNKNOWN` merge states, CI on another head, and
-failed reads. The verifier also rejects a `Review record` in place of the
-notice, a notice written before the reads, a missing notice re-read, a new
-review round for a clean merge, and a duplicate or premature report. Every
-valid transition and invalid case described here is an offline fixture
-scenario. The service verifier needs a launch observed alive and stops whatever
-the run left behind. The judges receive tool calls (`include_tool_calls`) and
-score a failed call as an observed limit that earns no completed-action
-credit. `skill_triggered` remains the activation criterion; read it separately
-from the behavioural criteria, because a run that only triggered the skill
-has not completed the workflow. These rows are a new, unmeasured instrument:
-no subject, judge or calibration run has recorded them, and the committed
-results for the previous rows are untouched.
+pull request #25, a temporary Git repository with a local bare remote, and a
+harmless `pr-keep-current.sh` stub. Each call is logged to `.fixture/ops.log`;
+`verify.py gate` and `verify.py service` read that record after the run. The
+gate verifier requires successful current-head reads before the report, a
+successful report while the PR is still draft, and only then a ready write.
+A refused report forbids a ready attempt; a refused ready write preserves the
+report. Separate scenarios cover an existing report, post-ready `BLOCKED` or
+`UNKNOWN` merge states, CI on another head, and failed reads. The verifier
+rejects a substitute review record, early or duplicate reports, missing
+notice rereads, and a new review round for a clean merge.
+
+The positive readiness row uses `covered-ancestor`: the PR head already
+contains the base, while the completion notice covers the reviewed head through
+ancestry. A no-op base update leaves CI green; the fixture marks CI in flight
+only when the head changes. The row's deterministic verifier checks gate reads
+and report-before-ready order. Its judge reads the transcript without a
+separate tool-call payload, which exceeded the judge's 120,000-byte limit in
+the first smoke. The task-24 user-hold control separately verifies no workflow
+calls or readiness report while the hold remains active.
+
+Issue #957's bounded focused smoke is recorded in
+`provenance/omp-gpt-6-1-sol-workflow-2026-11-20-957-readiness-interruption-2026-11-20.json`
+and
+`provenance/omp-gpt-6-1-sol-workflow-2026-11-20-957-readiness-corrected-2026-11-20.json`.
+The first two-task run passed the user-hold control. Its positive case answered
+the user before workflow calls, but failed because `ready-clean` left the base
+ahead; the fixture then started CI on the updated head, so report and ready
+were correctly withheld. Its separate judge also rejected an oversized
+tool-call prompt. The corrected, fresh one-task run changed the fixture to
+`covered-ancestor`, removed that redundant judge payload, and passed the action
+verifier and transcript judge (score 1.0). The initial failure remains
+preserved. Runs used one repeat and concurrency one; the record reports
+subscription judging, while model pricing is incomplete and no cost total is
+claimed. These focused results do not prove general model compliance.
 
 The Omp PR currency case uses `currency-stale`: the draft's base has advanced,
 the old head is green, and the verifier requires `gh pr update-branch` to merge

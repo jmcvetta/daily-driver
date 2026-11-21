@@ -261,7 +261,8 @@ def do_update_branch(args, state):
     parents = subprocess.run(["git", "rev-list", "--parents", "-n", "1", new_head], cwd=worktree, capture_output=True, text=True, check=True).stdout.split()[1:]
     state["pr"]["head"] = new_head
     state["commits"][new_head] = {"parents": parents}
-    state["ci_in_flight"] = True
+    if new_head != old_head:
+        state["ci_in_flight"] = True
     save(state)
     record(args, "update-branch", True, base_sha=base_sha, previous_head=old_head,
            base_in_head=subprocess.run(["git", "merge-base", "--is-ancestor", base, new_head], cwd=worktree).returncode == 0,
