@@ -204,9 +204,9 @@ leases remain unchanged.
 
 Cancellation writes a schema-2 `cancelled` lifecycle record, not a completion
 record. Existing schema-1 active and completed records remain readable.
-Transcript, worktree, branch, approval evidence, and unfinished task state stay
-intact. A new undertaking requires a fresh initial selection. Repeated
-cancellation with no owner is a no-op. This command does not replace the workflow's stop handoff.
+Transcript, worktree, branch, and unfinished task state stay intact. A new
+undertaking requires a fresh initial selection. Repeated cancellation with no
+owner is a no-op. This command does not replace the workflow's stop handoff.
 
 
 Omp prefers its extension's in-session switch. A full handoff needs one owner.

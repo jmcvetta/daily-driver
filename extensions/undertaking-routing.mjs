@@ -268,7 +268,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 					state.reason = "This child was cancelled and cannot resume execution";
 					publish(ctx, state);
 				}
-				ctx.ui.notify("Undertaking cancelled, not completed. Transcript, worktree, and approval evidence are unchanged. A new undertaking requires a fresh initial selection.", "info");
+				ctx.ui.notify("Undertaking cancelled, not completed. Transcript, worktree, and unfinished state are unchanged. A new undertaking requires a fresh initial selection.", "info");
 			} catch (error) {
 				reportRejection(ctx, state, error);
 			} finally {
@@ -490,7 +490,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		if (!state) return;
 		if (isCancelled(state)) return { block: true, reason: guardReason("The owning undertaking was cancelled; child dispatch is blocked", state?.issue) };
 		const dispatchEpoch = state.dispatchEpoch ?? 0;
-		if (isCancelled(state) || current(ctx) !== state || (state.dispatchEpoch ?? 0) !== dispatchEpoch) {
+		if (current(ctx) !== state || (state.dispatchEpoch ?? 0) !== dispatchEpoch) {
 			return { block: true, reason: guardReason("The owning undertaking or child dispatch was cancelled or replaced", state?.issue) };
 		}
 		const parents = [...(scope(ctx)?.values() ?? [])].filter(record => record.agentId === ctx.agent?.id);

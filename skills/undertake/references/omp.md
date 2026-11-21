@@ -122,10 +122,10 @@ cancel unfinished routing. When status reports `cancelOwner: invalid`, use
 `/undertaking cancel invalid` for that malformed current-session record.
 Cancellation aborts and waits for local work, releases only the owned lease,
 retires pending handoffs, and revokes owned children. It persists cancellation
-without completing the issue. It preserves transcript, worktree,
-branch, and approval evidence. A later undertaking requires a fresh initial
-selection. Repeated cancellation with no owner is a no-op. Use the workflow's
-stop handoff separately when work must be stood down.
+without completing the issue. It preserves transcript, worktree, and branch.
+A later undertaking requires a fresh initial selection. Repeated cancellation
+with no owner is a no-op. Use the workflow's stop handoff separately when work
+must be stood down.
 
 
 **Issue-only research writes use the issue client.** With no resume branch,
