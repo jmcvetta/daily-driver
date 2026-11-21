@@ -184,11 +184,8 @@ Landing and close
 -----------------
 
 The PR `get` supplies `draft`, `mergeable_state`, `head.sha`, labels and body.
-Use `review-cycle`'s complete paginated thread read. For the notice in `Land
-the pull request`, paginate conversation comments and match `user.login` to
-the claim author. If its SHA differs from `head.sha`, walk `get_commit` from
-the head along first parents to that SHA; every intervening commit must have
-two `parents`, and the walk must reach the SHA.
+Apply `undertake`'s `Review evidence` predicate to the complete review,
+conversation and thread histories and the gated `head.sha`.
 
 The merge call is made only for a task pull request,
 after those reads hold. `expectedHeadSha` makes it fail closed if the task

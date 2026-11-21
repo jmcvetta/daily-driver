@@ -56,12 +56,8 @@ exists to reach.
 | `Close the epic` | Comment with child outcome evidence or an unsupported claim | `gh issue comment <number> --body-file <path>` |
 | `Close the epic` | Close as completed | `gh issue close <number> --reason completed` |
 
-The complete thread graph uses `review-cycle`'s paginated GraphQL read. For
-the notice at `Land the pull request`, paginate conversation comments and
-match `comments[].author.login` to the claim author. If the notice SHA differs
-from `headRefOid`, verify it lies on the first-parent chain with
-`git rev-list --first-parent <headRefOid> | grep -qx <sha>` and verify
-`git rev-list --first-parent --no-merges <sha>..<headRefOid>` is empty.
+Apply `undertake`'s `Review evidence` predicate to the complete review,
+conversation and thread histories and the gated `headRefOid`.
 
 The merge is one conditional `gh pr merge` call for a task pull request after
 the gate holds. `--match-head-commit <headRefOid>` makes it fail closed if the
