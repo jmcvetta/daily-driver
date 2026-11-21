@@ -74,7 +74,7 @@ Stop there and let it overrun: the identifier and the subject are the two
 things worth more than the budget.
 
 Issue #40, *"New skill: set the session title"*, needs **Tracker
-prefix** alone: `#40 Set the session title` — 29 characters.
+prefix** alone: `#40 Set the session title` — 25 characters.
 
 Issue #212, *"fix(storage): retry with exponential backoff for the S3 upload
 client"*, loses its type prefix to **Tracker prefix**, then `the`, `with`,
