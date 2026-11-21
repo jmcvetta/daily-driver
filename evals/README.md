@@ -251,6 +251,84 @@ a completed attempt lacks verified telemetry or a priced card. A missing
 reviewer cost is `unreported`, never zero and never the parent's cost. Prices
 are computed from the committed endpoint cards, not billed amounts.
 
+Run every attempt serially, one active attempt globally:
+
+```sh
+make evals-plan-reviewer-quality
+make evals-judge-preflight JUDGE=omp-vercel-gpt-6.1-sol
+
+python3 scripts/evals-reviewer-run.py --arm vercel-mistral --phase smoke \
+  --run-dir evals/runs/906/vercel-mistral-smoke
+make evals-record RUN=evals/runs/906/vercel-mistral-smoke \
+  EXPERIMENT=evals/experiments/omp-reviewer-mistral-large-4-vercel.yaml \
+  JUDGE=omp-vercel-gpt-6.1-sol JUDGE_TASKS_DIR=evals/tasks-judged
+python3 scripts/evals-reviewer-quality.py --arm vercel-mistral \
+  --experiment evals/experiments/omp-reviewer-mistral-large-4-vercel.yaml \
+  --run-dir evals/runs/906/vercel-mistral-smoke \
+  --record evals/provenance/<record>.json --repeats 1 \
+  --output evals/provenance/reviewer-quality/vercel-mistral-smoke.json
+```
+
+The smoke pair is `01-boundary` and `05-clean-boundary` once per arm: 14
+attempts, excluded from cohort metrics. Inspect completion, captured delivery,
+requested and resolved identities, the resolved upstream and effort, child
+usage and cost, and the judge score before dispatching that arm's cohort.
+Cohorts run all eight cases five times per arm: 40 attempts per arm, 280 total.
+Use a fresh explicit nested run directory for each phase and keep the
+interrupted attempts.
+
+### Observed comparison
+
+Both interrupted DeepSeek slots were rerun once with the user's authorization.
+The [replacement record](provenance/reviewer-quality/deepseek-replacements.json)
+preserves their terminal evaluator results and independent judge scores. The
+original interruptions remain in the
+[reconciliation](provenance/reviewer-quality/deepseek-resumption.json).
+
+**Reviewer attribution is incomplete.** In both replacements, the parent
+dispatched a reviewer but the eval guard rejected its `agent://` result read.
+The retained records do not show delivery of a completed reviewer result.
+The parent's final JSON and the judge's scores do not prove that the reviewer
+produced that JSON. Both replacements are therefore excluded from reviewer
+quality metrics, even though their evaluator records say `SUCCESS`.
+
+The same attribution check applies to the original cohorts. A captured
+completed reviewer result must match the parent's final JSON. Under that rule,
+the GLM cohort has no verified reviewer results and the DeepSeek cohort has
+five; 16 additional final responses in each arm have unverified delivery.
+The two smoke results for each arm also lack captured delivery. This does not
+prove those reviewers failed; it means the retained evidence cannot attribute
+their parent responses to them. The standard run index scores parent responses,
+not necessarily reviewer output.
+
+The revised capture smoke used source commit `74660927775deeb0a1f6719b51e6d96145df4027`
+and Omp 18.14.1. Each model reviewed the defective and clean boundary once.
+All four reviewer deliveries matched the final responses; the independent judge
+scored each response 1. Both models reported the boundary defect and cleared
+the clean case. The
+[GLM record](provenance/reviewer-quality/glm-capture-smoke.json) and
+[DeepSeek record](provenance/reviewer-quality/deepseek-capture-smoke.json)
+preserve the outcomes. GLM's defective-case identity was an object rather than
+the requested string, so the collector marks that identity unreported.
+Backend-served identity remains unreported for all four. These two cases do
+not establish which reviewer is better.
+
+The five verified DeepSeek responses are too few to establish a comparison.
+Their original task records include three positive full reviews, one clean
+full review, and one fix-delta review. Details, verdicts, errors, and the
+original two interruption markers remain in the
+[GLM record](provenance/reviewer-quality/glm-cohort-v3.json) and
+[DeepSeek record](provenance/reviewer-quality/deepseek-cohort-v3.json).
+Do not use the earlier unverified precision, recall, or delta accuracy claims.
+
+Attempt duration includes orchestration and is not reviewer latency. The
+DeepSeek cohort's near-zero duration in the standard index measures its resume
+aggregation, not the cohort. Reviewer usage and backend-served identity are
+unavailable. The evidence does not distinguish the reviewers. Keep the current
+default; this is not a promotion.
+
+### Vercel evidence and dispatch stop
+
 **Dispatch stopped on 2026-11-18T22:10:53Z.** The campaign exhausted the
 Vercel AI Gateway balance. The parent, every non-review helper and the judge
 were pinned to `vercel-ai-gateway/openai/gpt-6.1-sol:low` by the issue, and
@@ -325,83 +403,6 @@ refusal.
 
 Do not dispatch inference until the operator authorizes spend and the gateway
 balance is restored.
-
-Run every attempt serially, one active attempt globally:
-
-```sh
-make evals-plan-reviewer-quality
-make evals-judge-preflight JUDGE=omp-vercel-gpt-6.1-sol
-
-python3 scripts/evals-reviewer-run.py --arm vercel-mistral --phase smoke \
-  --run-dir evals/runs/906/vercel-mistral-smoke
-make evals-record RUN=evals/runs/906/vercel-mistral-smoke \
-  EXPERIMENT=evals/experiments/omp-reviewer-mistral-large-4-vercel.yaml \
-  JUDGE=omp-vercel-gpt-6.1-sol JUDGE_TASKS_DIR=evals/tasks-judged
-python3 scripts/evals-reviewer-quality.py --arm vercel-mistral \
-  --experiment evals/experiments/omp-reviewer-mistral-large-4-vercel.yaml \
-  --run-dir evals/runs/906/vercel-mistral-smoke \
-  --record evals/provenance/<record>.json --repeats 1 \
-  --output evals/provenance/reviewer-quality/vercel-mistral-smoke.json
-```
-
-The smoke pair is `01-boundary` and `05-clean-boundary` once per arm: 14
-attempts, excluded from cohort metrics. Inspect completion, captured delivery,
-requested and resolved identities, the resolved upstream and effort, child
-usage and cost, and the judge score before dispatching that arm's cohort.
-Cohorts run all eight cases five times per arm: 40 attempts per arm, 280 total.
-Use a fresh explicit nested run directory for each phase and keep the
-interrupted attempts.
-
-
-### Observed comparison
-
-Both interrupted DeepSeek slots were rerun once with the user's authorization.
-The [replacement record](provenance/reviewer-quality/deepseek-replacements.json)
-preserves their terminal evaluator results and independent judge scores. The
-original interruptions remain in the
-[reconciliation](provenance/reviewer-quality/deepseek-resumption.json).
-
-**Reviewer attribution is incomplete.** In both replacements, the parent
-dispatched a reviewer but the eval guard rejected its `agent://` result read.
-The retained records do not show delivery of a completed reviewer result.
-The parent's final JSON and the judge's scores do not prove that the reviewer
-produced that JSON. Both replacements are therefore excluded from reviewer
-quality metrics, even though their evaluator records say `SUCCESS`.
-
-The same attribution check applies to the original cohorts. A captured
-completed reviewer result must match the parent's final JSON. Under that rule,
-the GLM cohort has no verified reviewer results and the DeepSeek cohort has
-five; 16 additional final responses in each arm have unverified delivery.
-The two smoke results for each arm also lack captured delivery. This does not
-prove those reviewers failed; it means the retained evidence cannot attribute
-their parent responses to them. The standard run index scores parent responses,
-not necessarily reviewer output.
-
-The revised capture smoke used source commit `74660927775deeb0a1f6719b51e6d96145df4027`
-and Omp 18.14.1. Each model reviewed the defective and clean boundary once.
-All four reviewer deliveries matched the final responses; the independent judge
-scored each response 1. Both models reported the boundary defect and cleared
-the clean case. The
-[GLM record](provenance/reviewer-quality/glm-capture-smoke.json) and
-[DeepSeek record](provenance/reviewer-quality/deepseek-capture-smoke.json)
-preserve the outcomes. GLM's defective-case identity was an object rather than
-the requested string, so the collector marks that identity unreported.
-Backend-served identity remains unreported for all four. These two cases do
-not establish which reviewer is better.
-
-The five verified DeepSeek responses are too few to establish a comparison.
-Their original task records include three positive full reviews, one clean
-full review, and one fix-delta review. Details, verdicts, errors, and the
-original two interruption markers remain in the
-[GLM record](provenance/reviewer-quality/glm-cohort-v3.json) and
-[DeepSeek record](provenance/reviewer-quality/deepseek-cohort-v3.json).
-Do not use the earlier unverified precision, recall, or delta accuracy claims.
-
-Attempt duration includes orchestration and is not reviewer latency. The
-DeepSeek cohort's near-zero duration in the standard index measures its resume
-aggregation, not the cohort. Reviewer usage and backend-served identity are
-unavailable. The evidence does not distinguish the reviewers. Keep the current
-default; this is not a promotion.
 
 ### Revised capture cohort
 
