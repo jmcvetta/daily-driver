@@ -1,15 +1,11 @@
 ---
 name: issue
 description: >-
-  This skill should be used whenever a GitHub issue is being opened or updated
-  — including when the user says "/issue", "open an issue for this", "update
-  #123", or asks for an issue's body, label or state to change, and before
-  opening or updating an issue, or changing its body, label or state. Reads the
-  issue's existing state before any edit. The body's content is `issue-body`'s,
-  the label is `issue-labels`'s, the relationship graph is `issue-deps`'s; each
-  is invoked rather than restated. Not for read-only discussion of an issue,
-  for a comment alone, or for taking an issue to a pull request — that is
-  `undertake`.
+  Use for `/issue` when a GitHub issue is opened or updated, or its body,
+  label, or state changes. Reads existing state before any edit; body content
+  is `issue-body`'s, labels `issue-labels`'s, graph edges `issue-deps`'s. Not
+  for read-only discussion of an issue, a comment alone, or taking an issue to
+  a pull request (`undertake`).
 ---
 
 # Issue authoring

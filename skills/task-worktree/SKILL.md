@@ -1,18 +1,14 @@
 ---
 name: task-worktree
 description: >-
-  This skill should be used before repository-changing work begins in an
-  already-running Claude Code, Codex, or Oh My Pi session — including when the
-  user asks to implement, build, fix, refactor, write, or update repository
-  files; assigns an issue; invokes a workflow that will change the repository;
-  or when a read-only investigation turns into edits. It fires before task
-  research or the first mutating call. Supplies the feature branch from the
-  repository's base branch, the sibling worktree, and the rule that every later
-  task operation stays rooted there while the primary worktree stays unchanged.
-  Not for read-only questions, investigations, or reviews. Not when the current
-  worktree is already dedicated to this task and attached to its feature
-  branch; a detached task worktree still triggers it. A delegated slice uses
-  its parent's task worktree and does not create another one.
+  Use before repository-changing work begins in a running session, before task
+  research or the first mutating call, including when an investigation turns
+  into edits. Supplies the feature branch from the base branch and the sibling
+  worktree that roots every later task operation while the primary worktree
+  stays unchanged. Not for read-only questions, investigations, or reviews. Not
+  when the current worktree is already dedicated to this task and attached to
+  its feature branch; a detached one still triggers it. A delegated slice uses
+  its parent's task worktree.
 ---
 
 # Task worktree

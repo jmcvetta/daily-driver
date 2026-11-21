@@ -1,20 +1,12 @@
 ---
 name: stand-down
 description: >-
-  This skill should be used whenever an embarked epic's watch is ended
-  because work must stop — when the user says "/stand-down", "stand down",
-  "stop work", "wrap up", or is putting the machine away, and whenever an
-  embark must end for any reason short of the last wave coming in. Supplies
-  the cancellation of the orchestrator's own watches first, then the wrap-up
-  that secures every implementor's work-in-progress — commit and push —
-  before the handoff it writes: one comment per task issue at sea and one
-  roll-shaped stand-down comment on the epic. Then the stop and archive of
-  every implementor and the banner that says stopping is safe. Runs fast by
-  design: no `embark` work from the invocation on, parallel batches, no
-  polls, one bounded wrap-up wait, one bounded retry anywhere.
-  Not for the watch ending because the epic is worked out — `embark` reports
-  that itself — and not for a single issue, which has no fleet to stand down
-  and whose stop is `undertake`'s `The stop`.
+  Use for `/stand-down` when an embarked epic's work must stop: a fleet is
+  stood down, the machine is put away, or an embark ends short of the last wave
+  landing. Supplies cancellation of the orchestrator's watches first, the
+  wrap-up that commits and pushes every implementor's work, one handoff per
+  task issue, the epic stand-down comment, and the stop and archive. Not for an
+  epic worked out (`embark` reports it) or a single issue (`undertake`'s stop).
 ---
 
 # Stand-down

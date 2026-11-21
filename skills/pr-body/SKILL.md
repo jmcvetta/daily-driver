@@ -1,19 +1,12 @@
 ---
 name: pr-body
 description: >-
-  This skill should be used whenever the body of a GitHub pull request is
-  being written or revised — including when the user says "rewrite the PR
-  description", "update the PR body", "the PR description is thin", or asks
-  for more detail in a PR, and including any call the agent makes on its own
-  initiative that writes or revises a pull request's body while opening or
-  updating one. Supplies the required
-  structure: one-line summary, salutation in verse, optional blockers and
-  issue-reference sections, executive summary, and reviewer-relevant detail.
-  A pull request whose diff changes the Tofu stack carries an apply-and-state
-  blocker and the PR `human` label only while that requirement is outstanding.
-  `undertake` owns operational escalation and its evidence; this skill
-  publishes that decision and maintains its visible PR state. Not for the PR
-  title — that is `pr-title`.
+  Use whenever a GitHub pull request body is written or revised, including on
+  the agent's own initiative while opening or updating one. Supplies the
+  required structure: summary, salutation in verse, optional blockers and
+  issue-reference sections, executive summary, and reviewer-relevant detail,
+  including the Tofu apply-and-state blocker and PR `human` label while that
+  requirement is outstanding. Not for the title (`pr-title`).
 ---
 
 # PR Body

@@ -1,15 +1,13 @@
 ---
 name: undertake
 description: >-
-  Use for an assigned GitHub issue, an explicit undertaking invocation, or a
-  PR branch update such as "bring it up to date". Owns the issue-to-result
-  sequence, readiness and ongoing base currency; review rounds belong to
-  review-cycle. An invocation without an issue opens one. Ordinary coding
-  requests without an issue or invocation do not start this sequence.
-  Reading or discussing an issue is not an assignment. Also read the relevant
-  execution policy before delegation or an unfinished stop, even without an
-  issue. A policy-only read does not start the issue sequence or create an
-  issue.
+  Use for an assigned GitHub issue, an explicit undertaking invocation, or a PR
+  branch update such as bringing it up to date. Owns the issue-to-result
+  sequence, readiness and ongoing base currency; review rounds are
+  `review-cycle`'s. An invocation without an issue opens one; ordinary coding
+  requests without an issue or invocation do not start it, and reading or
+  discussing an issue is not an assignment. Also read its execution policy
+  before delegation or an unfinished stop; a policy-only read starts no issue.
 ---
 
 # Undertake
