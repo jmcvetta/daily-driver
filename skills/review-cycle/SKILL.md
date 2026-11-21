@@ -304,7 +304,7 @@ never have to parse a paragraph to learn whether the finding was implemented or
 rejected. No thanks, no apologies, no restating the finding, and no poetry in
 an actionable reply. The active route supplies `provenance` for every
 body-bearing write, including individual finding replies. On Omp, the wrapper
-appends and deduplicates the block on each review, reply, and completion notice;
+appends and deduplicates the block on each review and reply;
 do not format it in those bodies. Other routes follow `provenance`'s block rules.
 
 A rejection carries its reason and stops. *"Rejected — `n` is bounded by the
@@ -405,35 +405,6 @@ own behavior starts `Review the head` again and establishes a new scope. A
 comment reflow, changelog line, or clean base merge does not. The classification
 is content-based, so rewritten history preserves the existing scope when its
 pull-request content is unchanged.
-
-Review-cycle completion notice
-------------------------------
-
-**Post a separate top-level PR conversation comment only when a non-standalone
-round is complete.** Keep the normal submitted `COMMENT` review and every
-`Review verification` record unchanged. The notice starts with
-completed head SHA. The active route supplies `provenance`; Omp's wrapper
-appends it automatically, so the notice body carries no new block.
-
-Completion requires green CI for that head, every finding's required
-disposition and resolved thread, and a clean required independent verification
-pass. A clean full review with no fixes needs no invented delta pass. Pending,
-failed, or unregistered CI; outstanding findings; incomplete or unavailable
-verification; and the non-convergence wall do not qualify.
-
-Before publication, re-read the pull request head and conversation comments.
-The head must still be the one the notice names. Do not post another notice
-whose heading and SHA already identify that completed head; a later completed
-round at a different head may receive one. If publication fails, report that
-failure and do not claim success.
-
-This notice reports the review cycle, not merge readiness. It never approves,
-merges, changes draft state, or replaces `undertake`'s first-readiness report.
-A standalone review ends at `Review the head` and never posts it.
-`undertake`'s `The gate` and `embark`'s `Land the pull request` read this
-notice, which is why a completed round that starts no new review posts it
-before the round returns to its caller, the clean full review included. The
-harness reference names the read and publication route.
 
 
 Where it stops and waits

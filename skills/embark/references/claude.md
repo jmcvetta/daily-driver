@@ -174,8 +174,8 @@ The watch
 | `Land the pull request` | Diagnose blocked CI | `review-cycle`'s `references/claude.md` checks and status reads |
 | `Land the pull request` | Read the aggregate review decision when available | Authenticated `gh pr view <number> --repo <owner>/<repo> --json headRefOid,reviewDecision`; if unavailable, report that evidence gap |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/claude.md` thread read |
-| `Land the pull request` | Read the review-cycle completion notice | `mcp__github__pull_request_read`, method `get_comments`, every page — `user.login` |
-| `Land the pull request` | Read the commits after the notice's SHA | `mcp__github__get_commit`, from `head.sha` back along first parents — `parents` |
+| `Land the pull request` | Read submitted reviews, recorded review identifiers and SHAs, dispositions, and verification records | `review-cycle`'s `references/claude.md` review history and conversation-comment reads, all pages |
+| `Land the pull request` | Read first-parent ancestry | `git show -s --format=%P <sha>` in a checkout containing the head and its ancestors; unavailable objects fail the predicate |
 | `Land the pull request` | Squash merge the gated PR | `mcp__github__merge_pull_request`, `merge_method: squash`, `expectedHeadSha: <head.sha>` |
 | `Close the epic` | Comment with outcome evidence or an unsupported claim | `mcp__github__add_issue_comment` |
 | `Close the epic` | Close as completed | `mcp__github__issue_write`, `method: update`, `state: closed`, `state_reason: completed` |
@@ -206,13 +206,8 @@ and explicit blockers. Pending CI retains the existing continuation. Missing
 access or inconclusive evidence leaves the cause unresolved, not human-only.
 Only `clean` can pass the merge-state read.
 
-The completion read is the conversation-comment read `review-cycle`'s
-`Review-cycle completion notice` names, read to the last page: the latest
-comment starting with `## Review cycle complete! 🎉` whose author is the
-author of the task issue's claim comment, and the SHA it names. Where that SHA
-is not `head.sha`, walk `get_commit` from `head.sha` along each first parent
-until the named SHA; every commit on the way must carry two `parents`. A
-single-parent commit, or a walk that never reaches the SHA, fails the read.
+Apply `undertake`'s `Review evidence` predicate to the complete histories and
+the gated `head.sha`; its first-parent test is not a content comparison.
 
 The merge call is made only for a task pull request,
 after those reads hold. `expectedHeadSha` makes it fail closed if the task

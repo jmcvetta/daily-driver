@@ -1,4 +1,4 @@
-First-readiness report
+# First-readiness report 🎉
 
 Elapsed: 31 minutes 44 seconds, from claim (2026-09-28T12:35:20Z) to first merge readiness (2026-09-28T13:07:04Z).
 

@@ -23,16 +23,8 @@ The issue
 | `Implement` (issue-only research) | Record findings | `daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file", <path>] })` |
 | `Implement` (issue-only research) | Close completed research | `gh issue close <number> --reason completed` |
 
-**Before `Claim the issue`, check the session title.** Read `sessionName` from
-`daily_driver_get_session` for title handling only. Format the expected title
-as `#{number} {shortened issue title}` using `session-title`'s thirty-character
-budget and shortening rules. If it differs, set it before the wrapper call
-with `daily_driver_set_session_title({ title })`, or in a shell as
-`daily_driver_set_session_title '#<number> <title>'`; the title is plain text,
-and a serialized JSON argument object is rejected. If it already matches, do
-not rename it. The wrapper reads live model and session
-identity for attribution. If the title surface is unavailable, report that
-limitation and continue without an alternate route, as `session-title` requires.
+Before claim, read `sessionName` with `daily_driver_get_session`; use
+[`session-title`](../../session-title/references/omp.md) for the title call.
 
 **`issue://<number>` carries the comments**, so the read in that row is one
 call and returns the handoff content `SKILL.md` asks for. Where a cache miss
@@ -44,12 +36,7 @@ makes further down this file.
 `issue-labels`, whose `references/omp.md` says why `--add-label` needs no
 read-first and the Claude route does.
 
-For a `task` or a classed `research` or `bug`, validate its `Model class`
-section and rationale through
-[`issue-body`'s guidance](../../issue-body/references/model-classes.md) before
-claim, repairing an old or invalid body where its handoff is otherwise
-grounded. A frontier `research` issue keeps that label and its narrow metadata
-exception; do not impose the task template.
+Validate readiness and model class through `issue-body` before routing.
 
 Before worktree creation or claim, call `daily_driver_route_undertaking` with
 `{ issue: <positive issue number>, modelClass: "mechanical" | "routine" |
@@ -69,21 +56,6 @@ class suitability. Keep the requested class, selected model, and observed model
 separate. Do not claim verification from a selector or status alone.
 
 
-After initial selection, agent-initiated worker, provider, and fallback
-choices are not restricted by the undertaking router. Missing candidate
-metadata or route verification does not stop dispatch or ordinary work.
-
-If the known family is absent from the class table, a prominent warning names
-the family, class, and retained provider/model. Continue immediately on the
-invoking model, provider, and effort without confirmation. Class suitability
-remains unverified. A class omitted from a mapped family follows the same
-warning-and-continue with suitability unverified. An explicitly cleared class
-or unavailable initial target is a configuration gap; unknown identity and
-later operator selection are not absent-family continuation.
-
-Independently configured `reviewer`, `scout`, `security-reviewer`, and `seance`
-helpers are not issue implementation workers for class selection. This does not
-define their cancellation ownership.
 
 After the pull request is ready, or answer-only research is completed and
 recorded, call `daily_driver_finish_undertaking({ issue: <positive issue number> })`
@@ -108,12 +80,6 @@ notification does not replace the chat handoff or durable record. A child
 reports to its orchestrator instead; recoverable errors, CI waits, reminders,
 progress and ordinary final replies do not notify.
 
-**Operator choices remain in control after selection.** Request rejection or
-resume does not restore or require the initially selected model or effort.
-Operators may change model, provider, and effort at any later point; routing
-must not block those changes. The initial selection records the class and
-model chosen at the start; later worker and fallback choices are not checked
-against it. Native consultations and independent helpers remain separate.
 
 **Operator recovery does not require a model turn.** Run `/undertaking status`
 locally to inspect the owner, selected model and effort, host selection, last
@@ -165,9 +131,8 @@ The pull request
 | `The gate` | Read the branch against its base | `gh pr view <number> --json mergeStateStatus` |
 | `The gate` | Read CI on the head | `gh pr view <number> --json statusCheckRollup` |
 | `The gate` | Read the review threads | `review-cycle`'s `references/omp.md` owns them |
-| `The gate` | Read the review record | `gh pr view <number> --json comments` — the round's own `Review` and `Review verification` comments |
-| `The gate` | Read the completion notice | `gh pr view <number> --json comments`, to the last page — the latest `## Review cycle complete! 🎉` comment by the claim's author |
-| `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>] })` |
+| `The gate` | Read review evidence | `review-cycle`'s complete submitted-review, conversation-comment and thread reads; read the claim author from the task issue |
+| `The gate` | Read first-parent ancestry | `git show -s --format=%P <sha>` in the task worktree; unavailable objects fail the predicate |
 | `The gate` | Read the Blockers section | `gh pr view <number> --json body`, where `pr-body`'s Blockers section sits |
 | `The milestone` | Read the draft state and report head | `gh pr view <number> --json isDraft,headRefOid` |
 | `The milestone` | Read the existing comments | `gh pr view <number> --json comments` |
@@ -220,7 +185,7 @@ state and head with:
 
 `isDraft` must be true, and `headRefOid` is the SHA the report binds to. The
 gate already establishes branch currency, current-head CI, review completion,
-resolved threads, the completion notice and absence of human blockers.
+resolved threads and absence of human blockers.
 `mergeable` and `mergeStateStatus` are not readiness prerequisites here:
 draft states can mask the underlying result, and a post-ready `CLEAN` read
 would put the report after the transition it must precede.
@@ -238,7 +203,7 @@ read. An issue with no recoverable claim leaves the timing `n/a`, per
 
 **Post the report before marking ready.** Read the existing comments with
 `gh pr view <number> --json comments` and look for the fixed
-`First-readiness report` marker. If none exists and the gate holds, write the
+`# First-readiness report 🎉` or historical unheaded marker. If none exists and the gate holds, write the
 report as a pull-request comment with
 `daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file",
 <path>] })`.
@@ -272,9 +237,7 @@ read `gh pr view <number> --json statusCheckRollup` for the resulting
 Pending or unregistered checks retain its renewable bounded observation and
 the common PR owner reminder. Window expiration is not a task blocker.
 Failed checks return to `Fix, answer, resolve, push`; unavailable logs require
-diagnosis, not a green verdict. When CI on the current head is green and the
-gate's notice read finds no completion notice, post it before continuing the
-ready gate. A live idle owner must retain the common reminder. Process
+diagnosis, not a green verdict. A live idle owner must retain the common reminder. Process
 persistence alone does not resume an owner after session shutdown.
 
 The common merge loop remains mechanical. It does not assess the gate or

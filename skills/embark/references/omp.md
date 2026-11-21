@@ -136,8 +136,9 @@ The watch
 | `Land the pull request` | Read draft, merge state, head SHA, labels, and body | `gh pr view <number> --json isDraft,mergeStateStatus,headRefOid,labels,body` |
 | `Land the pull request` | Diagnose a blocked gate | `gh pr view <number> --json headRefOid,reviewDecision,statusCheckRollup`; current-head checks, statuses, and workflow runs through `review-cycle`'s `references/omp.md` |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/omp.md` thread read |
-| `Land the pull request` | Read the review-cycle completion notice | `gh pr view <number> --json headRefOid,comments` — `comments[].author.login` |
-| `Land the pull request` | Read the commits after the notice's SHA | `git rev-list --first-parent --no-merges <sha>..<headRefOid>` after `git fetch` of the head |
+| `Land the pull request` | Read submitted reviews, recorded review identifiers and SHAs, and dispositions | `review-cycle`'s `references/omp.md` review history read |
+| `Land the pull request` | Read verification records | `gh api --paginate /repos/{owner}/{repo}/issues/{number}/comments` |
+| `Land the pull request` | Read first-parent ancestry | `git show -s --format=%P <sha>` in a checkout containing the head and its ancestors; unavailable objects fail the predicate |
 | `Land the pull request` | Squash merge the gated head | `gh pr merge <number> --squash --match-head-commit <headRefOid>` |
 | `Close the epic` | Comment with the landed pull requests or missing claim | `daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file", <path>] })` |
 | `Close the epic` | Close as completed | `gh issue close <number> --reason completed` |
@@ -156,14 +157,8 @@ identify the actual gate. Pending CI retains the existing continuation; an
 unavailable or inconclusive read leaves the cause unresolved. Only `CLEAN`
 can pass the merge-state read.
 
-The completion read is the conversation-comment read `review-cycle`'s
-`Review-cycle completion notice` names, read to the last page: the latest
-comment starting with `## Review cycle complete! 🎉` whose author is the
-author of the task issue's claim comment, and the SHA it names. Where that SHA is not
-`headRefOid`, the named SHA must be on the head's first-parent chain
-(`git rev-list --first-parent <headRefOid> | grep -qx <sha>`), and the
-`rev-list` must print nothing. A SHA off that chain, or any printed commit,
-fails the read.
+Apply `undertake`'s `Review evidence` predicate to the complete histories and
+the gated `headRefOid`; its first-parent test is not a content comparison.
 
 The merge is one conditional `gh pr merge` call for a task pull request after
 the gate holds. `--match-head-commit <headRefOid>` makes it fail closed if the

@@ -9,13 +9,14 @@ WHAT IT ASSERTS
     skill shape (`Model:`/`session:`, no `Harness:` line or leading `---`),
     the historical `provenance` block, and the current provider-inclusive
     block (`Model:`/`Provider:`/`Harness:`/`Session:`) -- both session-field
-    capitalizations, with the same output fields either way. A
-    `First-readiness report` parses its provenance pair, head SHA, and
-    elapsed minutes computed from its two ISO timestamps; a report whose
-    `Elapsed:` line names no recoverable timestamps ("unavailable") reports
-    `elapsed_minutes` as `None` rather than a guess. A `Review verification`
-    comment parses its pass number, outcome, and finding count, and a
-    comment recording `findings: none` counts zero rather than one finding literally named
+    capitalizations, with the same output fields either way. A current
+    `# First-readiness report 🎉` or historical unheaded `First-readiness
+    report` parses its provenance pair, head SHA, and elapsed minutes from its
+    supported timestamp formats; a report whose `Elapsed:` line names no
+    recoverable timestamps ("unavailable") reports `elapsed_minutes` as
+    `None` rather than a guess. A `Review verification` comment parses its
+    pass number, outcome, and finding count. A comment recording
+    `findings: none` counts zero rather than one finding literally named
     `none`. A pull request whose claim and readiness `Model:` lines disagree
     is flagged as a mismatch rather than silently trusting either one. A
     check-runs list with a name repeated by reruns counts each rerun once. A
@@ -174,8 +175,18 @@ def main() -> int:
     )
 
     check(
-        "find_readiness_report: matches on the leading marker",
-        mt.find_readiness_report([{"body": good_report}]) is not None,
+        "find_readiness_report: matches the exact current H1",
+        good_report.splitlines()[0] == "# First-readiness report 🎉"
+        and mt.find_readiness_report([{"body": good_report}]) is not None,
+    )
+    check(
+        "find_readiness_report: matches a historical unheaded report",
+        old_report.splitlines()[0] == "First-readiness report"
+        and mt.find_readiness_report([{"body": old_report}]) is not None,
+    )
+    check(
+        "find_readiness_report: rejects a non-exact heading",
+        mt.find_readiness_report([{"body": "## First-readiness report 🎉"}]) is None,
     )
     check(
         "find_readiness_report: a PR with no such comment returns None",
