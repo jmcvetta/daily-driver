@@ -16,7 +16,7 @@ The issues
 | ---- | --------- | ---- |
 | `Size the work` | Read an issue already in hand | `issue://<number>` |
 | `Open the issues` | Search the open issues | `github.search_issues`, or `gh search issues` |
-| `Open the issues` | Open the epic and each task; settle destination under [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository) and pass it to both creates | `gh issue create --label epic [--repo OWNER/REPO when target differs from current repository]` / `gh issue create --label task [--repo OWNER/REPO when target differs from current repository]` |
+| `Open the issues` | Open the epic and each story; settle destination under [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository) | `gh issue create --label epic [--repo OWNER/REPO when target differs from current repository]` / `gh issue create --label <task, research, or bug> [--repo OWNER/REPO when target differs from current repository]` |
 | `Open the issues` | Turn an existing issue into the epic | `daily_driver_gh_write({ args: ["issue", "edit", <number>, "--body-file", <path>, "--add-label", "epic", "--remove-label", <old label>] })` |
 | `Fill in the epic` | Replace the epic's body | `daily_driver_gh_write({ args: ["issue", "edit", <number>, "--body-file", <path>] })` |
 
@@ -42,15 +42,5 @@ The graph
 `issue-deps` owns both relationships and picks its own client. Read that
 skill's routes before `Write the graph`.
 
-Apply `issue-deps`' pre-link assignability gate before every parent or
-sub-issue write to the epic, including when linking an existing issue.
-
-
-The required class
-==================
-
-`issue-body` owns the task body contract and shared routing guidance in
-[`model-classes.md`](../../issue-body/references/model-classes.md). Every story
-uses that task contract and required model class at `Open the issues`, whether
-new or reused. This skill neither duplicates the taxonomy nor records a
-concrete model.
+Story bodies follow `issue-body`'s contract for their kind; research and bug
+stories carry the shared model-class section, not the task template.

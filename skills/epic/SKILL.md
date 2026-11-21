@@ -22,15 +22,8 @@ Work too big for one pull request becomes several child issues and one epic to
 coordinate them. This skill is the order that happens in, the two gates that
 decide whether it should happen at all, and what the epic body carries.
 
-It is an orchestrator, in the same shape as `undertake` and `pr`: **it invokes,
-it does not restate**. The graph writes are `issue-deps`', taking a task issue
-to a pull request is `undertake`'s, and whether the plan is the user's to agree
-is `judgement-call`'s. Where a step below names a rule one of those owns, it
-names it as a pointer and cites the owner — a rule that acquires a second home
-is one whose copy goes stale.
-
-What this skill owns is the decomposition: what a task is, what an edge is for,
-and what the epic body says that nothing else can render.
+This skill owns decomposition and the epic body. It invokes `issue-deps` for
+graph writes, `undertake` for delivery, and `judgement-call` for scope agreement.
 
 **The routes are per harness, and they live beside this file.** Every call the
 steps below need is named in words here and resolved to a route there:
@@ -40,11 +33,7 @@ steps below need is named in words here and resolved to a route there:
 harness in use before `Size the work`, which is the first step with a route in
 either table.
 
-**Every step has a name, and the name is how it is cited.** The numbers order
-the sequence and do nothing else: insert a step and all of them move, while a
-name stays where it was put.
-[`0005`](../../docs/notes/0005-steps-are-cited-by-name.md) is the decision and
-`scripts/check-step-names.py` is what enforces it.
+**Cite steps by their stable names**, not their sequence numbers.
 
 Discovery and specification-backed delivery
 ===========================================
@@ -173,14 +162,22 @@ spending approvals.
 These checks add no approval step or universal checklist. Scope agreement
 remains `Agree the plan`; true dependency edges remain `issue-deps`.
 
+1 — Draft the plan
+------------------
+
+
 **Every story is an assignable issue.** This applies to new children and
 existing issues selected for linking. An assignable story has exactly one
 agent-eligible kind — `task`, `research` or `bug` — and passes `issue-body`'s
 readiness test for that kind. It also carries exactly one valid `## Model class`
-section with a rationale, as `issue-body` defines. The kind stays what it is: a
-research or bug story keeps its own contract and completion test, and does not
-take the task template, haiku or implementation map. A `story` marker, a
-parent edge or a kind label alone proves no readiness.
+section with a rationale, as `issue-body` defines. A missing or invalid class
+or rationale never defaults to `routine`. A `frontier` rationale explains why
+cheaper classes are insufficient; the class is a capability label, not a
+separate approval event, and needs no approval record or work envelope.
+`issue-body` owns the taxonomy, format and routing guidance; `embark` resolves
+the concrete worker. Research and bug stories keep their own contracts and
+completion tests, not the task template, haiku or implementation map. A `story`
+marker, parent edge or kind label alone proves no readiness.
 
 Assignable means a complete handoff for the required agent class. Legitimate
 open blockers may delay dispatch without preventing inclusion in the epic.
@@ -222,15 +219,6 @@ edge means and what it must not be used to record.
 it to be true. What the epic body carries is the *reading* of it, under
 `The epic body` below.
 
-**Each story records its required model class**, whatever its kind. Sizing is
-when the remaining difficulty is known. `issue-body` owns the class taxonomy,
-section format, per-kind readiness tests, and routing guidance; `embark`
-resolves a concrete worker later. A missing or invalid class, or a missing
-rationale, never defaults to `routine`.
-
-When a story in a plan needs `frontier`, its rationale states why the cheaper
-classes are insufficient. The class is a capability label, not a separate
-approval event; no approval record or work envelope is required.
 
 2 — Agree the plan
 ------------------
@@ -240,9 +228,7 @@ model class and short rationale. Each edge states what it waits on, and the
 plan names any existing issue that becomes the epic. Nothing is written until
 the user agrees.
 
-It clears `judgement-call`'s gate on scope. A decomposition is a statement of
-scope: it says what the pieces are and what done means for each, and craft does
-not pick one split over another.
+A decomposition states scope: its pieces and what done means for each.
 
 The edges are agreed here too, and not because `issue-deps` asks for them — it
 writes an edge from evidence and reports the write. They are agreed because
@@ -472,25 +458,12 @@ What the body leaves out
 Where it stops and waits
 ========================
 
-Four, and only the first is routine.
-
-- **The plan**, at `Agree the plan`. One stop by design, covering the scope
-  question and every edge at once.
-- **A request too vague to decompose.** The constitution forbids guessing at
-  intent, and a decomposition guesses harder than an issue does: it invents the
-  boundaries, and then every pull request is measured against boundaries nobody
-  chose. Ask what the whole change is for, and do not draft a plan around the
-  answer you would have preferred.
-- **A gate closing at `Size the work`.** A report rather than a question: say
-  which gate closed, and carry on as ordinary work.
-- **An epic handed over to be undertaken.** `undertake` stops at
-  `Read the issue and its edges` and delegates the wording here, and this is
-  the wording: an epic carries no code, so there is no branch to cut and no
-  pull request to open. The sequence does not run on it either — the work is
-  already decomposed, and `Size the work` has nothing left to size. Say which
-  issue is the epic, name the tasks whose blockers are closed, and undertake
-  one of those. An epic whose body or graph is wrong is an edit at
-  `Fill in the epic` or `Write the graph`, not a reason to plan it again.
+- Plan agreement and edges: `Agree the plan`.
+- Request too vague to decompose: ask for the intended outcome before drafting.
+- Sizing gate closes: `Size the work`.
+- Epic presented to `undertake`: name the epic and eligible children; undertake
+  a child instead. Correct its body or graph at `Fill in the epic` or
+  `Write the graph` without decomposing it again.
 
 
 Non-goals
