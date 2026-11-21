@@ -403,6 +403,7 @@ def run_cases(
     client_name: str,
     prices: dict[str, dict[str, Any]],
     sources: dict[str, str] | None = None,
+    billing_source: str | None = None,
 ) -> list[dict[str, Any]]:
     """One row per task result in `run`: model, settings, class, outcome,
     elapsed seconds, tokens, price and the price's source, plus the pull
@@ -410,10 +411,6 @@ def run_cases(
     `evals-render-routes.py`'s and `evals-render-results.py`'s input.
     """
     cases = []
-    environment = run.get("environment_info")
-    environment = environment if isinstance(environment, dict) else {}
-    billing_source = environment.get("codex_billing_source")
-    billing_source = billing_source if isinstance(billing_source, str) else None
     for row in run.get("task_results", []):
         variant_id = row.get("variant_id")
         model_served = "unreported" if client_name == "omp" else (row.get("model_used") or "unreported")
@@ -800,6 +797,10 @@ def run_attempts(run_dir: Path, run: dict[str, Any], root: Path) -> list[dict[st
                 "effective_thinking": environment.get("omp_effective_thinking", "unreported"),
                 "skills_loaded": environment.get("omp_skills_loaded", "unreported"),
             }
+        if isinstance(environment, dict):
+            billing_source = environment.get("codex_billing_source")
+            if isinstance(billing_source, str):
+                attempt["codex_billing_source"] = billing_source
         if attempt["max_turns_exhausted"]:
             attempt["coder_eval_status"] = attempt["final_status"]
             attempt["final_status"] = "ERROR"
@@ -1054,7 +1055,23 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path, prices: dict[
     if not isinstance(historical_client_version, str) or not historical_client_version:
         historical_client_version = "unknown"
     session_present = "CLAUDE_CODE_SESSION_ID" in os.environ
-    cases = run_cases(run, experiment["experiment_id"], requested, client_name, prices, task_sources(run_dir, run))
+    billing_source = next(
+        (
+            attempt["codex_billing_source"]
+            for attempt in attempts
+            if isinstance(attempt.get("codex_billing_source"), str)
+        ),
+        None,
+    )
+    cases = run_cases(
+        run,
+        experiment["experiment_id"],
+        requested,
+        client_name,
+        prices,
+        task_sources(run_dir, run),
+        billing_source,
+    )
     apply_judge(attempts, variants, cases, judge_sidecar_rows)
     judge = judge_block(judge_manifest, judge_sidecar_rows, attempts, root)
     record = {

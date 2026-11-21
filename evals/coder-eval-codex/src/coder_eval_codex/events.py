@@ -131,6 +131,25 @@ def token_delta(current: Usage, previous: Usage) -> TokenCounts:
     )
 
 
+def tool_status(item: Item, *, completed: bool) -> str:
+    """Classify one tool item's result: success, error or unknown.
+
+    Exit code arbitrates when the CLI reports one, because a `command_execution`
+    can carry `status: completed` for a shell command that exited non-zero. The
+    status string is the fallback for tools that have no exit code (file
+    changes, MCP calls, searches).
+    """
+    if not completed:
+        return "unknown"
+    if item.exit_code is not None:
+        return "success" if item.exit_code == 0 else "error"
+    if item.status in {"completed", "success"}:
+        return "success"
+    if item.status in {"failed", "error"}:
+        return "error"
+    return "unknown"
+
+
 def _int(value: Any) -> int:
     """Coerce a reported token count. Anything unusable is 0, never a guess."""
     if isinstance(value, bool):

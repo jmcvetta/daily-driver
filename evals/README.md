@@ -992,7 +992,7 @@ and one-off comparison experiments — and its result never gates a merge:
 - **Manual (Codex):** `make evals-run-codex`.
 - **Manual (model classes):** `make evals-run-classes MODEL=<stem>`.
 
-Every run takes an explicit `RUN`; no target races through `runs/latest`.
+Every run target takes an explicit `RUN`; none races through `runs/latest`.
 `make evals-plan` validates every registered experiment, required and manual,
 calls no model and costs nothing. CI runs no eval arm, required or manual.
 

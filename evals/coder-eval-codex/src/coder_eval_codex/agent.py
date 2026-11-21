@@ -87,7 +87,7 @@ from coder_eval.streaming.events import (
 )
 
 from .discovery import classify_auth, model_slugs
-from .events import Event, Item, TokenCounts, TurnAccumulator, token_counts, token_delta
+from .events import Event, Item, TokenCounts, TurnAccumulator, token_counts, token_delta, tool_status
 from .skills import SkillLinkError, link_skills
 from .transcript import is_already_tagged, render_agent_output
 
@@ -288,12 +288,7 @@ class _CodexTurnState:
         elif tool_name == "WebSearch" and item.query:
             params["query"] = item.query
 
-        status: Literal["success", "error", "unknown"] = "unknown"
-        if completed:
-            if item.status in {"completed", "success"} or item.exit_code == 0:
-                status = "success"
-            elif item.status in {"failed", "error"} or (item.exit_code is not None and item.exit_code != 0):
-                status = "error"
+        status: Literal["success", "error", "unknown"] = tool_status(item, completed=completed)  # type: ignore[assignment]
 
         telemetry = CommandTelemetry(
             tool_name=tool_name,
@@ -717,7 +712,7 @@ class CodexCLIAgent(Agent[CodexCLIAgentConfig]):
             record = collector.build_turn_record()
             # The judge anchors on the [RESULT - …] transcript; the CLI emits a
             # bare agent message. Without this every judged row scores 0.0.
-            if record.agent_output and not is_already_tagged(record.agent_output):
+            if not is_already_tagged(record.agent_output):
                 record = record.model_copy(update={"agent_output": render_agent_output(record.agent_output)})
             self._end_turn_ok()
             return record

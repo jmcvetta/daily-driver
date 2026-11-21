@@ -107,6 +107,20 @@ def test_unknown_types_are_bounded() -> None:
     check(accumulator.recognized == 0, "unknown envelopes must not count as recognized")
 
 
+def test_tool_status_prefers_exit_code() -> None:
+    """`status: completed` must not mask a failed shell exit."""
+    from coder_eval_codex.events import Item, tool_status
+
+    failed = Item(id="1", type="command_execution", status="completed", command="false", exit_code=1)
+    check(tool_status(failed, completed=True) == "error", "non-zero exit recorded as success")
+    ok = Item(id="2", type="command_execution", status="completed", command="true", exit_code=0)
+    check(tool_status(ok, completed=True) == "success", "zero exit recorded as error")
+    no_code = Item(id="3", type="file_change", status="completed")
+    check(tool_status(no_code, completed=True) == "success", "status fallback lost")
+    pending = Item(id="4", type="command_execution", status="in_progress")
+    check(tool_status(pending, completed=False) == "unknown", "an unfinished tool was scored")
+
+
 def test_usage_delta_never_goes_negative() -> None:
     previous = Usage(input_tokens=100, cached_input_tokens=40, output_tokens=10, reasoning_output_tokens=2)
     current = Usage(input_tokens=90, cached_input_tokens=50, output_tokens=8, reasoning_output_tokens=1)

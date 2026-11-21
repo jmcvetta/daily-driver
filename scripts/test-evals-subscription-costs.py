@@ -57,6 +57,33 @@ class TerraSubscriptionTest(unittest.TestCase):
         self.assertEqual(recorder.case_price(row, "gpt-6.1-sol", {}, "codex-daily-driver"),
                          (0.5, "reported"))
 
+    def test_codex_cli_billing_source_comes_from_the_task_artifact(self):
+        """run.json has no agent environment; the per-attempt task.json does."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            task = root / "cli" / "case" / "00"
+            task.mkdir(parents=True)
+            (task / "task.json").write_text(json.dumps({
+                "success_criteria_results": [],
+                "environment_info": {
+                    "codex_auth_mode": "subscription",
+                    "codex_billing_source": "subscription",
+                },
+            }))
+            run = {"task_results": [{
+                "variant_id": "cli", "task_id": "case", "status": "SUCCESS", "duration": 1.0,
+                "input_tokens": 10, "output_tokens": 2,
+                "agent_cost_usd": 0.5, "total_cost_usd": 0.5,
+            }]}
+            attempts = recorder.run_attempts(root, run, root)
+            self.assertEqual(attempts[0]["codex_billing_source"], "subscription")
+            cases = recorder.run_cases(
+                run, "codex", {"cli": "gpt-6.1-sol"}, "codex-daily-driver", {},
+                billing_source=attempts[0]["codex_billing_source"],
+            )
+            self.assertEqual(cases[0]["cost_source"], "subscription")
+            self.assertIsNone(cases[0]["cost"])
+
     def test_go_catalog_estimate_is_not_reported_as_cash(self):
         row = {"input_tokens": 100, "output_tokens": 20, "agent_cost_usd": 0.5}
         self.assertEqual(recorder.case_price(row, "opencode-go/glm-5.3", {}, "omp"),

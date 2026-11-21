@@ -617,13 +617,16 @@ evals-run-codex: evals-judge-preflight evals-variants evals-preflight
 # MANUAL ONLY: Claude Code comparison arm. Not a required gate.
 
 evals-run-comparison: evals-judge-preflight evals-plan evals-preflight
+	@test -n "$(RUN)" && test "$(RUN)" != "evals/runs/latest" || { echo "Set RUN to a unique explicit run directory" >&2; exit 1; }
+	@test ! -e "$(RUN)" || { echo "RUN already exists; preserve the existing attempt" >&2; exit 1; }
 	@test -d ../daily-driver-base/skills || { \
 		echo "error: ../daily-driver-base is missing or is not a plugin root;" >&2; \
 		echo "  run: git worktree add ../daily-driver-base <base-revision>" >&2; \
 		exit 1; }
-	cd evals && $(CODER_EVAL) run -e experiments/base-vs-candidate.yaml -j $(if $(filter file,$(origin JOBS)),16,$(JOBS)) \
+	cd evals && $(CODER_EVAL) plan -e experiments/base-vs-candidate.yaml $(RUN_TASKS)
+	cd evals && $(CODER_EVAL) run --run-dir ../$(RUN) -e experiments/base-vs-candidate.yaml -j $(if $(filter file,$(origin JOBS)),16,$(JOBS)) \
 		--exclude-tags omp-only,codex-only,skip:claude,model-classes $(RUN_TASKS); status=$$?; \
-	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/base-vs-candidate.yaml; \
+	$(MAKE) -C .. evals-record RUN=$(RUN) EXPERIMENT=evals/experiments/base-vs-candidate.yaml JUDGE=$(JUDGE) JOBS=$(JOBS); \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 # evals-run-classes: the model-class capability suite, built from real merged
