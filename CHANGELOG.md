@@ -54,6 +54,17 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.70.0](https://github.com/jmcvetta/daily-driver/compare/v0.69.0...v0.70.0) (2026-11-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* Custom `modelRoles` and `dailyDriver.modelClassRoutes` keys named `implementation`, `integration`, or `reasoning` must be renamed to `routine`, `intermediate`, or `complex`, respectively. Existing invocations of the old agent names must use the new names.
+
+### Features
+
+* rename model classes by task difficulty ([#956](https://github.com/jmcvetta/daily-driver/issues/956)) ([9956523](https://github.com/jmcvetta/daily-driver/commit/995652399e2d6905d9f7338572571b8a5113d1e0))
+
 ## [0.69.0](https://github.com/jmcvetta/daily-driver/compare/v0.68.0...v0.69.0) (2026-11-21)
 
 
