@@ -16,7 +16,7 @@ SHELL := /bin/bash
 	evals-install evals-setup-claude evals-setup-omp evals-plan evals-judge-preflight evals-judge-calibrate \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-leaks check-evals-leaks evals-run evals-run-omp \
 	evals-campaign-preflight \
-	check-claude-dependency evals-run-codex evals-run-comparison evals-run-classes mcp-usage
+	check-claude-dependency evals-run-codex evals-run-comparison evals-run-classes
 
 # The `coder_eval` release the eval suites are written against. Pinned on
 # purpose: being able to hold a version back is the whole reason the suites are
