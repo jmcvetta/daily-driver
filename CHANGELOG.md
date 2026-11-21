@@ -4,6 +4,8 @@
 
 ### Changed
 
+* Reject serialized JSON argument objects and arrays as Omp session titles, show the direct-call, quoted shell, and `-j` command forms in the title instructions and gate messages, and keep ordinary prose containing braces or brackets ([#978](https://github.com/jmcvetta/daily-driver/issues/978)).
+
 * Limit undertaking routing to the initial same-family, same-provider model and effort selection; remove route-authorization, frontier-approval, worker-route admission, and continuing route-verification gates while preserving cancellation, completion, credential and switch failures ([#971](https://github.com/jmcvetta/daily-driver/issues/971)).
 
 * Limit Omp desktop notifications to explicit human handoffs and completed operations, suppress generic completion and error notifications in live settings, and deduplicate delivery across session resumes ([#946](https://github.com/jmcvetta/daily-driver/issues/946)).

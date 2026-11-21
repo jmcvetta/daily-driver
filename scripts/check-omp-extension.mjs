@@ -3716,6 +3716,63 @@ check("set_session_title calls pi.setSessionName", async () => {
 	assert.deepEqual(result.details, { titled: "Fix the parser" });
 });
 
+check("set_session_title rejects serialized JSON arguments without renaming", async () => {
+	const s = makeSession();
+	const def = s.tools.get("daily_driver_set_session_title");
+	const unnamed = namedCtx(undefined);
+	const blobs = [
+		['{"title":"#52 Rotate the Aurora access token"}', "object"],
+		['  {"title":"#52 Rotate the Aurora access token"}  ', "object"],
+		["[]", "array"],
+		[' ["#52 Rotate the Aurora access token"] ', "array"],
+	];
+	for (const [blob, kind] of blobs) {
+		const result = await def.execute("bad", { title: blob }, undefined, undefined, unnamed);
+		assert.equal(result.isError, true, blob);
+		assert.deepEqual(result.details, { titled: null, rejected: true }, blob);
+		assert.match(result.content[0].text, new RegExp(`serialized JSON ${kind}`, "u"), blob);
+		assert.match(result.content[0].text, /daily_driver_set_session_title '#123 Short title'/u);
+		assert.match(result.content[0].text, /-j '\{"title":"#123 Short title"\}'/u);
+	}
+	assert.deepEqual(s.rec.sessionNames, [], "no rejected title reached setSessionName");
+	assertTitleBlocked(titleCall(s, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, unnamed));
+	const corrected = await def.execute("good", { title: "#123 Short title" }, undefined, undefined, unnamed);
+	assert.deepEqual(corrected.details, { titled: "#123 Short title" });
+	assert.deepEqual(s.rec.sessionNames, ["#123 Short title"]);
+	assert.equal(titleCall(s, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, unnamed), undefined);
+});
+
+check("set_session_title keeps prose containing braces or brackets", async () => {
+	const s = makeSession();
+	const def = s.tools.get("daily_driver_set_session_title");
+	const titles = ["{draft} Fix the parser", "[WIP] Fix the parser", "#978 Omp title {json}"];
+	for (const title of titles) {
+		const result = await def.execute("ok", { title }, undefined, undefined, {});
+		assert.deepEqual(result.details, { titled: title }, title);
+	}
+	assert.deepEqual(s.rec.sessionNames, titles);
+});
+
+check("a serialized title does not satisfy the epic title gate", async () => {
+	const s = makeSession();
+	const ctx = startupCtx(s);
+	s.fire("input", { text: "embark 582", source: "interactive" }, ctx);
+	deliverEpicRead(s, ctx);
+	const def = s.tools.get("daily_driver_set_session_title");
+	const rejected = await def.execute(
+		"bad",
+		{ title: `{"title":"${EPIC_TITLE}"}` },
+		undefined,
+		undefined,
+		ctx,
+	);
+	assert.equal(rejected.isError, true);
+	assert.deepEqual(rejected.details, { titled: null, rejected: true });
+	assert.equal(startupState(s).status, "required");
+	assert.equal(s.rec.sessionNames.length, 0);
+	assert.equal(titleCall(s, "task", {}, ctx).block, true);
+});
+
 // --- get_session ------------------------------------------------------------
 check("get_session reads the session manager and the serving model", async () => {
 	const s = makeSession();

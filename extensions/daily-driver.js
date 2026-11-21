@@ -77,7 +77,11 @@ export const TITLE_BLOCK_REASON =
 	"This call is shut until the session is titled. A retry is denied the " +
 	"same way, so do not retry it.\n\n" +
 	"Set the title first. `daily_driver_get_session` answers this session's " +
-	"current name; `daily_driver_set_session_title({ title })` sets it.\n\n" +
+	"current name; `daily_driver_set_session_title({ title })` sets it from a " +
+	"direct tool call. A shell command takes one quoted plain title, " +
+	"`daily_driver_set_session_title '#52 Rotate the token'`, and JSON only " +
+	"through its `-j`/`--json` argument; a JSON argument object as the " +
+	"positional argument is rejected.\n\n" +
 	"The title takes one of two forms:\n\n" +
 	"    #{number} {shortened issue title}\n" +
 	"    ⛵ EPIC #{number} {shortened epic title}\n\n" +
@@ -2282,6 +2286,41 @@ function matchesEpicTitle(name, number) {
 		new RegExp(`^⛵ EPIC #${number} \\S`, "u").test(name);
 }
 
+/**
+ * Whether a submitted title is a serialized JSON object or array.
+ *
+ * A model that copies the shell command's `-j` payload into the positional
+ * argument, or into this tool's `title` as text, would otherwise name the
+ * session with the raw braces. Only a complete JSON object or array counts:
+ * prose that merely contains braces or brackets stays a valid title.
+ */
+function serializedTitleArgument(title) {
+	const text = title.trim();
+	if (!text.startsWith("{") && !text.startsWith("[")) return null;
+	try {
+		const parsed = JSON.parse(text);
+		return parsed !== null && typeof parsed === "object" ? parsed : null;
+	} catch {
+		return null;
+	}
+}
+
+/** Actionable text for a title submitted as a serialized JSON argument. */
+function serializedTitleReason(kind) {
+	return (
+		`Title rejected. The submitted title is a serialized JSON ${kind}, not ` +
+		"plain text; the session name and the title gate were left unchanged.\n\n" +
+		"Pass the title as one plain string. Direct tool calls take it as the " +
+		"`title` field:\n\n" +
+		`    daily_driver_set_session_title({ title: "#123 Short title" })\n\n` +
+		"A shell command takes it as one quoted positional argument:\n\n" +
+		`    daily_driver_set_session_title '#123 Short title'\n\n` +
+		"JSON belongs only in the shell command's `-j`/`--json` argument:\n\n" +
+		`    daily_driver_set_session_title -j '{"title":"#123 Short title"}'\n\n` +
+		"Do not pass a JSON argument object as the positional argument."
+	);
+}
+
 /** Resolve only exact title-recovery tool and device routes. */
 function embarkTitleRecoveryRoute(event, state) {
 	if (event.toolName === "daily_driver_get_session" || event.toolName === "daily_driver_set_session_title") {
@@ -2358,7 +2397,9 @@ function embarkTitleReason(state) {
 		`${EMBARK_TITLE_PREFIX}${target.number} <shortened epic title>.\n\n` +
 		"Use the `session-title` skill for the existing shortening rules. " +
 		"Allowed recovery: `daily_driver_get_session` and " +
-		"`daily_driver_set_session_title({ title })`. " +
+		"`daily_driver_set_session_title({ title })`, with the title as plain " +
+		"text; in a shell command quote that title as the positional argument " +
+		"or use `-j`, never a positional JSON argument object. " +
 		"Reads of `session-title`, its Omp reference, the title-tool documentation, and the same issue are allowed."
 	);
 }
@@ -2731,11 +2772,30 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 		description:
 			"Set the title of the current session. Use it to keep the session " +
 			"name meaningful while work is under way, so the session list shows " +
-			"what this session is for.",
+			"what this session is for. `title` is plain text, never a serialized " +
+			"JSON argument object: pass the title itself here, quote it as one " +
+			"plain positional argument in a shell command, and use `-j`/`--json` " +
+			"only to supply the shell command's JSON argument object.",
 		parameters: z.object({
-			title: z.string().describe("The new session title"),
+			title: z.string().describe(
+				"The new session title as plain text; a serialized JSON object or " +
+				"array is rejected",
+			),
 		}),
 		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => {
+			const serialized = serializedTitleArgument(params.title);
+			if (serialized) {
+				return {
+					content: [
+						{
+							type: "text",
+							text: serializedTitleReason(Array.isArray(serialized) ? "array" : "object"),
+						},
+					],
+					details: { titled: null, rejected: true },
+					isError: true,
+				};
+			}
 			const startup = ctx?.agent?.kind === "main" ? startupState(ctx) : null;
 			if (startup?.status === "required" && !matchesEpicTitle(params.title, startup.target.number)) {
 				return {
