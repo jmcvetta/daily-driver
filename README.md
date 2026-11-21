@@ -1,12 +1,10 @@
 # daily-driver
 
 Daily Driver gives coding agents a shared engineering constitution, task-specific
-skills, and runtime integrations for Omp, Claude Code and Codex. Omp is the
-supported harness: required evals and live checks cover it. Claude Code and
-Codex are best effort: their plugins, hooks and per-skill reference files are
-maintained, but no required eval arm or live runtime check gates on them. You
-direct the task; the agent uses the workflow to plan, implement, verify, and
-prepare its change for review.
+skills, and runtime integrations for Omp, Claude Code and Codex. You direct the
+task; the agent uses the workflow to plan, implement, verify, and prepare its
+change for review. Harness support levels and their limits are in
+[Runtime integration and compatibility](docs/harness-integration.md#support-levels).
 
 This is the author's personal toolkit, published without a license. See
 [License](#license) and [ANTI-LICENSE.md](ANTI-LICENSE.md); installation does
@@ -20,8 +18,7 @@ migration, cloud configuration and compatibility limits are in
 
 ### Omp
 
-Supported and tested: the required eval arms and the live runtime checks run on
-Omp.
+Supported and tested: the required eval arms and live runtime checks run here.
 
 ```sh
 omp plugin marketplace add jmcvetta/daily-driver
@@ -30,8 +27,8 @@ omp plugin install daily-driver@daily-driver
 
 ### Claude Code
 
-Best effort. The plugin, hooks and `references/claude.md` routes are maintained
-on each change, but no required eval or live check covers Claude Code.
+Best effort: the plugin, hooks and per-skill reference routes are maintained,
+with no required eval arm or live runtime check.
 
 ```sh
 claude plugin marketplace add jmcvetta/daily-driver
@@ -40,9 +37,7 @@ claude plugin install daily-driver@daily-driver
 
 ### Codex
 
-Best effort, like Claude Code: the plugin, hooks and `references/codex.md` routes
-are maintained, without a required eval arm or live check. Codex uses
-`plugin add`:
+Best effort on the same terms. Codex uses `plugin add`:
 
 ```sh
 codex plugin marketplace add jmcvetta/daily-driver
@@ -78,17 +73,17 @@ of the published plugin.
 ## Skills
 
 Skills are instructions for recurring engineering tasks. Ask in plain language
-or name a skill; the [skill catalog](skills/README.md) explains when to use each.
+or name a skill. The [skill catalog](skills/README.md) is the authoritative
+index: it lists every skill in workflow order and explains when to use each.
 
-| Task | Provided skills |
-| ---- | --------------- |
-| Plan and carry out work | [specification](skills/specification/SKILL.md), [epic](skills/epic/SKILL.md), [rectify-names](skills/rectify-names/SKILL.md), [undertake](skills/undertake/SKILL.md) |
-| Coordinate parallel work and stop it safely | [embark](skills/embark/SKILL.md), [stand-down](skills/stand-down/SKILL.md) |
-| Isolate changes and handle decisions | [task-worktree](skills/task-worktree/SKILL.md), [judgement-call](skills/judgement-call/SKILL.md) |
-| Create and organize issues | [issue](skills/issue/SKILL.md), [issue-body](skills/issue-body/SKILL.md), [issue-labels](skills/issue-labels/SKILL.md), [issue-deps](skills/issue-deps/SKILL.md) |
-| Prepare and review pull requests; validate changes and change CI | [pr](skills/pr/SKILL.md), [pr-title](skills/pr-title/SKILL.md), [pr-body](skills/pr-body/SKILL.md), [review-cycle](skills/review-cycle/SKILL.md) |
-| Classify changes and upgrade dependencies | [conventional-commits-type](skills/conventional-commits-type/SKILL.md), [deps](skills/deps/SKILL.md) |
-| Write documentation and identify agent work | [readme](skills/readme/SKILL.md), [provenance](skills/provenance/SKILL.md), [session-title](skills/session-title/SKILL.md) |
+- **Plan and carry out work** — `undertake` completes an assigned issue;
+  `specification` and `epic` settle larger work before implementation;
+  `embark` and `stand-down` coordinate parallel sessions.
+- **Create and organize issues** — `issue`, `issue-body`, `issue-labels` and
+  `issue-deps` write issues and connect their relationships.
+- **Prepare and review changes** — `pr`, `pr-title`, `pr-body` and
+  `review-cycle` open, validate and review pull requests; `deps` resolves
+  dependency upgrades.
 
 ## Constitution
 

@@ -2,12 +2,14 @@
 
 ## Adding a skill
 
-When adding a skill under `skills/`, update both `README.md` and
-`skills/README.md` in the same change. Add the skill to the root README's
-compact overview and the skill catalog, with its purpose and a link to its
-`SKILL.md`. Keep the task-based groups and workflow order; do not alphabetize
-the lists. This keeps new skills discoverable without making the root README
-a detailed manual.
+When adding a skill under `skills/`, add it to `skills/README.md` in the
+matching task-based group, in workflow order; do not alphabetize the lists.
+That catalog is the authoritative index of every published skill, with its
+purpose and a link to its `SKILL.md`.
+
+The root `README.md` is an entry point, not a second catalog. Do not recreate
+a per-skill table there. Update it only when the new skill changes a
+representative entry workflow the root README names.
 
 ## Breaking-change classification
 

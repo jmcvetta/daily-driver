@@ -158,6 +158,26 @@ the stanza in its own `.claude/settings.json`. So the cloud case for a
 second, stanza-less repository in an already-bootstrapped environment is
 confounded rather than proven: check it there rather than inheriting it.
 
+## Migration
+
+### Class names
+
+For the class-name cutover, merge and release the parser first. Then migrate
+open assignable issues across the participating repositories: change
+`implementation` to `routine`, `integration` to `intermediate`, and
+`reasoning` to `complex` in `## Model class`; update only rationale wording
+that uses the old names. Preserve all other content and leave closed issues
+unchanged. Update custom role and route-map keys with the same mapping. Older
+saved undertaking sessions are translated on resume; new selections reject
+the old tokens.
+
+### Task-state records
+
+The former `daily_driver_task_state` tool and the Claude and Codex task-state
+commands are removed. Work directly from the user's request and issue; use the
+existing review and validation workflows to verify and report the result.
+Existing private task-state records are not read or deleted.
+
 ## The per-repository stanza, and what it buys
 
 A repository *can* declare that it wants the plugin, with an
