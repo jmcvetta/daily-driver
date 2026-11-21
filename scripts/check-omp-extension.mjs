@@ -3717,9 +3717,10 @@ check("set_session_title calls pi.setSessionName", async () => {
 });
 
 check("set_session_title rejects serialized JSON arguments without renaming", async () => {
-	const s = makeSession();
+	const priorName = "Existing session name";
+	const s = makeSession({ sessionName: priorName });
 	const def = s.tools.get("daily_driver_set_session_title");
-	const unnamed = namedCtx(undefined);
+	const ctx = { cwd: "/tmp", ui: {}, sessionManager: { getSessionName: () => s.rec.sessionName } };
 	const blobs = [
 		['{"title":"#52 Rotate the Aurora access token"}', "object"],
 		['  {"title":"#52 Rotate the Aurora access token"}  ', "object"],
@@ -3727,19 +3728,20 @@ check("set_session_title rejects serialized JSON arguments without renaming", as
 		[' ["#52 Rotate the Aurora access token"] ', "array"],
 	];
 	for (const [blob, kind] of blobs) {
-		const result = await def.execute("bad", { title: blob }, undefined, undefined, unnamed);
+		const result = await def.execute("bad", { title: blob }, undefined, undefined, ctx);
 		assert.equal(result.isError, true, blob);
 		assert.deepEqual(result.details, { titled: null, rejected: true }, blob);
 		assert.match(result.content[0].text, new RegExp(`serialized JSON ${kind}`, "u"), blob);
 		assert.match(result.content[0].text, /daily_driver_set_session_title '#123 Short title'/u);
 		assert.match(result.content[0].text, /-j '\{"title":"#123 Short title"\}'/u);
+		assert.equal(s.rec.sessionName, priorName, "rejected title must preserve the existing name");
+		assertTitleBlocked(titleCall(s, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, ctx));
 	}
 	assert.deepEqual(s.rec.sessionNames, [], "no rejected title reached setSessionName");
-	assertTitleBlocked(titleCall(s, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, unnamed));
-	const corrected = await def.execute("good", { title: "#123 Short title" }, undefined, undefined, unnamed);
-	assert.deepEqual(corrected.details, { titled: "#123 Short title" });
-	assert.deepEqual(s.rec.sessionNames, ["#123 Short title"]);
-	assert.equal(titleCall(s, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, unnamed), undefined);
+	const corrected = await def.execute("good", { title: ISSUE_TITLE }, undefined, undefined, ctx);
+	assert.deepEqual(corrected.details, { titled: ISSUE_TITLE });
+	assert.deepEqual(s.rec.sessionNames, [ISSUE_TITLE]);
+	assert.equal(titleCall(s, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, ctx), undefined);
 });
 
 check("set_session_title keeps prose containing braces or brackets", async () => {
