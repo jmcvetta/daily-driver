@@ -1,12 +1,11 @@
 ---
 name: issue-body
 description: >-
-  This skill should be used whenever the body of a GitHub issue is being
-  written or revised. It selects the body contract by effective issue kind,
-  including each kind's readiness and completion test. It supplies the grounded
-  handoff for `task`, the provider-neutral class contract that every assignable
-  epic story carries, and the narrow frontier research exception. It is invoked from `issue` and
-  direct body edits. Not for labels, issue relationships, or pull request bodies.
+  Use whenever a GitHub issue body is written or revised. Selects the contract
+  by effective issue kind, with that kind's readiness and completion test, the
+  grounded `task` handoff, the class section every assignable epic story
+  carries, and the frontier research exception. Not for labels, issue
+  relationships, or pull request bodies.
 ---
 
 # Issue body

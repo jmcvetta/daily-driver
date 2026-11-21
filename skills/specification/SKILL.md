@@ -1,9 +1,9 @@
 ---
 name: specification
 description: >-
-  Use when an operator wants to collaboratively draft, review, and publish a
-  canonical specification, or when an issue of kind `specification` is handed
-  over. This is interactive work, not an unattended implementation assignment.
+  Use when an operator wants to draft, review, and publish a canonical
+  specification collaboratively, or when an issue of kind `specification` is
+  handed over. Interactive work, not an unattended implementation assignment.
 ---
 
 # Specification

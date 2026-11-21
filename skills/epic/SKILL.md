@@ -1,19 +1,14 @@
 ---
 name: epic
 description: >-
-  This skill should be used whenever a piece of work is being broken into more
-  than one issue, or an epic issue is being opened, read or corrected —
-  including when the user says "/epic", "break this down", "this is too big
-  for one PR", "split #142", "make an epic for this", or "which of these has
-  to land first", and on the agent's own move from a request that will not fit
-  one pull request to writing issues for it. It is also where `undertake`
-  sends work too big for the one issue it takes in, and it fires on an attempt
-  to undertake an epic, which carries no code. Supplies the two gates that
-  decide whether an epic fits, assignable stories, model class, the
-  plan-agreement gate, and the epic body — its sequencing and waves, which the
-  sub-issue panel and dependency graph do not render. The graph writes are
-  `issue-deps`'. Not for taking one child issue to a pull request, which is
-  `undertake`, and never fired on work that fits one.
+  Use for `/epic` when work is broken into more than one issue, or an epic
+  issue is opened, read, or corrected, including work too big for one pull
+  request and an attempt to undertake an epic, which carries no code. Supplies
+  the fit gates, assignable stories and model class, the plan-agreement gate,
+  and the epic body with its waves, which the sub-issue panel and dependency
+  graph do not render. Graph writes are `issue-deps`'. Not for taking one
+  child issue to a pull request (`undertake`), and never for work that fits one
+  issue.
 ---
 
 # Epic planning

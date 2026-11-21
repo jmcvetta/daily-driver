@@ -1,15 +1,11 @@
 ---
 name: pr-title
 description: >-
-  This skill should be used whenever the title of a GitHub pull request is
-  being written or revised — including when the user says "fix the PR title",
-  "rename the PR", "that title is wrong", or asks what a PR should be called,
-  and including any call the agent makes on its own initiative that writes or
-  revises a pull request's title while opening or updating one. Supplies the
-  Conventional Commits convention the title must
-  conform to; the type itself comes from `conventional-commits-type`. Not for
-  commit messages, not for the PR body — that is `pr-body` — and not for the
-  session's own name — that is `session-title`.
+  Use whenever a GitHub pull request title is written or revised, including on
+  the agent's own initiative while opening or updating one. Supplies the
+  Conventional Commits convention; the type comes from
+  `conventional-commits-type`. Not for commit messages, the PR body
+  (`pr-body`), or the session name (`session-title`).
 ---
 
 # PR Title

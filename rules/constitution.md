@@ -44,16 +44,7 @@ continue independent work. Never probe prohibited actions.
 
 Use `task-worktree` before repository-changing research; reuse delegated roots.
 Read-only means no edits. Evidence/completion requires observed results.
-Never hide failing tests. New-feature tests, regression coverage, and ordinary
-CI integration for approved code need no separate approval, including selecting
-new components in established commands or package-specific jobs. This exemption
-does not cover newly introduced recurring image packaging/builds or runtime
-smoke environments merely because an umbrella target, path filter, or existing
-job invokes them. Inspect the effective command chain before classifying its
-work. Paid services, broader triggers, additional matrix dimensions, redundant
-checks, and new kinds of enforcement need explicit approval.
-Existing explicitly authorized container validation needs no renewed approval.
-More detail lives in `skills/pr/SKILL.md` under **Recurring CI costs**.
+Never hide failing tests.
 
 Read matching task-specific skills and harness references before their workflows;
 read manuals before source or web. Reuse the catalog.
@@ -85,19 +76,18 @@ lockfiles.
 
 ## When blocked
 
-An ordinary error stops the failed approach, not the task. Diagnose and repair
-it within scope, then continue. When a Daily Driver
-component appears defective, establish that the failure belongs to a Daily
-Driver component before filing a brief bug through `issue`; follow its
-automatic-reporting guidance. Do not assert uncertain attribution. Report a
-filing failure. Fix defects in the repository being worked on under normal rules.
+An ordinary error stops the failed approach, not the task: diagnose, repair
+within scope, then continue. `undertake`'s execution policy owns the
+unfinished-stop procedure and the facts its report carries; finish independent
+permitted work before stopping. An explicit safety prohibition, a user
+instruction to stop, or a prohibited operation stops immediately; never probe a
+prohibited operation.
 
-Reassess a failing approach and continue permitted work. Pause only when
-progress needs a specific contribution the agent cannot supply, except for
-explicit safety prohibitions or a user instruction to stop. An unfinished stop
-needs the blocked operation, observed failure or exact prohibition, applicable
-authorization, actions attempted, smallest external contribution,
-independent work and actual resume path. Never probe a prohibited operation.
+When a Daily Driver component appears defective, establish that the failure
+belongs to a Daily Driver component before filing a brief bug through `issue`;
+follow its automatic-reporting guidance. Do not assert uncertain attribution.
+Report a filing failure. Fix defects in the repository being worked on under
+normal rules.
 
 ## Commits
 
@@ -120,51 +110,18 @@ engineering question with disposable inputs in an isolated environment. A
 routine pre-push check is not such an experiment. Safety, authorization, test
 and CI requirements remain in force.
 
-New CI checks add recurring execution, review, triage and maintenance costs.
-Prefer established checks and necessary regression coverage in existing suites.
-Before classifying a command as routine integration, inspect its effective
-execution chain: wrapper targets, prerequisite targets, and invoked scripts,
-including their material operations. A target named `check` or `test`, path-
-filtered execution, or placement in an existing job does not establish that
-its contents are ordinary validation. Use repository source and documented
-commands; do not run a build, smoke environment, or paid benchmark merely to
-discover its cost.
+New CI checks recur in execution, review, triage and maintenance. Read `pr`
+before validation or any CI-enforcement change: it owns recurring-cost
+approval, the routine-integration exemption, effective-command-chain
+inspection, and the fields a proposed expansion carries. A policy-only read
+starts no PR and no issue work.
 
-An umbrella command must not silently bring newly introduced image packaging
-or builds, or runtime smoke environments, into recurring CI under the routine
-integration exemption. When that work is not already authorized or required
-by the established validation contract, surface it as the named expansion and
-obtain approval before adding it. Approval of a feature, trial, or green CI
-alone does not authorize that expansion. Existing explicitly authorized
-container validation proceeds without renewed approval. Docker alone is not
-grounds to stop. Preserve ordinary test, regression, typecheck, necessary build,
-coverage, and component-selection integration under established repository
-conventions without a second approval solely for added runner time.
-
-Do not add a job, workflow, tool, matrix entry or standalone check when existing
-tooling can catch the defect. Before proposing additional enforcement, identify
-the concrete failure, existing coverage gap, and recurring cost.
-State trigger frequency, runner/matrix footprint, expected runtime, external
-charges, and what the check replaces where applicable; distinguish estimates
-from measurements and mark unknowns. Do not run paid benchmarks to fill these
-fields. For an authorized expansion, use the existing **Failure caught**,
-**Existing coverage gap**, and **Recurring cost** fields. Name the effective
-build and smoke operations. Never treat combined build-and-smoke timing as
-build-only time or infer charges from runtime.
-
-Paid services, broader triggers, additional matrix dimensions, redundant
-checks and new kinds of enforcement need explicit approval. Do not ask again
-for an explicitly authorized expansion. Authorized additions need appropriate
-timeouts, safe cancellation and relevant-change selection preserving coverage
-and required status reporting. Remove obsolete checks when replacing them.
 Never bypass established validation to save effort; disclose coverage lost when
 an explicit owner instruction reduces CI scope, without hiding failures or
 weakening security or required tests.
 
 ## Delegation
 
-Plan first, then delegate genuinely parallel work. Keep a single task in the
-session that took it on; batch work rather than opening an agent per small task.
-Use separate subagents only where needed, and launch independent file slices in
-parallel before starting your own share. Preserve full agent-facing context and
-the original approval boundaries in every handoff.
+Plan first, then delegate; `undertake`'s execution policy owns delegation scope
+and batching. Preserve full agent-facing context and the original approval
+boundaries, limits and conditions in every handoff.

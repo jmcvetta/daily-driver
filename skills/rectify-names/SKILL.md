@@ -1,12 +1,12 @@
 ---
 name: rectify-names
 description: >-
-  Use when asked to systematically examine naming across a repository or a
+  Use when asked to examine naming systematically across a repository or a
   defined part of one, assess candidate improvements, or coordinate approved
-  naming corrections. Do not start a repository-wide audit because an
-  unrelated task exposes one poor name. Supplies an evidence-led audit,
-  separate judgment and issue-backed incremental correction workflow; it does
-  not authorize edits, compatibility changes, deployment, or production access.
+  naming corrections. Not for a repository-wide audit because an unrelated
+  task exposed one poor name. Supplies an evidence-led audit and separate
+  judgment and issue-backed incremental correction; it authorizes no edits,
+  compatibility changes, deployment, or production access.
 ---
 
 # Rectify names
