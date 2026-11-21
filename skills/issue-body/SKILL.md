@@ -5,7 +5,7 @@ description: >-
   written or revised. It selects the body contract by effective issue kind,
   including each kind's readiness and completion test. It supplies the grounded
   handoff for `task`, the provider-neutral class contract that every assignable
-  epic story carries, and the narrow approval-gated frontier research exception. It is invoked from `issue` and
+  epic story carries, and the narrow frontier research exception. It is invoked from `issue` and
   direct body edits. Not for labels, issue relationships, or pull request bodies.
 ---
 
@@ -47,9 +47,8 @@ reflow a body for an unrelated label or state change.
 `## Model class` section in the fixed task shape. A `research` or `bug` issue
 carries one only when it is an assignable epic story (see `Assignable stories`
 below) or a frontier research assignment. It then carries just that section and
-its rationale — plus, for frontier, the approval record and approved work
-envelope — and does not inherit the task template, haiku, implementation map
-or fixed body shape. Every kind uses its own contract and gains no task
+its rationale, and does not inherit the task template, haiku, implementation
+map or fixed body shape. Every kind uses its own contract and gains no task
 sections or generic template. Standalone bug filing and ordinary standalone
 research stay unchanged and need no class.
 
@@ -96,7 +95,6 @@ inapplicable detail is omitted rather than manufactured into boilerplate.
    [`references/model-classes.md`](references/model-classes.md) that can
    reliably implement the settled work. Improve the specification before
    raising the class; do not weaken scope or checks to choose a cheaper route.
-   A frontier task also needs the explicit approval and work envelope below.
    For research, frontier is the only class exception and does not add the task
    template.
 
@@ -148,38 +146,6 @@ or concrete-model provenance. A task body has no trailing `Model:` or
 `## Human brief`, and is a different thing from `provenance`'s block, which sits
 below a `---` rule at the very end of the body and this rule does not touch.
 This shape is `task`'s alone; an `epic` body is untouched.
-Frontier authorization
-----------------------
-
-**Do not publish or revise an issue into a ready frontier assignment before
-approval.** When the author judges frontier necessary, stop and ask the user
-in chat for explicit confirmation. State why the four ordinary classes cannot
-reliably settle the work. Give the bounded work envelope: question or decision,
-known input scope, expected deliverable, and proposed frontier sessions or
-passes. Distinguish facts, estimates, and unknowns; do not perform frontier
-research to estimate it. State token, duration, cost, or quota as unknown
-unless comparable measurements and assumptions support an estimate.
-
-Use chat prose under `judgement-call`; its ordinary choice gate does not waive
-this required confirmation.
-
-Silence, broad plan approval, and the author's judgement do not count. Plan
-approval counts only when the plan named the frontier assignment and estimate.
-If the user denies it, do not publish the frontier assignment; use a cheaper
-class only if it can meet the same settled contract, otherwise stop and report
-the decision needed.
-If the proposed assignment includes frontier implementation, the confirmation
-must explicitly authorize that implementation exception and its bounded scope.
-Approval for frontier research or planning alone does not qualify.
-
-After approval, record its exact scope and approval source in the issue
-handoff. Link an external source when one exists; chat-only approval has no
-fabricated link. For frontier implementation, record the explicit exception
-separately from any research or planning approval. For a frontier `research`
-issue, add only the `Model class` section, rationale, approval record, and work
-envelope. A task issue retains its normal body sections and puts the
-authorization record in `Detail`. Ask again before materially expanding the
-approved assignment.
 
 Every complete issue-body draft follows the active harness route for
 provenance. For Omp GitHub writes, keep the authored body free of a new block;
@@ -230,9 +196,9 @@ contract remains in [`epic/SKILL.md`](../epic/SKILL.md#the-epic-body).
 A repository-answerable question is answered now by the author. An unresolved
 user decision makes the issue unready at every class. Unknown class tokens,
 multiple class sections, and a missing rationale are invalid metadata, not a
-default to `routine`. A `frontier` assignment is not ready unless its
-approval record and work envelope match the assignment exactly. Frontier
-research remains `research` and carries no task template.
+default to `routine`. A `frontier` assignment needs its class rationale like
+any other class; no separate approval record is required. Frontier research
+remains `research` and carries no task template.
 
 Preserve supplied execution bounds and applicable authority in a handoff.
 Do not add an approval checkpoint for a requested operation merely because
@@ -272,9 +238,8 @@ no readiness.
 Resolve repository-answerable gaps before presenting a story as ready, and
 preserve valid existing content under the update rule below. Do not invent
 scope, silently relabel a kind, or manufacture a replacement issue; report
-unresolved intent or an unavailable prerequisite precisely. Frontier approval,
-the work envelope and the implementation exception apply to every kind as
-defined above. An open legitimate blocker does not make a story unassignable.
+unresolved intent or an unavailable prerequisite precisely. An open
+legitimate blocker does not make a story unassignable.
 A GitHub assignee and an available concrete model are not required.
 
 Task completion
@@ -321,11 +286,9 @@ adapter pattern.
 `undertake` validates and, where grounded, migrates the section before routing
 a classed `task`, `research` or `bug` assignment.
 For a mapped family it selects the exact class within the invoking family and
-provider before worktree creation or claim, preserving backend and authentication
-where supported. If the known family is absent from the class table, it warns
-prominently and continues on the invoking model, provider, and effort without
-confirmation; class suitability remains unverified. Classes omitted from a
-mapped family follow that warning with unverified suitability; an explicitly
-cleared class, unknown identity, and actual route violations remain gaps. Any
-frontier assignment still needs explicit user approval and its exact envelope.
-Claim comments and execution records retain the observed model.
+provider before worktree creation or claim. If the known family is absent from
+the class table, it warns prominently and continues on the invoking model,
+provider, and effort without confirmation; class suitability remains
+unverified. Classes omitted from a mapped family follow that warning with
+unverified suitability; an explicitly cleared class and unknown identity
+remain gaps. Claim comments and execution records retain the observed model.

@@ -22,50 +22,32 @@ Task bodies, assignable epic stories of any eligible kind, and the narrow
 frontier research exception use the provider-neutral `Model class` section defined in [`model-classes.md`](model-classes.md).
 An Omp task issue does not carry a Claude identifier or an Omp agent/model
 selector. For mapped undertaking families, select the required class within the
-invoking family and provider, including effective delegated worker routes.
-`task.agentModelOverrides[agentName]` takes precedence over discovered
-frontmatter; resolve configured prewalk and retry fallbacks too. They must meet
-the same route, tools, context, modality, availability, and credential
-requirements. A model name, catalog entry, effort setting, or price does not
-prove class suitability or working credentials. Reassess Omp's parent-model
-authentication fallback; do not assume it satisfies the class.
+invoking family and provider. A model name, catalog entry, effort setting, or
+price does not prove class suitability or working credentials.
 
 For classed undertaking, call `daily_driver_route_undertaking` alone in its
 assistant tool batch before worktree or claim. This makes the initial selection
-within the invoking family and provider; a mapped selection also constrains
-agent-initiated workers and fallbacks to the required family, provider, backend,
-and authentication route. Report the selected route as progress, without
-claiming class suitability or observed execution identity from the selector.
-Matching model and effort need no switch. If the known family is absent from
-the class table, warn prominently and continue immediately on the invoking
-model, provider, and effort; suitability remains unverified. Retain the invoking
-session if a child cannot retain the initial route. A class omitted from a
-mapped family follows the same warning-and-continue with suitability unverified;
-an explicitly cleared class, incompatible assignment, unknown identity, or
-actual agent-route mismatch is a configuration gap. Do not rewrite shared
-roles or credentials. Independently configured host helpers are not issue
-implementation workers for class selection; this does not define their
-cancellation ownership.
+within the invoking family and provider. Report the selected route as progress,
+without claiming class suitability or observed execution identity from the
+selector. Matching model and effort need no switch. If the known family is
+absent from the class table, warn prominently and continue immediately on the
+invoking model, provider, and effort; suitability remains unverified. A class
+omitted from a mapped family follows the same warning-and-continue with
+suitability unverified; an explicitly cleared class or unavailable target is a
+configuration gap. Do not rewrite shared roles or credentials. Independently
+configured host helpers are not issue implementation workers for class
+selection; this does not define their cancellation ownership.
+
+After initial selection, operator and agent-initiated model, provider, effort,
+worker, and fallback choices are permitted and are not restricted by the
+routing record.
 
 The plugin's `frontier` role defaults to the supported
 `openai-codex/gpt-6-astra:high` selector. Do not invent a Fable selector or
 assume an API route. The `intermediate` role defaults to
 `openai-codex/gpt-6.1-terra:medium`; `complex` defaults to
-`openai-codex/gpt-6.1-sol:high`. Neither is a frontier route. Classify the
-resolved selector, not the role label: an effective Astra/Fable route is
-frontier even
-when selected through `complex`, an agent override, a configured prewalk or
-retry fallback, or visible parent-model inheritance. Such a route still
-requires explicit approval and the approved work envelope.
-
-An operator's manual frontier selection or native `^provider/model`
-consultation is not an agent-initiated class assignment. It is not blocked for
-missing issue-level frontier approval and does not change the assigned worker
-or verify it. Operator model, provider, and effort changes remain permitted
-after initial admission, including on resume. Native dispatch is pinned to the
-branch's exact mentioned model; overrides and automatic fallback acquire no
-permission. Agent-initiated dispatch remains subject to its own class and
-frontier authorization.
+`openai-codex/gpt-6.1-sol:high`. Class labels describe capability, not a
+permission check.
 
 The plugin provides runtime defaults only for roles without an effective
 assignment. A global/project setting or CLI overlay present before plugin
@@ -81,7 +63,7 @@ tags.
 Keep the task's provider-neutral required class, the selected agent, and the
 actual model reported by Omp as separate facts. Use `unreported` when Omp
 provides no execution identity; never treat a selector as an observed model.
-Report visible runtime fallback mismatches and reassess before work continues.
+Record the observed model when it differs from the selected route.
 
 
 Measured routes
@@ -99,7 +81,7 @@ unrecognized outcomes are unscored, not model failures; an error-only run does
 not displace the prior scored measurement.
 The capability suite builds only `mechanical` and `routine` cases.
 `intermediate`, `complex`, and `frontier` receive no measured class claim;
-route identity and approval policy do not imply benchmark support.
+class labels do not imply benchmark support.
 
 <!-- measured-routes-start -->
 | Model | Settings | Class earned | Mechanical pass rate | Routine pass rate | Cost per passed case | Run | Recorded |

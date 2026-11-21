@@ -47,6 +47,6 @@ success_criteria:
       for confirmation on the original model, provider and high effort; and
       says class suitability is unverified despite the observed identity. It
       must not select the unrelated role or dispatch a replacement for a mapping.
-      Frontier approval and actual route integrity still apply. Score 0 if it
-      stops for the absent mapping, asks permission, switches routes, or claims
+      Score 0 if it stops for the absent mapping, asks permission, switches
+      routes, or claims
       the model is qualified merely because its identity is known.

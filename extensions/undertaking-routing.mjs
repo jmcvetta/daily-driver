@@ -1,10 +1,8 @@
-import { createHash } from "node:crypto";
-import { MODEL_CLASS_ROUTES, explicitModelClassRole, readExecutionCandidates } from "./role-default-helper.mjs";
+import { MODEL_CLASS_ROUTES, explicitModelClassRole } from "./role-default-helper.mjs";
 
 const ENTRY = "daily-driver-undertaking-route";
 const CLASSES = ["mechanical", "routine", "intermediate", "complex", "frontier"];
 const EFFORT = /:(off|minimal|low|medium|high|xhigh|max|auto|inherit)$/u;
-const INDEPENDENT_HELPERS = new Set(["reviewer", "scout", "security-reviewer", "seance"]);
 // Agent names are process-local, not globally unique. A shared auth store and
 // an unambiguous live parent session are both required for inheritance.
 const roots = new WeakMap();
@@ -23,36 +21,6 @@ function selector(model) {
 	return model && typeof model.provider === "string" && typeof model.id === "string"
 		? `${model.provider}/${model.id}` : null;
 }
-
-function frontier(model) {
-	return /(?:^|[-/])(?:astra|fable)(?:[-/]|$)/iu.test(selector(model) ?? "");
-}
-
-function nativeMention(ctx, agent) {
-	const agents = new Set();
-	const selectors = new Set();
-	for (const entry of ctx.sessionManager.getBranch?.() ?? []) {
-		if (entry.type !== "custom" || entry.customType !== "model_mention") continue;
-		const mention = entry.data;
-		if (!mention || typeof mention.agent !== "string" || !/^m\d+$/u.test(mention.agent) ||
-			typeof mention.selector !== "string" || typeof mention.name !== "string" ||
-			agents.has(mention.agent) || selectors.has(mention.selector)) continue;
-		agents.add(mention.agent);
-		selectors.add(mention.selector);
-		if (mention.agent === agent) return mention;
-	}
-	return null;
-}
-
-function origin(model) {
-	if (!selector(model) || !model.api || !model.baseUrl) throw new Error("Model backend identity is unavailable");
-	return {
-		provider: model.provider, model: model.id, api: model.api, baseUrl: model.baseUrl,
-		headersDigest: createHash("sha256").update(JSON.stringify(Object.entries(model.headers ?? {}).sort())).digest("hex"),
-	};
-}
-
-
 
 function source(ctx, provider) {
 	const value = ctx.modelRegistry?.authStorage?.keys?.source(provider, { env: "aliases" });
@@ -73,20 +41,6 @@ function routeError(state, message) {
 	state.status = "blocked";
 	state.reason = message;
 	return new Error(`Undertaking route gap: ${message}`);
-}
-
-function checkModel(ctx, state, model, routingOnly = false) {
-	const candidate = origin(model);
-	const original = state.origin;
-	if (candidate.provider !== original.provider) throw new Error("Provider must remain unchanged");
-	if (candidate.api !== original.api || candidate.baseUrl !== original.baseUrl || candidate.headersDigest !== original.headersDigest) {
-		throw new Error("Model backend must remain unchanged");
-	}
-	const family = ctx.models.family(model);
-	const reference = ctx.models.resolve(`${original.provider}/${original.model}`);
-	if (!family || !reference || family !== ctx.models.family(reference)) throw new Error("Model family must remain unchanged");
-	if (!routingOnly && frontier(model) && !state.frontierApproval) throw new Error("Frontier execution requires recorded approval and its bounded envelope");
-	if (!routingOnly && frontier(model) && state.modelClass !== "frontier") throw new Error("Ordinary work cannot use a frontier fallback");
 }
 
 // Catalog model IDs may include the family prefix for only one provider.
@@ -157,7 +111,7 @@ function storedState(ctx) {
 		? legacyClasses[saved.modelClass] ?? saved.modelClass : saved?.modelClass;
 	if (![1, 2, 3].includes(saved?.schema) || saved.schema >= 2 && saved.lifecycle !== "active" ||
 		!CLASSES.includes(modelClass) || !Number.isSafeInteger(saved.issue) || saved.issue < 1 ||
-		!saved.origin?.provider || !saved.selectedModel || !saved.authenticationRoute) {
+		!saved.selectedModel) {
 		throw new Error("Saved undertaking route is invalid; use /undertaking status for local recovery");
 	}
 	return { ...saved, modelClass };
@@ -184,10 +138,10 @@ function ownedBy(state, owner) {
 }
 
 /** Install one-time undertaking model selection without changing host helper roles. */
-export function installUndertakingRouting(pi, getSettings, getRoutes = () => MODEL_CLASS_ROUTES, getCandidates = readExecutionCandidates, onCompleted = () => {}) {
+export function installUndertakingRouting(pi, getSettings, getRoutes = () => MODEL_CLASS_ROUTES, onCompleted = () => {}) {
 	const states = new Map();
 	const selecting = new Set();
-	const admissions = new Set();
+	const inFlightSelections = new Set();
 	const rejections = new Map();
 
 	function status(ctx, text) { ctx.ui?.setStatus?.("daily-driver-routing", text); }
@@ -235,10 +189,8 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 	function inspect(ctx) {
 		const state = current(ctx);
 		const saved = savedEntry(ctx)?.data;
-		let authenticationRoute = state?.authenticationRoute?.split(":")[0] ?? "unreported";
-		if (authenticationRoute === "unreported") {
-			try { authenticationRoute = source(ctx, ctx.models?.current?.()?.provider).split(":")[0]; } catch { /* Report missing observation. */ }
-		}
+		let authenticationRoute = "unreported";
+		try { authenticationRoute = source(ctx, ctx.models?.current?.()?.provider).split(":")[0]; } catch { /* Report missing observation. */ }
 		return {
 			issue: state?.issue ?? null,
 			requiredClass: state?.modelClass ?? null,
@@ -316,7 +268,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 					state.reason = "This child was cancelled and cannot resume execution";
 					publish(ctx, state);
 				}
-				ctx.ui.notify("Undertaking cancelled, not completed. Transcript, worktree, and approval evidence are unchanged. A new undertaking requires normal admission.", "info");
+				ctx.ui.notify("Undertaking cancelled, not completed. Transcript, worktree, and unfinished state are unchanged. A new undertaking requires a fresh initial selection.", "info");
 			} catch (error) {
 				reportRejection(ctx, state, error);
 			} finally {
@@ -328,11 +280,9 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 	async function save(state) {
 		await pi.appendEntry(ENTRY, {
 			schema: 3, lifecycle: "active", issue: state.issue, modelClass: state.modelClass, selectedModel: state.selectedModel,
-			origin: state.origin, authenticationRoute: state.authenticationRoute,
 			selectedEffort: state.selectedEffort,
 			capability: state.capability ?? "mapped",
 			...(state.warning ? { warning: state.warning } : {}),
-			...(state.frontierApproval ? { frontierApproval: state.frontierApproval } : {}),
 		});
 	}
 
@@ -395,16 +345,15 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 	pi.registerTool({
 		name: "daily_driver_route_undertaking",
 		label: "Select undertaking model class",
-		description: "Select the issue's initial model class on its invoking family and provider. Call alone, not batched with other tools. Later operator model and effort changes are not restricted. An unmapped family or an omitted class warns and retains the invoking model.",
+		description: "Select the issue's initial model class on its invoking family and provider. Call alone, not batched with other tools. Later model, provider, effort, worker, and fallback choices are not restricted. An unmapped family or an omitted class warns and retains the invoking model.",
 		parameters: pi.zod.object({
 			issue: pi.zod.number().int().min(1),
 			modelClass: pi.zod.string(),
-			frontierApproval: pi.zod.string().optional(),
 		}),
 		execute: async (_id, params, _signal, _update, ctx) => {
 			const previous = current(ctx);
 			const sessionId = ctx.sessionManager.getSessionId();
-			if (admissions.has(sessionId)) return {
+			if (inFlightSelections.has(sessionId)) return {
 				isError: true, content: [{ type: "text", text: "Another route admission is in flight; inspect or cancel the current operation before retrying." }], details: describe(ctx),
 			};
 			if (previous && isCancelled(previous)) return {
@@ -433,7 +382,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			const checkAdmission = () => {
 				if (_signal?.aborted || admissionRevoked()) throw new Error("Undertaking admission was cancelled or its owner changed");
 			};
-			admissions.add(sessionId);
+			inFlightSelections.add(sessionId);
 			selecting.add(sessionId);
 			try {
 				if (!Number.isSafeInteger(params.issue) || params.issue < 1 || !CLASSES.includes(params.modelClass)) {
@@ -445,15 +394,8 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				state = {
 					...previous,
 					issue: params.issue, modelClass: params.modelClass, sessionId,
-					origin: previous?.origin ?? origin(invoking),
-					authenticationRoute: previous?.authenticationRoute ?? source(ctx, invoking.provider),
 					workerModels: ctx.models, capability, recovery: undefined,
-					frontierApproval: params.frontierApproval?.trim() || previous?.frontierApproval,
 				};
-				checkModel(ctx, state, invoking, true);
-				checkModel(ctx, state, target);
-				if (params.modelClass === "frontier" && !state.frontierApproval) throw new Error("Frontier execution requires recorded approval and its bounded envelope");
-				if (source(ctx, state.origin.provider) !== state.authenticationRoute) throw new Error("Authentication route must remain unchanged");
 				if (!(await ctx.modelRegistry.getApiKey(invoking, sessionId))) throw new Error("Current route has no available credentials");
 				const effort = configured?.match(EFFORT)?.[1];
 				const nextEffort = effort && effort !== "inherit" ? effort : invokingEffort;
@@ -508,7 +450,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 					? { isError: true, content: [{ type: "text", text: `Undertaking admission cancelled: ${message}. Ownership was not restored.` }], details: describe(ctx) }
 					: { isError: true, content: [{ type: "text", text: `Undertaking route gap: ${message}. Use /undertaking status for local recovery.` }], details: describe(ctx) };
 			} finally {
-				admissions.delete(sessionId);
+				inFlightSelections.delete(sessionId);
 				selecting.delete(sessionId);
 			}
 		},
@@ -543,31 +485,12 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		}
 	});
 
-	pi.on("before_subagent_spawn", async (event, ctx) => {
+	pi.on("before_subagent_spawn", (event, ctx) => {
 		const state = current(ctx);
 		if (!state) return;
-		if (isCancelled(state)) return { block: true, reason: guardReason("The owning undertaking was cancelled; execution is not authorized", state?.issue) };
+		if (isCancelled(state)) return { block: true, reason: guardReason("The owning undertaking was cancelled; child dispatch is blocked", state?.issue) };
 		const dispatchEpoch = state.dispatchEpoch ?? 0;
-		const mention = nativeMention(ctx, event.agent);
-		if (!INDEPENDENT_HELPERS.has(event.agent)) {
-			try {
-				if (!event.patterns?.length) throw new Error("Child effective model route is unavailable");
-				const candidates = await getCandidates(ctx, await getSettings(ctx), event.patterns, event.modelRole, event.agent);
-				if (!candidates.length) throw new Error("Child effective model route is unavailable");
-				for (const pattern of candidates) {
-					if (typeof pattern !== "string" || /[*?,]/u.test(pattern)) throw new Error("Child effective model candidate cannot be verified");
-					const model = ctx.models.resolve(pattern);
-					if (!model) throw new Error("Child effective model candidate cannot be resolved");
-					const operatorSelected = mention && selector(model) === mention.selector.replace(EFFORT, "");
-					if (frontier(model) && !operatorSelected && (state.modelClass !== "frontier" || event.modelRole !== "frontier" || !state.frontierApproval)) {
-						throw new Error("Frontier worker execution requires a frontier assignment and recorded approval");
-					}
-				}
-			} catch (error) {
-				return { block: true, reason: guardReason(`Undertaking assignment gap: ${error.message}`, state?.issue) };
-			}
-		}
-		if (isCancelled(state) || current(ctx) !== state || (state.dispatchEpoch ?? 0) !== dispatchEpoch) {
+		if (current(ctx) !== state || (state.dispatchEpoch ?? 0) !== dispatchEpoch) {
 			return { block: true, reason: guardReason("The owning undertaking or child dispatch was cancelled or replaced", state?.issue) };
 		}
 		const parents = [...(scope(ctx)?.values() ?? [])].filter(record => record.agentId === ctx.agent?.id);
