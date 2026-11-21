@@ -249,20 +249,23 @@ is kept, but the attempt does not enter a measured cost comparison.
 
 ## Cost
 
-**Rates come from the gateway, not from a person and not from Omp.**
-`prices.json` is a dated snapshot of the Vercel AI Gateway endpoints API —
-`https://ai-gateway.vercel.sh/v1/models/<provider>/<model>/endpoints`, public
-and unauthenticated — for the upstream an arm restricts itself to with
-`vercel_gateway_only`. Each row carries `source` and `read_on`. Refresh the
-snapshot before a benchmark and commit it, so every record can name the card
-that priced it: `python3 scripts/evals-fetch-prices.py` rewrites it for every
-gateway model an experiment restricts to one upstream, and fails rather than
-guess when that upstream is missing from the response or matched twice.
-`--check` reports a snapshot that no longer matches the API. Rows for models
-no experiment restricts are dropped, because an unrestricted gateway model has
-one card per upstream and nothing can choose between them. A
-`vercel_gateway_only` mapping contributes every route it names, so a reviewer
-arm that pins both the parent and the `review` role prices both.
+**Rates come from the pinned provider catalog, not from a person and not from Omp.**
+`prices.json` is a dated snapshot with `source` and `read_on` on every row.
+Vercel models remain sourced from
+`https://ai-gateway.vercel.sh/v1/models/<provider>/<model>/endpoints`, selecting
+the one endpoint named by `vercel_gateway_only`. A `vercel_gateway_only`
+mapping contributes every route it names, so a reviewer arm that pins both
+the parent and the `review` role prices both. OpenCode Go models are read
+from `https://opencode.ai/inference/go/v1/models` by their exact `id`. For the
+free Go arms, the generator requires numeric zero text input, output and cache
+read rates; a missing model, changed required shape or any published nonzero
+rate fails rather than guessing. A cache-write rate the catalog does not
+publish stays `null`.
+
+`python3 scripts/evals-fetch-prices.py` refreshes both sources, and `--check`
+reports a stale snapshot. Vercel rows for models no restricted experiment pins
+are dropped, because an unrestricted gateway model has one card per upstream
+and nothing here can choose between them.
 
 Two things must not be used as a price:
 

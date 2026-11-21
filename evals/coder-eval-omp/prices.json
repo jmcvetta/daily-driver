@@ -1,4 +1,31 @@
 {
+  "opencode-go/beam-free": {
+    "input_usd_per_million": 0.0,
+    "output_usd_per_million": 0.0,
+    "cache_read_usd_per_million": 0.0,
+    "cache_write_usd_per_million": null,
+    "source": "https://opencode.ai/inference/go/v1/models",
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
+  },
+  "opencode-go/iceman-contributor-free": {
+    "input_usd_per_million": 0.0,
+    "output_usd_per_million": 0.0,
+    "cache_read_usd_per_million": 0.0,
+    "cache_write_usd_per_million": null,
+    "source": "https://opencode.ai/inference/go/v1/models",
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
+  },
+  "opencode-go/longcat-2.5-free": {
+    "input_usd_per_million": 0.0,
+    "output_usd_per_million": 0.0,
+    "cache_read_usd_per_million": 0.0,
+    "cache_write_usd_per_million": null,
+    "source": "https://opencode.ai/inference/go/v1/models",
+    "read_on": "2026-11-19",
+    "recorded": "2026-11-19"
+  },
   "vercel-ai-gateway/alibaba/qwen4-max": {
     "input_usd_per_million": 1.5,
     "output_usd_per_million": 4.5,

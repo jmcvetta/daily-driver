@@ -251,32 +251,6 @@ a completed attempt lacks verified telemetry or a priced card. A missing
 reviewer cost is `unreported`, never zero and never the parent's cost. Prices
 are computed from the committed endpoint cards, not billed amounts.
 
-Run every attempt serially, one active attempt globally:
-
-```sh
-make evals-plan-reviewer-quality
-make evals-judge-preflight JUDGE=omp-vercel-gpt-6.1-sol
-
-python3 scripts/evals-reviewer-run.py --arm vercel-mistral --phase smoke \
-  --run-dir evals/runs/906/vercel-mistral-smoke
-make evals-record RUN=evals/runs/906/vercel-mistral-smoke \
-  EXPERIMENT=evals/experiments/omp-reviewer-mistral-large-4-vercel.yaml \
-  JUDGE=omp-vercel-gpt-6.1-sol JUDGE_TASKS_DIR=evals/tasks-judged
-python3 scripts/evals-reviewer-quality.py --arm vercel-mistral \
-  --experiment evals/experiments/omp-reviewer-mistral-large-4-vercel.yaml \
-  --run-dir evals/runs/906/vercel-mistral-smoke \
-  --record evals/provenance/<record>.json --repeats 1 \
-  --output evals/provenance/reviewer-quality/vercel-mistral-smoke.json
-```
-
-The smoke pair is `01-boundary` and `05-clean-boundary` once per arm: 14
-attempts, excluded from cohort metrics. Inspect completion, captured delivery,
-requested and resolved identities, the resolved upstream and effort, child
-usage and cost, and the judge score before dispatching that arm's cohort.
-Cohorts run all eight cases five times per arm: 40 attempts per arm, 280 total.
-Use a fresh explicit nested run directory for each phase and keep the
-interrupted attempts.
-
 **Dispatch stopped on 2026-11-18T22:10:53Z.** The campaign exhausted the
 Vercel AI Gateway balance. The parent, every non-review helper and the judge
 were pinned to `vercel-ai-gateway/openai/gpt-6.1-sol:low` by the issue, and
@@ -346,6 +320,38 @@ counted as a missed defect. That is evidence about these three repeats, not a
 reliability estimate and not a comparison. The other six arms have smoke
 evidence only. The full per-arm comparison remains blocked by the gateway
 refusal.
+
+#### Campaign operation
+
+Do not dispatch inference until the operator authorizes spend and the gateway
+balance is restored.
+
+Run every attempt serially, one active attempt globally:
+
+```sh
+make evals-plan-reviewer-quality
+make evals-judge-preflight JUDGE=omp-vercel-gpt-6.1-sol
+
+python3 scripts/evals-reviewer-run.py --arm vercel-mistral --phase smoke \
+  --run-dir evals/runs/906/vercel-mistral-smoke
+make evals-record RUN=evals/runs/906/vercel-mistral-smoke \
+  EXPERIMENT=evals/experiments/omp-reviewer-mistral-large-4-vercel.yaml \
+  JUDGE=omp-vercel-gpt-6.1-sol JUDGE_TASKS_DIR=evals/tasks-judged
+python3 scripts/evals-reviewer-quality.py --arm vercel-mistral \
+  --experiment evals/experiments/omp-reviewer-mistral-large-4-vercel.yaml \
+  --run-dir evals/runs/906/vercel-mistral-smoke \
+  --record evals/provenance/<record>.json --repeats 1 \
+  --output evals/provenance/reviewer-quality/vercel-mistral-smoke.json
+```
+
+The smoke pair is `01-boundary` and `05-clean-boundary` once per arm: 14
+attempts, excluded from cohort metrics. Inspect completion, captured delivery,
+requested and resolved identities, the resolved upstream and effort, child
+usage and cost, and the judge score before dispatching that arm's cohort.
+Cohorts run all eight cases five times per arm: 40 attempts per arm, 280 total.
+Use a fresh explicit nested run directory for each phase and keep the
+interrupted attempts.
+
 
 ### Observed comparison
 
