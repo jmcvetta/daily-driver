@@ -54,6 +54,19 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.69.0](https://github.com/jmcvetta/daily-driver/compare/v0.68.0...v0.69.0) (2026-11-21)
+
+
+### Features
+
+* preserve readiness evidence across turns ([#958](https://github.com/jmcvetta/daily-driver/issues/958)) ([1c84d65](https://github.com/jmcvetta/daily-driver/commit/1c84d65df79cc943e7f0c2db2fe7f220a5630f28))
+
+
+### Bug Fixes
+
+* inspect effective CI costs ([#952](https://github.com/jmcvetta/daily-driver/issues/952)) ([55b7833](https://github.com/jmcvetta/daily-driver/commit/55b78339b44048f4be08ca7832ec002d73d94e30))
+* **task-worktree:** refresh the default base before branch creation ([#953](https://github.com/jmcvetta/daily-driver/issues/953)) ([022784b](https://github.com/jmcvetta/daily-driver/commit/022784b492b486fb7be149771812c8385df43087))
+
 ## [0.68.0](https://github.com/jmcvetta/daily-driver/compare/v0.67.0...v0.68.0) (2026-11-20)
 
 
