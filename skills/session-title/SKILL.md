@@ -25,17 +25,17 @@ Claude Code, [`references/omp.md`](references/omp.md) for Oh My Pi, and
 harness in use before the first call.
 
 
-Budget: 40 characters
+Budget: 30 characters
 =====================
 
-Every harness's title tool accepts far more than forty. Forty is this skill's
+Every harness's title tool accepts far more than thirty. Thirty is this skill's
 own cap, chosen rather than measured — short enough to survive the mobile list
 at the width it is read on, long enough to say which session this is. A
 measurement, when someone takes one, is what may move it. The cap is this
 skill's and not the tool's, so it holds on every harness, whatever that
 harness's own limit turns out to be.
 
-- **Hard cap, 40 characters**, counting the whole string, `#123 ` prefix
+- **Hard cap, 30 characters**, counting the whole string, `#123 ` prefix
   included. Past that the title is cut where the renderer reaches rather than
   where a writer would have chosen; shortening it here keeps the choice.
 - **No ellipsis.** A title trimmed to fit reads as a title. One ending in `…`
@@ -78,9 +78,9 @@ prefix** alone: `#40 Set the session title` — 29 characters.
 
 Issue #212, *"fix(storage): retry with exponential backoff for the S3 upload
 client"*, loses its type prefix to **Tracker prefix**, then `the`, `with`,
-`for` and finally the adjective `exponential` to **Empty words**, fitting at
-35: `#212 Retry backoff S3 upload client`. **Words from the end** never runs,
-and `client` — the noun the title is about — survives because of it.
+`for` and finally the adjective `exponential` to **Empty words**. **Words
+from the end** then removes `upload`, fitting at 28: `#212 Retry backoff S3
+client`. `client` — the noun the title is about — survives.
 
 
 Orchestrating an epic

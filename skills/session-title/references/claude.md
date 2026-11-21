@@ -17,7 +17,7 @@ offered as `mcp__claude-code-remote__get_session` and
 operation name, never by the prefix: a prefix that differs from the one
 written here is the same server, not a missing surface.
 
-`set_session_title` accepts 500 characters. The forty-character budget in
+`set_session_title` accepts 500 characters. The thirty-character budget in
 `SKILL.md` is this skill's own cap, not the tool's.
 
 Both tools exist only on the Claude Code Remote surface. Where no tool with

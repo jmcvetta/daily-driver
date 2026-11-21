@@ -17,5 +17,5 @@ name matches the epic form. The extension also allows
 the submitted title against the active epic before applying it.
 
 The runtime's own session-name limit is not measured here. The
-forty-character budget in `SKILL.md` applies whatever it is, because the cap
+thirty-character budget in `SKILL.md` applies whatever it is, because the cap
 is this skill's rather than the tool's.
