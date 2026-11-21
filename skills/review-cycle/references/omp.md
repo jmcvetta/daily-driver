@@ -21,6 +21,23 @@ are not a transcript-only degradation. Give the reviewer the complete history,
 reviewed SHA, and current head; the publication route below turns its findings
 into the submitted threads that `Fix, answer, resolve, push` answers.
 
+For each completed reviewer task, retain its execution identity with that
+result. Task result `outputPath` names its artifact; the sibling `.jsonl`
+is the persisted child session. Read the assistant `message.model` and
+`message.provider` fields from successful review turns in that session and
+the session ID from its header. If the transcript is unavailable or those
+fields are missing or disagree across the review, report the affected field
+as `unreported`. A task's `resolvedModel` and `resolvedModelIdentity` describe
+resolution, not proof of the model that served the review. Never substitute
+the configured role, publisher, or the reviewer's own claim.
+
+Pass the observed values as `reviewerModel`, `reviewerProvider`, and
+`reviewerSession` to the publication calls below. Use
+`reviewerModel: "unreported"` when no actual model is available; omit unknown
+provider or session values. Keep each review and verification pass paired with
+its own result. The normal `Model:` block identifies the publisher, not the
+reviewer.
+
 
 Fix-delta verification
 ======================
@@ -35,7 +52,8 @@ concrete regressions in that delta. It must not perform a full-PR audit or offer
 style improvements.
 
 The author records the result with `daily_driver_gh_write({ args: ["pr",
-"comment", <number>, "--body-file", <path>] })`:
+"comment", <number>, "--body-file", <path>], reviewerModel: <pass model>,
+reviewerProvider: <pass provider>, reviewerSession: <pass session> })`:
 
 ```text
 Review verification
@@ -244,8 +262,10 @@ review:
 ```
 
 Run `daily_driver_gh_write({ args: ["api", "--method", "POST",
-"/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"] })`.
-The wrapper attributes the summary and every inline comment in the JSON body.
+"/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"],
+reviewerModel: <review model>, reviewerProvider: <review provider>,
+reviewerSession: <review session> })`. The wrapper labels the reviewer and
+publisher on the summary and every inline comment in the JSON body.
 Use `start_side` and `start_line` for a valid range. A clean or unanchorable
 review has no `comments` entry and uses the submitted summary. Never invent an
 anchor. On changed head, invalid anchor, absent `gh`, or GitHub failure, retain

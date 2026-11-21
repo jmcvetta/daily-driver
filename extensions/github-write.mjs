@@ -127,6 +127,33 @@ export function isGitHubCommentWrite(args) {
 	return inputOptions.length > 0 || fieldOptions.some((option) => option.value?.split("=", 1)[0] === "body");
 }
 
+function reviewAttribution(body, reviewer) {
+	if (!reviewer) return body;
+	const value = (field) => typeof field === "string" && field.trim() && !/[\r\n]/u.test(field)
+		? field.trim() : "unreported";
+	const record = `Reviewer model: ${value(reviewer.model)}\nReviewer provider: ${value(reviewer.provider)}\nReviewer session: ${value(reviewer.session)}`;
+	const pattern = /(?:^|\n)Reviewer model: [^\r\n]*\r?\nReviewer provider: [^\r\n]*\r?\nReviewer session: [^\r\n]*/gu;
+	const previous = [...body.matchAll(pattern)];
+	if (previous.some((match) => match[0].trim() !== record)) {
+		throw new Error("Review body contains conflicting reviewer attribution.");
+	}
+	if (previous.length > 0) {
+		let kept = false;
+		return body.replace(pattern, (match) => {
+			if (!kept) { kept = true; return match; }
+			return "";
+		});
+	}
+	return `${body}${body.endsWith("\n\n") || !body ? "" : body.endsWith("\n") ? "\n" : "\n\n"}${record}`;
+}
+
+function attributedBody(body, attribution, reviewer) {
+	const reviewed = reviewAttribution(body, reviewer);
+	const labeled = reviewer && !reviewed.includes("\n\nPublisher provenance:\n")
+		? `${reviewed}\n\nPublisher provenance:` : reviewed;
+	return attributionBlock(labeled, attribution);
+}
+
 function attributionBlock(body, attribution) {
 	const tuples = new Set();
 	const duplicateRanges = [];
@@ -208,7 +235,7 @@ function bodyFileContents(path, stdin, cwd) {
 	return readFileSync(resolve(cwd || process.cwd(), path), "utf8");
 }
 
-function prepareArguments(args, stdin, attribution, cwd, directory) {
+function prepareArguments(args, stdin, attribution, cwd, directory, reviewer) {
 	const prepared = [...args];
 	const parsed = optionValues(prepared);
 	let bodyCount = 0;
@@ -217,10 +244,10 @@ function prepareArguments(args, stdin, attribution, cwd, directory) {
 		let body;
 		if (option.flag === "--body-file") {
 			body = bodyFileContents(option.value, stdin, cwd);
-			const path = writePrivateFile(directory, `body-${bodyCount}.txt`, attributionBlock(body, attribution));
+			const path = writePrivateFile(directory, `body-${bodyCount}.txt`, attributedBody(body, attribution, reviewer));
 			putOptionValue(prepared, option, path);
 		} else {
-			body = attributionBlock(option.value, attribution);
+			body = attributedBody(option.value, attribution, reviewer);
 			putOptionValue(prepared, option, body);
 		}
 		bodyCount++;
@@ -230,7 +257,7 @@ function prepareArguments(args, stdin, attribution, cwd, directory) {
 		if (option.value === null) throw new Error(`${option.flag} requires a value.`);
 		const separator = option.value.indexOf("=");
 		if (separator < 0 || option.value.slice(0, separator) !== "body") continue;
-		const next = `body=${attributionBlock(option.value.slice(separator + 1), attribution)}`;
+		const next = `body=${attributedBody(option.value.slice(separator + 1), attribution, reviewer)}`;
 		if (option.inline) {
 			const old = prepared[option.index];
 			const prefix = old.startsWith("--") ? `${old.slice(0, old.indexOf("=") + 1)}` : old.slice(0, 2);
@@ -252,7 +279,7 @@ function prepareArguments(args, stdin, attribution, cwd, directory) {
 		}
 		const targets = bodyFields(payload);
 		if (targets.length === 0) throw new Error("The JSON supplied to this body-bearing API write has no string `body` field.");
-		for (const target of targets) target.body = attributionBlock(target.body, attribution);
+		for (const target of targets) target.body = attributedBody(target.body, attribution, reviewer);
 		const content = JSON.stringify(payload) + (source.endsWith("\n") ? "\n" : "");
 		const path = writePrivateFile(directory, `input-${index}.json`, content);
 		putOptionValue(prepared, input, path);
@@ -294,7 +321,7 @@ function runProcess(spawnProcess, args, stdin, cwd, signal) {
 /** Create an Omp GitHub writer with one version read cached per extension instance. */
 export function createGitHubWriteRunner({ spawnProcess = spawn, versionReader = readOmpVersion } = {}) {
 	let versionPromise;
-	return async function runGitHubWrite(args, stdin, ctx, signal) {
+	return async function runGitHubWrite(args, stdin, ctx, signal, reviewer) {
 		if (!isGitHubBodyWrite(args)) throw new Error("Only body-bearing `gh` writes are accepted by this tool.");
 		if (!Array.isArray(args) || args.some((arg) => typeof arg !== "string")) {
 			throw new Error("`args` must be an array of `gh` argument strings.");
@@ -320,7 +347,7 @@ export function createGitHubWriteRunner({ spawnProcess = spawn, versionReader = 
 		let temporaryDirectory;
 		try {
 			temporaryDirectory = mkdtempSync(join(tmpdir(), "daily-driver-gh-write-"));
-			const preparedArgs = prepareArguments(args, stdin, attribution, ctx?.cwd, temporaryDirectory);
+			const preparedArgs = prepareArguments(args, stdin, attribution, ctx?.cwd, temporaryDirectory, reviewer);
 			return await runProcess(spawnProcess, preparedArgs, stdin, ctx?.cwd, signal);
 		} finally {
 			if (temporaryDirectory) rmSync(temporaryDirectory, { recursive: true, force: true });
