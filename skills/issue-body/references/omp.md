@@ -4,13 +4,15 @@
 session running in Oh My Pi. Claude Code's routes are in
 [`claude.md`](claude.md), Codex's in [`codex.md`](codex.md).
 
-- **Opening an issue with a body.** `gh issue create --label <label>
-  --body-file <path>`.
-- **Replacing a body.** `gh issue edit <number> --body-file <path>`.
+- **Opening an issue with a body.** Settle destination under
+  [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository)
+  and pass it in `daily_driver_gh_write({ args: ["issue", "create", "--label", <label>, "--body-file", <path>] })`,
+  adding `"--repo", "OWNER/REPO"` when the target differs from the current
+  repository.
+- **Replacing a body.** `daily_driver_gh_write({ args: ["issue", "edit", <number>, "--body-file", <path>] })`.
 
-`--body-file` rather than `--body`: a handoff body carries fenced blocks and
-lists, and passing that through a shell argument is where the quoting breaks.
-Write the body to a file and hand over the path.
+The wrapper reads the supplied body file, applies provenance, and sends a
+private attributed copy to `gh`; keep the caller's file free of a new block.
 
 
 The required class
@@ -37,20 +39,22 @@ claiming class suitability or observed execution identity from the selector.
 Matching model and effort need no switch. If the known family is absent from
 the class table, warn prominently and continue immediately on the invoking
 model, provider, and effort; suitability remains unverified. Retain the invoking
-session if a child cannot retain the initial route. A missing or cleared class
-in a mapped family, incompatible assignment, unknown identity, or actual
-agent-route mismatch is a configuration gap. Do not rewrite shared roles or
-credentials. Independently configured host helpers are not issue implementation
-workers for class selection; this does not define their cancellation ownership.
+session if a child cannot retain the initial route. A class omitted from a
+mapped family follows the same warning-and-continue with suitability unverified;
+an explicitly cleared class, incompatible assignment, unknown identity, or
+actual agent-route mismatch is a configuration gap. Do not rewrite shared
+roles or credentials. Independently configured host helpers are not issue
+implementation workers for class selection; this does not define their
+cancellation ownership.
 
 The plugin's `frontier` role defaults to the supported
 `openai-codex/gpt-6-astra:high` selector. Do not invent a Fable selector or
-assume an API route. The `integration` role defaults to
-`openai-codex/gpt-6.1-terra:medium`; `reasoning` defaults to
+assume an API route. The `intermediate` role defaults to
+`openai-codex/gpt-6.1-terra:medium`; `complex` defaults to
 `openai-codex/gpt-6.1-sol:high`. Neither is a frontier route. Classify the
 resolved selector, not the role label: an effective Astra/Fable route is
 frontier even
-when selected through `reasoning`, an agent override, a configured prewalk or
+when selected through `complex`, an agent override, a configured prewalk or
 retry fallback, or visible parent-model inheritance. Such a route still
 requires explicit approval and the approved work envelope.
 
@@ -93,17 +97,17 @@ a row, and reading it as current or not is left to the reader.
 Pass rates use the latest run with scored outcomes for each class. `error` and
 unrecognized outcomes are unscored, not model failures; an error-only run does
 not displace the prior scored measurement.
-The capability suite builds only `mechanical` and `implementation` cases.
-`integration`, `reasoning`, and `frontier` receive no measured class claim;
+The capability suite builds only `mechanical` and `routine` cases.
+`intermediate`, `complex`, and `frontier` receive no measured class claim;
 route identity and approval policy do not imply benchmark support.
 
 <!-- measured-routes-start -->
-| Model | Settings | Class earned | Mechanical pass rate | Implementation pass rate | Cost per passed case | Run | Recorded |
+| Model | Settings | Class earned | Mechanical pass rate | Routine pass rate | Cost per passed case | Run | Recorded |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | cheaper | classes-cheaper | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
-| claude-opus-5-5 | classes-opus-low | implementation | 9/9 | 9/9 | $0.53 | 2026-10-01_11-36-04 | 2026-10-01 |
-| claude-sonnet-5-5 | classes-sonnet-high | implementation | 9/9 | 9/9 | $0.34 | 2026-10-01_11-14-25 | 2026-10-01 |
-| claude-sonnet-5-5 | classes-sonnet-low | implementation | 9/9 | 9/9 | $0.27 | 2026-10-01_11-05-50 | 2026-10-01 |
+| claude-opus-5-5 | classes-opus-low | routine | 9/9 | 9/9 | $0.53 | 2026-10-01_11-36-04 | 2026-10-01 |
+| claude-sonnet-5-5 | classes-sonnet-high | routine | 9/9 | 9/9 | $0.34 | 2026-10-01_11-14-25 | 2026-10-01 |
+| claude-sonnet-5-5 | classes-sonnet-low | routine | 9/9 | 9/9 | $0.27 | 2026-10-01_11-05-50 | 2026-10-01 |
 | cocktail | classes-cocktail | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | cocktail.gpts-choice | classes-cocktail-gpts-choice | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | glm | classes-glm | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
@@ -114,14 +118,15 @@ route identity and approval policy do not imply benchmark support.
 | kimi | classes-kimi | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | minimax | classes-minimax | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | multi-model | classes-multi-model | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
-| openai-codex/gpt-5.6-terra | classes-smoke-terra-5-6 | implementation | 1/1 | 1/1 | unreported | 2026-10-17_17-50-08 | 2026-10-17 |
+| openai-codex/gpt-5.6-terra | classes-smoke-terra-5-6 | routine | 1/1 | 1/1 | unreported | 2026-10-17_17-50-08 | 2026-10-17 |
 | openai-codex/gpt-5.6-terra | classes-terra-5-6 | none | 6/9 | 1/9 | subscription | 2026-10-17_17-56-32 | 2026-10-18 |
-| openai-codex/gpt-6-luna | classes-luna-6 | implementation | 9/9 | 7/7 | unreported | 2026-10-09_19-52-53 | 2026-10-09 |
-| openai-codex/gpt-6-luna | classes-smoke-luna-6 | implementation | 1/1 | 1/1 | unreported | 2026-10-09_20-10-04 | 2026-10-09 |
+| openai-codex/gpt-6-luna | classes-luna-6 | routine | 9/9 | 7/7 | unreported | 2026-10-09_19-52-53 | 2026-10-09 |
+| openai-codex/gpt-6-luna | classes-smoke-luna-6 | routine | 1/1 | 1/1 | unreported | 2026-10-09_20-10-04 | 2026-10-09 |
 | openai-codex/gpt-6.1-sol | classes-smoke-sol-6-1 | mechanical | 1/1 | 0/1 | unreported | 2026-10-08_19-02-13 | 2026-10-08 |
 | openai-codex/gpt-6.1-sol | classes-sol-6-1 | mechanical | 9/9 | 6/8 | unreported | 2026-10-08_18-38-45 | 2026-10-08 |
-| openai-codex/gpt-6.1-sol:high | classes-gpt-6-1-sol | implementation | 1/1 | 2/2 | unreported | 2026-10-08_19-02-43 | 2026-10-08 |
+| openai-codex/gpt-6.1-sol:high | classes-gpt-6-1-sol | routine | 1/1 | 2/2 | unreported | 2026-10-08_19-02-43 | 2026-10-08 |
+| opencode-go/beam-free:high | classes-beam-go | routine | 5/5 | 3/3 | $0.00 | 2026-11-19_21-43-36 | 2026-11-19 |
 | vercel | classes-vercel | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
-| vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high | classes-deepseek-v4-1-flash-gateway | implementation | 9/10 | 7/8 | $0.01 | deepseek | 2026-11-19 |
-| vercel-ai-gateway/openai/gpt-6-luna:high | classes-gpt-6-luna-gateway | implementation | 15/15 | 9/9 | $0.01 | luna | 2026-11-19 |
+| vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high | classes-deepseek-v4-1-flash-gateway | routine | 9/10 | 7/8 | $0.01 | deepseek | 2026-11-19 |
+| vercel-ai-gateway/openai/gpt-6-luna:high | classes-gpt-6-luna-gateway | routine | 15/15 | 9/9 | $0.01 | luna | 2026-11-19 |
 <!-- measured-routes-end -->

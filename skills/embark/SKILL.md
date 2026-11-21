@@ -236,7 +236,7 @@ frontier assignment may dispatch only when its issue carries explicit
 user approval and the exact approved work envelope. Review agent overrides,
 configured prewalk and retry fallbacks, and visible parent-model inheritance;
 an effective astra/fable execution route is frontier even when selected through
-a lower-class role. The stale Omp helper's astra-backed `reasoning` selector
+a lower-class role. A stale Omp helper's astra-backed lower-class selector
 does not bypass this check. If a fallback would move ordinary work to frontier
 without approval, reject that route before dispatch and choose an eligible
 non-frontier route; if none exists, report the configuration gap for that task
@@ -301,8 +301,8 @@ Landing: orchestrator
 
 | Task | Implementor | Required class | Selected route | Actual model |
 | ---- | ----------- | -------------- | -------------- | ------------ |
-| #144 — Validate against the schema. | session `session_01AbC` | `implementation` | `route-standard` | `model-standard` |
-| #145 — Add the retry loop. | session `session_01DeF` | `implementation` | `route-standard` | `model-standard` |
+| #144 — Validate against the schema. | session `session_01AbC` | `routine` | `route-standard` | `model-standard` |
+| #145 — Add the retry loop. | session `session_01DeF` | `routine` | `route-standard` | `model-standard` |
 | #147 — Document the format. | subagent `agent://abc` | `mechanical` | `sonic` | `unreported` |
 ```
 
@@ -320,14 +320,17 @@ to. Reachability is read from the send, never assumed or recorded here. Do not
 describe an actual model that the harness did not report. Record planning
 defects separately, not as ships in a wave.
 
-The comment carries `provenance`'s block after the table, naming this
-orchestrating session — never a task session's, which names its own at its
-own claim.
+The active route attaches `provenance` to the muster-roll comment. On Omp,
+the GitHub-write wrapper appends it automatically using this orchestrating
+session, not a task session's claim identity; do not add a block to the
+authored comment.
 
-**A sailing couplet follows the block, last.** Two rhymed lines as the wave
-puts to sea, each italicised as [`HAIKU.md`](../../HAIKU.md) shows. It comes
-after the table and the block, so a reader who wants the rows never reads past
-verse to reach them — the order `undertake`'s claim comment keeps.
+**A sailing couplet follows the table, last in the authored body.** Two
+rhymed lines as the wave puts to sea, each italicised as
+[`HAIKU.md`](../../HAIKU.md) shows. On Omp, the wrapper appends provenance
+after the couplet. On other routes, the authored block precedes it, so a reader
+who wants the rows never reads past verse to reach them — the order
+`undertake`'s claim comment keeps.
 
 **The wave headings carry state, and nothing else moves it.** `epic` writes
 that state into the epic's `Sequencing` at decomposition time and never
@@ -698,6 +701,14 @@ When the roll says `Landing: by hand`, report that the evidenced epic is ready
 and leave it open. On completion or the by-hand stopping point, cancel the
 backstop and drop every pull-request subscription. Preserve the existing
 conditional merge and archive permissions.
+
+Use the active harness's notification route, where supported, only after
+that cleanup for the whole completed operation or by-hand stopping point.
+Do not notify for an individual child or wave. For a genuine unresolved human
+handoff, notify before the chat handoff with a stable semantic key for the
+specific action; child reports go to the orchestrator. Recoverable errors,
+CI and external waits, reminders, progress and ordinary final replies are not
+notifications. The notification does not replace the record or chat handoff.
 
 
 Waves launch without confirmation

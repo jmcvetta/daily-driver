@@ -76,7 +76,7 @@ class Model(BaseHTTPRequestHandler):
             else:
                 tool, params = (
                     ("daily_driver_set_session_title", {"title": "#819 Reviewer routing fixture"}) if index == 0 else
-                    ("daily_driver_route_undertaking", {"issue": 819, "modelClass": "implementation"}) if index == 1 else
+                    ("daily_driver_route_undertaking", {"issue": 819, "modelClass": "routine"}) if index == 1 else
                     ("daily_driver_finish_undertaking", {"issue": 819})
                 )
                 name, args = "write", {"path": f"xd://{tool}", "content": json.dumps(params)}
@@ -144,7 +144,7 @@ export default function(pi) {
   const model = ctx.models.current();
   const auth = ctx.modelRegistry.authStorage.keys.source(model.provider, {env:"aliases"});
   const data = args === "malformed" ? {schema:1,issue:828} : {
-   schema:1,issue:828,modelClass:"implementation",
+   schema:1,issue:828,modelClass:"routine",
    selectedModel: model.provider + "/independent-reviewer", selectedEffort:pi.getThinkingLevel(),
    origin:{provider:model.provider,model:model.id,api:model.api,baseUrl:model.baseUrl,
     headersDigest:createHash("sha256").update(JSON.stringify(Object.entries(model.headers ?? {}).sort())).digest("hex")},
@@ -241,7 +241,7 @@ export default function(pi) {
             session_file = next(storage.glob("*.jsonl"))
             entries = [json.loads(line) for line in session_file.read_text().splitlines()]
             routes = [entry["data"] for entry in entries if entry.get("customType") == "daily-driver-undertaking-route"]
-            assert routes[-1] == {"schema": 2, "issue": 828, "lifecycle": "cancelled"}, routes
+            assert routes[-1] == {"schema": 3, "issue": 828, "lifecycle": "cancelled"}, routes
             assert not any(route.get("completed") or route.get("lifecycle") == "completed" for route in routes)
             if not malformed:
                 assert "CONTROL_CONVERSATION_RETAINED" in session_file.read_text()
@@ -263,7 +263,7 @@ export default function(pi) {
  let route;
  const routes = [{
   referenceModel:"kimi-code/embark-title-probe-model",
-  classes:{reasoning:"kimi-code/independent-reviewer"}
+  classes:{complex:"kimi-code/independent-reviewer"}
  }];
  const register = pi.registerTool.bind(pi);
  pi.registerTool = definition => {
@@ -272,7 +272,7 @@ export default function(pi) {
  };
  installUndertakingRouting(pi, () => pi.pi.settings, () => routes);
  pi.registerCommand("route-boundary", {handler:async(_args,ctx)=>{
-  const result=await route.execute("boundary",{issue:829,modelClass:"reasoning"},null,null,ctx);
+  const result=await route.execute("boundary",{issue:829,modelClass:"complex"},null,null,ctx);
   ctx.ui.notify(JSON.stringify({admission:result}),"info");
  }});
 }''', encoding="utf-8")
@@ -445,7 +445,7 @@ export default function(pi) {
   const clone = await settings.cloneForCwd(ctx.cwd);
   assert.deepEqual(await readModelClassRoutes(clone), MODEL_CLASS_ROUTES, "cloned defaults");
   const routes = lookup("dailyDriver.modelClassRoutes");
-  for (const value of [[], [{referenceModel:"fixture/model",classes:{implementation:"fixture/worker"}}]]) {
+  for (const value of [[], [{referenceModel:"fixture/model",classes:{routine:"fixture/worker"}}]]) {
    const explicit = settings.overlay();
    routes.override(explicit, value);
    assert.deepEqual(await readModelClassRoutes(await explicit.cloneForCwd(ctx.cwd)), value, "explicit clone");

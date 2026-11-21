@@ -36,11 +36,10 @@ The fleet
 | `Secure the work` | Stage and commit the worktree | `bash`, `git -C <worktree> add <named files>` then `git -C <worktree> commit -m <message>` |
 | `Secure the work` | Push the branch | `bash`, `git -C <worktree> push`
 | `Write the handoff` | Read a task's pull-request state | `pr://<number>` |
-| `Write the handoff` | Comment on a task issue or the epic | `gh issue comment <number> --body-file <path>` |
+| `Write the handoff` | Comment on a task issue or the epic | `daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file", <path>] })` |
 
-`--body-file` on every comment write, for the reason the other skills'
-routes give: the handoff carries fenced blocks, backticks and identifiers,
-and a double-quoted shell argument substitutes them before `gh` sees them.
+The wrapper appends provenance to the supplied comment body; do not format or
+include a block in the body file.
 
 `write proc://<job-id>/kill` returns without confirming the job stopped; that is the current route. Do not poll. This session commits and pushes after the cancellation request. A job ID no longer listed by `proc://` has finished on its own and is recorded as retired, not cancelled.
 

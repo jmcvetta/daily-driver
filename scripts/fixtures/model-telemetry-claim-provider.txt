@@ -1,0 +1,13 @@
+Claiming this issue.
+
+Branch: [`929-provenance-provider`](https://github.com/jmcvetta/daily-driver/tree/issue-929-provenance-provider)
+
+---
+Model: deepseek-v4.1-flash
+Provider: vercel-ai-gateway
+Harness: Omp 19.0.0
+Session: 01a1f537-0d84-73a6-9caf-192ddc32f19a
+
+*Provider named beside the model,*
+*Session rises to a capital,*
+*Old blocks still parse clean.*

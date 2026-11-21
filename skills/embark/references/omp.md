@@ -42,8 +42,12 @@ The wave
 | `Take the wave` | Read each eligible child's body and claim | `issue://<number>`, comments included |
 | `Open the sessions` | Dispatch one implementor per eligible child, concurrently | `task`, one item per child issue in a single batch |
 | `Open the sessions` | Name the implementor | the item's `name`, in `session-title`'s form |
-| `Post the muster roll` | Comment on the epic | `gh issue comment <number> --body-file <path>` |
-| `Post the muster roll` | Mark the wave in the epic's body | `gh issue edit <number> --body-file <path>` |
+| `Post the muster roll` | Comment on the epic | `daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file", <path>] })` |
+| `Post the muster roll` | Mark the wave in the epic's body | `daily_driver_gh_write({ args: ["issue", "edit", <number>, "--body-file", <path>] })` |
+
+The wrapper appends and deduplicates provenance for both writes; submit the
+body or comment without a new attribution block.
+
 
 The dispatch is one batch, never one call per child: the items run
 concurrently, and an item that fails to launch is reported in its own result
@@ -67,12 +71,12 @@ The route an implementor runs
 
 The `task` surface selects an `agent`, not a model. Every epic story must pass
 `Take the wave`'s assignability gate before dispatch. For mapped families,
-select the agent named for its required class (`mechanical`, `implementation`,
-`integration`, `reasoning`, or `frontier`). Each batch item sets only `agent`;
+select the agent named for its required class (`mechanical`, `routine`,
+`intermediate`, `complex`, or `frontier`). Each batch item sets only `agent`;
 it carries no per-item model argument. Resolve the effective route under
 [`issue-body`'s required-class policy](../../issue-body/references/omp.md#the-required-class):
 `task.agentModelOverrides[agentName]` takes precedence over discovered agent
-frontmatter, including a tagged-role assignment such as `@implementation` or
+frontmatter, including a tagged-role assignment such as `@routine` or
 `@frontier`. Resolve configured prewalk and retry fallbacks under the same policy.
 
 For a mapped family, undertaking issue workers and every visible execution
@@ -86,8 +90,10 @@ If the known family is absent from the class table, prominently warn with the
 family, requested class, and retained provider/model. Continue immediately on
 the invoking model, provider, and effort without confirmation; class suitability
 is unverified. Do not dispatch a replacement to obtain a mapping. If a child
-cannot retain the route, work in the invoking session. Unknown identity, a
-missing class in a mapped family, and actual route violations remain gaps.
+cannot retain the route, work in the invoking session. A class omitted from a
+mapped family follows the same warning-and-continue with unverified suitability;
+unknown identity, an explicitly cleared class, and actual route violations
+remain gaps.
 Reviewer and scout specialization and host helper inference remain independent.
 
 A current measured class outranks handwritten guidance, and a measured class
@@ -109,8 +115,8 @@ operator cleared to make a wave launch.
 
 Treat an effective astra/fable route as frontier, regardless of whether an
 override, retry fallback, or visible parent inheritance selects it through
-`reasoning` or another lower-class role. Classify the resolved selector rather
-than its role label: the current `reasoning` default is
+`complex` or another lower-class role. Classify the resolved selector rather
+than its role label: the current `complex` default is
 `openai-codex/gpt-6.1-sol:high`, not a frontier route.
 An issue assigned `frontier` must include its explicit approval and exact
 work envelope before dispatch. Reject an unauthorized frontier fallback
@@ -160,7 +166,7 @@ The watch
 | `Land the pull request` | Read the review-cycle completion notice | `gh pr view <number> --json headRefOid,comments` — `comments[].author.login` |
 | `Land the pull request` | Read the commits after the notice's SHA | `git rev-list --first-parent --no-merges <sha>..<headRefOid>` after `git fetch` of the head |
 | `Land the pull request` | Squash merge the gated head | `gh pr merge <number> --squash --match-head-commit <headRefOid>` |
-| `Close the epic` | Comment with the landed pull requests or missing claim | `gh issue comment <number> --body-file <path>` |
+| `Close the epic` | Comment with the landed pull requests or missing claim | `daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file", <path>] })` |
 | `Close the epic` | Close as completed | `gh issue close <number> --reason completed` |
 
 `Land the pull request` reads its own state: `isDraft` must be false,
@@ -195,6 +201,20 @@ Read the delivered outcome against the story's own completion contract: a
 pull request for a task or bug, the evidenced answer recorded on the issue for
 research.
 An issue's closed state alone does not prove the epic outcome was met.
+
+After the whole epic operation completes or reaches its evidenced by-hand
+stopping point, and after cancelling the backstop and dropping subscriptions,
+call `daily_driver_notify({ reason: "work_complete", key: "epic-complete",
+message: "<epic outcome or by-hand action>" })`. Do not notify for a wave or
+child completion. For a genuine unresolved human handoff, call
+`daily_driver_notify({ reason: "attention_required", key: "<stable action key>",
+message: "<specific action needed>" })` before the chat handoff. Choose a
+stable key for the specific required action, not an attempt. Keys must be
+nonblank and at most 160 characters; messages must be nonblank and at most
+400 characters; neither may contain control characters or secrets. Child
+agents report to the orchestrator, not the user. Recoverable errors, CI waits,
+reminders, progress and ordinary final replies do not notify. Notifications
+do not replace the record or chat handoff.
 
 **A live subagent's result or failure arrives as a wake of its own.** The
 orchestrator ends its turn holding the job IDs returned by `task`, and each

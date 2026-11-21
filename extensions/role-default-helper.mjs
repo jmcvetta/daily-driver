@@ -1,15 +1,23 @@
 /** Default model selectors for Omp task capability classes. */
 export const MODEL_CLASS_ROLE_DEFAULTS = Object.freeze({
 	mechanical: "openai-codex/gpt-6-luna:low",
-	implementation: "openai-codex/gpt-6-luna:high",
-	integration: "openai-codex/gpt-6.1-terra:medium",
-	reasoning: "openai-codex/gpt-6.1-sol:high",
+	routine: "openai-codex/gpt-6-luna:high",
+	intermediate: "openai-codex/gpt-6.1-terra:medium",
+	complex: "openai-codex/gpt-6.1-sol:high",
 	frontier: "openai-codex/gpt-6-astra:high",
 });
 
-/** Provider-scoped class routes, identified by a catalog model from each family. */
+/** Family-scoped class routes, identified by a catalog model from each family. */
 export const MODEL_CLASS_ROUTES = Object.freeze([
 	Object.freeze({ referenceModel: "openai-codex/gpt-6-luna", classes: MODEL_CLASS_ROLE_DEFAULTS }),
+	// Measured for mechanical and routine only; other classes stay unmapped.
+	Object.freeze({
+		referenceModel: "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017",
+		classes: Object.freeze({
+			mechanical: "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:low",
+			routine: "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high",
+		}),
+	}),
 ]);
 
 const installedRoles = new WeakMap();
@@ -23,7 +31,7 @@ export function explicitModelClassRole(settings, role) {
 	return { assigned: value !== undefined || (provenance !== undefined && provenance !== "default"), value };
 }
 
-/** Read provider-scoped routes through Omp's typed settings registry without persisting changes. */
+/** Read family-scoped routes through Omp's typed settings registry without persisting changes. */
 export async function readModelClassRoutes(settings) {
 	const { lookup, register } = await import("@oh-my-pi/pi-coding-agent/config/registry");
 	const handle = lookup("dailyDriver.modelClassRoutes") ?? register({
@@ -57,10 +65,11 @@ function validateModelClassRoutes(routes) {
 /** Display metadata for task capability roles in the Omp Roles view. */
 export const MODEL_CLASS_ROLE_TAGS = Object.freeze({
 	mechanical: Object.freeze({ name: "Mechanical" }),
-	implementation: Object.freeze({ name: "Implementation" }),
-	integration: Object.freeze({ name: "Integration" }),
-	reasoning: Object.freeze({ name: "Reasoning" }),
+	routine: Object.freeze({ name: "Routine" }),
+	intermediate: Object.freeze({ name: "Intermediate" }),
+	complex: Object.freeze({ name: "Complex" }),
 	frontier: Object.freeze({ name: "Frontier" }),
+	reviewer: Object.freeze({ name: "Reviewer" }),
 });
 
 /** Install only absent class selectors and role tags on one Omp settings instance. */

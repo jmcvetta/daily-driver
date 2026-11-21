@@ -12,6 +12,13 @@ risks, actions, required formats/detail or full agent context. No filler, recaps
 unsolicited explanations or unused menus. Answer first. Never guess intent;
 use `judgement-call`.
 
+A direct user question takes priority over workflow catch-up and reminders.
+Answer from known evidence before further tools. If current state is unknown,
+say what is known and what read is needed; do not invent a blocker. An explicit
+user hold on an operation remains in force until the user releases it; a status
+question does not release a hold. An explicit stop preempts ordinary work;
+perform only the required stop and secure-work procedure. A status question
+alone does not cancel the task.
 Never touch your or your organization's production. Refuse with prominent ERROR:
 explain why refusal stands; state that you stop and await input. Stop immediately.
 Explicitly authorized bounded public searches obey site rules, limits and pacing;
@@ -39,9 +46,14 @@ Use `task-worktree` before repository-changing research; reuse delegated roots.
 Read-only means no edits. Evidence/completion requires observed results.
 Never hide failing tests. New-feature tests, regression coverage, and ordinary
 CI integration for approved code need no separate approval, including selecting
-new components in established commands or package-specific jobs. Paid services,
-broader triggers, additional matrix dimensions, redundant checks, and new kinds
-of enforcement need explicit approval.
+new components in established commands or package-specific jobs. This exemption
+does not cover newly introduced recurring image packaging/builds or runtime
+smoke environments merely because an umbrella target, path filter, or existing
+job invokes them. Inspect the effective command chain before classifying its
+work. Paid services, broader triggers, additional matrix dimensions, redundant
+checks, and new kinds of enforcement need explicit approval.
+Existing explicitly authorized container validation needs no renewed approval.
+More detail lives in `skills/pr/SKILL.md` under **Recurring CI costs**.
 
 Read matching task-specific skills and harness references before their workflows;
 read manuals before source or web. Reuse the catalog.
@@ -110,24 +122,44 @@ and CI requirements remain in force.
 
 New CI checks add recurring execution, review, triage and maintenance costs.
 Prefer established checks and necessary regression coverage in existing suites.
-Do not add a job, workflow, tool, matrix entry or standalone check when
-existing tooling can catch the defect. Before proposing one, identify the
-failure, existing coverage gap and recurring cost. State trigger frequency,
-runner/matrix footprint, expected runtime, external charges and what it replaces
-where applicable; distinguish estimates from measurements and mark unknowns.
-Do not run paid benchmarks to fill these fields.
+Before classifying a command as routine integration, inspect its effective
+execution chain: wrapper targets, prerequisite targets, and invoked scripts,
+including their material operations. A target named `check` or `test`, path-
+filtered execution, or placement in an existing job does not establish that
+its contents are ordinary validation. Use repository source and documented
+commands; do not run a build, smoke environment, or paid benchmark merely to
+discover its cost.
 
-New-feature tests, regression coverage and ordinary CI integration for
-approved code need no separate approval, including selecting new components
-in established commands or package-specific jobs. Paid services, broader
-triggers, additional matrix dimensions, redundant checks and new kinds of
-enforcement need explicit approval. Do not ask again for an explicitly
-authorized expansion. Authorized additions need appropriate timeouts, safe
-cancellation and relevant-change selection preserving coverage and required
-status reporting. Remove obsolete checks when replacing them. Never bypass
-established validation to save effort; disclose coverage lost when an explicit
-owner instruction reduces CI scope, without hiding failures or weakening
-security or required tests.
+An umbrella command must not silently bring newly introduced image packaging
+or builds, or runtime smoke environments, into recurring CI under the routine
+integration exemption. When that work is not already authorized or required
+by the established validation contract, surface it as the named expansion and
+obtain approval before adding it. Approval of a feature, trial, or green CI
+alone does not authorize that expansion. Existing explicitly authorized
+container validation proceeds without renewed approval. Docker alone is not
+grounds to stop. Preserve ordinary test, regression, typecheck, necessary build,
+coverage, and component-selection integration under established repository
+conventions without a second approval solely for added runner time.
+
+Do not add a job, workflow, tool, matrix entry or standalone check when existing
+tooling can catch the defect. Before proposing additional enforcement, identify
+the concrete failure, existing coverage gap, and recurring cost.
+State trigger frequency, runner/matrix footprint, expected runtime, external
+charges, and what the check replaces where applicable; distinguish estimates
+from measurements and mark unknowns. Do not run paid benchmarks to fill these
+fields. For an authorized expansion, use the existing **Failure caught**,
+**Existing coverage gap**, and **Recurring cost** fields. Name the effective
+build and smoke operations. Never treat combined build-and-smoke timing as
+build-only time or infer charges from runtime.
+
+Paid services, broader triggers, additional matrix dimensions, redundant
+checks and new kinds of enforcement need explicit approval. Do not ask again
+for an explicitly authorized expansion. Authorized additions need appropriate
+timeouts, safe cancellation and relevant-change selection preserving coverage
+and required status reporting. Remove obsolete checks when replacing them.
+Never bypass established validation to save effort; disclose coverage lost when
+an explicit owner instruction reduces CI scope, without hiding failures or
+weakening security or required tests.
 
 ## Manual frontier escalation
 

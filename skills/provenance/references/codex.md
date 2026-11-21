@@ -8,10 +8,13 @@ Oh My Pi's in [`omp.md`](omp.md).
 The block
 =========
 
-Codex exposes no session id, so record `session: n/a` — the marker
+Codex exposes no session id, so record `Session: n/a` — the marker
 `SKILL.md` prescribes, not a diagnostic about the missing surface. The
 `Model:` line repeats what the harness states is serving the turn — the
 session's configured model — rather than a recalled name.
+
+**Codex exposes no provider identity**, and one inferred from the model id is
+not the serving provider. Record `Provider: n/a`.
 
 **The harness version** is `codex --version`, where it answers. A version no
 surface in the session reports is `n/a`, never a guessed one.

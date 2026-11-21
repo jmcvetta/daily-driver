@@ -19,6 +19,14 @@ task_list="$(wt --config-set 'list.json-schema=2' list --format=json)"
 [ "${branch}" = "${expected_branch}" ]
 [ "${base}" = "upstream/master" ]
 git merge-base --is-ancestor "${base}" HEAD
+if [ "${mode}" != "resume" ]; then
+	# A branch cut without fetching would pass the stale-base ancestry check
+	# above while missing this commit from the actual upstream head.
+	remote_default="$(git ls-remote upstream refs/heads/master | cut -f1)"
+	[ -n "${remote_default}" ]
+	git merge-base --is-ancestor "${remote_default}" HEAD
+	[ -e "${task_root}/upstream-only.txt" ]
+fi
 if git merge-base --is-ancestor "refs/heads/${primary_branch}" HEAD; then
 	printf 'task branch started from the primary branch, not the remote base\n' >&2
 	exit 1

@@ -38,9 +38,35 @@ owning skill; the [existing catalog](../skills/README.md) maps those workflows.
 | `ask-in-chat.py` | `PreToolUse` on `AskUserQuestion`/`request_user_input` | Blocks the question widget and directs questions to chat. |
 | `title-gate.py` | Issue-comment and session-creation events | On Claude Code cloud sessions, holds the first issue comment and dispatch until the session is titled. |
 
-Omp uses `extensions/daily-driver.js`. It blocks the `ask` tool, holds issue and pull-request comments and task dispatch until the session is titled, and provides session-title, reminder and session-info tools. Explicit `embark` requests require a canonical issue read before dispatch. Omp loads constitution files with `alwaysApply: true` frontmatter.
+Omp uses `extensions/daily-driver.js`. It blocks the `ask` tool, holds issue and pull-request comments and task dispatch until the session is titled, and provides session-title, reminder, session-info, and attributed GitHub-write tools. `daily_driver_gh_write` attaches live provenance — model, harness-reported provider, harness/version and session — to body-bearing `gh` writes and denies direct Bash writes that bypass it; read-only and non-body GitHub calls keep their existing routes. Explicit `embark` requests require a canonical issue read before dispatch. Omp loads constitution files with `alwaysApply: true` frontmatter.
 
 The exact calls and per-skill differences live in the active harness's reference file. The [architecture notes](notes/0011-two-harnesses-one-skill-tree.md) and [Codex integration note](notes/0016-three-harnesses-one-skill-tree.md) record why the adapters differ.
+
+### Omp notifications
+
+Daily Driver overrides Omp's generic `completion.notify` and `error.notify`
+settings to off in each live settings scope at session start, switch, branch,
+tree and before agent start. It does not edit persisted YAML. These process
+overrides are not restored on refresh (`/reload-plugins`), session end or
+cleanup; refresh is not removal. Reminder, asynchronous result, child report,
+wait and in-app feedback behavior is unchanged. This policy does not change
+other harnesses.
+
+The explicit `daily_driver_notify` tool accepts `attention_required` for an
+unresolved human action and `work_complete` for an entire completed operation.
+The undertaking finish tool sends its completion automatically after
+successful persistence and release. The skill references describe when to
+call the tool; an ordinary completion, progress update, recoverable error or
+CI wait is not a notification event.
+
+Only a main agent with UI in TUI or RPC mode can deliver. Children and
+headless sessions are suppressed, and the public Omp terminal notification
+transport may apply its own suppression. The policy records a deduplication
+entry on the active session branch before best-effort transport, without
+storing the message. It re-reads the branch and serializes requests, so a
+repeated semantic key for the same work identity and reason is not replayed,
+including after a delivery error. Delivery failure is reported, not retried
+as a fresh event.
 
 ## Standing instruction delivery
 
@@ -79,8 +105,8 @@ is the user's authentication action; it does not renew task approval.
 
 ## Omp task roles and worktrees
 
-The Omp installation defines `mechanical`, `implementation`, `integration`,
-`reasoning` and `frontier` task roles. Where no operator assignment exists, the
+The Omp installation defines `mechanical`, `routine`, `intermediate`,
+`complex` and `frontier` task roles. Where no operator assignment exists, the
 extension supplies defaults. Frontier is limited to explicitly approved, bounded research
 or planning; ordinary implementation uses a non-frontier route unless the user
 separately authorizes that exception. The defaults require configured
@@ -113,12 +139,25 @@ This adapter is not a security boundary against arbitrary trusted extensions.
 
 `dailyDriver.modelClassRoutes` is an array of entries with `referenceModel`
 and `classes`, for example `{ referenceModel: "provider/model", classes: {
-implementation: "provider/variant:high" } }`. Omp resolves the reference
-through its model catalog to identify the family and provider. A family entry
-does not authorize a different provider. The built-in OpenAI Codex entry
-preserves the existing defaults; explicit same-family class roles remain
-operator assignments. Plugin-installed global defaults do not establish a
-mapping for unrelated families. A mapping is not measurement evidence.
+routine: "provider/variant:high" } }`. Omp resolves the reference
+through its model catalog to identify the family; that family mapping applies
+regardless of the reference model's provider. Omp resolves the configured
+class target to the same model identity in the invoking provider and family,
+then retains the invoking provider. Ambiguous or unavailable targets are route
+gaps. Explicit class roles remain valid only in the invoking provider and
+family. The built-in OpenAI Codex entry preserves existing defaults, and the
+DeepSeek V4.1 Flash entry maps only its measured mechanical and routine
+classes. Plugin-installed global defaults do not establish a mapping for
+unrelated families. A mapping is not measurement evidence.
+
+For the class-name cutover, merge and release the parser first. Then migrate
+open assignable issues across the participating repositories: change
+`implementation` to `routine`, `integration` to `intermediate`, and
+`reasoning` to `complex` in `## Model class`; update only rationale wording
+that uses the old names. Preserve all other content and leave closed issues
+unchanged. Update custom role and route-map keys with the same mapping. Older
+saved undertaking sessions are translated on resume; new admissions reject
+the old tokens.
 
 An unset route configuration uses the registered default, including when Omp
 clones settings for a task. An explicit empty array stays empty; malformed
@@ -150,9 +189,11 @@ When the known family is absent from the class table, a prominent warning names
 the family, required class, and retained provider/model. Work continues
 immediately on the invoking model, provider, and effort without confirmation.
 The route's execution identity can be reported separately from class suitability.
-A missing or cleared class in a mapped family, unavailable or incompatible
-initial target, unknown identity, or observed agent-route mismatch requires
-explanation and repair; later operator selections are not route violations.
+A class omitted from a mapped family follows the same warning-and-continue:
+its absence leaves suitability unverified and retains the invoking route. An
+explicitly cleared (`null`) class, unavailable or incompatible initial target,
+unknown identity, or observed agent-route mismatch requires explanation and
+repair; later operator selections are not route violations.
 Failed preflight must permit explanation and retry without discarding an
 existing valid route. Route status is `selected` after initial selection;
 malformed or cancelled state can report `blocked`. Neither status alone

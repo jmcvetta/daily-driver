@@ -224,9 +224,9 @@ Where securing failed, "Secured: no" says so, and nothing beyond the last push
 survived.
 ```
 
-This comment ends with `provenance`'s block, and the stand-down comment below
-carries it just before its envoi. Both blocks name this stand-down session
-rather than any retired implementor's.
+The active route adds `provenance` to each comment. Omp's wrapper appends its
+block after the authored body, including the envoi; both blocks name this
+stand-down session rather than any retired implementor's.
 
 Carry authorization and stop information already available in the handoff.
 `undertake` owns their meaning and revalidation. An agent-written summary
@@ -264,12 +264,13 @@ recovers each quiet task by reopening on the branch its claim or pull
 request names.
 ```
 
-**The stand-down comment ends with an envoi**: a brief farewell stanza for
-the watch, after `provenance`'s block, each line italicised as
-[`HAIKU.md`](../../HAIKU.md) shows. It is last so the rows and the resume
-line are found first. The handoff comments on the task issues carry none:
-each hands work to whoever reclaims it, and verse never attaches to a write
-somebody has to act on.
+**The stand-down comment ends with an envoi in its authored body**: a brief
+farewell stanza for the watch, each line italicised as
+[`HAIKU.md`](../../HAIKU.md) shows. It is last so the rows and the resume line
+are found first. Omp's wrapper appends provenance after the envoi; other
+routes place the block before it. The handoff comments on the task issues carry
+no verse: each hands work to whoever reclaims it, and verse never attaches to a
+write somebody has to act on.
 
 The landing mode is copied unchanged from the latest record into this
 superseding comment. A resumed `embark` therefore reads the same opt-out or

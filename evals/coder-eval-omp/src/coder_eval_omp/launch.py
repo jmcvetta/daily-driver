@@ -73,7 +73,7 @@ def child_env(
     task_root: Path,
     plugin_roots: Sequence[Path] = (),
 ) -> dict[str, str]:
-    """The child's environment: `base`, pointed at the throwaway home.
+    """The Omp child environment, pointed at the throwaway home.
 
     The PATH prepend is `Agent.start`'s mock-shadowing contract: the sandbox's
     mock CLI directories must resolve before the real binaries, or a task
@@ -81,8 +81,12 @@ def child_env(
     guard which tools the row granted. `READ_POLICY_ENV` replaces any inherited
     policy with this task and its linked treatment documents, never provider
     storage or the whole host checkout.
+    Host-side fixture setup may need GitHub tokens, but the evaluated agent has
+    Bash access and must not inherit them.
     """
     env = dict(base)
+    for name in ("GITHUB_TOKEN", "GH_TOKEN", "GH_ENTERPRISE_TOKEN", "GITHUB_ENTERPRISE_TOKEN"):
+        env.pop(name, None)
     if path_prepend:
         env["PATH"] = os.pathsep.join([*path_prepend, env.get("PATH", "")])
     env["HOME"] = str(home)

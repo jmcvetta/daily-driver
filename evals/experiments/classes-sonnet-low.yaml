@@ -1,7 +1,7 @@
 # The model-classes capability arm for Claude Sonnet 5.5 at `low` effort, on Claude Code.
 #
 # Measures whether this model, in the role it plays for delegated implementation
-# work (its `task` role), clears the mechanical/implementation cases the suite builds from
+# work (its `task` role), clears the mechanical/routine cases the suite builds from
 # real merged pull requests -- see `scripts/evals-cases-from-prs.py` and
 # `evals/tasks/model-classes/`. One variant: there is no plugin ablation here,
 # only the question "does this model finish this task and leave its own tests
@@ -10,7 +10,7 @@
 # One of three files that price the Claude route table for `embark`'s workflow
 # dispatch (issue #435): this one is the `mechanical` route the table names.
 # The three `mechanical` cases are the floor it must clear; its
-# `implementation` cases say how far above that floor it reaches. Read pass
+# `routine` cases say how far above that floor it reaches. Read pass
 # rate and cost per completed task together.
 #
 # Sonnet 5.5 recalibrated the effort levels from Sonnet 5, so a `low` run here

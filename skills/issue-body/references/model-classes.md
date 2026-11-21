@@ -11,16 +11,15 @@ name a provider, price tier, context window, or reasoning-effort setting.
 | Class | Suitable work | Boundary |
 | --- | --- | --- |
 | `mechanical` | A bounded transformation with an explicit rule, identified scope, existing example, and direct check. | No substantive implementation choice or diagnosis remains. |
-| `implementation` | Settled design using repository patterns, routine local choices, ordinary multi-file coordination, meaningful tests, and local failure diagnosis. | The normal class for a specified feature or bug fix, even when several files change. |
-| `integration` | Settled implementation whose primary difficulty is coordinating multiple existing components or contracts and preserving behavior across their boundaries. | Name the interacting components or contracts and the cross-boundary behavior to preserve. Ordinary multi-file work, file count, and missing specification are not reasons. |
-| `reasoning` | A settled design with sustained reasoning about interacting invariants or difficult failure modes. | State the irreducible reason, such as concurrency correctness, security boundaries, or data integrity. File count, a security filename, and missing specification are not reasons. |
+| `routine` | Ordinary settled implementation using established repository patterns. | The normal class for a specified feature or bug fix, even when several files change. |
+| `intermediate` | Work beyond routine that does not require the sustained difficult analysis of complex work. | Name the interacting components or contracts and the behavior to preserve. |
+| `complex` | Settled work involving difficult behavior, correctness, or failure modes. | State the irreducible reason, such as concurrency correctness, security boundaries, or data integrity. |
 | `frontier` | Exceptional, bounded research or planning where the cheaper classes cannot reliably settle the named question. | Requires explicit user approval for the assignment and work envelope; never a default implementation route. |
 
 For example, adding a field through an established API, state, and UI path is
-`implementation`. A settled persisted-state transition affecting execution,
-recovery, hooks, and resume is `integration`. Making task claiming exactly-once
-under concurrent workers, retries, and stale ownership is `reasoning`. When
-both integration and reasoning apply, choose `reasoning`.
+`routine`. A settled persisted-state transition affecting execution,
+recovery, hooks, and resume is `intermediate`. Making task claiming exactly-once
+under concurrent workers, retries, and stale ownership is `complex`.
 
 Frontier does not mean difficult, underspecified, unavailable, or retrying.
 Those conditions do not authorize its use. A frontier assignment states why the
@@ -33,7 +32,7 @@ not make an underspecified task ready.
 
 Before publishing or revising an issue into a frontier assignment ready for
 execution, stop and ask the user in chat for explicit confirmation. Explain why
-`mechanical`, `implementation`, `integration`, and `reasoning` cannot reliably
+`mechanical`, `routine`, `intermediate`, and `complex` cannot reliably
 deliver it.
 Silence, broad plan approval, or the author's own judgement is not approval.
 Approval of a plan counts only when it explicitly includes the frontier
@@ -64,14 +63,18 @@ where supported; never deliberately substitute a provider. Assess tools,
 context, modalities, availability, and visible fallbacks. A configured mapping
 does not itself prove capability. Do not change shared roles or infer an
 eligible route from price.
+Among verified eligible routes, prefer the cheapest one that can deliver the
+assigned class. Price and model identity alone do not establish suitability.
 
 If the known family is absent from the class table, prominently warn with the
 family, requested class, and retained provider/model. Continue immediately on
 the invoking model, provider, and effort without confirmation. Class suitability
 is unverified, even if execution identity is observed. Frontier authorization
-and actual route constraints still apply. Do not use this exception for unknown
-identity or for a mapped family with a missing or cleared class, unavailable
-target, or incompatible assignment: report those configuration gaps.
+and actual route constraints still apply. A class omitted from a mapped family
+uses this same warning-and-continue, with suitability unverified. Do not use
+this exception for unknown identity or for a mapped family with an explicitly
+cleared class, unavailable target, or incompatible assignment: report those
+configuration gaps.
 
 An effective route that runs frontier requires explicit approval for that
 assignment, even when a lower-class role, configured retry fallback, prewalk

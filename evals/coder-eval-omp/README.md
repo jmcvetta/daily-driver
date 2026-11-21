@@ -116,6 +116,13 @@ The adapter sets `CODER_EVAL_OMP_READ_POLICY`; do not supply it from an experime
 This is a file-tool guard, not OS isolation. A row granting Bash can still read
 the host through the shell. Concurrent filesystem mutation is not isolated.
 
+**Host GitHub credentials stay out of model agents.** A fixture's host-side
+`pre_run` may use `GITHUB_TOKEN`, `GH_TOKEN`, `GH_ENTERPRISE_TOKEN` or
+`GITHUB_ENTERPRISE_TOKEN` to fetch a public base commit. `launch.child_env`
+removes those variables before Omp starts, so an evaluated agent's Bash tool
+cannot read or send them to its provider. Other caller environment settings
+remain available; this is not OS isolation.
+
 **A thinking suffix is a separate RPC setting.** Experiments name a model as
 `provider/model:level`, but Omp's `set_model` accepts only the provider and
 model id. `rpc.model_commands` strips a recognized level such as `:high` and

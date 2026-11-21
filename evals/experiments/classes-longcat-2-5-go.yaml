@@ -1,0 +1,25 @@
+# The model-classes capability arm for LongCat 2.5 Free through OpenCode Go.
+#
+# Retains all six fixed cases with two predeclared repeats per case. The live
+# campaign runs one complete round first, checks request consumption and
+# remaining capacity, then runs the second complete round only when safe.
+experiment_id: classes-longcat-2-5-go
+description: >-
+  Model-class capability on the six fixed merged-PR cases,
+  opencode-go/longcat-2.5-free, in the `task` role; two repeats are exploratory.
+
+defaults:
+  repeats: 2
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 660
+  agent:
+    type: omp
+    model: opencode-go/longcat-2.5-free
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+
+variants:
+  - variant_id: default
+    description: LongCat 2.5 Free against the model-classes suite.

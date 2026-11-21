@@ -230,7 +230,7 @@ otherwise grounded. A story linked before the class was required is such an
 old body: where the handoff is grounded, repair its class through `issue` under
 `issue-body`'s update rule, choosing the lowest class that can deliver the
 settled work. Otherwise a missing or invalid class, or a missing rationale, is a
-gap to report; never default it to `implementation`. A classed
+gap to report; never default it to `routine`. A classed
 `research` or `bug` keeps its kind: it uses its own readiness and completion
 tests, not the task template. A standalone `bug` or `research` with no story
 role and no class section uses its kind-specific readiness test alone. A
@@ -265,7 +265,9 @@ worker merely to obtain a mapping. If a child cannot retain the initial route,
 work in the invoking session instead. Frontier approval and route integrity
 still apply.
 
-A known mapped family with a missing or cleared class, unavailable target, or
+A class omitted from a mapped family follows the absent-family continuation:
+warn, retain the invoking route, and report suitability as unverified. A known
+mapped family with an explicitly cleared class, unavailable target, or
 incompatible assignment is a configuration gap at initial selection. Unknown
 family or execution identity is not evidence of an absent family. Report
 unsupported controls without claiming verification. Preserve provider where
@@ -415,40 +417,42 @@ Beyond the claim itself the comment always carries:
   branch as the branch GitHub will carry. Ordinary and resume paths have one
   branch identity, so the linked and local branch are the same.
 
-- **`provenance`'s block**, immediately after the work identity lines:
-  the model that served the turn, the harness and its version, and the session
-  reading each field — never a name recalled instead of read, and where the
-  model the session was *set* to run disagrees with the one that served, both
-  are named. The `Model:` and lowercase `session:` line shapes are what the
-  claim lookup below and `The milestone` match on, so they are never varied
-  here.
-- **A brief poem, in the claiming agent's own style, placed last** — after
-  the work identity, model and session, so that a reader looking for them
-  finds them in a fixed place and is never made to read past verse to reach
-  them. Each line is written in italics — wrapped in asterisks, line by line,
-  as `HAIKU.md` at the repo root shows — because italics designate the verse
-  as poetry, so a reader never mistakes a line of it for part of the claim
-  data: the work identity, model or session. The style is the agent's own,
-  and deliberately so: a pull request's salutation is classical and a task
-  issue's opening verse is a haiku, but a claim is the agent's voice at the
-  moment it takes the work.
+- **`provenance`'s block.** Where the agent supplies it, place it immediately
+  after the work identity lines. It names the serving model, provider,
+  harness/version, and session under the exact `Model:`, `Provider:`,
+  `Harness:`, and `Session:` shapes used by claim lookup and milestone timing;
+  claim lookup also accepts historical blocks whose session field is
+  lowercase. Where the serving model differs from the session's configured
+  model, name both. For Omp body-bearing GitHub writes, the GitHub-write
+  wrapper appends the block from live execution context at the end of the
+  submitted body; do not read model/session identity or format it.
+- **A brief poem, in the claiming agent's own style, last in the authored
+  body** — after the work identity and, where the agent supplies it, the
+  provenance block. On Omp, the wrapper appends its block after the poem. Each
+  line is written in italics — wrapped in asterisks, line by line, as
+  `HAIKU.md` at the repo root shows — because italics designate the verse as
+  poetry, so a reader never mistakes it for claim data. The style is the
+  agent's own: a pull request's salutation is classical and a task issue's
+  opening verse is a haiku, but a claim is the agent's voice at the moment it
+  takes the work.
 
-The model and session come from the harness's session call, where it has one —
-the call `session-title` documents. In branch-free answer-only research, no
-branch is designated or established. Otherwise, without a resume or a
-verified primary-held designation exception, a branch designated by that call
-must be the branch `task-worktree` established; disagreement is a collision,
-not a choice between two branch sources. With a resume, the remote push branch
-is the adopted branch and outranks the designation. In the exception, the
-local execution branch may differ from the designation only as
-`task-worktree` verified; the designated branch remains the push/PR head.
-Other paths retain one branch identity.
+Where the agent supplies a provenance block, model and session values come
+from the harness's session call, where it has one. Omp's wrapper instead reads
+live execution context for each body-bearing write; the session-info tool
+remains available for separate purposes such as title handling. In branch-free
+answer-only research, no branch is designated or established. Otherwise,
+without a resume or a verified primary-held designation exception, a branch
+designated by the relevant harness call must be the branch `task-worktree`
+established; disagreement is a collision, not a choice between two branch
+sources. With a resume, the remote push branch is the adopted branch and
+outranks the designation. In the exception, the local execution branch may
+differ from the designation only as `task-worktree` verified; the designated
+branch remains the push/PR head. Other paths retain one branch identity.
 
-**The comment never goes up with the work identity alone.** For repository
-work, the branch comes from the task worktree's Git state, never from a fresh
-naming decision in this step. For branch-free research, the identity is
-explicitly `Branch: none`; the model and session lines follow the rules above
-whatever the harness supplies.
+**The comment never goes up with the work identity alone.** The active route
+supplies provenance. On Omp, the wrapper appends it automatically, so the
+authored claim contains the branch identity and poem but no new attribution
+block. Other routes include the model and session lines under the rules above.
 
 **Once per session, not once per run.** A sequence re-entered — its blocker
 cleared, the issue handed over again — does not claim what it has claimed
@@ -557,12 +561,13 @@ Gather the evidence and prepare the agreed answer. If follow-on issue
 specifications are required, create those through `issue` or `epic` under
 their existing gates and include their links in the result. If a required
 issue cannot be created, leave the research issue open and report the failure.
-Post the complete findings to the issue with `provenance`'s block. If that
-write fails, leave the issue open. Close the research issue as completed only
-when `issue-body`'s completion test holds and the answer was recorded. A
-supported no is a result. Inconclusive work is complete only under
-`issue-body`'s bounded-report rule. Failed access, unresolved blocking intent,
-or abandoned work stays open and follows `Where it stops and waits`.
+Post complete findings with provenance supplied by the active route; Omp's
+wrapper attaches it automatically. If that write fails, leave the issue open.
+Close the research issue as completed only when `issue-body`'s completion test
+holds and the answer was recorded. A supported no is a result. Inconclusive
+work is complete only under `issue-body`'s bounded-report rule. Failed access,
+unresolved blocking intent, or abandoned work stays open and follows `Where it
+stops and waits`.
 
 After completion, finish the Omp undertaking through its harness route before
 reusing the session for another issue. Do not finish a stopped or incomplete
@@ -643,11 +648,13 @@ common currency maintenance. The undertaking retains assessment of CI, review,
 harness reference names the continuation and any owner-resume limitation.
 
 **The body is `pr-body`'s, and so are blockers that go with a Tofu diff.**
-Where the branch changes the infrastructure Tofu stack, the body carries
-`pr-body`'s apply-and-state blocker and the pull request the `human` label
-while that action remains outstanding. A plan is a separate operation: it is
-not a human action by default, and `Implement`'s escalation gate decides
-whether its target, route and restrictions permit this session to run it.
+Where the branch changes the infrastructure Tofu stack — `pr-body`'s test, the
+OpenTofu configuration under `infra/` rather than a provider-lockfile-only
+diff — the body carries `pr-body`'s apply-and-state blocker and the pull
+request the `human` label while that action remains outstanding. A plan is a
+separate operation: it is not a human action by default, and `Implement`'s
+escalation gate decides whether its target, route and restrictions permit this
+session to run it.
 `issue-labels`' `human` kind remains an issue classification, not this
 temporary pull-request state.
 
@@ -855,9 +862,10 @@ it rather than waiting until ready or starting a second actor.
 When it looks
 -------------
 
-Take `pr`'s catch-up look on every turn returning to the open pull request,
-and once before `Ready for review`. Currency is the gate's first condition,
-not proof that the undertaking is complete.
+Take `pr`'s catch-up look before resuming work on the open pull request.
+Answer direct user questions first under the constitution. A catch-up look
+already taken in this turn also serves `Ready for review`; do not repeat it
+without a relevant state change. Currency is not proof of completion.
 
 After currency settles, assess CI on the resulting head through
 `review-cycle`'s `How to wait`, then continue review, the ready gate, and
@@ -924,6 +932,21 @@ Take the reads in this order. The first that does not hold is where the
 sequence stops, and the reason is stated in one line. Cite a read by its
 condition, never by its position: a read inserted ahead of it moves every
 number.
+
+**Continue from evidence, not from an old hold.** Keep each satisfied
+condition with the inputs it covers. Completed acceptance or runtime
+verification remains valid while its relevant artifact, head, configuration
+and validity conditions hold. A later turn or an old "keep draft" reminder
+does not invalidate it. Recheck dynamic PR state on return, but reuse reads
+already obtained for the same state in this turn. Changed inputs, incomplete
+evidence or a new contradictory result invalidate only the affected
+conditions; a changed head always needs current-head CI under `review-cycle`.
+Do not rerun a deployment or runtime wait solely to repeat a passed gate.
+
+When the last unmet condition clears, finish the remaining reads and execute
+the report and ready writes below. "Final gate pending" without a named unmet
+condition is not a blocker, and an earlier agent-authored hold is not user
+approval that must be renewed.
 
 1. **The head carries the whole of the issue's work.** Four parts, each a call
    or a comparison of two texts the session already holds:
@@ -1015,19 +1038,19 @@ number.
    pauses on it; this condition is what the sequence returns to once the
    branch carries the result.
 
-**When the reads agree, publish the first-readiness report if none exists,
-then mark the pull request ready in the same turn.** The harness calls are in
-`The milestone` and the reference file; no summary, permission request or
-turn boundary comes between the gate and these actions. A failed report write
-leaves the PR draft. If marking ready fails after the report posts, preserve
-the report and revalidate the gate before retrying.
+**When the reads agree and no explicit user hold applies, publish the
+first-readiness report if none exists, then mark the pull request ready in the
+same turn.** The harness calls are in `The milestone` and the reference file;
+no summary, permission request or turn boundary comes between the gate and
+these actions. A failed report write leaves the PR draft. If marking ready
+fails after the report posts, preserve the report and revalidate the gate
+before retrying.
 
-**The user is never a gate condition.** Every stop this sequence takes is
-named under `Where it stops and waits`, and none of them is a confirmation
-that the work is ready. The reads above are the only thing that knows. The
-user did not do the work and cannot answer for it, so a question here asks
-somebody else to carry a claim this session is the one holding the evidence
-for.
+**The user is never asked to certify the gate.** A direct user hold on the
+readiness transition remains controlling: do not publish the first-readiness
+report or mark ready while the hold applies. A status question does not release
+it. An agent-authored reminder is not a user hold and does not outlive the
+condition it records.
 
 A branch behind its base, red CI, an open thread, or a human action still
 owed, or an issue item the diff does not carry, means it **stays a draft**,
@@ -1118,10 +1141,12 @@ What the report carries
   unavailable. If posting fails, publish no milestone; revalidate the gate and
   capture a new time before retrying.
 
-- **`provenance`'s block, under `Claim the issue`'s rules for it.** One
-  session did the work, so one model and one session are named; where a
-  resume moved the work to another session, both are named in the order they
-  ran, and attribution nobody reported is not reconstructed.
+- **`provenance`'s block.** The active route supplies attribution. Omp's
+  wrapper attaches the current write's live model/harness/session tuple; do
+  not perform identity reads or format a block for it. Each claim or report is
+  its own comment, so attribution on an earlier claim remains there rather
+  than being copied into this report. Other routes follow the agent-supplied
+  block rules above.
 
 - **The head it binds to.** The pull request's head SHA and the report
   timestamp. The comment is a statement about that head: a later head — after
@@ -1258,9 +1283,10 @@ In order:
      on the branch above">.
    ```
 
-   It ends with `provenance`'s block and carries no verse: somebody acts on
-   it, the reason `stand-down`'s task handoffs carry none. A push that fails
-   is stated here: `Pushed head:` names the last head that reached origin,
+   The active route appends `provenance`'s block; on Omp the wrapper handles
+   it, so the handoff body must not format or include one. A user-action
+   handoff carries no verse, because somebody acts on it. A push that fails is
+   stated here: `Pushed head:` names the last head that reached origin,
    `Outstanding:` names the failure, and the handoff is still written.
    **The handoff is filled from what this session already knows**, plus the
    git read the reference names for `Pushed head:`. No test or CI check is
@@ -1325,6 +1351,13 @@ Blocked issues, ineligible issue kinds, external waits, review walls and
 observed capability gaps retain the specific handling below. Report the
 unfinished condition and actual resume path. Where an orchestrator's address
 was given, report the stop under `Reporting to an orchestrator`.
+
+For a genuine unresolved human handoff, notify through the active harness
+route before the chat handoff when that route supports it. Use a stable
+semantic key for the specific action needed, not a transient attempt. A child
+reports to its orchestrator instead of notifying the user. Recoverable errors,
+CI and external waits, reminders, progress and ordinary final replies do not
+qualify. Notification does not replace the required record or chat handoff.
 
 - **A blocked issue, an issue whose intent is genuinely ambiguous, or a
   request too vague to write an issue for.** The constitution forbids guessing

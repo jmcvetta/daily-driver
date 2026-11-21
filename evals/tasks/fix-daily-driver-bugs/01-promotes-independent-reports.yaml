@@ -57,7 +57,7 @@ sandbox:
                     "Model: fixture-reporter",
                     "Harness: Omp 18.4.1",
                     "Model class",
-                    "implementation",
+                    "routine",
                     "\n---\nModel: "
                   ],
                   "comment_contains": ["Keep the replay result from shell output."]
@@ -69,7 +69,7 @@ sandbox:
                     "Original automatic report title: [auto-filed] Empty config is read as invalid YAML",
                     "zero-byte config file",
                     "Model class",
-                    "implementation"
+                    "routine"
                   ]
                 }
               },
@@ -203,12 +203,12 @@ success_criteria:
     weight: 2
 
   - type: run_command
-    description: Issue #990001 is assigned to implementation exactly once
-    command: python3 .fixture/check_dispatch.py --require 990001 --agent implementation
+    description: Issue #990001 is assigned to routine exactly once
+    command: python3 .fixture/check_dispatch.py --require 990001 --agent routine
     timeout: 30
     weight: 1
 
   - type: run_command
-    description: Issue #990002 is assigned to implementation exactly once
-    command: python3 .fixture/check_dispatch.py --require 990002 --agent implementation
+    description: Issue #990002 is assigned to routine exactly once
+    command: python3 .fixture/check_dispatch.py --require 990002 --agent routine
     timeout: 30

@@ -11,7 +11,7 @@ The issue
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Open the issue` | Search the open issues | `mcp__github__search_issues` |
-| `Open the issue` | Open one, labelled | `mcp__github__issue_write`, method `create`, with `labels` |
+| `Open the issue` | Open one, labelled; settle destination under [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository) and pass it here | `mcp__github__issue_write`, method `create`, with `labels`; set `owner` and `repo` when the target differs from the current repository |
 | `Title the session` | Read the session's own id | `get_session` on the Claude Code Remote server, `session_id` omitted — `The session` below describes the call |
 | `Title the session` | Set the title | `set_session_title`, with that id and `session-title`'s form |
 | `Read the issue and its edges` | Read the body and the graph | `mcp__github__issue_read`, method `get` |
@@ -59,12 +59,13 @@ family, class, and retained provider/model, then continue immediately on the
 invoking model and effort without confirmation. Identity does not establish
 class suitability. Frontier approval and agent-route constraints still apply.
 
-For a mapped family, a missing or cleared class, unavailable target, or
-incompatible assignment is a gap. Unknown family or identity is not an absent
-family. The Claude Agent SDK's host-side `Query.setModel` is not an
-agent-callable switch tool. Do not invent one or assume that a session selector
-constrains backend, authentication, and fallbacks. Report any unsupported
-control and do not claim it is verified.
+For a mapped family, a class omitted from the family map follows the same
+warning-and-continue with suitability unverified. An explicitly cleared class,
+unavailable target, or incompatible assignment is a gap. Unknown family or
+identity is not an absent family. The Claude Agent SDK's host-side
+`Query.setModel` is not an agent-callable switch tool. Do not invent one or
+assume that a session selector constrains backend, authentication, and
+fallbacks. Report any unsupported control and do not claim it is verified.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
@@ -218,7 +219,8 @@ whether the report may be posted. Do not wait for a post-ready `clean` read.
 **The start is the claim comment's `created_at`.** Read the issue's comments
 with `mcp__github__issue_read`, method `get_comments` — the read `Read the
 issue and its edges` already makes — find the claim by its branch link plus
-`Model:` and `session:`, and take `created_at`; where more than one comment
+`Model:` and `Session:` (a historical lowercase `session:` is the same
+field), and take `created_at`; where more than one comment
 carries that shape, the earliest is the start. The resumed sequence makes this
 read anyway; an issue with no recoverable claim leaves the timing `n/a`, per
 `SKILL.md`.

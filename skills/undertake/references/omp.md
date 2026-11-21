@@ -16,14 +16,21 @@ The issue
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Open the issue` | Search the open issues | `github.search_issues`, or `gh search issues` |
-| `Open the issue` | Open one, labelled | `gh issue create --label task` |
+| `Open the issue` | Open one, labelled; settle destination under [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository) and pass it here | `gh issue create --label task [--repo OWNER/REPO when target differs from current repository]` |
 | `Read the issue and its edges` | Read the body, the graph and the comments | `issue://<number>`, comments included |
 | `Read the issue and its edges` | Label an issue that carries none | `gh issue edit <number> --add-label task` |
-| `Claim the issue` | Comment on the issue | `gh issue comment <number> -b "…"` |
-| `Implement` (issue-only research) | Record findings | `gh issue comment <number> --body-file <path>` |
+| `Claim the issue` | Comment on the issue | `daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file", <path>] })` |
+| `Implement` (issue-only research) | Record findings | `daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file", <path>] })` |
 | `Implement` (issue-only research) | Close completed research | `gh issue close <number> --reason completed` |
 
-**Before `Claim the issue`, check the session title.** Read `sessionName` from `daily_driver_get_session`, which the claim already needs for its model and session id. Format the expected title as `#{number} {shortened issue title}` using `session-title`'s forty-character budget and shortening rules. If it differs, call `daily_driver_set_session_title({ title })` before `gh issue comment`; if it already matches, do not rename it. If the title surface is unavailable, report that limitation and continue without an alternate route, as `session-title` requires.
+**Before `Claim the issue`, check the session title.** Read `sessionName` from
+`daily_driver_get_session` for title handling only. Format the expected title
+as `#{number} {shortened issue title}` using `session-title`'s forty-character
+budget and shortening rules. If it differs, call
+`daily_driver_set_session_title({ title })` before the wrapper call; if it
+already matches, do not rename it. The wrapper reads live model and session
+identity for attribution. If the title surface is unavailable, report that
+limitation and continue without an alternate route, as `session-title` requires.
 
 **`issue://<number>` carries the comments**, so the read in that row is one
 call and returns the handoff content `SKILL.md` asks for. Where a cache miss
@@ -44,8 +51,8 @@ envelope. A frontier `research` issue keeps that label and its narrow metadata
 exception; do not impose the task template.
 
 Before worktree creation or claim, call `daily_driver_route_undertaking` with
-`{ issue: <positive issue number>, modelClass: "mechanical" | "implementation" |
-"integration" | "reasoning" | "frontier", frontierApproval?: <recorded approval
+`{ issue: <positive issue number>, modelClass: "mechanical" | "routine" |
+"intermediate" | "complex" | "frontier", frontierApproval?: <recorded approval
 and envelope> }`.
 Validate readiness and frontier approval first; the approval argument is evidence,
 not authorization by itself. Call the routing tool alone in its assistant tool
@@ -76,9 +83,11 @@ the family, class, and retained provider/model. Continue immediately on the
 invoking model, provider, and effort without confirmation. Class suitability
 remains unverified. Preserve this disposition for agent-initiated worker
 dispatch. If a child cannot retain the initial route, work in the invoking
-session. A missing or cleared class, unavailable initial target, or incompatible
-agent assignment is a configuration gap; unknown identity and later operator
-selection are not absent-family continuation or route violations.
+session. A class omitted from a mapped family follows the same
+warning-and-continue with suitability unverified. An explicitly cleared class,
+unavailable initial target, or incompatible agent assignment is a configuration
+gap; unknown identity and later operator selection are not absent-family
+continuation or route violations.
 
 Independently configured `reviewer`, `scout`, `security-reviewer`, and `seance`
 helpers are not issue implementation workers for class selection. This does not
@@ -92,6 +101,20 @@ returns an error and preserves the existing owner and route. Finish the
 completed undertaking or resume the existing one before selecting another.
 A finish call with the wrong issue also returns an error and preserves the
 existing state.
+
+The successful finish persists and releases the undertaking before its
+automatic completion notification. Do not call `daily_driver_notify` again for
+that completion. A stopped or incomplete undertaking is not a completion.
+
+For a genuine unresolved human handoff, before the chat handoff call
+`daily_driver_notify({ reason: "attention_required", key: "<stable action key>",
+message: "<specific action needed>" })`. The key identifies the required
+action, not an attempt; use a different key for a different action. Keep the
+key nonblank and at most 160 characters, the message nonblank and at most 400,
+and both free of control characters. Do not put secrets in either. The
+notification does not replace the chat handoff or durable record. A child
+reports to its orchestrator instead; recoverable errors, CI waits, reminders,
+progress and ordinary final replies do not notify.
 
 **Operator choices remain in control after admission.** Request rejection or
 resume does not restore or require the initially selected model or effort.
@@ -118,8 +141,9 @@ stop handoff separately when work must be stood down.
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
 resume branch exists, `task-worktree` attaches it, but the research route
-leaves it unchanged. Post the complete answer with `gh issue comment
---body-file`, including `provenance`'s block; then close only when
+leaves it unchanged. Post the complete answer with
+`daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file",
+<path>] })`; the wrapper adds provenance. Then close only when
 `issue-body`'s research completion test holds. Failed or incomplete research
 stays open.
 
@@ -164,11 +188,11 @@ The pull request
 | `The gate` | Read the review threads | `review-cycle`'s `references/omp.md` owns them |
 | `The gate` | Read the review record | `gh pr view <number> --json comments` — the round's own `Review` and `Review verification` comments |
 | `The gate` | Read the completion notice | `gh pr view <number> --json comments`, to the last page — the latest `## Review cycle complete! 🎉` comment by the claim's author |
-| `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `gh pr comment <number>` |
+| `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>] })` |
 | `The gate` | Read the Blockers section | `gh pr view <number> --json body`, where `pr-body`'s Blockers section sits |
 | `The milestone` | Read the draft state and report head | `gh pr view <number> --json isDraft,headRefOid` |
 | `The milestone` | Read the existing comments | `gh pr view <number> --json comments` |
-| `The milestone` | Post the report | `gh pr comment <number> --body-file <path>` |
+| `The milestone` | Post the report | `daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>] })` |
 | `Ready for review` | Take it out of draft | `gh pr ready <number>` |
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
@@ -181,10 +205,13 @@ record, and bounded delta-pass contract.
 The session
 ===========
 
-**The claim's `provenance` block reads the model and the session id from
-`daily_driver_get_session`**, the tool `extensions/daily-driver.js` registers.
-`provenance`'s [`references/omp.md`](../../provenance/references/omp.md)
-names the fields it answers and how the block records them.
+**Body-bearing GitHub writes use `daily_driver_gh_write`**, which appends the
+provenance block from the live execution context and caches the installed Omp
+version once per extension instance. Do not read model/session identity, run
+`omp --version`, or format a block for these writes. `daily_driver_get_session`
+remains available for separate tasks such as reading the session name for
+title handling. `provenance`'s [`references/omp.md`](../../provenance/references/omp.md)
+defines the block and edit-deduplication behavior.
 
 For branch-free answer-only research, no task worktree exists and the claim
 uses `Branch: none`. Otherwise the branch comes from the task worktree's Git
@@ -223,26 +250,27 @@ would put the report after the transition it must precede.
 the comments, so `Read the issue and its edges` already has them; `gh issue
 view <issue> --json comments` is the same read where that resource is not to
 hand. The claim is the comment carrying the branch link and the `Model:` and
-`session:` lines. Take its `createdAt`; where more than one comment carries
-that shape, the earliest of them is the start — a later claim does not restart
-the clock. A resumed session finds the start with the same read. An issue
-with no recoverable claim leaves the timing `n/a`, per `SKILL.md`.
+`Session:` lines; a historical block with a lowercase `session:` field is the
+same claim, not a different one. Take its `createdAt`; where more than one
+comment carries that shape, the earliest of them is the start — a later claim
+does not restart the clock. A resumed session finds the start with the same
+read. An issue with no recoverable claim leaves the timing `n/a`, per
+`SKILL.md`.
 
 **Post the report before marking ready.** Read the existing comments with
 `gh pr view <number> --json comments` and look for the fixed
 `First-readiness report` marker. If none exists and the gate holds, write the
-report as a pull-request comment:
-
-    gh pr comment <number> --body-file <path>
+report as a pull-request comment with
+`daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file",
+<path>] })`.
 
 Only after that write succeeds, run `gh pr ready <number>`. A failed report
 write leaves the PR draft. A failed ready write preserves the report; on
 retry, revalidate the current gate and do not duplicate or rewrite the
 existing report.
 
-**The provenance** is `provenance`'s block, read the way its
-[`references/omp.md`](../../provenance/references/omp.md) names: the same
-`daily_driver_get_session` call `The session` above uses.
+The wrapper attaches the report's provenance automatically. The report body
+must not include a new attribution block or identity lookup.
 
 
 Common PR maintenance
@@ -256,8 +284,9 @@ does not start another one.
 The undertaking catch-up look
 -----------------------------
 
-Take the common catch-up look first, then continue this sequence:
-
+Answer direct user questions from known evidence before tools; where state is
+unknown, say which read is needed. An explicit stop follows `The stop`.
+Otherwise take the common catch-up look, then continue this sequence:
 **Currency is not completion.** After a currency test that can move the head,
 read `gh pr view <number> --json statusCheckRollup` for the resulting
 `headRefOid`; `review-cycle`'s three-source read remains the CI verdict.
@@ -283,8 +312,8 @@ The stop
 | Read the issue's comments, for the claim and any equivalent handoff | `gh issue view <number> --json comments` |
 | Cancel the owner reminder | `daily_driver_cancel_schedule({triggerId})`, using the common PR slot |
 | End the merge watch | `write proc://keep-current-<number>/kill`, the service name it was started under |
-| Post the handoff | `gh issue comment <number> --body-file <path>` |
+| Post the handoff | `daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file", <path>] })` |
 
-`--body-file` for the reason `Claim the issue`'s row gives. A CI watcher this
-session holds is stopped by its `review-cycle` route. The pushed head is `git
-ls-remote origin <branch>`.
+The wrapper appends provenance to the handoff body. Do not format or include a
+block in the body file. A CI watcher this session holds is stopped by its
+`review-cycle` route. The pushed head is `git ls-remote origin <branch>`.

@@ -5,15 +5,17 @@ text rather than a live GitHub call -- credential-free, like the other
 
 WHAT IT ASSERTS
 
-    The claim-comment provenance pair parses from both the pre-`provenance`-
-    skill shape (`Model:`/`session:`, no `Harness:` line or leading `---`)
-    and the current one (`provenance`'s block). A `First-readiness report`
-    parses its provenance pair, head SHA, and elapsed minutes computed from
-    its two ISO timestamps; a report whose `Elapsed:` line names no
-    recoverable timestamps ("unavailable") reports `elapsed_minutes` as
-    `None` rather than a guess. A `Review verification` comment parses its
-    pass number, outcome, and finding count, and a comment recording
-    `findings: none` counts zero rather than one finding literally named
+    The claim-comment provenance parses from the pre-`provenance`-
+    skill shape (`Model:`/`session:`, no `Harness:` line or leading `---`),
+    the historical `provenance` block, and the current provider-inclusive
+    block (`Model:`/`Provider:`/`Harness:`/`Session:`) -- both session-field
+    capitalizations, with the same output fields either way. A
+    `First-readiness report` parses its provenance pair, head SHA, and
+    elapsed minutes computed from its two ISO timestamps; a report whose
+    `Elapsed:` line names no recoverable timestamps ("unavailable") reports
+    `elapsed_minutes` as `None` rather than a guess. A `Review verification`
+    comment parses its pass number, outcome, and finding count, and a
+    comment recording `findings: none` counts zero rather than one finding literally named
     `none`. A pull request whose claim and readiness `Model:` lines disagree
     is flagged as a mismatch rather than silently trusting either one. A
     check-runs list with a name repeated by reruns counts each rerun once. A
@@ -78,6 +80,25 @@ def main() -> int:
             parsed_old["session"] == "https://claude.ai/code/session_01AS1Zx5kX3RvmomRuApS4Av",
         )
 
+    # The provider-inclusive block: `Provider:` between `Model:` and
+    # `Harness:`, and a capitalized `Session:`. Without the optional-provider
+    # and dual-capitalization grammar, this block parses as no provenance at
+    # all, and a claim comment carrying it stops being found.
+    provider_claim = read_fixture("model-telemetry-claim-provider.txt")
+    parsed_provider = mt.parse_provenance_block(provider_claim)
+    check("provider-shape claim: parses at all", parsed_provider is not None)
+    if parsed_provider:
+        check("provider-shape claim: model", parsed_provider["model"] == "deepseek-v4.1-flash")
+        check("provider-shape claim: harness", parsed_provider["harness"] == "Omp 19.0.0")
+        check(
+            "provider-shape claim: capitalized Session still yields the session",
+            parsed_provider["session"] == "01a1f537-0d84-73a6-9caf-192ddc32f19a",
+        )
+        check(
+            "provider-shape claim: the output fields are unchanged",
+            set(parsed_provider) == {"model", "harness", "session"},
+        )
+
     found = mt.find_claim_comment(
         [
             {"body": "unrelated comment with no Branch: line", "created_at": "2026-09-28T12:00:00Z"},
@@ -115,6 +136,24 @@ def main() -> int:
         unavailable["elapsed_minutes"] is None,
     )
     check("readiness: unavailable report still parses its provenance pair", unavailable["model"] == "claude-opus-5-5")
+
+    # The provider-inclusive readiness report parses with the same output
+    # fields the historical reports produce: model, harness, session, times
+    # and head. Provider is consumed for compatibility, not aggregated.
+    provider_report = read_fixture("model-telemetry-readiness-provider.txt")
+    provider_readiness = mt.parse_readiness_report(provider_report)
+    check(
+        "readiness: provider-inclusive block yields the same fields",
+        provider_readiness["model"] == "deepseek-v4.1-flash"
+        and provider_readiness["harness"] == "Omp 19.0.0"
+        and provider_readiness["session"] == "01a1f537-0d84-73a6-9caf-192ddc32f19a",
+    )
+    check(
+        "readiness: provider-inclusive block still yields elapsed minutes and head",
+        provider_readiness["elapsed_minutes"] is not None
+        and abs(provider_readiness["elapsed_minutes"] - 31.73) < 0.1
+        and provider_readiness["head_sha"] == "9786d61ef31146ef00faeb3e78120810db9bc677",
+    )
 
     # PR #405's own First-readiness report: "start:"/"ready:"/"elapsed:" and
     # a lowercase "head:" line, pre-dating both `provenance`'s block and the
@@ -195,10 +234,16 @@ def main() -> int:
     check("count_check_reruns: two extra runs of the same name is two reruns", reruns == 2)
     check("count_check_reruns: no repeats is zero reruns", mt.count_check_reruns([{"name": "a"}, {"name": "b"}]) == 0)
 
-    for token in ("mechanical", "implementation", "integration", "reasoning"):
+    for token in ("mechanical", "routine", "intermediate", "complex"):
         check(
             f"read_model_class: preserves {token}",
             mt.read_model_class(f"## Model class\n\n`{token}`\n") == token,
+        )
+    # Old tokens must not silently classify issues after the cutover.
+    for token in ("implementation", "integration", "reasoning"):
+        check(
+            f"read_model_class: rejects former class {token}",
+            mt.read_model_class(f"## Model class\n\n`{token}`\n") == "unlabelled",
         )
     # Without this regression, frontier assignments disappear from telemetry as unlabelled.
     check(

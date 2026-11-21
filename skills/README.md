@@ -20,6 +20,7 @@ limits; a shared skill does not imply identical capabilities on every harness.
 | ----- | -------------- |
 | [specification](specification/SKILL.md) | Collaborate on a canonical specification and publish it through an operator-approved, reviewed PR. |
 | [epic](epic/SKILL.md) | Coordinate discovery and specification-backed promotion, or break settled work into issues with dependencies and completion criteria. |
+| [rectify-names](rectify-names/SKILL.md) | Examine repository naming, judge evidence-backed candidates, agree issue-backed corrections, and rectify them incrementally. |
 | [undertake](undertake/SKILL.md) | Complete assigned issues; also read its execution policy before delegation, frontier escalation or unfinished stops without starting an issue. |
 | [task-worktree](task-worktree/SKILL.md) | Establish an isolated feature branch and worktree before repository-changing work. |
 | [embark](embark/SKILL.md) | Dispatch discovery research or eligible epic children in parallel and monitor the work. |
@@ -29,7 +30,7 @@ limits; a shared skill does not imply identical capabilities on every harness.
 
 | Skill | When to use it |
 | ----- | -------------- |
-| [issue](issue/SKILL.md) | Open or update a GitHub issue; new requests default to assignable tasks unless a kind is specified. |
+| [issue](issue/SKILL.md) | Open or update GitHub issues; pause before third-party creation without a named, approved destination. |
 | [issue-body](issue-body/SKILL.md) | Write an issue body with the scope, evidence and completion conditions required by its kind. |
 | [issue-labels](issue-labels/SKILL.md) | Classify issues and determine which kinds are eligible for agent work. |
 | [issue-deps](issue-deps/SKILL.md) | Record or inspect blocked-by, parent/sub-issue and PR-closes relationships. |

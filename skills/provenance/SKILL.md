@@ -4,9 +4,10 @@ description: >-
   Read for contribution attribution on commits and GitHub writes.
   Supplies the trailing provenance
   block's shape and placement, the rule for reading the model that served the
-  turn against the one the session was set to, the harness name and version,
-  the session identifier or `n/a`, the rule for retaining distinct attribution
-  across body edits, and the commit trailer each harness adds. Not for the claim
+  turn against the one the session was set to, the provider that served it,
+  the harness name and version, the session identifier or `n/a`, the rule for
+  retaining distinct attribution across body edits, and the commit trailer
+  each harness adds. Not for the claim
   comment's branch line or haiku, which are
   `undertake`'s, and not for a task issue's `Model class` section, which is
   implementation metadata `issue-body` owns.
@@ -14,8 +15,9 @@ description: >-
 
 # Provenance
 
-One shape for the record every write leaves: which model wrote it, on which
-harness and version, in which session. `undertake`'s claim comment and
+One shape for the record every write leaves: which model wrote it, which
+provider served it, on which harness and version, in which session.
+`undertake`'s claim comment and
 first-readiness report already carried a version of this; every other
 writing skill carried nothing, or only a harness's own generic footer. This
 skill is the one owner of that record, cited rather than restated wherever a
@@ -28,6 +30,15 @@ operation below is named in words here and resolved to a route there:
 [`references/codex.md`](references/codex.md) for Codex. Read the one for the
 harness in use before the first write this skill governs.
 
+On Omp, the GitHub-write wrapper attaches this block to every body-bearing
+GitHub write and applies the edit deduplication rules below. Callers provide
+the substantive body without a new block. Do not read session identity, run
+`omp --version`, or format attribution solely for an Omp GitHub write; the
+wrapper reads the live model, provider and session on each call and caches
+the Omp version once per extension instance. Read-only and non-body GitHub
+operations keep their existing routes. The Omp commit procedure below is
+unchanged.
+
 
 The block
 =========
@@ -38,8 +49,9 @@ above any footer the harness appends to the same write:
 ```
 ---
 Model: <model id that served the turn>
+Provider: <serving provider id, or n/a>
 Harness: <name> <version>
-session: <session link or id, or n/a>
+Session: <session link or id, or n/a>
 ```
 
 **`Model:`, one line.** The model that served the turn — never a name
@@ -49,12 +61,30 @@ two is the half of the record worth having. Read it from the harness's own
 session call where it has one, and from the harness's own statement of the
 serving model where it does not.
 
+**`Provider:`, one line.** The provider that served the model, as the
+harness reports it — never inferred from the model id or the harness name,
+because one model id can be served through more than one provider and the two
+are different attribution. Apply this precedence:
+
+1. An explicitly reported serving-provider identity.
+2. Otherwise, the model vendor's own identity for a verified first-party cloud
+   session of that vendor, or for a CLI configuration positively identified as
+   the vendor's direct API or another first-party service.
+3. Otherwise, the serving provider a CLI configuration positively identifies
+   as a third-party backend, such as Bedrock or Vertex AI.
+4. Otherwise, `n/a`.
+
+The per-harness reference names where the report comes from, the vendor
+identity to record, and what counts as verification. A model id or a harness
+name alone never proves the serving provider, and an unidentified session
+retains `n/a`.
+
 **`Harness:`, one line.** The harness's name and the version a surface in the
 session can actually read, by whatever call the reference file for the
 harness in use names. A version no surface reports is `n/a`, never a guessed
 one.
 
-**`session:`, lowercase, one line.** The session identifier — linked where
+**`Session:`, one line.** The session identifier — linked where
 the harness offers a link, bare where it offers only an id, and `n/a` where
 it offers neither. A missing session is recorded as `n/a`, never narrated: a
 block that explains why it has no session id publishes a diagnostic instead
@@ -62,26 +92,32 @@ of a record.
 
 **The line shapes are fixed, because other skills key their reads off them.**
 `undertake`'s claim lookup and first-readiness timing find the claim comment
-by its `Model:` and `session:` lines. Changing either shape breaks that
-lookup silently, on every issue it has ever run against.
+by its `Model:` and `Session:` lines. Historical blocks carrying lowercase
+`session:` remain readable and are never rewritten; a reader accepts either
+capitalization. Changing the `Model:` line or dropping the session field
+breaks that lookup silently, on every issue it has ever run against.
 
 
 Bodies edited later
 ====================
 
 **Each body retains one block per distinct attribution.** Compare the
-complete recorded `Model:`, `Harness:`, and `session:` field values exactly,
-across all existing complete blocks in that body. Include any configured and
-served model distinction and the harness version in the comparison. Treat
-`n/a` as a literal value; do not infer identities, aliases, or equivalent
-session links.
+complete recorded `Model:`, `Provider:`, `Harness:`, and `Session:` field
+values exactly, across all existing complete blocks in that body. Include any
+configured and served model distinction and the harness version in the
+comparison. Treat `n/a` as a literal value; do not infer identities, aliases,
+or equivalent session links. A historical block with no `Provider:` line
+compares as provider `n/a`, and field-label capitalization is not part of the
+identity: `session:` and `Session:` name the same field. A changed provider is
+distinct even when model, harness and session are unchanged.
 
 On an edit, retain the first occurrence of each distinct tuple, in its
 original order and with its field values unchanged. Remove exact duplicate
 blocks. Append the current writer's block only if its complete tuple is not
 already present, regardless of turn. A changed model, harness or version, or
-session is distinct and remains recorded. Do not rewrite incomplete or
-nonstandard historical records to deduplicate them. Preserve substantive
+session is distinct and remains recorded. Do not rewrite historical blocks
+to the new shape, and do not rewrite incomplete or nonstandard historical
+records to deduplicate them. Preserve substantive
 body content, closing references, and unrelated footers.
 
 The scope is one artifact, not a thread. A new comment or review carries its

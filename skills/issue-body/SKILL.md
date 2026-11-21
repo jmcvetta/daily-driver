@@ -181,10 +181,12 @@ envelope. A task issue retains its normal body sections and puts the
 authorization record in `Detail`. Ask again before materially expanding the
 approved assignment.
 
-Every complete issue-body draft intended for a write includes the block it
-would publish. Withholding the live write does not remove the provenance
-requirement. Follow `provenance`'s placement, field, and distinct-attribution
-rules on an edited issue.
+Every complete issue-body draft follows the active harness route for
+provenance. For Omp GitHub writes, keep the authored body free of a new block;
+the wrapper attaches and deduplicates attribution. Other routes include the
+block they will publish. Withholding a live write does not remove the
+provenance requirement. Follow `provenance`'s placement, field, and
+distinct-attribution rules on an edited issue.
 
 
 **Relationships are edges, not prose.** What an issue waits on is
@@ -228,7 +230,7 @@ contract remains in [`epic/SKILL.md`](../epic/SKILL.md#the-epic-body).
 A repository-answerable question is answered now by the author. An unresolved
 user decision makes the issue unready at every class. Unknown class tokens,
 multiple class sections, and a missing rationale are invalid metadata, not a
-default to `implementation`. A `frontier` assignment is not ready unless its
+default to `routine`. A `frontier` assignment is not ready unless its
 approval record and work envelope match the assignment exactly. Frontier
 research remains `research` and carries no task template.
 
@@ -264,7 +266,7 @@ worker. **Assignable is not the `task` kind.** A story is assignable when it is:
 
 An unknown token, a duplicate section, a missing section or a missing
 rationale makes the story not ready. None of them defaults to
-`implementation`. A `story` marker, a parent edge or a kind label alone proves
+`routine`. A `story` marker, a parent edge or a kind label alone proves
 no readiness.
 
 Resolve repository-answerable gaps before presenting a story as ready, and
@@ -296,7 +298,7 @@ task `Model:` field — the legacy class-metadata field below `## Human brief`, 
 a `provenance` block below the closing `---` rule, which follows `provenance`'s
 distinct-attribution rule. When selecting an old task for work, assess its body
 against the class rubric and migrate only that issue before dispatch. Map the
-former `standard` class to `implementation` and `advanced` to `reasoning`, based
+former `standard` class to `routine` and `advanced` to `complex`, based
 on the grounded handoff; do not change its rationale or capability requirement,
 and do not infer a class from the old identifier. A valid new section is
 authoritative when both forms exist.
@@ -310,7 +312,7 @@ The section is immediately below `## Human brief` and before `## Detail`:
 ```markdown
 ## Model class
 
-`implementation`
+`routine`
 
 The API contract and edge cases are fixed; implementation follows the existing
 adapter pattern.
@@ -322,7 +324,8 @@ For a mapped family it selects the exact class within the invoking family and
 provider before worktree creation or claim, preserving backend and authentication
 where supported. If the known family is absent from the class table, it warns
 prominently and continues on the invoking model, provider, and effort without
-confirmation; class suitability remains unverified. Missing classes in mapped
-families, unknown identity, and actual route violations remain gaps. Any
+confirmation; class suitability remains unverified. Classes omitted from a
+mapped family follow that warning with unverified suitability; an explicitly
+cleared class, unknown identity, and actual route violations remain gaps. Any
 frontier assignment still needs explicit user approval and its exact envelope.
 Claim comments and execution records retain the observed model.

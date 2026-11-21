@@ -1,7 +1,7 @@
-task_id: epic-11-assigns-integration-class
+task_id: epic-11-assigns-intermediate-class
 description: >-
-  Epic planning distinguishes routine implementation, cross-contract
-  integration, and invariant-heavy reasoning by their capability needs.
+  Epic planning distinguishes routine, intermediate, and complex work by
+  their capability needs.
 tags: [epic, behaviour, fire]
 
 initial_prompt: |
@@ -40,7 +40,7 @@ success_criteria:
     expected_skill: epic
     skill_name: epic
   - type: agent_judge
-    description: Planning selects integration by cross-boundary difficulty rather than file count
+    description: Planning selects intermediate for work beyond routine
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -56,14 +56,14 @@ success_criteria:
       Find the final reply after the last `[RESULT - …]` tag. Begin the
       rationale with `ANCHOR: result` or `ANCHOR: none`; no result means 0.
 
-      Score 1.0 only if Child A is `implementation`, Child B is `integration`,
-      and Child C is `reasoning`, each with a concise rationale tied to its
+      Score 1.0 only if Child A is `routine`, Child B is `intermediate`,
+      and Child C is `complex`, each with a concise rationale tied to its
       stated capability need. A's three established editing points must not be
-      treated as integration merely because they cross files or layers. B's
+      treated as intermediate merely because they cross files or layers. B's
       rationale must name the persisted execution/recovery/hook/resume
       contracts and the behavior preserved across them. C's rationale must
       name the exactly-once ownership and fencing invariant under concurrency,
       retries, and stale ownership. All three designs are settled; the reply
       must not request more specification or choose `frontier`. Score 0.0 if
-      it uses file count alone, treats integration as open design, or assigns
+      it uses file count alone, treats intermediate as open design, or assigns
       the same class to all three children.
