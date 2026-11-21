@@ -74,12 +74,11 @@ class Model(BaseHTTPRequestHandler):
                     "i": "Dispatching offline reviewer",
                 }
             else:
-                tool, params = (
+                name, args = (
                     ("daily_driver_set_session_title", {"title": "#819 Reviewer routing fixture"}) if index == 0 else
                     ("daily_driver_route_undertaking", {"issue": 819, "modelClass": "routine"}) if index == 1 else
                     ("daily_driver_finish_undertaking", {"issue": 819})
                 )
-                name, args = "write", {"path": f"xd://{tool}", "content": json.dumps(params)}
             message = {"role": "assistant", "tool_calls": [{
                 "index": 0, "id": f"routing-{index}", "type": "function",
                 "function": {"name": name, "arguments": json.dumps(args)},
