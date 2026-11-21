@@ -190,24 +190,12 @@ recorded as completed.
 Landing and close
 -----------------
 
-The state read is the pull request `get` call: `draft` must be false,
-`mergeable_state` must be `clean`, and `head.sha` is the head the merge binds
-to. The same `get` call supplies the labels and body for the human-action read.
-The complete thread read is the one `review-cycle`'s `Review history,
-publication, and threads` names; a partial review-comments page does not
-answer the gate.
-
-`blocked` alone does not identify a required approval. The aggregate
-`reviewDecision: REVIEW_REQUIRED` establishes an outstanding review
-requirement; a missing or empty decision does not prove that all requirements
-are satisfied. Individual review comments do not establish repository review
-requirements. Combine this evidence with current-head CI, complete threads,
-and explicit blockers. Pending CI retains the existing continuation. Missing
-access or inconclusive evidence leaves the cause unresolved, not human-only.
-Only `clean` can pass the merge-state read.
-
-Apply `undertake`'s `Review evidence` predicate to the complete histories and
-the gated `head.sha`; its first-parent test is not a content comparison.
+The PR `get` supplies `draft`, `mergeable_state`, `head.sha`, labels and body.
+Use `review-cycle`'s complete paginated thread read. For the notice in `Land
+the pull request`, paginate conversation comments and match `user.login` to
+the claim author. If its SHA differs from `head.sha`, walk `get_commit` from
+the head along first parents to that SHA; every intervening commit must have
+two `parents`, and the walk must reach the SHA.
 
 The merge call is made only for a task pull request,
 after those reads hold. `expectedHeadSha` makes it fail closed if the task

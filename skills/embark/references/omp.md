@@ -143,22 +143,12 @@ The watch
 | `Close the epic` | Comment with the landed pull requests or missing claim | `daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file", <path>] })` |
 | `Close the epic` | Close as completed | `gh issue close <number> --reason completed` |
 
-`Land the pull request` reads its own state: `isDraft` must be false,
-`mergeStateStatus` must be `CLEAN`, and `headRefOid` is the head the merge
-binds to. The labels and body answer the
-human-action read in the same call. The complete thread graph is the paginated
-GraphQL read named by `review-cycle`; a REST comments page is not a substitute.
-
-`BLOCKED` alone does not identify a required approval. `reviewDecision`
-`REVIEW_REQUIRED` is evidence of an outstanding review requirement; a missing
-or empty decision does not prove that every merge requirement is satisfied.
-Use the CI reads above, the complete thread read, and the labels/body to
-identify the actual gate. Pending CI retains the existing continuation; an
-unavailable or inconclusive read leaves the cause unresolved. Only `CLEAN`
-can pass the merge-state read.
-
-Apply `undertake`'s `Review evidence` predicate to the complete histories and
-the gated `headRefOid`; its first-parent test is not a content comparison.
+The complete thread graph uses `review-cycle`'s paginated GraphQL read. For
+the notice at `Land the pull request`, paginate conversation comments and
+match `comments[].author.login` to the claim author. If the notice SHA differs
+from `headRefOid`, verify it lies on the first-parent chain with
+`git rev-list --first-parent <headRefOid> | grep -qx <sha>` and verify
+`git rev-list --first-parent --no-merges <sha>..<headRefOid>` is empty.
 
 The merge is one conditional `gh pr merge` call for a task pull request after
 the gate holds. `--match-head-commit <headRefOid>` makes it fail closed if the
