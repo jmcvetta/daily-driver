@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any
 
 
-from evals_costs import uses_omp_codex_subscription
+from evals_costs import uses_codex_cli_subscription, uses_omp_codex_subscription
 
 try:
     import yaml
@@ -262,6 +262,8 @@ def case_price(
     """
     task = row_label(row)
     if uses_omp_codex_subscription(client_name, "omp", model):
+        return None, "subscription"
+    if uses_codex_cli_subscription(client_name):
         return None, "subscription"
     # Go's catalog rates describe allowance consumption, not cash paid. The
     # adapter's estimated agent_cost_usd does not establish the billing source.

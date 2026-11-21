@@ -33,6 +33,21 @@ class TerraSubscriptionTest(unittest.TestCase):
         self.assertEqual(recorder.case_price({}, "openai-codex/gpt-6.1-terra", {}, "codex"),
                          (None, "unreported"))
 
+    def test_codex_cli_subscription_keeps_tokens_without_cash(self):
+        row = {"input_tokens": 315, "output_tokens": 130, "cache_read_input_tokens": 24448,
+               "agent_cost_usd": 0.42, "total_cost_usd": 0.57}
+        self.assertEqual(recorder.case_price(row, "gpt-6.1-sol", {}, "codex-daily-driver"),
+                         (None, "subscription"))
+        usage = recorder.token_usage(row)
+        self.assertEqual(usage["uncached_input_tokens"], 315)
+        self.assertEqual(usage["cache_read_input_tokens"], 24448)
+        self.assertEqual(usage["output_tokens"], 130)
+
+    def test_codex_cli_missing_usage_stays_unreported(self):
+        self.assertEqual(recorder.case_price({}, "gpt-6.1-sol", {}, "codex-daily-driver"),
+                         (None, "subscription"))
+        self.assertTrue(all(value == "unreported" for value in recorder.token_usage({}).values()))
+
     def test_go_catalog_estimate_is_not_reported_as_cash(self):
         row = {"input_tokens": 100, "output_tokens": 20, "agent_cost_usd": 0.5}
         self.assertEqual(recorder.case_price(row, "opencode-go/glm-5.3", {}, "omp"),

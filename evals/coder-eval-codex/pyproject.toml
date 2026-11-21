@@ -21,18 +21,18 @@ requires-python = ">=3.13"
 license = { text = "LicenseRef-Anti-License" }
 authors = [{ name = "Jason McVetta", email = "jason.mcvetta@gmail.com" }]
 
-# The `codex` extra, not the bare package: `coder_eval`'s Codex agent imports
-# `openai_codex` inside `start()` and raises "Codex SDK not installed" without
-# it, at run time, once the money is committed. Declaring the extra here is what
-# makes `make evals-install` pull the SDK — the Makefile's own pin is
-# `coder-eval==<version>` with no extras, and adding one there would pin the
-# extra to every arm including the two that do not need it.
+# The bare package, not the `codex` extra: this kind drives the installed
+# `codex` executable and must not import the SDK. The extra would pull
+# `openai_codex` into the tool environment, where a future accidental import
+# would make an SDK-backed path look available again — the exact cutover this
+# arm replaces. `codex` itself is installed and authenticated on the machine
+# that runs the arm; see evals/README.md, "The Codex arm".
 #
 # Deliberately NOT pinned to the exact `CODER_EVAL_VERSION` in the Makefile, for
 # the reason `coder-eval-omp` gives: `uv tool install coder-eval==<pin> --with .`
 # resolves both, and an equality pin here would fight that pin rather than agree
 # with it. The floor is the release the pin names.
-dependencies = ["coder-eval[codex]>=0.11.6"]
+dependencies = ["coder-eval>=0.11.6"]
 
 # The seam. `coder_eval` scans installed distributions for this group and calls
 # each target with its agent registry.

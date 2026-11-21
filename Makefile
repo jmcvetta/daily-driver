@@ -260,6 +260,7 @@ check-scripts:
 		skills/*/scripts/*.sh scripts/*.sh \
 		evals/fixtures/*/shared/*.sh
 	python3 scripts/test-evals-subscription-costs.py
+	python3 evals/coder-eval-codex/tests/test_codex_cli_contract.py
 
 # Exercise the real Omp keep-current loop against an offline GitHub client.
 check-pr-keep-current:
@@ -338,9 +339,10 @@ check-zizmor:
 # not resolve, and `plan` says so and exits 0 anyway -- which is what
 # `evals-variants` is for.
 #
-# `coder-eval-codex` declares `coder-eval[codex]`, so the Codex SDK arrives with
-# it. The pin above stays extras-free on purpose: the extra belongs to the one
-# arm that needs it, not to the two that do not.
+# `coder-eval-codex` drives the installed `codex` executable and deliberately
+# does not depend on the Codex SDK. The CLI itself is installed and
+# authenticated separately; see `evals-run-codex` and "The Codex arm" in
+# evals/README.md.
 #
 # Both local agents keep one version, so uv would reuse its cached build and an
 # edit to either would never reach the harness. `--reinstall-package` rebuilds
@@ -379,36 +381,21 @@ evals-setup-omp:
 #
 # Laptop-only, unlike check-git-sync: the cases need a live model, and this
 # repository's CI is deliberately credential-free.
+#
+# The set is the directory, so a retired experiment cannot leave a stale plan
+# line behind. Reviewer-quality arms are planned by their own target below.
+EVAL_PLAN_EXPERIMENTS := $(filter-out evals/experiments/cohort-695.yaml $(wildcard evals/experiments/classes-*.yaml) $(wildcard evals/experiments/omp-reviewer-*.yaml),$(wildcard evals/experiments/*.yaml))
+EVAL_PLAN_CLASSES := $(wildcard evals/experiments/classes-*.yaml)
+
 evals-plan: evals-setup-claude evals-variants
-	cd evals && $(CODER_EVAL) plan -e experiments/with-without.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/with-without-haiku-5.5.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/omp-glm-5.3.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/omp-glm-5.3-flash.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/omp-deepseek-v4-pro.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/omp-deepseek-v4.1-flash.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-5.6-sol.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6-sol.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6-luna.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/omp-gemini-3.8-flash.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/omp-gemini-3.1-pro.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6.1-sol-workflow.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gemini-3.8-flash.yaml tasks/model-classes/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gemini-3.1-pro.yaml tasks/model-classes/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt-6.1-sol.yaml tasks/model-classes/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6.1-sol.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/codex.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-cheaper.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.gpts-choice.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-glm.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-haiku-low.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-haiku-medium.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-kimi.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-minimax.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-opus-low.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-sonnet-high.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-sonnet-low.yaml tasks/*/*.yaml
+	@set -e; for experiment in $(EVAL_PLAN_EXPERIMENTS); do \
+		echo "plan: $$experiment"; \
+		(cd evals && $(CODER_EVAL) plan -e "../$$experiment" tasks/*/*.yaml); \
+	done
+	@set -e; for experiment in $(EVAL_PLAN_CLASSES); do \
+		echo "plan: $$experiment"; \
+		(cd evals && $(CODER_EVAL) plan -e "../$$experiment" tasks/model-classes/*.yaml); \
+	done
 
 # The reviewer-quality cohort is opt-in and does not run workflow ablations.
 .PHONY: evals-plan-reviewer-quality
@@ -425,7 +412,7 @@ evals-plan-reviewer-quality: evals-setup-claude
 # anyone runs is the one that catches it. See the script's docstring and
 # docs/notes/0013-the-omp-arm.md.
 evals-variants:
-	uv run --frozen python3 scripts/evals-variants.py evals/experiments/*.yaml
+	uv run --frozen python3 scripts/evals-variants.py $(filter-out evals/experiments/cohort-695.yaml,$(wildcard evals/experiments/*.yaml))
 
 # evals-run: the whole suite on the Claude Code subscription, both variants.
 # See evals/README.md for credential and authorization boundaries. Narrow it
@@ -542,19 +529,25 @@ evals-run-omp: evals-judge-preflight evals-variants evals-preflight
 	$(MAKE) -C .. evals-record RUN=$(RUN) EXPERIMENT=$(EXPERIMENT) JUDGE=$(JUDGE) JOBS=$(JOBS); \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
-# evals-run-codex: the same suites on Codex. Needs the Codex SDK, which
-# `evals-install` brings in with `coder-eval-codex`, and OpenAI credentials the
-# SDK can authenticate with. Costs real money, like its siblings, and narrows
-# the same way with TASKS=.
+# evals-run-codex: the same suites on the installed Codex CLI. Needs `codex` on
+# PATH, authenticated with the Codex subscription (`codex login`); the adapter
+# refuses an API key and records the CLI version, auth mode and model catalog.
+# Costs subscription allowance, like its siblings, and narrows the same way
+# with TASKS=.
 #
-# `skip:codex` is not a spare exclusion: `tasks/constitution/*` carries it,
-# because `coder_eval`'s Codex agent links skills and installs no hooks, so no
-# constitution reaches that arm and every row there would score 0 for the wrong
-# reason. See docs/notes/0015-the-codex-arm.md.
-evals-run-codex: evals-judge-preflight evals-plan evals-preflight
-	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) -e experiments/codex.yaml \
+# `skip:codex` is not a spare exclusion: `tasks/constitution/*` carries it
+# because no run has yet shown the constitution reaching a CLI session. The CLI
+# does have hooks, so this is an unproven exclusion rather than an SDK fact; it
+# stays until actual CLI evidence replaces it. See
+# docs/notes/0015-the-codex-arm.md.
+evals-run-codex: evals-judge-preflight evals-variants evals-preflight
+	@command -v codex >/dev/null || { echo "error: the codex CLI is not on PATH; install it and run 'codex login'" >&2; exit 1; }
+	@test -n "$(RUN)" && test "$(RUN)" != "evals/runs/latest" || { echo "Set RUN to a unique explicit run directory" >&2; exit 1; }
+	@test ! -e "$(RUN)" || { echo "RUN already exists; preserve the existing attempt" >&2; exit 1; }
+	cd evals && $(CODER_EVAL) plan -e experiments/codex.yaml $(RUN_TASKS)
+	cd evals && $(CODER_EVAL) run --run-dir ../$(RUN) --max-parallel $(JOBS) $(if $(REPEATS),--repeats $(REPEATS)) -e experiments/codex.yaml \
 		--exclude-tags claude-only,omp-only,skip:codex,model-classes $(RUN_TASKS); status=$$?; \
-	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/codex.yaml; \
+	$(MAKE) -C .. evals-record RUN=$(RUN) EXPERIMENT=evals/experiments/codex.yaml JUDGE=$(JUDGE) JOBS=$(JOBS); \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 # evals-run-comparison: the same suites with the plugin at a base revision and at

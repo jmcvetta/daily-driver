@@ -15,14 +15,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from .agent import AGENT_KIND, CodexDailyDriverAgent, CodexDailyDriverAgentConfig
+from .agent import AGENT_KIND, CodexCLIAgent, CodexCLIAgentConfig
 
 
 def register(registry: Any) -> None:
-    """Bind `codex-daily-driver` to its agent and config classes.
+    """Bind `codex-daily-driver` to its CLI driver and config class.
 
     Idempotent: re-registering the same pair is allowed by the registry, which
     rejects only a second plugin trying to shadow the kind with a different
     implementation.
     """
-    registry.register(AGENT_KIND, CodexDailyDriverAgentConfig)(CodexDailyDriverAgent)
+    registry.register(AGENT_KIND, CodexCLIAgentConfig)(CodexCLIAgent)

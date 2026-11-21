@@ -118,7 +118,9 @@ Their main, child, switch, compact, and resume phases completed. These are
 request-construction experiments, not inference-cost or model-behavior results.
 
 The opt-in `codex-daily-driver` adapter was also exercised through its actual SDK
-and bundled Codex 0.154.0, with reviewed native hook trust. Its five parent/child
+and bundled Codex 0.154.0, with reviewed native hook trust. That measured the
+retired SDK execution path; issue #695 replaced it with a driver for the
+installed `codex` executable, and these captures are not CLI evidence. Its five parent/child
 requests each contained one complete 8,880-byte core. Read-only and
 workspace-write confinement, blocked network access, and disabled shell/child
 tools were observed. Injected HTTP errors and broken streams each produced a

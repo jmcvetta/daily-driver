@@ -1,115 +1,479 @@
-"""The `codex-daily-driver` agent kind: `coder_eval`'s Codex agent, retagged.
+"""The ``codex-daily-driver`` agent kind: a driver for the installed Codex CLI.
 
-Unlike the Omp arm, this is not a harness driver. `coder_eval` 0.11.6 already
-ships a `codex` kind that drives the Codex SDK, links a `plugins:` root's skills
-into `<cwd>/.agents/skills/`, and records command telemetry in the vocabulary
-the criteria are written in. All of that is inherited unchanged. What is added
-is two corrections the built-in does not make, and the fields that say what the
-session actually got.
+The comparison this arm exists for is the **CLI**, not the Codex SDK. The SDK
+and the app-server clients are a different execution path with their own
+authentication and transport, so an SDK run cannot answer whether the shipped
+tool behaves the same as Omp. This module therefore spawns::
 
-**Why a new kind rather than `agent: {type: codex}`.** The registry rejects two
-implementations claiming one kind, and shadowing a built-in would change what
-every other `coder_eval` user's `codex` means. A distinct kind also makes the
-arm's routing readable: `agent.type` and the experiment arm tag must agree.
+    codex exec --json … -
 
-**The first correction** is `transcript.render_agent_output`, applied to the
-`TurnRecord` this agent hands back. `transcript.py` says what it is for; the
-short version is that every judge rubric under `evals/tasks/` locates the reply
-at the last `[RESULT - …]` tag and scores 0.0 where there is none, and
-`coder_eval` builds that shape for its Claude Code agent alone.
+one process per ``communicate()``, reads the documented JSON Lines stream, and
+reduces it with :mod:`coder_eval_codex.events`. Session continuity across turns
+is the CLI's own ``exec resume <thread_id>``.
 
-**The second** is `plugins.resolve_local_plugins`, applied to the plugin roots
-before `start()` delegates. `plugins.py` says what it is for; the short version
-is that `_setup_skills` symlinks each skill by the path it was handed, so the
-relative root an experiment naturally writes links every skill back at itself.
+Evidence is recorded, not assumed. ``start()`` asks the installed binary for its
+version, its login status, and its model catalog, then fails closed when the
+answer contradicts the arm:
 
-**Neither of them is the normalisation issue #185 expected.** It asked for a
-`skill://<name>` mapping, the spelling Omp uses. The spike in #181 measured
-that Codex does not use that spelling, and `coder_eval`'s `skill_triggered`
-already detects the spelling Codex does use — a shell read of
-`.agents/skills/<name>/SKILL.md`, whose command string carries the
-`skills/<name>/` substring the criterion matches on. Adding a mapping would have
-been a rename of something already named.
+* no ``codex`` on ``PATH`` is a configuration error naming the install route;
+* API-key environment variables are refused, because the authorized route is
+  the Codex subscription and an API key would silently bill a different meter;
+* a login that is absent, unrecognized, or a plain API key is refused rather
+  than discovered after the first paid turn;
+* a requested model the catalog does not list is refused, instead of being
+  replaced by a guessed identity or a provider default.
 
-Nothing here can be exercised without a `coder_eval` install and the Codex SDK.
+Subscription runs record tokens but never a fabricated cash cost: the CLI
+reports no charge for subscription allowance, and coder_eval's rate card is a
+list price, not a bill.
+
+Skills are placed where the CLI scans for them — ``.agents/skills`` in the
+working directory, with symlinks the CLI follows — by
+:mod:`coder_eval_codex.skills`; see that module for the relative-root defect
+this replaces.
+
+Not supported, and logged rather than pretended: ``system_prompt`` and
+``system_prompt_file`` have no ``codex exec`` flag, and
+``allowed_tools``/``disallowed_tools`` are not an enforceable CLI surface. The
+trust boundary is the eval sandbox plus the CLI's own sandbox mode.
 """
 
 from __future__ import annotations
 
-import json
+import asyncio
+import contextlib
 import logging
 import os
-import stat
+import shutil
+import signal
 import subprocess
+import time
 from collections.abc import Callable
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal, NoReturn
 
-from coder_eval.agents.codex_agent import CodexAgent
-from coder_eval.errors import AgentConfigError
-from coder_eval.models import ApiRoute, CodexAgentConfig, TurnRecord
+from coder_eval.agent import Agent
+from coder_eval.errors import AgentConfigError, AgentCrashError, TurnTimeoutError
+from coder_eval.isolation.docker_runner import STDOUT_LINE_LIMIT_BYTES
+from coder_eval.models import (
+    AgentState,
+    ApiRoute,
+    AssistantMessage,
+    BaseAgentConfig,
+    CommandTelemetry,
+    ContentBlock,
+    PermissionMode,
+    ResultSummary,
+    SystemPromptSemantics,
+    TokenUsage,
+    TranscriptMessage,
+    TurnRecord,
+)
+from coder_eval.streaming.callbacks import StreamCallback, safe_emit
+from coder_eval.streaming.collector import EventCollector
+from coder_eval.streaming.events import (
+    AgentEndEvent,
+    AgentEndStatus,
+    AgentStartEvent,
+    StreamEvent,
+    TextChunkEvent,
+    ToolEndEvent,
+    ToolEndStatus,
+    ToolStartEvent,
+    TurnEndEvent,
+    TurnEndStatus,
+    TurnStartEvent,
+)
 
-from .plugins import PluginPathError, resolve_local_plugins
+from .discovery import classify_auth, model_slugs
+from .events import Event, Item, TokenCounts, TurnAccumulator, token_counts, token_delta
+from .skills import SkillLinkError, link_skills
 from .transcript import is_already_tagged, render_agent_output
 
 
 logger = logging.getLogger(__name__)
 
-#: The kind string this agent registers under, and the value a task's or an
-#: experiment's `agent: {type: …}` carries.
+#: The kind string this agent registers under, and the value an experiment's
+#: ``agent: {type: …}`` carries.
 AGENT_KIND = "codex-daily-driver"
 
-#: Where `CodexAgent._setup_skills` links a `plugins:` root's skills. Read back
-#: after `start()` so a run records what the session was actually given.
-SKILLS_DIR = Path(".agents") / "skills"
+# Grace between SIGTERM and SIGKILL when tearing down the CLI subprocess.
+_TERM_GRACE_SECONDS = 5.0
+# How long to drain stderr after the process is reaped.
+_DRAIN_SECONDS = 2.0
+_SIGKILL: signal.Signals = getattr(signal, "SIGKILL", signal.SIGTERM)
+
+# Config fields the CLI has no equivalent knob for.
+_UNSUPPORTED_CONFIG_FIELDS: tuple[str, ...] = (
+    "system_prompt",
+    "system_prompt_file",
+    "allowed_tools",
+    "disallowed_tools",
+)
+
+# Environment variables that would route the CLI to metered API billing. The
+# authorized route is the subscription; refuse rather than silently spend.
+_METERED_AUTH_ENV: tuple[str, ...] = ("CODEX_API_KEY", "OPENAI_API_KEY")
+
+# Native Codex tool item types -> the canonical (Claude) vocabulary every
+# criterion is written against.
+_TOOL_ITEM_NAMES: dict[str, str] = {
+    "command_execution": "Bash",
+    "file_change": "Write",
+    "mcp_tool_call": "Mcp",
+    "web_search": "WebSearch",
+    "image_generation": "ImageGeneration",
+    "image_view": "ImageView",
+    "collab_agent_tool_call": "Agent",
+    "dynamic_tool_call": "Tool",
+}
 
 
-class CodexDailyDriverAgentConfig(CodexAgentConfig):
-    """Configuration for the `codex-daily-driver` kind.
-
-    The inherited fields keep their existing meaning. Focused delivery
-    comparisons opt into trusted lifecycle hooks and offline fixture confinement.
-    """
+class CodexCLIAgentConfig(BaseAgentConfig):
+    """Configuration for the ``codex-daily-driver`` kind."""
 
     type: Literal["codex-daily-driver"]  # type: ignore[assignment]
 
-    #: Activate native lifecycle hooks in an explicitly prepared CODEX_HOME.
-    lifecycle_hooks: bool = False
-    #: Confine fixture writes and disable non-fixture native capabilities.
-    offline_fixture: bool = False
-    #: Reviewed hook payload selects frozen hooks without changing native account lookup.
-    reviewed_hook_payload: str | None = None
-    #: Permit native worktree creation in a controller-marked private DIRECT_WRITE artifacts envelope.
-    fixture_worktree_envelope: bool = False
+    #: Reasoning effort passed as ``model_reasoning_effort``. None leaves the
+    #: model's own default, which is recorded as unreported rather than "high".
+    effort: Literal["minimal", "low", "medium", "high", "xhigh", "max", "ultra"] | None = None
+    #: The executable to drive. A name is resolved on PATH; a path is used as given.
+    executable: str = "codex"
+    #: Refuse API-key authentication. The arm is a subscription comparison.
+    require_subscription_auth: bool = True
+    #: Crash a clean turn that reported no token counts, instead of scoring it.
+    require_token_telemetry: bool = True
 
 
-class CodexDailyDriverAgent(CodexAgent):
-    """`coder_eval`'s Codex agent with the judge's transcript anchor restored."""
+def _usage(counts: TokenCounts) -> TokenUsage:
+    """coder_eval's token record from the pure counts the reducer produced."""
+    return TokenUsage(
+        uncached_input_tokens=counts.uncached_input_tokens,
+        output_tokens=counts.output_tokens,
+        cache_creation_input_tokens=counts.cache_creation_input_tokens,
+        cache_read_input_tokens=counts.cache_read_input_tokens,
+    )
+
+
+class _CodexTurnState:
+    """Per-``communicate()`` reducer output, assembled into a ``TurnRecord``."""
+
+    def __init__(self, *, task_id: str, iteration: int, user_input: str, model: str | None) -> None:
+        self.task_id = task_id
+        self.iteration = iteration
+        self.user_input = user_input
+        self.model = model
+        self.started_at = time.monotonic()
+        self.thread_id: str | None = None
+        self.turn_id = ""
+        self.turn_open = False
+        self.turn_count = 0
+        self.turns_completed = 0
+        self.max_turns_exhausted = False
+        self.messages: list[TranscriptMessage] = []
+        self.text_parts: list[str] = []
+        self.open_tools: dict[str, CommandTelemetry] = {}
+        self.sequence = 0
+        self.failure: str | None = None
+        self.errors: list[str] = []
+        self.recognized = 0
+        self.unrecognized_types: set[str] = set()
+        self.finalized = False
+        self._turn_started_at: datetime | None = None
+        self._turn_text: list[str] = []
+        self._turn_thinking: list[str] = []
+        self._turn_tool_ids: list[str] = []
+        self._previous_usage = TurnAccumulator().usage
+        self._emit: Callable[[StreamEvent], None] = lambda _e: None
+
+    def bind(self, emit: Callable[[StreamEvent], None]) -> None:
+        self._emit = emit
+
+    def emit(self, event: StreamEvent) -> None:
+        self._emit(event)
+
+    @property
+    def agent_output(self) -> str:
+        return "".join(self.text_parts)
+
+    def _open_turn(self) -> None:
+        self.turn_count += 1
+        self.turn_open = True
+        self.turn_id = f"{self.thread_id or self.task_id}:turn{self.turn_count}"
+        self._turn_started_at = datetime.now()
+        self._turn_text = []
+        self._turn_thinking = []
+        self._turn_tool_ids = []
+        self.emit(
+            TurnStartEvent(
+                task_id=self.task_id,
+                thread_id=self.thread_id,
+                turn_id=self.turn_id,
+                model=self.model,
+            )
+        )
+
+    def _close_turn(self, *, status: TurnEndStatus = TurnEndStatus.COMPLETED, tokens: TokenUsage | None = None) -> None:
+        if not self.turn_open:
+            return
+        self.turn_open = False
+        started = self._turn_started_at or datetime.now()
+        completed = datetime.now()
+        blocks: list[ContentBlock] = []
+        if self._turn_text:
+            blocks.append(ContentBlock(block_type="text", sequence=0, text="".join(self._turn_text)))
+        if self._turn_thinking:
+            blocks.append(
+                ContentBlock(block_type="thinking", sequence=len(blocks), thinking="\n".join(self._turn_thinking))
+            )
+        for tool_id in self._turn_tool_ids:
+            blocks.append(ContentBlock(block_type="tool_use", sequence=len(blocks), tool_use_id=tool_id))
+        self.messages.append(
+            AssistantMessage(
+                started_at=started,
+                completed_at=completed,
+                generation_duration_ms=(completed - started).total_seconds() * 1000,
+                content_blocks=blocks,
+                tool_use_ids=list(self._turn_tool_ids),
+                input_tokens=tokens.uncached_input_tokens if tokens else 0,
+                output_tokens=tokens.output_tokens if tokens else 0,
+                cache_read_tokens=tokens.cache_read_input_tokens if tokens else 0,
+                model=self.model,
+            )
+        )
+        self.emit(
+            TurnEndEvent(
+                task_id=self.task_id,
+                thread_id=self.thread_id,
+                turn_id=self.turn_id,
+                status=status,
+                tokens=tokens,
+            )
+        )
+
+    def on_text(self, item: Item) -> None:
+        if not item.text:
+            return
+        self.text_parts.append(item.text)
+        self._turn_text.append(item.text)
+        self.emit(TextChunkEvent(task_id=self.task_id, thread_id=self.thread_id, turn_id=self.turn_id, text=item.text))
+
+    def on_thinking(self, item: Item) -> None:
+        if item.text:
+            self._turn_thinking.append(item.text)
+
+    def on_tool(self, item: Item, *, completed: bool) -> None:
+        tool_name = _TOOL_ITEM_NAMES.get(item.type, item.type)
+        tool_id = item.id or f"{tool_name.lower()}_{self.sequence + 1}"
+        self.sequence += 1
+
+        params: dict[str, Any] = {}
+        summary: str | None = None
+        if tool_name == "Bash":
+            if item.command:
+                params["command"] = item.command
+                summary = item.command
+        elif tool_name == "Write":
+            paths = [str(change.get("path")) for change in item.changes if change.get("path")]
+            if paths:
+                params["file_path"] = paths[0]
+            summary = ", ".join(paths) or None
+        elif tool_name == "Mcp":
+            params = {
+                key: value
+                for key, value in (("server", item.server), ("tool", item.tool), ("arguments", item.arguments))
+                if value is not None
+            }
+        elif tool_name == "WebSearch" and item.query:
+            params["query"] = item.query
+
+        status: Literal["success", "error", "unknown"] = "unknown"
+        if completed:
+            if item.status in {"completed", "success"} or item.exit_code == 0:
+                status = "success"
+            elif item.status in {"failed", "error"} or (item.exit_code is not None and item.exit_code != 0):
+                status = "error"
+
+        telemetry = CommandTelemetry(
+            tool_name=tool_name,
+            tool_id=tool_id,
+            timestamp=datetime.now(),
+            parameters=params,
+            result_status=status if completed else None,
+            result_summary=summary,
+        )
+        if tool_id not in self.open_tools:
+            self.emit(ToolStartEvent(task_id=self.task_id, thread_id=self.thread_id, turn_id=self.turn_id, tool=telemetry))
+            self._turn_tool_ids.append(tool_id)
+        if completed:
+            self.open_tools.pop(tool_id, None)
+            self.emit(
+                ToolEndEvent(
+                    task_id=self.task_id,
+                    thread_id=self.thread_id,
+                    turn_id=self.turn_id,
+                    tool=telemetry,
+                    status=ToolEndStatus.OK if status == "success" else ToolEndStatus.ERROR,
+                )
+            )
+        else:
+            self.open_tools[tool_id] = telemetry
+
+    def on_turn_completed(self, usage: Any) -> None:
+        self.turns_completed += 1
+        delta = _usage(token_delta(usage, self._previous_usage))
+        self._previous_usage = usage
+        self._close_turn(tokens=delta)
+
+    def close_open_tools(self) -> None:
+        for tool_id, telemetry in list(self.open_tools.items()):
+            self.open_tools.pop(tool_id, None)
+            self.emit(
+                ToolEndEvent(
+                    task_id=self.task_id,
+                    thread_id=self.thread_id,
+                    turn_id=self.turn_id,
+                    tool=telemetry,
+                    status=ToolEndStatus.UNRESOLVED,
+                )
+            )
+
+    def finalize(
+        self,
+        status: AgentEndStatus,
+        *,
+        usage: TokenUsage,
+        model_used: str | None,
+        crashed: bool = False,
+        crash_reason: str | None = None,
+    ) -> None:
+        """Close orphans, close an open turn, and emit exactly one terminal event."""
+        if self.finalized:
+            return
+        self.finalized = True
+        self.close_open_tools()
+        if self.turn_open:
+            self._close_turn(status=TurnEndStatus(status.value))  # type: ignore[arg-type]
+        self.emit(
+            AgentEndEvent(
+                task_id=self.task_id,
+                thread_id=self.thread_id,
+                status=status,
+                usage=usage,
+                iteration=self.iteration,
+                user_input=self.user_input,
+                agent_output=self.agent_output,
+                model_used=model_used,
+                assistant_turn_count=len(self.messages),
+                messages=list(self.messages),
+                num_turns=self.turn_count,
+                max_turns_exhausted=self.max_turns_exhausted,
+                result_summary=ResultSummary(
+                    is_error=crashed,
+                    subtype=status.value,
+                    stop_reason=None,
+                    result=crash_reason or self.failure or ("; ".join(self.errors[-3:]) if self.errors else None),
+                ),
+                crashed=crashed,
+                crash_reason=crash_reason,
+                duration_seconds=time.monotonic() - self.started_at,
+            )
+        )
+
+
+class CodexCLIAgent(Agent[CodexCLIAgentConfig]):
+    """Drives the installed ``codex`` executable, one process per turn."""
+
+    supports_cooperative_stop: ClassVar[bool] = True
+    #: The CLI has no system-prompt flag; the regime is genuinely unknown.
+    system_prompt_semantics: ClassVar[SystemPromptSemantics] = "unknown"
 
     def __init__(
         self,
-        config: CodexDailyDriverAgentConfig,
+        config: CodexCLIAgentConfig,
         route: ApiRoute | None = None,
         *,
-        instance_name: str = "codex-daily-driver",
-    ):
-        """Construct the built-in agent, relabelled in the logs.
+        task_id: str = "unknown",
+    ) -> None:
+        self.config = config
+        self.route = route
+        self.task_id = task_id
+        self.working_directory: str | None = None
+        self._env_path_prepend: list[str] = []
+        self._plugin_tools_dir: str | None = None
+        self._thread_id: str | None = None
+        self._skills: list[str] = []
+        self._version: str | None = None
+        self._auth_mode: str = "unknown"
+        self._login_status: str = "unreported"
+        self._catalog_checked = False
+        self._process: asyncio.subprocess.Process | None = None
+        self._spawned_pgids: list[int] = []
+        self._state = AgentState.WORKING
 
-        Args:
-            config: The `codex-daily-driver` configuration.
-            route: API routing configuration, unused by Codex and passed through
-                for interface compatibility.
-            instance_name: Short label prefixing this instance's log records.
-        """
-        super().__init__(config, route, instance_name=instance_name)
-        self.config: CodexDailyDriverAgentConfig
-        self._linked_skills: list[str] = []
-        self._retagged_turns = 0
-        self._already_tagged_turns = 0
-        self._reviewed_hook_payload: dict[str, Any] | None = None
-        self._fixture_envelope_roots: tuple[Path, Path] | None = None
-        self._fixture_envelope_identity: tuple[int, int, int, int] | None = None
-        self._fixture_git_directories: tuple[Path, ...] = ()
+    # --- probes -----------------------------------------------------------
+
+    def _run_probe(self, argv: list[str], *, timeout: float = 60.0) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            argv,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=self._build_env(),
+            check=False,
+        )
+
+    def _probe_identity(self) -> None:
+        """Record the binary, its auth mode and its catalog; fail closed on a gap."""
+        executable = self.config.executable
+        env = self._build_env()
+        if shutil.which(executable, path=env.get("PATH")) is None and not Path(executable).is_file():
+            raise AgentConfigError(
+                f"The Codex CLI {executable!r} was not found on PATH. Install the current CLI "
+                "(npm install -g @openai/codex) and authenticate the Codex subscription with `codex login`."
+            )
+        version = self._run_probe([executable, "--version"])
+        self._version = (version.stdout or version.stderr).strip() or "unreported"
+
+        login = self._run_probe([executable, "login", "status"])
+        self._login_status = (login.stdout or login.stderr).strip() or "unreported"
+        self._auth_mode = classify_auth(self._login_status)
+
+        if self.config.require_subscription_auth:
+            metered = [name for name in _METERED_AUTH_ENV if os.environ.get(name)]
+            if metered:
+                raise AgentConfigError(
+                    f"{', '.join(metered)} is set. This arm measures the Codex subscription and must not "
+                    "fall back to metered API billing; unset the variable and authenticate with `codex login`."
+                )
+            if self._auth_mode != "subscription":
+                raise AgentConfigError(
+                    f"The Codex CLI is not authenticated with a subscription ({self._login_status!r}). "
+                    "Run `codex login` on the machine that runs the arm; the CLI comparison does not "
+                    "accept an API key or an unverified login."
+                )
+
+        models_probe = self._run_probe([executable, "debug", "models"])
+        slugs: list[str] = []
+        if models_probe.returncode == 0:
+            slugs = model_slugs(models_probe.stdout or "")
+            self._catalog_checked = bool(slugs)
+        if self.config.model and slugs and self.config.model not in slugs:
+            raise AgentConfigError(
+                f"The Codex CLI catalog does not list {self.config.model!r}; available: {', '.join(slugs)}. "
+                "Fix the experiment pin rather than letting the CLI choose another model."
+            )
+
+    def _build_env(self) -> dict[str, str]:
+        env = dict(os.environ)
+        if self._env_path_prepend:
+            env["PATH"] = os.pathsep.join([*self._env_path_prepend, env.get("PATH", "")])
+        if self._plugin_tools_dir and "PLUGIN_TOOLS_DIR" not in env:
+            env["PLUGIN_TOOLS_DIR"] = self._plugin_tools_dir
+        return env
+
+    # --- lifecycle --------------------------------------------------------
 
     async def start(
         self,
@@ -118,513 +482,408 @@ class CodexDailyDriverAgent(CodexAgent):
         env_path_prepend: list[str] | None = None,
         plugin_tools_dir: str | None = None,
     ) -> None:
-        """Resolve the plugin roots, start the session, then check what it got.
+        self.working_directory = working_directory
+        self._env_path_prepend = list(env_path_prepend or [])
+        self._plugin_tools_dir = plugin_tools_dir
+        self._thread_id = None
+        self._state = AgentState.WORKING
 
-        **The roots are made absolute first**, and `plugins.py` says why at
-        length: `CodexAgent._setup_skills` symlinks each skill by the path it was
-        handed, so a relative root — which is what these experiments write, and
-        what the Claude agent never sees because `coder_eval` resolves it before
-        that agent is built — produces one broken link per skill.
-
-        **Then the count is checked, and an empty one is fatal.** The Omp arm
-        raises in the same place and for the same reason: an arm that declared
-        plugins and loaded none runs untreated and reports zeros, which reads
-        exactly like a skill that never fires. `_setup_skills` only warns, and
-        only when it had sources to link from — those broken links are still
-        `iterdir()` entries, so its own warning stays silent on exactly
-        the failure above.
-
-        The reading is done from the directory rather than from the session: the
-        Codex app-server exposes no query for the skills it discovered, so unlike
-        the Omp arm's `omp_skills_loaded` this says what was offered rather than
-        what was taken up. Requiring a readable `SKILL.md` is what makes it an
-        answer at all rather than a count of directory entries.
-        """
-        self._reviewed_hook_payload = None
-        self._fixture_envelope_roots = None
-        self._fixture_envelope_identity = None
-        self._fixture_git_directories = ()
-        if self.config.fixture_worktree_envelope:
-            self._validate_fixture_worktree_envelope(Path(working_directory), require_git=False)
-        if self.config.reviewed_hook_payload is not None:
-            self._reviewed_hook_payload = self._load_reviewed_hook_payload()
-        elif self.config.lifecycle_hooks:
-            home = os.environ.get("CODEX_HOME")
-            if not home or not (Path(home) / "hooks.json").is_file():
-                raise AgentConfigError(
-                    "codex-daily-driver: lifecycle_hooks needs an explicit, "
-                    "pre-reviewed CODEX_HOME/hooks.json for this frozen arm"
-                )
-        if self.config.plugins:
-            try:
-                self.config.plugins = resolve_local_plugins(list(self.config.plugins), base=Path.cwd())
-            except PluginPathError as failure:
-                # Typed on the way out. `coder_eval` categorises a bare
-                # `RuntimeError` as the retryable `AGENT_API_ERROR` -- three
-                # retries at 5/10/20s, the Codex client re-spawned each time,
-                # and a deterministic path failure finally reported as a network
-                # problem. `AgentConfigError` is routed by `isinstance` to the
-                # non-retryable `AGENT_CONFIG_ERROR`, which is what a mistyped
-                # plugin root actually is.
-                raise AgentConfigError(str(failure)) from failure
-        await super().start(
-            working_directory,
-            env_path_prepend=env_path_prepend,
-            plugin_tools_dir=plugin_tools_dir,
-        )
-        self._linked_skills = self._read_linked_skills()
-        if self.config.plugins and not self._linked_skills:
-            # `AgentConfigError` for the reason above: retrying a plugin root
-            # that linked nothing links nothing again, three times over.
-            raise AgentConfigError(
-                "codex-daily-driver: plugins were declared but no skill with a readable SKILL.md is under "
-                f"{SKILLS_DIR}; the arm would run untreated"
+        ignored = [field for field in _UNSUPPORTED_CONFIG_FIELDS if getattr(self.config, field, None)]
+        if ignored:
+            logger.warning(
+                "codex: %s set but NOT enforced — the CLI has no equivalent knob, so the run is "
+                "unconstrained by them; do not rely on them as a boundary.",
+                ", ".join(ignored),
             )
 
-    @staticmethod
-    def _canonical_fixture_directory(value: Any) -> Path:
-        """Reject noncanonical, missing, symlinked or non-owned fixture roots."""
-        if not isinstance(value, str):
-            raise AgentConfigError("Fixture envelope paths must be canonical absolute strings")
-        path = Path(value)
-        if not path.is_absolute() or str(path) != value or path.resolve(strict=True) != path:
-            raise AgentConfigError("Fixture envelope paths must be canonical and must not contain symlinks")
-        details = path.stat()
-        if not stat.S_ISDIR(details.st_mode) or details.st_uid != os.getuid():
-            raise AgentConfigError("Fixture envelope roots must be current-user owned directories")
-        return path
-
-    def _validate_fixture_worktree_envelope(self, working_directory: Path, *, require_git: bool) -> None:
-        """Bind a private runner envelope to this task before granting native writes."""
-        if not self.config.offline_fixture or self.config.allowed_tools is None:
-            raise AgentConfigError("fixture_worktree_envelope requires offline_fixture and explicit allowed_tools")
-        allowed = set(self.config.allowed_tools) - set(self.config.disallowed_tools or [])
-        if not allowed & {"Bash", "Write", "Edit"}:
-            raise AgentConfigError("fixture_worktree_envelope requires write-capable allowed_tools")
+        self._probe_identity()
         try:
-            task = self._canonical_fixture_directory(str(working_directory))
-            artifacts = self._canonical_fixture_directory(str(task.parent))
-            if artifacts.name != "artifacts" or stat.S_IMODE(artifacts.stat().st_mode) != 0o700:
-                raise AgentConfigError("Fixture artifacts envelope must be named artifacts and have mode0700")
-            marker = artifacts.parent / "fixture-envelope.json"
-            details = marker.lstat()
-            if (
-                not stat.S_ISREG(details.st_mode)
-                or details.st_uid != os.getuid()
-                or stat.S_IMODE(details.st_mode) != 0o600
-            ):
-                raise AgentConfigError("Fixture envelope marker must be an owned regular mode0600 file")
-            payload = json.loads(marker.read_text(encoding="utf-8"))
-            if not isinstance(payload, dict) or set(payload) != {"task_root", "artifacts_root"}:
-                raise AgentConfigError("Fixture envelope marker must contain exactly task_root and artifacts_root")
-            roots = (
-                self._canonical_fixture_directory(payload["task_root"]),
-                self._canonical_fixture_directory(payload["artifacts_root"]),
+            self._skills = link_skills(
+                self.config.plugins or [],
+                base=Path.cwd(),
+                workspace=Path(working_directory),
             )
-            if roots != (task, artifacts):
-                raise AgentConfigError("Fixture envelope marker does not match the actual task directory")
-            task_stat, artifacts_stat = task.stat(), artifacts.stat()
-            identity = (task_stat.st_dev, task_stat.st_ino, artifacts_stat.st_dev, artifacts_stat.st_ino)
-            if self._fixture_envelope_roots is None:
-                if set(artifacts.iterdir()) != {task}:
-                    raise AgentConfigError("Fresh fixture envelope must contain only its declared task directory")
-                self._fixture_envelope_roots = roots
-                self._fixture_envelope_identity = identity
-            elif roots != self._fixture_envelope_roots or identity != self._fixture_envelope_identity:
-                raise AgentConfigError("Fixture envelope roots changed after agent start")
-            if require_git:
-                result = subprocess.run(
-                    ["git", "-C", str(task), "rev-parse", "--path-format=absolute",
-                     "--git-common-dir", "--absolute-git-dir", "--show-toplevel"],
-                    check=True, capture_output=True, text=True, timeout=5,
-                )
-                paths = result.stdout.splitlines()
-                if len(paths) != 3 or paths[2] != str(task):
-                    raise AgentConfigError("Fixture Git metadata does not describe the declared task root")
-                directories = tuple(self._canonical_fixture_directory(value) for value in paths[:2])
-                if any(not directory.is_relative_to(artifacts) or directory == artifacts for directory in directories):
-                    raise AgentConfigError("Fixture Git metadata must remain inside its owned artifacts envelope")
-                self._fixture_git_directories = directories
-        except AgentConfigError:
-            raise
-        except (OSError, UnicodeError, ValueError, subprocess.SubprocessError) as failure:
-            raise AgentConfigError("Unable to validate fixture worktree envelope and Git metadata") from failure
+        except SkillLinkError as exc:
+            raise AgentConfigError(str(exc)) from exc
 
-    def _load_reviewed_hook_payload(self) -> dict[str, Any]:
-        """Reject settings outside the reviewed hook and native-isolation contract."""
-        if not self.config.lifecycle_hooks or not self.config.offline_fixture:
-            raise AgentConfigError("reviewed_hook_payload requires lifecycle_hooks and offline_fixture")
-        if self.config.allowed_tools is None:
-            raise AgentConfigError("reviewed_hook_payload requires an explicit allowed_tools list")
-        try:
-            payload = json.loads(Path(self.config.reviewed_hook_payload or "").read_text(encoding="utf-8"))
-        except (OSError, UnicodeError, ValueError) as failure:
-            raise AgentConfigError("Unable to read reviewed_hook_payload JSON") from failure
-        if not isinstance(payload, dict) or set(payload) != {"hooks", "mcp_servers", "features"}:
-            raise AgentConfigError("reviewed_hook_payload must contain exactly hooks, mcp_servers, and features")
-        features = payload["features"]
-        if (
-            not isinstance(features, dict)
-            or set(features) != {"plugins", "plugin_hooks", "apps"}
-            or any(value is not False for value in features.values())
-        ):
-            raise AgentConfigError("reviewed_hook_payload may only disable plugins, plugin_hooks, and apps")
-        servers = payload["mcp_servers"]
-        if not isinstance(servers, dict) or any(
-            not isinstance(name, str) or not name
-            or not isinstance(server, dict) or set(server) != {"enabled"}
-            or server["enabled"] is not False
-            for name, server in servers.items()
-        ):
-            raise AgentConfigError("reviewed_hook_payload MCP entries must contain only enabled=false")
-        from openai_codex.generated.v2_all import HookEventName
+    async def stop(self) -> None:
+        await self.kill()
+        self._mark_stopped()
 
-        hooks = payload["hooks"]
-        events = {event.value[0].upper() + event.value[1:] for event in HookEventName}
-        if (
-            not isinstance(hooks, dict) or not set(hooks) <= events | {"state"}
-            or not hooks.get("SessionStart") or not hooks.get("SubagentStart")
-            or not isinstance(hooks.get("state"), dict)
-        ):
-            raise AgentConfigError("reviewed_hook_payload requires native startup hooks and explicit hook state")
-        count = 0
-        for event, groups in hooks.items():
-            if event == "state":
-                continue
-            if not isinstance(groups, list):
-                raise AgentConfigError("reviewed_hook_payload hook events must contain matcher groups")
-            for group in groups:
-                if (
-                    not isinstance(group, dict) or not set(group) <= {"matcher", "hooks"}
-                    or ("matcher" in group and not isinstance(group["matcher"], str))
-                    or not isinstance(group.get("hooks"), list) or not group["hooks"]
-                ):
-                    raise AgentConfigError("reviewed_hook_payload contains an invalid hook matcher group")
-                for handler in group["hooks"]:
-                    if (
-                        not isinstance(handler, dict)
-                        or not set(handler) <= {"type", "command", "timeout", "statusMessage", "additionalContextLimit"}
-                        or handler.get("type") != "command"
-                        or not isinstance(handler.get("command"), str) or not handler["command"].strip()
-                        or ("statusMessage" in handler and not isinstance(handler["statusMessage"], str))
-                        or any(
-                            key in handler and (type(handler[key]) is not int or handler[key] < 0)
-                            for key in ("timeout", "additionalContextLimit")
-                        )
-                    ):
-                        raise AgentConfigError("reviewed_hook_payload supports only reviewed native command hooks")
-                    count += 1
-        enabled = 0
-        for key, state in hooks["state"].items():
-            if not isinstance(key, str) or not isinstance(state, dict):
-                raise AgentConfigError("reviewed_hook_payload contains invalid hook state")
-            if set(state) == {"enabled"} and state["enabled"] is False:
-                continue
-            digest = state.get("trusted_hash")
-            if (
-                set(state) != {"enabled", "trusted_hash"} or state.get("enabled") is not True
-                or not key.startswith("/<session-flags>/config.toml:")
-                or not isinstance(digest, str) or not digest.startswith("sha256:")
-                or len(digest) != 71 or any(char not in "0123456789abcdef" for char in digest[7:])
-            ):
-                raise AgentConfigError("reviewed_hook_payload may trust only reviewed session-flag hooks")
-            enabled += 1
-        if enabled != count:
-            raise AgentConfigError("reviewed_hook_payload must explicitly trust every selected hook")
-        return payload
+    async def kill(self) -> None:
+        proc = self._process
+        if proc is not None and proc.returncode is None:
+            with contextlib.suppress(ProcessLookupError):
+                proc.terminate()
+            with contextlib.suppress(TimeoutError, asyncio.TimeoutError):
+                await asyncio.wait_for(proc.wait(), timeout=_TERM_GRACE_SECONDS)
+            if proc.returncode is None:
+                with contextlib.suppress(ProcessLookupError):
+                    proc.kill()
+        self._sweep_process_groups()
 
-    @staticmethod
-    def _native_inline(value: Any) -> str:
-        """Encode the validated payload for metadata-only native config inspection."""
-        if isinstance(value, dict):
-            return "{" + ",".join(
-                json.dumps(key, ensure_ascii=False) + "=" + CodexDailyDriverAgent._native_inline(item)
-                for key, item in value.items()
-            ) + "}"
-        if isinstance(value, list):
-            return "[" + ",".join(CodexDailyDriverAgent._native_inline(item) for item in value) + "]"
-        return json.dumps(value, ensure_ascii=False)
+    def kill_sync(self) -> None:
+        proc = self._process
+        if proc is not None and proc.returncode is None:
+            with contextlib.suppress(ProcessLookupError, PermissionError):
+                os.kill(proc.pid, _SIGKILL)
+        self._sweep_process_groups()
 
-    def _fixture_project_trust(self) -> dict[str, dict[str, str]]:
-        """Keep native write-capable fixture auto-trust out of shared configuration."""
-        if not self.config.offline_fixture:
-            return {}
-        allowed = set(self.config.allowed_tools or []) - set(self.config.disallowed_tools or [])
-        if not allowed & {"Bash", "Write", "Edit"}:
-            return {}
-        if self.working_directory is None:
-            raise AgentConfigError("Fixture project trust requires a started agent")
-        try:
-            task = self._canonical_fixture_directory(str(self.working_directory))
-        except (OSError, ValueError) as failure:
-            raise AgentConfigError("Fixture project trust requires an owned canonical task directory") from failure
-        # thread/start otherwise persists workspace-write project trust in
-        # CODEX_HOME/config.toml. This exact-path override is per thread only.
-        return {str(task): {"trust_level": "trusted"}}
-
-    def _validate_native_fixture_isolation(self) -> None:
-        """Reject inherited additions to reviewed hooks or the fixed fixture profile."""
-        from openai_codex.client import CodexClient, CodexConfig
-        from openai_codex.generated.v2_all import ConfigReadResponse, HooksListResponse
-
-        payload = self._reviewed_hook_payload
-        if self.working_directory is None:
-            raise AgentConfigError("Native fixture inspection requires a started agent")
-        overrides = dict(payload or {})
-        permissions = None
-        projects = self._fixture_project_trust()
-        if projects:
-            overrides["projects"] = projects
-        if self.config.fixture_worktree_envelope:
-            native = self._build_thread_options()["config"]
-            permissions = native["permissions"]["owned-fixture"]
-            overrides.update(default_permissions="owned-fixture", permissions=native["permissions"])
-        # Metadata and execution use only validated hook values and this
-        # internally generated profile. There is no caller-supplied config API.
-        client = CodexClient(CodexConfig(
-            env=self._build_codex_env(), cwd=str(self.working_directory),
-            config_overrides=tuple(
-                key + "=" + self._native_inline(value) for key, value in overrides.items()
-            ),
-        ))
-        try:
-            client.start()
-            client.initialize()
-            if payload is not None:
-                expected = {
-                    key: state["trusted_hash"] for key, state in payload["hooks"]["state"].items()
-                    if state["enabled"]
-                }
-                response = client.request(
-                    "hooks/list", {"cwds": [str(self.working_directory)]}, response_model=HooksListResponse
-                )
-                found = set()
-                for row in response.data:
-                    if row.errors:
-                        raise AgentConfigError("reviewed_hook_payload failed native hook validation")
-                    for wrapped in row.hooks:
-                        hook = wrapped.root
-                        if hook.is_managed:
-                            raise AgentConfigError("reviewed_hook_payload cannot isolate unexpected managed hooks")
-                        if not hook.enabled:
-                            continue
-                        if (
-                            hook.key not in expected or hook.source.value != "sessionFlags"
-                            or hook.trust_status.value != "trusted" or hook.current_hash != expected[hook.key]
-                        ):
-                            raise AgentConfigError("reviewed_hook_payload leaves unreviewed or untrusted hooks enabled")
-                        found.add(hook.key)
-                if found != set(expected):
-                    raise AgentConfigError("reviewed_hook_payload did not load every reviewed hook")
-            config = client.request(
-                "config/read", {"cwd": str(self.working_directory), "includeLayers": False},
-                response_model=ConfigReadResponse,
-            ).config.model_dump(mode="json", by_alias=True)
-
-            def populated(value: Any) -> Any:
-                # Native config/read serializes unset profile fields as null.
-                if isinstance(value, dict):
-                    return {key: populated(item) for key, item in value.items() if item is not None}
-                return value
-
-            if permissions is not None and (
-                config.get("default_permissions") != "owned-fixture"
-                or populated((config.get("permissions") or {}).get("owned-fixture")) != permissions
-            ):
-                raise AgentConfigError("Native fixture profile contains inherited or altered permissions")
-            if any(
-                (config.get("projects") or {}).get(path, {}).get("trust_level") != state["trust_level"]
-                for path, state in projects.items()
-            ):
-                raise AgentConfigError("Native fixture task trust was not applied without persistence")
-            # Inspect names and enable flags only. Never retain or log host
-            # server settings, environment values, or authentication.
-            if payload is not None:
-                if any(server.get("enabled", True) for server in (config.get("mcp_servers") or {}).values()):
-                    raise AgentConfigError("reviewed_hook_payload leaves inherited MCP servers enabled")
-                if any((config.get("features") or {}).get(name) is not False for name in payload["features"]):
-                    raise AgentConfigError("reviewed_hook_payload did not disable unrelated native features")
-        except AgentConfigError:
-            raise
-        except Exception as failure:
-            raise AgentConfigError("Unable to inspect native fixture hook/config metadata") from failure
-        finally:
-            client.close()
-
-    def _build_thread_options(self) -> dict[str, Any]:
-        """Activate trusted hooks and native confinement only for opted-in fixtures."""
-        from openai_codex import Sandbox
-        from openai_codex.generated.v2_all import ThreadStartSource
-
-        options = super()._build_thread_options()
-        if self.config.lifecycle_hooks:
-            options["session_start_source"] = ThreadStartSource.startup
-        if self.config.offline_fixture:
-            if self.config.allowed_tools is None:
-                raise AgentConfigError("offline_fixture requires an explicit allowed_tools list")
-            allowed = set(self.config.allowed_tools) - set(self.config.disallowed_tools or [])
-            shell = bool(allowed & {"Read", "Grep", "Glob", "Skill", "Bash", "Write", "Edit"})
-            write = bool(allowed & {"Bash", "Write", "Edit"})
-            options["sandbox"] = Sandbox.workspace_write if write else Sandbox.read_only
-            native = dict(options.get("config") or {})
-            native.pop("enabled_tools", None)
-            native.pop("disabled_tools", None)
-            native["web_search"] = "disabled"
-            native["sandbox_workspace_write"] = {
-                "writable_roots": [],
-                "network_access": False,
-                "exclude_tmpdir_env_var": True,
-                "exclude_slash_tmp": True,
-            }
-            native["features"] = {
-                **native.get("features", {}),
-                "shell_tool": shell,
-                "multi_agent": bool(allowed & {"Agent", "Task"}),
-                **dict.fromkeys(
-                    ("goals", "view_image", "apps", "computer_use", "browser_use",
-                     "image_generation", "skill_search", "sleep_tool"), False
-                ),
-            }
-            projects = self._fixture_project_trust()
-            if projects:
-                native["projects"] = projects
-            options["config"] = native
-        if self.config.fixture_worktree_envelope:
-            if self._fixture_envelope_roots is None or not self._fixture_git_directories:
-                raise AgentConfigError("Fixture envelope needs validated task Git metadata before native execution")
-            options.pop("sandbox", None)
-            native = options["config"]
-            native.pop("sandbox_workspace_write", None)
-            native["default_permissions"] = "owned-fixture"
-            native["permissions"] = {
-                "owned-fixture": {
-                    "extends": ":workspace",
-                    "filesystem": {
-                        str(self._fixture_envelope_roots[1]): "write",
-                        **{str(directory): "write" for directory in self._fixture_git_directories},
-                        ":tmpdir": "read",
-                        ":slash_tmp": "read",
-                    },
-                    "network": {"enabled": False},
-                }
-            }
-        if self._reviewed_hook_payload is not None:
-            payload = self._reviewed_hook_payload
-            native = options["config"]
-            native["hooks"] = payload["hooks"]
-            native["mcp_servers"] = payload["mcp_servers"]
-            native["features"].update(payload["features"])
-        return options
-
-    def _log_config_enforcement(self) -> None:
-        """Avoid the inherited full-access claim when native fixture confinement applies."""
-        if self.config.offline_fixture:
-            policy = "owned worktree envelope" if self.config.fixture_worktree_envelope else "read-only/workspace-write"
-            self._log.info(
-                "Offline fixture: native %s sandbox; network and non-fixture tools disabled. "
-                "Read/Skill share the native shell capability.", policy,
-            )
-        else:
-            super()._log_config_enforcement()
-
-    async def _run_turn_with_streaming(
-        self, state: Any, should_stop: Callable[[], bool] | None = None
-    ) -> tuple[Any, Any, str]:
-        """Route a failed native turn through the inherited partial-record error path."""
-        result = await super()._run_turn_with_streaming(state, should_stop)
-        turn = result[0]
-        status = getattr(turn, "status", None)
-        if getattr(status, "value", status) == "failed":
-            error = getattr(turn, "error", None)
-            raise RuntimeError(getattr(error, "message", None) or "Codex returned a failed turn")
-        return result
-
-    async def communicate(self, user_input: str, **kwargs: Any) -> TurnRecord:
-        """Run one turn, and hand back its transcript with the judge's anchor in it.
-
-        Both exits are covered. A clean turn returns its `TurnRecord` here; a
-        crashed or timed-out one raises after leaving a partial record in
-        `pending_turn`, which the orchestrator reads and reports. A judged row
-        that crashed should score 0.0 on the reply rather than on the anchor
-        being absent, so the partial is tagged `ERROR` rather than left bare.
-        A turn stopped at its visible-tool limit carries an ERROR anchor even
-        when deterministic criteria passed on its partial output.
-
-        `**kwargs` rather than the base signature's keyword arguments: this
-        override adds nothing to the call and forwards it whole, so a new
-        keyword on `Agent.communicate` reaches the built-in without a change
-        here.
-        """
-        if self.config.fixture_worktree_envelope:
-            await self._run_async(
-                self._validate_fixture_worktree_envelope, Path(self.working_directory or ""), require_git=True
-            )
-        if self._reviewed_hook_payload is not None or self._fixture_project_trust():
-            await self._run_async(self._validate_native_fixture_isolation)
-        try:
-            record = await super().communicate(user_input, **kwargs)
-        except BaseException:
-            if self.pending_turn is not None:
-                self.pending_turn = self._retagged(self.pending_turn, is_error=True)
-            raise
-        return self._retagged(record, is_error=record.max_turns_exhausted)
+    def _sweep_process_groups(self) -> None:
+        if os.name != "posix":
+            return
+        for pgid in self._spawned_pgids:
+            with contextlib.suppress(ProcessLookupError, PermissionError, OSError):
+                os.killpg(pgid, _SIGKILL)
+        self._spawned_pgids.clear()
 
     def get_environment_info(self) -> dict[str, Any]:
-        """The built-in's routing record, plus what this arm loaded.
-
-        `codex_skills_linked` is the audit trail a run needs to tell a red arm
-        from an arm whose plugin never arrived — `0013`'s reason for the Omp
-        arm's equivalent fields. It is populated in `start()`, which is what
-        makes it recordable here.
-
-        **The retag counters are deliberately NOT here.** `coder_eval` merges
-        this dict into the result once, during setup, immediately after `start()`
-        and before any turn runs (`orchestrator.py`, `_record_route_environment_info`
-        at both of its call sites). A counter incremented in `communicate()` is
-        therefore always read as zero, so recording one would be a field that
-        says nothing while looking like a measurement. The drift it was meant to
-        alarm on is logged instead, in `_retagged`, where it happens.
-        """
-        return {
-            **super().get_environment_info(),
-            "codex_skills_linked": list(self._linked_skills),
-            "codex_lifecycle_hooks_requested": self.config.lifecycle_hooks,
-            "codex_offline_fixture": self.config.offline_fixture,
+        info: dict[str, Any] = {
+            "codex_cli_version": self._version or "unreported",
+            "codex_auth_mode": self._auth_mode,
+            "codex_login_status": self._login_status,
+            "codex_model_requested": self.config.model,
+            "codex_effort_requested": self.config.effort,
+            "codex_model_catalog_checked": self._catalog_checked,
+            "codex_skills_linked": list(self._skills),
+            # Subscription allowance is not cash; the recorder keeps the two apart.
+            "codex_billing_source": "subscription" if self._auth_mode == "subscription" else "unreported",
         }
+        if self._thread_id:
+            info["codex_session_id"] = self._thread_id
+        return info
 
-    # --- internals ---------------------------------------------------------
+    # --- command construction --------------------------------------------
 
-    def _retagged(self, record: TurnRecord, *, is_error: bool) -> TurnRecord:
-        """A copy of `record` whose `agent_output` carries the result anchor.
+    def _sandbox_mode(self) -> str:
+        return "read-only" if self.config.permission_mode is PermissionMode.PLAN else "workspace-write"
 
-        A turn that arrives ALREADY tagged warns, once per session. Under the
-        pinned `CODER_EVAL_VERSION` it never happens; if it starts happening the
-        built-in has begun rendering the transcript itself and this package has
-        become a no-op worth deleting. The warning goes to the run log rather
-        than to `environment_info`, because that dict is captured before any
-        turn has run — see `get_environment_info`.
-        """
-        if is_already_tagged(record.agent_output):
-            self._already_tagged_turns += 1
-            if self._already_tagged_turns == 1:
-                self._log.warning(
-                    "codex-daily-driver: a turn arrived already carrying the [RESULT - …] anchor. "
-                    "The built-in agent has started rendering the transcript itself, so this package's "
-                    "retag is now a no-op worth deleting — check it against the pinned CODER_EVAL_VERSION."
-                )
-            return record
-        self._retagged_turns += 1
-        return record.model_copy(
-            update={"agent_output": render_agent_output(record.agent_output, is_error=is_error)}
+    def _shared_args(self) -> list[str]:
+        argv = [
+            self.config.executable,
+            "exec",
+            "--json",
+            "--skip-git-repo-check",
+            "-c",
+            'approval_policy="never"',
+            "-c",
+            f'sandbox_mode="{self._sandbox_mode()}"',
+        ]
+        if self.config.model:
+            argv += ["-m", self.config.model]
+        if self.config.effort:
+            argv += ["-c", f'model_reasoning_effort="{self.config.effort}"']
+        return argv
+
+    def _build_argv(self) -> list[str]:
+        argv = self._shared_args()
+        if self._thread_id:
+            # Resume keeps the session's working directory and history; the
+            # prompt arrives on stdin, so no argument can be mistaken for a flag.
+            argv += ["resume", self._thread_id, "-"]
+        else:
+            argv += ["-C", self.working_directory or ".", "-"]
+        return argv
+
+    # --- the turn ---------------------------------------------------------
+
+    async def communicate(
+        self,
+        user_input: str,
+        *,
+        stream_callback: StreamCallback | None = None,
+        timeout: float | None = None,
+        max_turns: int | None = None,
+        should_stop: Callable[[], bool] | None = None,
+    ) -> TurnRecord:
+        if self.working_directory is None:
+            raise RuntimeError("CodexCLIAgent.start() must be called before communicate()")
+
+        self._begin_turn()
+        collector = EventCollector()
+
+        def emit(event: StreamEvent) -> None:
+            collector.on_event(event)
+            if stream_callback is not None:
+                safe_emit(stream_callback, event)
+
+        state = _CodexTurnState(
+            task_id=self.task_id,
+            iteration=self._iteration,
+            user_input=user_input,
+            model=self.config.model,
+        )
+        state.bind(emit)
+        emit(
+            AgentStartEvent(
+                task_id=self.task_id,
+                prompt=user_input,
+                iteration=self._iteration,
+                model=self.config.model,
+            )
         )
 
-    def _read_linked_skills(self) -> list[str]:
-        """The skill names under the working directory's `.agents/skills/`."""
-        if self.working_directory is None:
-            return []
-        skills_dir = self.working_directory / SKILLS_DIR
+        accumulator = TurnAccumulator()
+        deadline = None if timeout is None else time.monotonic() + timeout
+        stopped_early = False
+        stderr_drain: asyncio.Future[bytes] | None = None
+        proc: asyncio.subprocess.Process | None = None
         try:
-            return sorted(entry.name for entry in skills_dir.iterdir() if (entry / "SKILL.md").exists())
-        except OSError:
-            # No directory is the bare variant, and is reported by the caller.
-            return []
+            proc = await asyncio.create_subprocess_exec(
+                *self._build_argv(),
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=self.working_directory,
+                env=self._build_env(),
+                limit=STDOUT_LINE_LIMIT_BYTES,
+                start_new_session=os.name == "posix",
+            )
+            self._process = proc
+            if os.name == "posix":
+                self._spawned_pgids.append(proc.pid)
+            assert proc.stdin is not None
+            assert proc.stdout is not None
+
+            proc.stdin.write(user_input.encode())
+            await proc.stdin.drain()
+            proc.stdin.close()
+            with contextlib.suppress(BrokenPipeError, ConnectionResetError):
+                await proc.stdin.wait_closed()
+
+            if proc.stderr is not None:
+                stderr_drain = asyncio.ensure_future(proc.stderr.read())
+
+            exit_waiter = asyncio.ensure_future(proc.wait())
+            read_task: asyncio.Future[bytes] | None = None
+            try:
+                while True:
+                    remaining = None if deadline is None else deadline - time.monotonic()
+                    if remaining is not None and remaining <= 0:
+                        await self._timeout_turn(state, collector, accumulator, timeout or 0.0)
+
+                    if read_task is None:
+                        read_task = asyncio.ensure_future(proc.stdout.readline())
+                    done, _pending = await asyncio.wait(
+                        {read_task, exit_waiter},
+                        timeout=remaining,
+                        return_when=asyncio.FIRST_COMPLETED,
+                    )
+                    if not done:
+                        await self._timeout_turn(state, collector, accumulator, timeout or 0.0)
+                    if not read_task.done():
+                        try:
+                            await asyncio.wait_for(asyncio.shield(read_task), _DRAIN_SECONDS)
+                        except TimeoutError:
+                            break
+                    line = read_task.result()
+                    read_task = None
+                    if not line:
+                        break
+
+                    for reduced in accumulator.feed_line(line.decode("utf-8", "replace")):
+                        self._handle(reduced, state, accumulator)
+                    if state.failure is not None:
+                        await self.kill()
+                        break
+                    if max_turns is not None and state.turn_count > max_turns:
+                        state.max_turns_exhausted = True
+                        await self.kill()
+                        break
+                    if should_stop is not None and should_stop():
+                        stopped_early = True
+                        await self.kill()
+                        break
+            finally:
+                if read_task is not None:
+                    read_task.cancel()
+                exit_waiter.cancel()
+
+            status = await self._settle_turn(
+                proc,
+                state,
+                collector,
+                accumulator,
+                stderr_drain,
+                stopped_early=stopped_early,
+                deadline=deadline,
+                timeout=timeout,
+            )
+            usage = _usage(token_counts(accumulator.usage))
+            state.finalize(
+                status,
+                usage=usage,
+                model_used=accumulator.model_reported,
+            )
+            record = collector.build_turn_record()
+            # The judge anchors on the [RESULT - …] transcript; the CLI emits a
+            # bare agent message. Without this every judged row scores 0.0.
+            if record.agent_output and not is_already_tagged(record.agent_output):
+                record = record.model_copy(update={"agent_output": render_agent_output(record.agent_output)})
+            self._end_turn_ok()
+            return record
+
+        except (AgentCrashError, TurnTimeoutError):
+            raise
+        except asyncio.CancelledError:
+            state.finalize(
+                AgentEndStatus.CRASHED,
+                usage=_usage(token_counts(accumulator.usage)),
+                model_used=accumulator.model_reported,
+                crashed=True,
+                crash_reason="turn cancelled",
+            )
+            self._capture_partial_turn(collector)
+            raise
+        except Exception as exc:
+            self._crash_turn(state, collector, accumulator, f"Codex CLI turn failed: {exc!s}", cause=exc)
+            raise
+        finally:
+            if stderr_drain is not None:
+                stderr_drain.cancel()
+            if proc is not None and proc.returncode is None:
+                with contextlib.suppress(ProcessLookupError, PermissionError):
+                    proc.kill()
+                self._sweep_process_groups()
+            self._process = None
+
+    def _handle(self, event: Event, state: _CodexTurnState, accumulator: TurnAccumulator) -> None:
+        if event.kind == "thread_started":
+            state.thread_id = event.value
+            self._thread_id = event.value
+        elif event.kind == "turn_started":
+            state._open_turn()
+        elif event.kind == "item_started":
+            item = event.value
+            if isinstance(item, Item) and item.type in _TOOL_ITEM_NAMES:
+                state.on_tool(item, completed=False)
+        elif event.kind == "item_completed":
+            item = event.value
+            if not isinstance(item, Item):
+                return
+            if item.type == "agent_message":
+                state.on_text(item)
+            elif item.type == "reasoning":
+                state.on_thinking(item)
+            elif item.type in _TOOL_ITEM_NAMES:
+                state.on_tool(item, completed=True)
+            elif item.type == "error":
+                state.errors.append(item.text or "item error")
+            else:
+                if len(state.unrecognized_types) < 8:
+                    state.unrecognized_types.add(item.type)
+        elif event.kind == "turn_completed":
+            state.on_turn_completed(accumulator.usage)
+        elif event.kind == "turn_failed":
+            state.failure = str(event.value)
+
+        state.recognized = accumulator.recognized
+        state.errors = accumulator.errors
+        state.unrecognized_types = set(accumulator.unrecognized_types)
+
+    async def _settle_turn(
+        self,
+        proc: asyncio.subprocess.Process,
+        state: _CodexTurnState,
+        collector: EventCollector,
+        accumulator: TurnAccumulator,
+        stderr_drain: asyncio.Future[bytes] | None,
+        *,
+        stopped_early: bool,
+        deadline: float | None,
+        timeout: float | None,
+    ) -> AgentEndStatus:
+        remaining = None if deadline is None else max(0.0, deadline - time.monotonic())
+        try:
+            await asyncio.wait_for(proc.wait(), timeout=_TERM_GRACE_SECONDS if remaining is None else remaining)
+        except TimeoutError:
+            if remaining is not None:
+                await self._timeout_turn(state, collector, accumulator, timeout or 0.0)
+            await self.kill()
+            self._crash_turn(
+                state,
+                collector,
+                accumulator,
+                f"Codex CLI closed its event stream but did not exit within {_TERM_GRACE_SECONDS:.0f}s",
+            )
+
+        stderr_bytes = b""
+        if stderr_drain is not None:
+            with contextlib.suppress(TimeoutError):
+                stderr_bytes = await asyncio.wait_for(asyncio.shield(stderr_drain), timeout=_DRAIN_SECONDS)
+
+        if state.failure is not None:
+            self._crash_turn(state, collector, accumulator, f"Codex CLI turn failed: {state.failure}")
+        if proc.returncode not in (0, None) and not stopped_early and not state.max_turns_exhausted:
+            detail = stderr_bytes.decode("utf-8", "replace").strip() or f"exit code {proc.returncode}"
+            self._crash_turn(state, collector, accumulator, f"Codex CLI exited non-zero: {detail}")
+
+        if stopped_early:
+            return AgentEndStatus.STOPPED_EARLY
+        if state.max_turns_exhausted:
+            return AgentEndStatus.MAX_TURNS_EXHAUSTED
+
+        if accumulator.turns_completed == 0:
+            detail = "; ".join(accumulator.errors[-3:]) or "no turn.completed event"
+            self._crash_turn(state, collector, accumulator, f"Codex CLI produced no completed turn ({detail})")
+
+        usage = _usage(token_counts(accumulator.usage))
+        if (
+            self.config.require_token_telemetry
+            and usage.uncached_input_tokens == 0
+            and usage.cache_read_input_tokens == 0
+            and usage.output_tokens == 0
+        ):
+            self._crash_turn(
+                state,
+                collector,
+                accumulator,
+                "Codex CLI completed a turn with no token counts. The event or usage schema may have "
+                "changed; see evals/coder-eval-codex/events.py before trusting this CLI version.",
+            )
+        return AgentEndStatus.COMPLETED
+
+    def _crash_turn(
+        self,
+        state: _CodexTurnState,
+        collector: EventCollector | None,
+        accumulator: TurnAccumulator,
+        message: str,
+        *,
+        cause: BaseException | None = None,
+    ) -> NoReturn:
+        state.failure = state.failure or message
+        self._state = AgentState.ERROR
+        with contextlib.suppress(Exception):
+            state.finalize(
+                AgentEndStatus.CRASHED,
+                usage=_usage(token_counts(accumulator.usage)),
+                model_used=accumulator.model_reported,
+                crashed=True,
+                crash_reason=message,
+            )
+        if collector is not None:
+            self._capture_partial_turn(collector)
+        if cause is not None:
+            raise AgentCrashError(message) from cause
+        raise AgentCrashError(message)
+
+    async def _timeout_turn(
+        self,
+        state: _CodexTurnState,
+        collector: EventCollector | None,
+        accumulator: TurnAccumulator,
+        timeout: float,
+    ) -> NoReturn:
+        await self.kill()
+        self._state = AgentState.ERROR
+        state.finalize(
+            AgentEndStatus.TIMEOUT,
+            usage=_usage(token_counts(accumulator.usage)),
+            model_used=accumulator.model_reported,
+            crashed=True,
+            crash_reason=f"turn exceeded {timeout:.0f}s",
+        )
+        if collector is not None:
+            self._capture_partial_turn(collector)
+        raise TurnTimeoutError(timeout, iteration=self._iteration)

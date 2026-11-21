@@ -10,12 +10,15 @@ the `claude` binary, so there is no version to hold back.
 ```
 evals/
 ├── experiments/
-│   ├── with-without.yaml           the ablation every Claude case is measured under
-│   ├── with-without-haiku-5.5.yaml the same ablation, pinned to Claude Haiku 5.5
+│   ├── cohort-695.yaml             the frozen cohort: cases, exclusions, settings and commands
+│   ├── with-without.yaml           the Sonnet 5.5 skill/workflow ablation
+│   ├── with-without-haiku-5.5.yaml the same ablation at Haiku 5.5 medium effort
+│   ├── with-without-opus-5.5.yaml  the same ablation at Opus 5.5 low effort
+│   ├── omp-*.yaml                  one paired ablation per Omp model/provider pair
+│   ├── codex.yaml                  the Codex CLI comparison — see "The Codex arm"
+│   ├── classes-*.yaml              three-repeat model-class runs, one model/effort tuple each
 │   ├── base-vs-candidate.yaml      the plugin at `master` against this checkout, constitution in both arms
-│   ├── omp-*.yaml                  Omp model experiments; paired ablations or focused acceptance runs
-│   ├── codex.yaml                  the same suites, on Codex — see "The Codex arm"
-│   └── classes-*.yaml              model-classes experiments with their own model pins
+│   └── omp-reviewer-*.yaml         the opt-in reviewer-quality cohort, outside #695
 ├── tasks/
 │   ├── fix-daily-driver-bugs/  offline GitHub-fixture triage and dispatch cases
 │   ├── pr/              does `pr` fire when a PR is opened, and only then?
@@ -52,7 +55,7 @@ evals/
 │       └── candidates.json     every qualifying PR the builder saw, selected or not
 ├── judges/              selectable judges of the semantic criteria, and their calibration
 ├── coder-eval-omp/      the `omp` agent kind, so the same cases run on Omp
-└── coder-eval-codex/    `coder_eval`'s Codex agent, with the judge's anchor put back
+└── coder-eval-codex/    the Codex CLI driver, with the judge's anchor put back
 ```
 
 `tasks/issue/` covers the six kind-specific body contracts and their
@@ -879,6 +882,45 @@ with token buckets and records with subscription billing.
 
 ## Running them
 
+### The frozen cohort
+
+`experiments/cohort-695.yaml` is the protocol for the current-model rerun, not a
+description of it. It enumerates all 292 cases with the arm each one runs on,
+the reason for every exclusion, and the 40 experiments with their model, effort,
+repeats, variants and exact command. `baseline.inputs_sha256` pins the
+experiment, task, fixture and judge revisions the protocol was frozen against.
+Do not edit it to fit a run; a changed cohort is a new deliberate manifest.
+
+The cohorts it defines:
+
+- **Skill/workflow ablation** — 16 Omp experiments and three Claude experiments,
+  `repeats: 5`, `bare` against `with-plugin`, over every applicable case.
+- **Model classes** — 21 three-repeat experiments: five Claude effort tuples
+  (Haiku low/medium, Sonnet low/high, Opus low) and one high-effort run for each
+  of the 16 Omp pairs, over the six fixed merged-PR cases.
+- **Codex CLI comparison** — GPT-6.1 Sol at high effort through the installed
+  `codex` executable, measured against the same Omp subject. It is a harness
+  comparison, not a twentieth provider pair.
+
+Before dispatch, in a clean task worktree at the merged setup revision:
+
+1. Run `make evals-plan` and `make evals-variants`. Both are free.
+2. Record `git rev-parse HEAD` in the dispatch log, and check the four
+   `inputs_sha256` values still match that revision.
+3. Start every cohort at `JOBS=1`, one account and provider at a time. Raise
+   concurrency only within observed allowance and documented limits.
+4. Record each run with the command the manifest names:
+   `make evals-record RUN=<run-dir> EXPERIMENT=<experiment> JUDGE=omp-gpt-6.1-sol`.
+   Never use `runs/latest` under concurrent work.
+5. Render `evals/RESULTS.md` and the measured routes with
+   `make evals-render-results` and `make evals-render-routes`.
+
+A failure blocks only its own route. Preserve the failed attempt, record the
+exact prerequisite, and continue the cohorts that can run. Behavioral failures
+are measured outcomes; infrastructure failures earn no capability credit. The
+manifest is complete only when every tuple it names has a terminal recorded
+attempt or an explicitly reported prerequisite that prevented it.
+
 ### Choose the execution session first
 
 Choose the subject model, judge model, and execution session separately. A
@@ -1012,7 +1054,7 @@ For example, this selected plan makes no inference calls:
     --from coder-eval==0.11.6 \
     --with typer==0.24.1 \
     --with-editable ./coder-eval-omp --with-editable ./coder-eval-codex \
-    coder-eval plan -e experiments/classes-gemini-3.1-pro.yaml \
+    coder-eval plan -e experiments/classes-glm-5.3-vercel.yaml \
       tasks/model-classes/career-370.yaml
 )
 ```
@@ -1169,11 +1211,26 @@ Both the subject and judge use `openai-codex` for this configuration. Do not
 route OpenAI models through the Vercel AI Gateway. The experiment uses one
 repeat per variant for the focused run; expand only after reviewing those results.
 
-### Retired Gemini routes
+### Retired arms
 
-Gemini and Antigravity are excluded from the current rerun. Historical
-provenance and its original interpretation remain available; do not dispatch
-those routes as part of this cohort.
+The rerun keeps one experiment file per surviving route. These are retired, with
+no compatibility aliases:
+
+- Gemini and Antigravity, in both the workflow and model-class forms.
+- Old OpenAI and Anthropic versions: GPT 5.6 Sol, GPT 6 Sol, Claude Sonnet 5,
+  and the smoke/one-off experiment aliases that pinned them.
+- The undated Vercel Kimi route, and the replaced `opencode-go/kimi-k3.1-pro`
+  route.
+- The undated Vercel GLM, Minimax and DeepSeek aliases, where a dated or more
+  specific route replaced them. The two undated DeepSeek names that remain are
+  themselves pinned to the dated catalog entries `deepseek-v4-pro-0813` and
+  `deepseek-v4.1-flash-1017`.
+- The cocktail, cheaper-route and other helper arms that existed to explore the
+  old matrix rather than measure an approved pair.
+
+Historical provenance and its original interpretation remain available; those
+records keep their `experiment_id` and are never relabelled. Do not dispatch a
+retired route as part of this cohort.
 
 
 **What a non-Claude judge changes.** `make evals-judge-preflight` runs first and
@@ -1896,13 +1953,22 @@ must configure it. Every GPT subject, judge, and helper call must use
 
 | Experiment | Model |
 | --- | --- |
+| `omp-gpt-6-luna.yaml` | `openai-codex/gpt-6-luna` |
+| `omp-gpt-6.1-sol-ablation.yaml` | `openai-codex/gpt-6.1-sol` |
+| `omp-gpt-6.1-terra.yaml` | `openai-codex/gpt-6.1-terra` |
 | `omp-glm-5.3.yaml` | `vercel-ai-gateway/zai/glm-5.3` |
 | `omp-glm-5.3-flash.yaml` | `vercel-ai-gateway/zai/glm-5.3-flash` |
+| `omp-glm-5.3-fast.yaml` | `vercel-ai-gateway/zai/glm-5.3-fast` |
+| `omp-minimax-m3.yaml` | `vercel-ai-gateway/minimax/minimax-m3` |
 | `omp-deepseek-v4-pro.yaml` | `vercel-ai-gateway/deepseek/deepseek-v4-pro-0813` |
 | `omp-deepseek-v4.1-flash.yaml` | `vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017` |
-| `omp-gpt-5.6-sol.yaml` | `openai-codex/gpt-5.6-sol` |
-| `omp-gpt-6-sol.yaml` | `openai-codex/gpt-6-sol` |
-| `omp-gpt-6-luna.yaml` | `openai-codex/gpt-6-luna` |
+| `omp-deepseek-v4-pro-go.yaml` | `opencode-go/deepseek-v4-pro` |
+| `omp-deepseek-v4.1-flash-go.yaml` | `opencode-go/deepseek-v4.1-flash` |
+| `omp-glm-5.3-go.yaml` | `opencode-go/glm-5.3` |
+| `omp-glm-5.3-flash-go.yaml` | `opencode-go/glm-5.3-flash` |
+| `omp-minimax-m3-go.yaml` | `opencode-go/minimax-m3` |
+| `omp-mimo-v2.6-pro-go.yaml` | `opencode-go/mimo-v2.6-pro` |
+| `omp-kimi-k3.1-pro-code.yaml` | `kimi-code/k3.1-pro` |
 
 For a supported non-GPT model, the experiment needs `omp` on PATH and its
 provider's credentials: the gateway key above or a login in the caller's own
@@ -2050,47 +2116,67 @@ has in each run's `environment_info`.
 
 ## The Codex arm
 
-The same suites, the same skills, a third harness.
-`docs/notes/0015-the-codex-arm.md` is the decision; this is how it is run.
+GPT-6.1 Sol through the installed `codex` executable, against the same
+subscription's Omp run. This is a harness comparison, not a twentieth provider
+pair. `docs/notes/0015-the-codex-arm.md` is the decision; this is how it runs.
 
 ```sh
-make evals-run-codex                          # the Codex arm
-make evals-run-codex TASKS='tasks/pr/*.yaml'  # one suite of it
+make evals-run-codex RUN=evals/runs/695-codex-cli JUDGE=omp-gpt-6.1-sol
+make evals-run-codex RUN=evals/runs/codex-pr TASKS='tasks/pr/*.yaml' JUDGE=omp-gpt-6.1-sol
 ```
 
-It needs the Codex SDK, which `make evals-install` brings in with
-`coder-eval-codex`, and OpenAI credentials the SDK can authenticate with
-(`CODEX_API_KEY`, or an existing ChatGPT login on the machine).
+It needs `codex` on `PATH`, authenticated with the Codex subscription by
+`codex login`. The adapter refuses `CODEX_API_KEY` and `OPENAI_API_KEY`: an API
+key would bill a different meter from the one this comparison measures. It also
+refuses a login it cannot identify as a subscription, so a misconfigured machine
+fails before the first turn instead of after the first bill.
 
-**`agent: {type: codex-daily-driver}` is not the built-in `codex` kind**, and
-the difference is not cosmetic. `coder_eval` already ships a `codex` agent that
-does almost all of this — it drives the SDK, links a `plugins:` root's skills
-into `<cwd>/.agents/skills/`, and records `commandExecution` as `Bash` with its
-command string. What it does not do is build the `[RESULT - …]` transcript, and
-every rubric here anchors on that tag and scores 0.0 without it. Point the
-experiment at `codex` and the suite runs, costs money, and reports zeros that
-read exactly like a plugin that never loaded. Keep each experiment's variants
-consistent with the arm tags.
-`coder-eval-codex/` is the built-in subclassed; its README says what it adds and
-why.
+**`agent: {type: codex-daily-driver}` is a CLI driver, not the built-in `codex`
+kind.** The built-in drives the Codex SDK, a different execution path with its
+own authentication and transport. This kind spawns
 
-**It also resolves the plugin root**, which the built-in does not.
-`_setup_skills` symlinks each skill by the path it was handed, so the relative
-`path: ".."` every experiment here writes — right for the Claude agent, which
-never sees an unresolved path — links fifteen skills whose bodies point back at
-their own directory. Measured with the current tree: fifteen entries, none with
-a readable
-`SKILL.md`, and `_setup_skills`'s own "0 skills linked" warning silent because it
-counts entries. `start()` makes the root absolute and then raises rather than
-warns when no readable skill arrived.
+```sh
+codex exec --json --skip-git-repo-check -C <task-dir> -s workspace-write \
+  -c approval_policy="never" -m gpt-6.1-sol -c model_reasoning_effort="high" -
+```
 
-**This arm needs no skill-engagement normalisation, and the Omp arm does.**
-Omp reads `skill://<name>`, which `skill_triggered` cannot see. Codex has no
-skill tool at all: the model is handed a skills table and opens
-`.agents/skills/<name>/SKILL.md` with the shell, and `skill_triggered` matches
-`skills/<name>/` in any string tool parameter — its own docstring names Codex as
-the agent that branch was written for. Issue #185 expected the Omp spelling
-here; the spike in #181 measured that Codex does not use it.
+reads the documented JSON Lines stream (`thread.started`, `turn.started`,
+`item.*`, `turn.completed`, `turn.failed`, `error`), and resumes later turns
+with `codex exec resume <thread_id>`. The prompt goes on stdin, so it can never
+be mistaken for a flag. `coder-eval-codex/` has the implementation and the
+event reducer; `events.py` is pure and tested offline.
+
+**The judge still needs the transcript.** The CLI emits an `agent_message`
+item, not the `[RESULT - …]` transcript every rubric anchors on.
+`transcript.render_agent_output` renders that shape; without it every judged
+row scores 0.0, which reads exactly like a plugin that never loaded.
+
+**Skills are linked where the CLI scans for them.**
+`skills.link_skills` resolves each `plugins:` root against the process working
+directory — the experiments write `path: ".."`, relative to `evals/` — and
+symlinks every `skills/<name>/` into `<task dir>/.agents/skills/<name>`. The CLI
+follows those symlinks. A declared root that yields no readable `SKILL.md` is
+fatal, not a warning: an arm that runs untreated reports zeros that look like a
+skill failure.
+
+**Evidence is recorded, not assumed.** `start()` writes these keys into the
+run's `environment_info`:
+
+| Field | What it answers |
+| --- | --- |
+| `codex_cli_version` | which executable produced the run |
+| `codex_auth_mode` | `subscription`, `api_key`, `none` or `unknown` |
+| `codex_login_status` | the CLI's own sentence, for diagnosis (no secrets) |
+| `codex_model_requested` / `codex_effort_requested` | the pin |
+| `codex_model_catalog_checked` | whether `codex debug models` answered |
+| `codex_skills_linked` | skills with a readable `SKILL.md` after linking |
+| `codex_billing_source` | `subscription`; usage is allowance, not cash |
+| `codex_session_id` | the thread resumed by later turns |
+
+A requested model the installed catalog does not list is a configuration error,
+not a provider-default fallback. On 2026-11-21, CLI 0.171.0 listed
+`gpt-6.1-sol`, so the pin is catalog-verified; served identity and a live
+inference are still unproven until a subscription-authenticated run exists.
 
 **Eleven `codex-only` rows.** Each forked row grades a route stated in a
 `skills/<name>/references/*.md`, so a Codex counterpart needs a
@@ -2111,60 +2197,44 @@ here; the spike in #181 measured that Codex does not use it.
 | `undertake` | `09-session-fields-for-claim` | `09-claim-records-session-na-codex` | branch from git, `session: n/a` recorded, model from the harness |
 | `task-worktree` | `01-isolate-new-task` | `01-isolate-new-task-codex` | shell `workdir` and file paths keep every later operation in the task worktree |
 
-None is its sibling's stem plus `-codex`, for the reason the Omp table above
-gives: the stem states Claude's route, and on Codex the row grades the opposite.
-Two of them grade a *stop* — Codex is the first harness where the right answer
-to "title this session" and to "wait for CI" is that there is no way to do it.
+None is its sibling's stem plus `-codex`, for the reason the Omp table gives:
+the stem states Claude's route, and on Codex the row grades the opposite. Two
+grade a *stop* — Codex is the first harness where the right answer to "title
+this session" and to "wait for CI" is that there is no way to do it.
 
-Three of the eleven — `pr`, `pr-title` and `deps` — grade the same `gh` call their
-Omp counterpart does, because Codex has no GitHub tool of its own either. They
-need their own files regardless: an arm tag claims exactly one arm, so without
-them the Codex arm would not measure those routes at all. `pr-body` is the
-exception among the `gh` rows: Codex prescribes `--body-file` where Omp's row
-grades `--body`.
+Three of the eleven — `pr`, `pr-title` and `deps` — grade the same `gh` call
+their Omp counterpart does, because Codex has no GitHub tool of its own either.
+They need their own files regardless: an arm tag claims exactly one arm, so
+without them the Codex arm would not measure those routes at all. `pr-body` is
+the exception among the `gh` rows: Codex prescribes `--body-file` where Omp's
+row grades `--body`.
 
-**`tasks/constitution/*` is not in this arm**, and carries `skip:codex` to say
-so. That tag takes a row out of one arm and leaves it in the rest, which an arm
-tag cannot express. The reason is that `coder_eval`'s Codex agent links skills
-and installs nothing else — no `hooks/hooks.json`, so no `SessionStart` or
-`SubagentStart` context and no constitution in the session. Every row
-there would score 0 for a reason that has nothing to do with the constitution. #181
-measured that a *real* Codex session does load the hook file and does deliver
-the constitution, behind persisted hook trust and an exactly-echoed
-`hookEventName`; whether the SDK's app-server can be driven through those gates
-is unmeasured, and `0015` says what settling it needs.
+**`tasks/constitution/*` stays out of this arm, and the reason is now
+unproven rather than borrowed.** The rows carry `skip:codex`. The SDK arm
+installed skills and no hooks, so no constitution could reach it. The CLI has
+hooks (`--dangerously-bypass-hook-trust` exists), but no run has shown the
+constitution arriving through them, and this task cannot claim that coverage
+without CLI evidence. Keep the tag until a live run proves delivery; do not
+copy the SDK's limitation forward as a CLI fact.
 
 **Four things this arm measures more weakly than the Claude arms**, recorded so
 a report is read with them in mind.
 
-- **No bare-Codex control.** As with Omp: the arm reports the treated side
-  alone, so a row's score has no delta beside it, and the no-fire rows in the
-  same run are what say the skills reached the session at all.
-- **`allowed_tools` and `disallowed_tools` are not enforced**, and Codex runs
-  full-access on every `permission_mode` by the built-in agent's own design —
-  `coder_eval`'s per-run sandbox is the boundary. That costs more here than on
-  Omp: the mitigation under "How the graders ported" removes `Read` so a denied
-  read of `skills/<name>/SKILL.md` cannot score as an engagement, and on Codex
-  that read *is* the engagement signal. A no-fire row scoring badly in this arm
-  should be read as that before it is read as a skill firing when it should not.
-- **The constitution suite is absent**, per the paragraph above.
-- **The model pin is unverified.** `gpt-5-codex`, pinned so a report says what
-  produced it. Nothing here has resolved it against an account.
-
-`codex_skills_linked` lands in each run's `environment_info`, for the reason the
-Omp arm's equivalents do: a red arm and an arm whose skills never arrived must
-not read alike. It counts skills with a readable `SKILL.md` rather than
-directory entries, which is what makes it an answer — broken symlinks still
-count as entries.
-
-**It is the only such field, because `coder_eval` reads
-`get_environment_info()` once, during setup, before any turn runs.** A counter
-kept over the turns — how many transcripts this package retagged, say — would
-always be recorded as zero, which is worse than absent: a field that says
-nothing while looking like a measurement. The one thing worth alarming on, a
-turn arriving with the anchor already in it, is logged where it happens instead:
-it means the built-in has started rendering the transcript itself and
-`coder-eval-codex` has become a no-op worth deleting.
+- **No bare-CLI control.** The Omp ablation supplies the treated-versus-bare
+  delta; this arm isolates the harness by matching the treated side. The no-fire
+  rows in the same run are what say the skills reached the session at all.
+- **`allowed_tools` and `disallowed_tools` are not enforced.** `codex exec` has
+  no tool allowlist; the boundary is the eval sandbox plus `sandbox_mode`
+  (`workspace-write`, or `read-only` for a PLAN task). That costs more here than
+  on Omp: the mitigation under "How the graders ported" removes `Read` so a
+  denied read of `skills/<name>/SKILL.md` cannot score as an engagement, and on
+  Codex that read *is* the engagement signal. Read a bad no-fire row as that
+  before reading it as a skill firing when it should not.
+- **The constitution suite is absent**, pending delivery evidence.
+- **The live inference is unproven.** Catalog membership, CLI version, login
+  mode and skill links are checked at `start()`; no authenticated CLI run exists
+  yet, so served model identity and effective effort are `unreported` until one
+  does.
 
 ## The model-classes suite
 
