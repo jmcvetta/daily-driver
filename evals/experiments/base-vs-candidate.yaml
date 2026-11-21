@@ -46,7 +46,9 @@ defaults:
 
   agent:
     type: claude-code
-    model: claude-sonnet-5
+    model: claude-sonnet-5-5
+    sdk_options:
+      effort: high
     permission_mode: acceptEdits
     allowed_tools: [Skill]
 

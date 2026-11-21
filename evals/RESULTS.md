@@ -192,6 +192,9 @@ One row per committed record, oldest first.
 | 2026-11-10 | disclosure-claude-native-continuation-20261110 | claude-code | claude-sonnet-5 | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | $1.05 | $0.26 | 1m 32s |
 | 2026-11-10 | disclosure-claude-native-continuation-20261110 | claude-code | claude-sonnet-5 | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | $0.65 | $0.16 | 1m 42s |
 | 2026-11-10 | disclosure-claude-native-continuation-20261110 | claude-code | claude-sonnet-5 | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | $0.86 | $0.21 | 1m 58s |
+| 2026-11-10 | omp-gpt-6-1-sol-ablation | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 2/4 | subscription | subscription | 1m 50s |
+| 2026-11-10 | omp-gpt-6-luna | omp | openai-codex/gpt-6-luna (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 2/4 | subscription | subscription | 3m 44s |
+| 2026-11-10 | omp-gpt-6-1-terra | omp | openai-codex/gpt-6.1-terra (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 2/4 | subscription | subscription | 1m 09s |
 | 2026-11-11 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 2 | 0/2 | subscription | subscription | 1m 07s |
 | 2026-11-13 | with-without | claude-code | claude-sonnet-5 | omp-gpt-6.1-sol (run-selected) | 4 | 0/4 | $1.53 | no task completed | 4m 44s |
 | 2026-11-13 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 6 | 5/6 | subscription | subscription | 1m 00s |
@@ -199,3 +202,5 @@ One row per committed record, oldest first.
 | 2026-11-19 | classes-deepseek-v4-1-flash-gateway | omp | vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high (requested) | not recorded | 30 | 16/30 | not recorded | not recorded | 49m 10s |
 | 2026-11-19 | classes-beam-go | omp | opencode-go/beam-free:high (requested) | not recorded | 30 | 8/30 | $0.00 | $0.00 | 37m 12s |
 | 2026-11-19 | classes-iceman-contributor-go | omp | opencode-go/iceman-contributor-free (requested) | not recorded | 10 | 0/10 | not recorded | not recorded | 0m 28s |
+| 2026-11-20 | omp-gpt-6-1-sol-workflow | omp | openai-codex/gpt-6.1-sol:high (requested) | omp-gpt-6.1-sol (run-selected) | 2 | 1/2 | not recorded | not recorded | 2m 23s |
+| 2026-11-20 | omp-gpt-6-1-sol-workflow | omp | openai-codex/gpt-6.1-sol:high (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | not recorded | not recorded | 2m 18s |

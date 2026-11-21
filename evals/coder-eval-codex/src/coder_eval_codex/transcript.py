@@ -2,20 +2,20 @@
 
 Everything in this module is pure: a string in, a string out. That is
 deliberate, and it is the same split `coder_eval_omp/rpc.py` makes. The agent in
-`agent.py` cannot be exercised without a `coder_eval` install and the Codex SDK,
-so anything load-bearing that lives there is untested code. What is load-bearing
-is here instead.
+`agent.py` cannot be exercised without an installed, subscription-authenticated
+`codex` executable, so anything load-bearing that lives there is untested code.
+What is load-bearing is here instead.
 
 One thing it owns, and it is a silent zero if it is wrong.
 
 **The reply the judge reads.** Every judge rubric under `evals/tasks/` anchors
 on the `[RESULT - …]` tag that `coder_eval`'s `format_messages` emits, and
 scores 0.0 where the tag is missing — by design, so a drifted harness cannot
-report a plausible number. `coder_eval` builds that transcript for its Claude
-Code agent only; its Codex agent hands the judge `result_text`, the assistant
-message deltas joined and nothing else. A Codex arm that did the same would
-score every judged row 0.0, which is most of the `references` suites and both
-halves of the constitution suite.
+report a plausible number. `codex exec --json` emits an `agent_message` item,
+not that transcript, and `coder_eval`'s built-in Codex agent hands the judge
+bare reply text for the same reason. An arm that did the same would score every
+judged row 0.0, which is most of the `references` suites and both halves of the
+constitution suite.
 
 **What this module does NOT own, and why there is only one normalisation here
 rather than the two the Omp arm needed.** A skill engagement is already visible

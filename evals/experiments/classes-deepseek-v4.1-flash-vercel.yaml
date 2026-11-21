@@ -1,0 +1,14 @@
+experiment_id: classes-deepseek-v4-1-flash-vercel
+description: Fixed merged-PR cases on first-party DeepSeek V4.1 Flash 1017 through Vercel at high effort.
+defaults:
+  repeats: 3
+  run_limits: {max_turns: 30, task_timeout: 780, turn_timeout: 600}
+  agent:
+    type: omp
+    model: vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017
+    extra_args: ["--thinking", "high"]
+    vercel_gateway_only: [deepseek]
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+variants:
+  - variant_id: default
