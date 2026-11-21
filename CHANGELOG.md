@@ -4,6 +4,8 @@
 
 ### Changed
 
+* Limit undertaking routing to the initial same-family, same-provider model and effort selection; remove route-authorization, frontier-approval, worker-route admission, and continuing route-verification gates while preserving cancellation, completion, credential and switch failures ([#971](https://github.com/jmcvetta/daily-driver/issues/971)).
+
 * Limit Omp desktop notifications to explicit human handoffs and completed operations, suppress generic completion and error notifications in live settings, and deduplicate delivery across session resumes ([#946](https://github.com/jmcvetta/daily-driver/issues/946)).
 
 * Route DeepSeek V4.1 Flash's measured mechanical and implementation classes through a provider-neutral family mapping; a class omitted from a mapped family warns and continues with unverified suitability instead of failing admission, while an explicitly cleared class remains a configuration gap ([#927](https://github.com/jmcvetta/daily-driver/issues/927)).

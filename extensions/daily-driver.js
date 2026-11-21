@@ -2397,7 +2397,6 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 		pi,
 		settingsFor,
 		async ctx => readModelClassRoutes(await settingsFor(ctx)),
-		undefined,
 		async (ctx, issue) => notificationPolicy.notify(ctx, {
 			reason: "work_complete",
 			key: `undertaking-${issue}-complete`,

@@ -227,37 +227,18 @@ On Omp, select the class-specific agent that fits the assessed work and resolve
 its effective route under
 [`issue-body`'s Omp required-class policy](../issue-body/references/omp.md#the-required-class)
 and [`model-classes.md`'s selection policy](../issue-body/references/model-classes.md#selection).
-The issue's required class constrains this choice.
+The issue's required class guides this initial choice.
 The harness reference owns concrete precedence, measurement, fallback, and
 dispatch details; do not treat `modelRoles.task` as a universal implementor
 route.
-**Authorization is checked on the effective route, not its role name.** A
-frontier assignment may dispatch only when its issue carries explicit
-user approval and the exact approved work envelope. Review agent overrides,
-configured prewalk and retry fallbacks, and visible parent-model inheritance;
-an effective astra/fable execution route is frontier even when selected through
-a lower-class role. A stale Omp helper's astra-backed lower-class selector
-does not bypass this check. If a fallback would move ordinary work to frontier
-without approval, reject that route before dispatch and choose an eligible
-non-frontier route; if none exists, report the configuration gap for that task
-and continue other eligible tasks in the wave.
 
-A frontier session assigned ordinary implementation may do only the bounded
-routing and handoff to an eligible non-frontier class. It must not retain the
-implementation or supervise it on frontier. If no authorized handoff or model
-switch is available, report the gap. Frontier implementation requires explicit
-user authorization for that exception and its bounded scope; planning or
-research approval does not cover it.
-
-For a manual escalation during a task, `undertake`'s *Manual frontier escalation*
-policy requires plan repair before returning the existing work. This is not
-permission to retain or supervise the implementation on frontier.
-
-The selected route and actual model are distinct from any task class. Record
-`unreported` when actual identity is unavailable; visible provider fallbacks
-are mismatches to report and reassess. No eligible route stops only that issue;
-the rest of the wave launches. An underspecified body is a planning defect, not
-an excuse to dispatch a stronger model.
+After the initial selection, worker, provider, effort, and fallback choices are
+not restricted by the undertaking router. The selected route and actual model
+are distinct; record `unreported` when actual identity is unavailable. If the
+initial class selection cannot be established for an issue, report the
+configuration gap and continue other eligible tasks in the wave. An
+underspecified body is a planning defect, not an excuse to dispatch a stronger
+model.
 
 Each harness reference owns concrete dispatch. It resolves the applicable
 route before session creation and records the actual model separately from the
@@ -659,7 +640,7 @@ explicitly permits that result. No open-child count stands in for this read.
 **An unsupported outcome is unfinished work, not automatically a human
 dependency.** Leave the epic open and classify the gap before selecting a stop:
 
-- **Missing evidence:** gather it through available permitted routes.
+- **Missing evidence:** gather it through available routes.
 - **Repairable defect within agreed scope:** route repair through the existing
   task workflow. Do not reopen correctly completed children merely because
   integration work is missing. The orchestrator does not implement the repair;
@@ -803,9 +784,7 @@ Non-goals
   ready and stops there. The default `Landing: orchestrator` mode closes it
   only after `Close the epic` reads every `Human brief` claim as delivered.
 - **Does not fire on one issue.** A single task uses `undertake`, not an epic,
-  muster roll, or wave watch. Non-frontier undertakers implement in their
-  session; `undertake`'s narrow frontier exception hands ordinary work to an
-  eligible non-frontier route or stops with a configuration gap. That handoff
-  is not a one-task `embark` fleet.
+  muster roll, or wave watch. A single task's undertaker implements in its
+  own session. That work is not a one-task `embark` fleet.
 - **Does not sweep for epics.** It works the epic in hand. Reading the issue
   list for others to put to sea is `epic`'s manufacturing failure, one level up.

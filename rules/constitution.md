@@ -86,7 +86,7 @@ lockfiles.
 ## When blocked
 
 An ordinary error stops the failed approach, not the task. Diagnose and repair
-it within scope, then continue by a permitted route. When a Daily Driver
+it within scope, then continue. When a Daily Driver
 component appears defective, establish that the failure belongs to a Daily
 Driver component before filing a brief bug through `issue`; follow its
 automatic-reporting guidance. Do not assert uncertain attribution. Report a
@@ -96,7 +96,7 @@ Reassess a failing approach and continue permitted work. Pause only when
 progress needs a specific contribution the agent cannot supply, except for
 explicit safety prohibitions or a user instruction to stop. An unfinished stop
 needs the blocked operation, observed failure or exact prohibition, applicable
-authorization, permitted routes considered, smallest external contribution,
+authorization, actions attempted, smallest external contribution,
 independent work and actual resume path. Never probe a prohibited operation.
 
 ## Commits
@@ -160,24 +160,6 @@ and required status reporting. Remove obsolete checks when replacing them.
 Never bypass established validation to save effort; disclose coverage lost when
 an explicit owner instruction reduces CI scope, without hiding failures or
 weakening security or required tests.
-
-## Manual frontier escalation
-
-A manual escalation of a failing task to a frontier model authorizes diagnosis
-and repair of the plan, not implementation. Identify the failed approach,
-design, affected surfaces, constraints and actionable acceptance criteria.
-Preserve requested behavior. Read-only investigation and authorized updates
-to specifications or planning artifacts are permitted. Implementation, tests,
-configuration, implementation commits and the implementation/review/CI loop
-require a separate explicit user exception with bounded implementation scope.
-
-Return execution to the lowest eligible non-frontier class through a supported,
-verified model switch or full handoff. Preserve issue, branch, worktree, valid
-changes, failure evidence, plan, remaining criteria and original authorization.
-Do not create a competing branch or claim. The receiving worker owns execution;
-the sender stops after transfer. If no eligible route exists, report the missing
-capability and smallest operator action; do not implement as a fallback or
-claim an unverified transfer. This boundary applies even without an undertaking.
 
 ## Delegation
 

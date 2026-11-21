@@ -105,19 +105,9 @@ before calling `create_session`.
 `session_context.model` is a candidate concrete identifier only after that
 assessment; `configured_model` can be an alias or unsupported suffix. Never
 pass a class name to `model`, and never silently inherit an unchecked model.
-The selected exact class and every visible fallback must retain the current
-family, provider, backend, and authentication route. A model argument alone
-does not establish those constraints. Stop the affected task if the available
-session surface cannot constrain and verify them; do not rewrite shared roles.
-The effective model route, including configured fallbacks and visible parent
-inheritance, must be resolved before dispatch. Treat any route the harness
-identifies as astra/fable as frontier regardless of agent or role name. A
-frontier task needs issue-recorded approval and its exact work envelope. Do not
-invent a Fable identifier or assume an API route; if the concrete route cannot
-be established, stop that task with a configuration gap. A frontier route may
-receive ordinary work only for bounded routing and handoff to a non-frontier
-implementor. Frontier implementation requires a separate explicit user
-exception and bounded scope.
+Do not invent a Fable identifier or assume an API route; if the concrete route
+cannot be established for the initial selection, stop that task with a
+configuration gap.
 
 Reading a session, and what cannot be read
 ------------------------------------------
