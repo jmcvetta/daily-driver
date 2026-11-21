@@ -1,16 +1,12 @@
 ---
 name: provenance
 description: >-
-  Read for contribution attribution on commits and GitHub writes.
-  Supplies the trailing provenance
-  block's shape and placement, the rule for reading the model that served the
-  turn against the one the session was set to, the provider that served it,
-  the harness name and version, the session identifier or `n/a`, the rule for
-  retaining distinct attribution across body edits, and the commit trailer
-  each harness adds. Not for the claim
-  comment's branch line or haiku, which are
-  `undertake`'s, and not for a task issue's `Model class` section, which is
-  implementation metadata `issue-body` owns.
+  Read for contribution attribution on commits and GitHub writes. Supplies the
+  trailing provenance block's shape and placement, the served-model versus
+  session-model rule, provider, harness and version, session identifier,
+  distinct attribution across body edits, and the commit trailer each harness
+  adds. Not for the claim's branch line or verse (`undertake`) or a task's
+  `Model class` section (`issue-body`).
 ---
 
 # Provenance

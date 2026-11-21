@@ -1,17 +1,12 @@
 ---
 name: embark
 description: >-
-  This skill should be used whenever an epic's agent-eligible child issues are
-  put to work in more than one session at once, or a fleet already at sea is
-  watched — when the user says "/embark", "work the epic", "launch the wave",
-  "start the next wave", "run these issues in parallel", "open a session for
-  each of these", or "how is the epic going", and on the agent's own move from
-  a planned epic to opening a session per eligible child — a web session on
-  Claude Code, one harness-local subagent per issue on Omp and Codex. Supplies
-  the graph-derived wave, each story's readiness and required-class route, the
-  muster roll, the completion-surface watch, pull-request landing, epic close,
-  and quiet-session backstop. Not for decomposing work, which is `epic`, taking
-  one issue to a pull request, which is `undertake`, or a single issue.
+  Use for `/embark` when an epic's agent-eligible children are worked in more
+  than one session at once, a wave is launched, or a running fleet is watched.
+  Supplies the graph-derived wave, each story's readiness and class route, the
+  muster roll, the completion watch, pull-request landing, epic close, and
+  quiet backstop. Not for decomposing work (`epic`), one issue to a pull
+  request (`undertake`), or a single issue.
 ---
 
 # Embark

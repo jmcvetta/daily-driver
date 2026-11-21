@@ -1,16 +1,11 @@
 ---
 name: issue-labels
 description: >-
-  This skill should be used whenever a GitHub issue is being labelled, or a
-  label on one is being read as a statement about the work — including when
-  the user says "/issue-labels", "label this issue", "what label does this
-  get?", "is this an epic or a task?", "that label is wrong", or "which issue
-  kinds are eligible for agent work?", and whenever the agent sets a label on
-  an issue. It also fires when `undertake` opens an issue or reads one it is
-  about to start on. Supplies the eight issue kinds and the supplemental story
-  marker, including their write rules.
-  The kind determines work eligibility; body readiness is `issue-body`'s.
-  Not for pull request labels or graph writes, which are `issue-deps`'.
+  Use for `/issue-labels` when a GitHub issue is labelled, or a label is read
+  as a statement about the work: which of the eight kinds it is, its agent
+  eligibility, or the story marker. The kind decides eligibility; body
+  readiness is `issue-body`'s. Not for pull request labels or graph writes
+  (`issue-deps`).
 ---
 
 # Issue labels

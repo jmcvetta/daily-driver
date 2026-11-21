@@ -4,10 +4,8 @@ alwaysApply: true
 
 # Omp runtime identity
 
-This session runs in Oh My Pi (Omp). Treat Omp as the active harness when
-selecting harness-specific instruction references or routes. For a skill with
-harness reference files, use that skill's `references/omp.md`; do not select a
-Claude Code or Codex reference for this session.
-
-The model and provider identify what serves the turn, not which harness runs
-it. Neither name makes this a Codex session.
+This session runs in Oh My Pi (Omp): Omp is the active harness, and each
+skill's harness routes come from that skill's `references/omp.md`, never from a
+Claude Code or Codex reference. The serving model and provider identify what
+answers the turn, not the harness; a Codex-named model or provider does not make
+this a Codex session.
