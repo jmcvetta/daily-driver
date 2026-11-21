@@ -21,18 +21,9 @@ stated acceptance condition is evidenced by the completed disposition of its
 children. `epic` decomposes the work and stops; this skill works it, wave after
 wave, unless the user keeps landing by hand.
 
-It is an orchestrator, in the same shape as `epic` and `undertake`: **it
-invokes, it does not restate**. The decomposition is `epic`'s, taking an issue
-to a pull request is `undertake`'s, the graph reads are `issue-deps`', the
-selected body readiness is `issue-body`'s, the name a session carries is
-`session-title`'s, the model, harness and session record every write carries is
-`provenance`'s, and the engineering standard is the constitution's. Where a
-step below names a rule one of those owns, it names it as a pointer and cites
-the owner — a rule that acquires a second home is one whose copy goes stale.
-
-What this skill owns is the dispatch, the watch, and the landing: which issues
-sail together, what is written down as they sail, what is done about one that
-does not come back, and when the finished fleet closes its epic.
+This skill owns dispatch, watch, recovery and landing. It invokes `epic`,
+`undertake`, `issue-deps`, `issue-body`, `session-title`, `provenance`, and
+`review-cycle` for their respective contracts rather than restating them.
 
 **The routes are per harness, and they live beside this file.** Every call the
 steps below need is named in words here and resolved to a route there:
@@ -46,11 +37,7 @@ other has one this skill cannot reach — so their files carry the
 harness-local subagent fallback `Open the sessions` takes instead, and record
 what each surface has and has not been measured to do.
 
-**Every step has a name, and the name is how it is cited.** The numbers order
-the sequence and do nothing else: insert one and all of them move, while a name
-stays where it was put.
-[`0005`](../../docs/notes/0005-steps-are-cited-by-name.md) is the decision and
-`scripts/check-step-names.py` is what enforces it.
+**Cite steps by their stable names**, not their sequence numbers.
 
 Discovery dispatch and specification coverage
 =============================================
@@ -94,12 +81,6 @@ because the graph moved while the fleet was out, and what it finds decides
 whether the next wave sails, the watch resumes, or the epic closes.
 `Land the pull request` and `Recover a session` are reached from `Watch the
 wave`, and each returns there.
-On Omp, an explicit `embark <issue>`, `/embark <issue>`, or
-`/skill:embark <issue>` first reads that single issue through `issue://`.
-After matching epic metadata succeeds, title this session before reading its
-graph or making any other tool call. The runtime enforces that deadline.
-Free-form requests that invoke this skill without an explicit command retain
-the ordinary skill and title-gate behavior.
 
 
 0 — Read the epic
@@ -112,17 +93,12 @@ An `epic` with no sub-issues is not an epic. A discovery may await research or
 its interactive specification; return it to `epic`, never close it for that.
 An undecomposed task goes to `undertake` or `epic` as appropriate.
 
-Read the epic's comments too, because `Take the wave` needs to know which tasks
-are at sea already. On Omp, an explicit request reads them only after
-`Title the session` has titled the orchestrator.
-
-On Omp, an explicit `embark <issue>`, `/embark <issue>`, or
-`/skill:embark <issue>` request requires a canonical single-issue `issue://`
-read before dispatch. Read-only discovery and prerequisites may come first,
-but they do not satisfy that identity read. If its metadata confirms an epic,
-set this orchestrator title before reading comments or graph, or making any
-unrelated tool call. The extension enforces the dispatch gate and this
-post-result deadline; free-form requests do not activate the earlier barrier.
+Read the epic's comments too, because `Take the wave` needs the at-sea record.
+On Omp, an explicit embark command requires a canonical single-issue identity
+read, preserving any supplied repository, and, if it confirms an epic, the
+title before comments, graph traversal or unrelated calls. The Omp reference
+defines the complete barrier, activation and exceptions; free-form requests use the
+ordinary title gate.
 
 1 — Title the session
 ---------------------
@@ -293,13 +269,11 @@ sessions. If the user says they will handle landing by hand, record
 `Landing: by hand`; that opt-out disables automatic landing and archiving.
 Later invocations keep the latest recorded mode unless the user changes it.
 
+A fallback roll names the subagent and shared advisor; a web-session row links
+to the session and records its address. Record planning defects separately,
+not as ships in a wave.
 
-The roll distinguishes required class, selected route, and actual model. A
-fallback roll names the subagent and shared advisor; a web-session row links,
-and its session id is the address `Watch the wave` and `Recover a session` send
-to. Reachability is read from the send, never assumed or recorded here. Do not
-describe an actual model that the harness did not report. Record planning
-defects separately, not as ships in a wave.
+
 
 The active route attaches `provenance` to the muster-roll comment. On Omp,
 the GitHub-write wrapper appends it automatically using this orchestrating
@@ -408,12 +382,8 @@ So on every wake:
   muster roll records.
 - **Send each story pull request through `Land the pull request`.** That step
   reads the gate and returns here, whether it merges or waits.
-- **Read the epic's graph and child evidence.** A task or bug issue delivered
-  by a pull request closes when the pull request that names it merges. A
-  research issue closes when its evidenced answer is recorded. Verify the
-  story's specified outcome against its own completion contract; session
-  status, an ended session or a closed issue alone never proves a child is
-  done, and a closure without that evidence is reported, not accepted.
+- **Read the epic's graph and child evidence** against the completion
+  contracts at the start of this step; report unsupported closure.
 - **The wave is in when every child in it has a completed disposition and the
   evidence satisfies its kind's contract.** Mark the wave `done` in the epic's
   body, and go back to `Take the wave`, which routes what happens next — the
@@ -575,9 +545,8 @@ Reached from `Watch the wave`, and it returns there.
   is read from the send: a send that errors is the signal.
 - **A session whose send errors is not thereby stopped.** Read its session
   first. Reopen only one reported archived, failed or not found. A running or
-  idle one is interrupted and not reopened: a second session on its branch
-  would collide with the first. Record the task as a stop under `Where it
-  stops and waits`, naming the task, the session link and its pull request.
+  idle one is interrupted, left unarchived and not reopened; name the task,
+  session link and pull request and leave the decision to the user.
 - **A message is sent, not a conversation.** A successful send does not prove
   the session received or acted on it. Read the result of a correction from
   the pull request, the same as everything else this watch reads.
@@ -619,8 +588,8 @@ Reached from `Watch the wave`, and it returns there.
   visible** — in its report, on its pull request, or on its task issue — by
   sending the answer to
   the address the roll records; that is the case `Watch the wave` already sends
-  through. It is a stop, named under `Where it stops and waits`, only where
-  the question is not visible anywhere this step can read.
+  through. If unreadable everywhere, name the story, session and pull request
+  where one exists, and hand the question to the user without guessing.
 
 8 — Close the epic
 ------------------
@@ -724,26 +693,10 @@ Each pause has a specific cause; missing evidence alone is not one.
   for work not yet decomposed.
 - **No wave to take**, at `Take the wave`. A report: every open story is blocked
   by something open, so name the issue that blocks and wait for it.
-- **A session that stopped to ask**, at `Recover a session`. Name the story,
-  its session and its pull request where one exists, and hand the question to the user. A
-  fallback implementor's question is the other thing: it arrives through the
-  messaging, is readable, and is answered on the advisor route. So is a web
-  session's question that arrives in its report. This stop covers the
-  question that cannot be read — a web session that stopped without a report,
-  or a delivery that failed. Guessing at
-  the answer is guessing at intent twice over — the constitution forbids it
-  once, and this skill did not write the code being asked about.
-- **A live session that cannot be messaged**, at `Recover a session`. A
-  report: name the task, the session link and its pull request, and leave the
-  session interrupted and unarchived for the user to decide.
-- **The epic's graph disagreeing with its body about a blocker**, at `Take the
-  wave`. The graph wins, so the wave is not in doubt; the body is wrong, and
-  fixing it is `epic`'s `Fill in the epic` rather than an edit made in passing
-  here.
-- **An unsupported `Human brief` claim**, at `Close the epic`. Diagnose and route
-  it under that step. Ask a person only for a genuinely missing decision or
-  contribution; an exhausted bound is an execution failure, not a request to
-  take over the work.
+- **An unreadable question or a live session that cannot be messaged:**
+  `Recover a session`.
+- **Graph and body disagree about a blocker:** `Take the wave` and `epic`.
+- **Unsupported outcome:** `Close the epic`.
 - **Landing or archive is denied by the auto-mode classifier.** Do not post a
   record that claims the action happened, and do not seek another route to the
   same effect. Tell the user once which action was denied and the classifier's
