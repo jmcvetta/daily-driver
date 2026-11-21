@@ -51,7 +51,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-deepseek-v4-pro-go RUN=evals/runs/695-classes-deepseek-v4-pro-go JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=deepseek-v4-pro-go RUN=evals/runs/695-classes-deepseek-v4-pro-go JUDGE=omp-gpt-6.1-sol
 - experiment: classes-deepseek-v4-pro-vercel.yaml
   experiment_id: classes-deepseek-v4-pro-vercel
   arm: omp
@@ -62,7 +62,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-deepseek-v4-pro-vercel RUN=evals/runs/695-classes-deepseek-v4-pro-vercel JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=deepseek-v4-pro-vercel RUN=evals/runs/695-classes-deepseek-v4-pro-vercel JUDGE=omp-gpt-6.1-sol
 - experiment: classes-deepseek-v4.1-flash-go.yaml
   experiment_id: classes-deepseek-v4-1-flash-go
   arm: omp
@@ -73,7 +73,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-deepseek-v4.1-flash-go RUN=evals/runs/695-classes-deepseek-v4-1-flash-go JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=deepseek-v4.1-flash-go RUN=evals/runs/695-classes-deepseek-v4-1-flash-go JUDGE=omp-gpt-6.1-sol
 - experiment: classes-deepseek-v4.1-flash-vercel.yaml
   experiment_id: classes-deepseek-v4-1-flash-vercel
   arm: omp
@@ -84,7 +84,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-deepseek-v4.1-flash-vercel RUN=evals/runs/695-classes-deepseek-v4-1-flash-vercel JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=deepseek-v4.1-flash-vercel RUN=evals/runs/695-classes-deepseek-v4-1-flash-vercel JUDGE=omp-gpt-6.1-sol
 - experiment: classes-glm-5.3-fast-vercel.yaml
   experiment_id: classes-glm-5-3-fast-vercel
   arm: omp
@@ -95,7 +95,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-glm-5.3-fast-vercel RUN=evals/runs/695-classes-glm-5-3-fast-vercel JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=glm-5.3-fast-vercel RUN=evals/runs/695-classes-glm-5-3-fast-vercel JUDGE=omp-gpt-6.1-sol
 - experiment: classes-glm-5.3-flash-go.yaml
   experiment_id: classes-glm-5-3-flash-go
   arm: omp
@@ -106,7 +106,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-glm-5.3-flash-go RUN=evals/runs/695-classes-glm-5-3-flash-go JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=glm-5.3-flash-go RUN=evals/runs/695-classes-glm-5-3-flash-go JUDGE=omp-gpt-6.1-sol
 - experiment: classes-glm-5.3-flash-vercel.yaml
   experiment_id: classes-glm-5-3-flash-vercel
   arm: omp
@@ -117,7 +117,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-glm-5.3-flash-vercel RUN=evals/runs/695-classes-glm-5-3-flash-vercel JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=glm-5.3-flash-vercel RUN=evals/runs/695-classes-glm-5-3-flash-vercel JUDGE=omp-gpt-6.1-sol
 - experiment: classes-glm-5.3-go.yaml
   experiment_id: classes-glm-5-3-go
   arm: omp
@@ -128,7 +128,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-glm-5.3-go RUN=evals/runs/695-classes-glm-5-3-go JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=glm-5.3-go RUN=evals/runs/695-classes-glm-5-3-go JUDGE=omp-gpt-6.1-sol
 - experiment: classes-glm-5.3-vercel.yaml
   experiment_id: classes-glm-5-3-vercel
   arm: omp
@@ -139,7 +139,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-glm-5.3-vercel RUN=evals/runs/695-classes-glm-5-3-vercel JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=glm-5.3-vercel RUN=evals/runs/695-classes-glm-5-3-vercel JUDGE=omp-gpt-6.1-sol
 - experiment: classes-haiku-low.yaml
   experiment_id: classes-haiku-low
   arm: claude
@@ -150,7 +150,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-haiku-low RUN=evals/runs/695-classes-haiku-low JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=haiku-low RUN=evals/runs/695-classes-haiku-low JUDGE=omp-gpt-6.1-sol
 - experiment: classes-haiku-medium.yaml
   experiment_id: classes-haiku-medium
   arm: claude
@@ -161,7 +161,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-haiku-medium RUN=evals/runs/695-classes-haiku-medium JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=haiku-medium RUN=evals/runs/695-classes-haiku-medium JUDGE=omp-gpt-6.1-sol
 - experiment: classes-kimi-k3.1-pro-code.yaml
   experiment_id: classes-kimi-k3-1-pro-code
   arm: omp
@@ -172,7 +172,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-kimi-k3.1-pro-code RUN=evals/runs/695-classes-kimi-k3-1-pro-code JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=kimi-k3.1-pro-code RUN=evals/runs/695-classes-kimi-k3-1-pro-code JUDGE=omp-gpt-6.1-sol
 - experiment: classes-luna-6.yaml
   experiment_id: classes-luna-6
   arm: omp
@@ -183,7 +183,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-luna-6 RUN=evals/runs/695-classes-luna-6 JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=luna-6 RUN=evals/runs/695-classes-luna-6 JUDGE=omp-gpt-6.1-sol
 - experiment: classes-mimo-v2.6-pro-go.yaml
   experiment_id: classes-mimo-v2-6-pro-go
   arm: omp
@@ -194,7 +194,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-mimo-v2.6-pro-go RUN=evals/runs/695-classes-mimo-v2-6-pro-go JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=mimo-v2.6-pro-go RUN=evals/runs/695-classes-mimo-v2-6-pro-go JUDGE=omp-gpt-6.1-sol
 - experiment: classes-minimax-m3-go.yaml
   experiment_id: classes-minimax-m3-go
   arm: omp
@@ -205,7 +205,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-minimax-m3-go RUN=evals/runs/695-classes-minimax-m3-go JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=minimax-m3-go RUN=evals/runs/695-classes-minimax-m3-go JUDGE=omp-gpt-6.1-sol
 - experiment: classes-minimax-m3-vercel.yaml
   experiment_id: classes-minimax-m3-vercel
   arm: omp
@@ -216,7 +216,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-minimax-m3-vercel RUN=evals/runs/695-classes-minimax-m3-vercel JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=minimax-m3-vercel RUN=evals/runs/695-classes-minimax-m3-vercel JUDGE=omp-gpt-6.1-sol
 - experiment: classes-opus-low.yaml
   experiment_id: classes-opus-low
   arm: claude
@@ -227,7 +227,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-opus-low RUN=evals/runs/695-classes-opus-low JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=opus-low RUN=evals/runs/695-classes-opus-low JUDGE=omp-gpt-6.1-sol
 - experiment: classes-sol-6-1.yaml
   experiment_id: classes-sol-6-1
   arm: omp
@@ -238,7 +238,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-sol-6-1 RUN=evals/runs/695-classes-sol-6-1 JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=sol-6-1 RUN=evals/runs/695-classes-sol-6-1 JUDGE=omp-gpt-6.1-sol
 - experiment: classes-sonnet-high.yaml
   experiment_id: classes-sonnet-high
   arm: claude
@@ -249,7 +249,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-sonnet-high RUN=evals/runs/695-classes-sonnet-high JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=sonnet-high RUN=evals/runs/695-classes-sonnet-high JUDGE=omp-gpt-6.1-sol
 - experiment: classes-sonnet-low.yaml
   experiment_id: classes-sonnet-low
   arm: claude
@@ -260,7 +260,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-sonnet-low RUN=evals/runs/695-classes-sonnet-low JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=sonnet-low RUN=evals/runs/695-classes-sonnet-low JUDGE=omp-gpt-6.1-sol
 - experiment: classes-terra-6-1.yaml
   experiment_id: classes-terra-6-1
   arm: omp
@@ -271,7 +271,7 @@ experiments:
   variants:
   - default
   cohort: model-classes
-  command: make evals-run-classes MODEL=classes-terra-6-1 RUN=evals/runs/695-classes-terra-6-1 JUDGE=omp-gpt-6.1-sol
+  command: make evals-run-classes MODEL=terra-6-1 RUN=evals/runs/695-classes-terra-6-1 JUDGE=omp-gpt-6.1-sol
 - experiment: omp-deepseek-v4-pro-go.yaml
   experiment_id: omp-deepseek-v4-pro-go
   arm: omp
