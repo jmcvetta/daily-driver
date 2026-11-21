@@ -25,7 +25,7 @@ The issue
 
 **Before `Claim the issue`, check the session title.** Read `sessionName` from
 `daily_driver_get_session` for title handling only. Format the expected title
-as `#{number} {shortened issue title}` using `session-title`'s forty-character
+as `#{number} {shortened issue title}` using `session-title`'s thirty-character
 budget and shortening rules. If it differs, call
 `daily_driver_set_session_title({ title })` before the wrapper call; if it
 already matches, do not rename it. The wrapper reads live model and session
