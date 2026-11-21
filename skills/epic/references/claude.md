@@ -12,7 +12,7 @@ The issues
 | ---- | --------- | ---- |
 | `Size the work` | Read an issue already in hand | `mcp__github__issue_read` |
 | `Open the issues` | Search the open issues | `mcp__github__search_issues` |
-| `Open the issues` | Open the epic and each task; settle destination under [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository) and pass it to both creates | `mcp__github__issue_write`, `method: create`, with `labels`; set `owner` and `repo` on both creates when the target differs from the current repository |
+| `Open the issues` | Open the epic and each story; settle destination under [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository) | `mcp__github__issue_write`, `method: create`, with the `epic` or story kind label (`task`, `research`, or `bug`); set `owner` and `repo` when the target differs from the current repository |
 | `Open the issues` | Turn an existing issue into the epic | read `labels` with `mcp__github__issue_read`, then `mcp__github__issue_write`, `method: update`, sending that set with the old standard label swapped for `epic` |
 | `Fill in the epic` | Replace the epic's body | `mcp__github__issue_write`, `method: update` |
 
@@ -59,11 +59,3 @@ because neither generation of the GitHub MCP server writes that edge at all.
 Read that skill's routes before `Write the graph`.
 
 
-The required class
-==================
-
-`issue-body` owns the task body contract and shared routing guidance in
-[`model-classes.md`](../../issue-body/references/model-classes.md). Every story
-uses that task contract and required model class at `Open the issues`, whether
-new or reused. This skill neither duplicates the taxonomy nor records a
-concrete model.
