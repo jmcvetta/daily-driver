@@ -54,6 +54,13 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.71.0](https://github.com/jmcvetta/daily-driver/compare/v0.70.0...v0.71.0) (2026-11-21)
+
+
+### Features
+
+* **session-title:** cap titles at 30 characters ([#970](https://github.com/jmcvetta/daily-driver/issues/970)) ([d79efaa](https://github.com/jmcvetta/daily-driver/commit/d79efaa171a1b001aba282cf71bec8ea683c9633))
+
 ## [0.70.0](https://github.com/jmcvetta/daily-driver/compare/v0.69.0...v0.70.0) (2026-11-21)
 
 
