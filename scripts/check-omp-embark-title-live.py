@@ -77,10 +77,7 @@ def tool_call(number: int, index: int, repository_qualified: bool) -> tuple[str,
     if index == 2:
         return "read", {"path": "prep.md"}
     if index == 3:
-        return "write", {
-            "path": "xd://daily_driver_set_session_title",
-            "content": json.dumps({"title": TARGETS[number][1]}),
-        }
+        return "daily_driver_set_session_title", {"title": TARGETS[number][1]}
     if index == 4:
         return "read", {"path": "prep.md"}
     if index == 5:

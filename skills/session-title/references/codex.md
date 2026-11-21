@@ -10,7 +10,7 @@ rename the calling task."* Omitting `threadId` is what makes it the one call
 rather than two: it takes the title alone, which is Omp's shape and not Claude
 Code's, and there is no session id to look up first.
 
-The title itself is `SKILL.md`'s, budget included. The forty characters are
+The title itself is `SKILL.md`'s, budget included. The thirty characters are
 this skill's cap rather than any tool's, so they hold here whatever Codex's own
 limit turns out to be.
 

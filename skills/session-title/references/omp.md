@@ -12,10 +12,9 @@ For an explicit Omp embark request, this setter is the only normal recovery
 write after the requested epic's matching canonical `issue://` read.
 Read-only discovery may precede that identity read. After matching epic
 metadata, the startup barrier blocks unrelated calls until the active session
-name matches the epic form. The extension also allows
-`write xd://daily_driver_set_session_title` for the title device; it checks
-the submitted title against the active epic before applying it.
+name matches the epic form. The extension checks the submitted title against
+the active epic before applying it.
 
 The runtime's own session-name limit is not measured here. The
-forty-character budget in `SKILL.md` applies whatever it is, because the cap
+thirty-character budget in `SKILL.md` applies whatever it is, because the cap
 is this skill's rather than the tool's.

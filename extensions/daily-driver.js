@@ -2358,7 +2358,7 @@ function embarkTitleReason(state) {
 		`${EMBARK_TITLE_PREFIX}${target.number} <shortened epic title>.\n\n` +
 		"Use the `session-title` skill for the existing shortening rules. " +
 		"Allowed recovery: `daily_driver_get_session` and " +
-		"`daily_driver_set_session_title({ title })`, or `write xd://daily_driver_set_session_title`. " +
+		"`daily_driver_set_session_title({ title })`. " +
 		"Reads of `session-title`, its Omp reference, the title-tool documentation, and the same issue are allowed."
 	);
 }
