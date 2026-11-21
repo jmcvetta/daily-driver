@@ -324,6 +324,7 @@ def case_price(
     model: str,
     prices: dict[str, dict[str, Any]],
     client_name: str,
+    billing_source: str | None = None,
 ) -> tuple[float | None, str]:
     """The USD price of one task result and its source.
 
@@ -340,7 +341,7 @@ def case_price(
     task = row_label(row)
     if uses_omp_codex_subscription(client_name, "omp", model):
         return None, "subscription"
-    if uses_codex_cli_subscription(client_name):
+    if uses_codex_cli_subscription(client_name, billing_source):
         return None, "subscription"
     # Go's catalog rates describe allowance consumption, not cash paid. The
     # adapter's estimated agent_cost_usd does not establish the billing source.
@@ -409,12 +410,16 @@ def run_cases(
     `evals-render-routes.py`'s and `evals-render-results.py`'s input.
     """
     cases = []
+    environment = run.get("environment_info")
+    environment = environment if isinstance(environment, dict) else {}
+    billing_source = environment.get("codex_billing_source")
+    billing_source = billing_source if isinstance(billing_source, str) else None
     for row in run.get("task_results", []):
         variant_id = row.get("variant_id")
         model_served = "unreported" if client_name == "omp" else (row.get("model_used") or "unreported")
         tokens = row.get("total_tokens")
         model_requested = requested.get(variant_id, "unknown")
-        cost, cost_source = case_price(row, model_requested, prices, client_name)
+        cost, cost_source = case_price(row, model_requested, prices, client_name, billing_source)
         elapsed = row.get("duration")
         if not _number(elapsed) or elapsed <= 0:
             raise ValueError(

@@ -21,12 +21,14 @@ def uses_omp_codex_subscription(client_name: str, route: str, model: str) -> boo
     )
 
 
-def uses_codex_cli_subscription(client_name: str) -> bool:
-    """Whether the client is the subscription-authenticated Codex CLI driver.
+def uses_codex_cli_subscription(client_name: str, billing_source: str | None) -> bool:
+    """Whether a Codex CLI run recorded the subscription as its billing source.
 
     The driver refuses an API-key environment variable and any login it cannot
-    identify as a subscription, so a completed turn on this kind consumed
-    allowance, not cash. The CLI reports no charge for that allowance; a list
-    price is not a bill, so the record keeps tokens and no dollar figure.
+    identify as a subscription, and writes `codex_billing_source: subscription`
+    into the run only when that check passed. Requiring the recorded field —
+    rather than the agent kind alone — keeps a historical SDK run of the same
+    kind, or a test that disabled the guard, from being relabelled as
+    subscription allowance.
     """
-    return client_name == "codex-daily-driver"
+    return client_name == "codex-daily-driver" and billing_source == "subscription"
