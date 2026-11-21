@@ -1044,10 +1044,12 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 		models: { current: () => modelsCurrent() },
 		sessionManager: { getSessionId: () => sessionId },
 	};
-	const execute = async (args) => {
+	const execute = async (args, reviewer) => {
 		ctx.model = { id: model, ...(modelProvider ? { provider: modelProvider } : {}) };
 		ctx.models = { current: () => modelsCurrent() };
-		const result = await tool.execute("gh-write", { args }, undefined, undefined, ctx);
+		const result = await tool.execute("gh-write", {
+			args, ...(reviewer ? { reviewerModel: reviewer.model ?? "unreported", reviewerProvider: reviewer.provider, reviewerSession: reviewer.session } : {}),
+		}, undefined, undefined, ctx);
 		return { result, capture: JSON.parse(readFileSync(capturePath, "utf8")) };
 	};
 	try {
@@ -1105,6 +1107,22 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 		assert.ok(review.capture.payload.body.includes("Model: model-b"));
 		assert.ok(review.capture.payload.comments[0].body.includes("Model: model-b"));
 		assert.equal(existsSync(review.capture.temporaryPath), false, "the private review JSON was removed");
+
+		// The publisher's identity must not replace the reviewer in either body.
+		const reviewer = { model: "mistral", provider: "gateway", session: "review-session" };
+		const delegated = await execute(["api", "--method", "POST", "repos/o/r/pulls/7/reviews", "--input", reviewFile], reviewer);
+		for (const body of [delegated.capture.payload.body, delegated.capture.payload.comments[0].body]) {
+			assert.ok(body.includes("Reviewer model: mistral\nReviewer provider: gateway\nReviewer session: review-session"));
+			assert.ok(body.includes("Publisher provenance:\n\n---\nModel: model-b"));
+		}
+		const verification = await execute(["pr", "comment", "7", "--body", "Review verification"], { model: "other-reviewer" });
+		assert.ok(verification.capture.body.includes("Reviewer model: other-reviewer\nReviewer provider: unreported\nReviewer session: unreported"));
+		const editReviewFile = join(root, "review-edit.json");
+		writeFileSync(editReviewFile, JSON.stringify({ body: delegated.capture.payload.body }));
+		const reviewEdit = await execute(["api", "--method", "PATCH", "repos/o/r/pulls/7/reviews", "--input", editReviewFile], reviewer);
+		assert.equal((reviewEdit.capture.payload.body.match(/Reviewer model:/gu) ?? []).length, 1);
+		assert.equal((reviewEdit.capture.payload.body.match(/Publisher provenance:/gu) ?? []).length, 1);
+		assert.equal((reviewEdit.capture.payload.body.match(/\nModel: model-b/gu) ?? []).length, 1);
 
 		const replyFile = join(root, "reply.json");
 		writeFileSync(replyFile, JSON.stringify({ body: "thread reply" }));

@@ -2693,10 +2693,16 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 		parameters: z.object({
 			args: z.array(z.string()).min(1).describe("Arguments passed to `gh`, excluding the `gh` executable"),
 			stdin: z.string().optional().describe("Optional standard input, used when a supported body source is `-`"),
+			reviewerModel: z.string().optional().describe("Observed reviewer model, or unreported when unknown"),
+			reviewerProvider: z.string().optional().describe("Observed reviewer provider, when known"),
+			reviewerSession: z.string().optional().describe("Observed reviewer session, when known"),
 		}),
 		execute: async (_toolCallId, params, signal, _onUpdate, ctx) => {
 			try {
-				const result = await runGitHubWrite(params.args, params.stdin, ctx, signal);
+				const reviewer = params.reviewerModel === undefined ? undefined : {
+					model: params.reviewerModel, provider: params.reviewerProvider, session: params.reviewerSession,
+				};
+				const result = await runGitHubWrite(params.args, params.stdin, ctx, signal, reviewer);
 				const content = [];
 				if (result.stdout) content.push({ type: "text", text: result.stdout });
 				if (result.stderr) content.push({ type: "text", text: result.stderr });
