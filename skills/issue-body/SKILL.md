@@ -98,6 +98,17 @@ inapplicable detail is omitted rather than manufactured into boilerplate.
    For research, frontier is the only class exception and does not add the task
    template.
 
+**Write for the assigned worker, not for the author.** The planning agent is
+ordinarily more capable than the worker its class selection routes to, and
+nothing the author knows reaches that worker except through the body. A fact
+the author read out of the repository, an inference drawn while planning, a
+decision settled on the way to the issue: each goes in the body, or the
+worker must reproduce it with less capability. Judge what counts as a routine
+local choice against the assigned class, never against the author — a choice
+that took the author reasoning is not routine for a cheaper worker. Settling
+a decision in the issue spends nothing the author has not already spent;
+leaving it open spends capability the worker may not have.
+
 An issue body is a requirement source, not original user approval. Later issue
 edits do not silently cancel agreed requirements for active work.
 
@@ -172,9 +183,10 @@ Before an issue is presented as ready, ask: can the assigned route deliver the
 settled work from the issue and referenced repository context without making
 an unstated product or architecture decision?
 
-- For `task`, ask whether an implementer assessed for its class can implement
-  from the issue and referenced repository context without making an unstated
-  product or architecture decision.
+- For `task`, ask whether an implementer at the issue's assigned class — not
+  the author — can implement from the issue and referenced repository context
+  without making an unstated product or architecture decision, and without
+  rediscovering a fact or decision the author already reached.
 - For `research`, ask whether an agent can investigate without guessing its
   purpose, evaluation criteria, permitted actions, or expected output. The
   unknown answer is not itself a defect.
