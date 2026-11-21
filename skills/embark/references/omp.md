@@ -58,57 +58,25 @@ implementor needs: the repository, the base branch, and the fallback protocol
 of `Open the sessions`. Issue scope stays in the issue; a summary of it in the
 context is the second copy `SKILL.md` forbids.
 
-Duplicate-dispatch protection is unchanged: the epic's muster rolls and each
-child issue's claim comments are read before the batch is built, exactly as
-`Take the wave` words it.
-
-Each item's prompt is the child issue number and the instruction to undertake
-it, and nothing else. The prompt boundary of `Open the sessions` holds.
 
 
 The route an implementor runs
 =============================
 
-The `task` surface selects an `agent`, not a model. Every epic story must pass
-`Take the wave`'s assignability gate before dispatch. For mapped families,
-select the agent named for its required class (`mechanical`, `routine`,
-`intermediate`, `complex`, or `frontier`). Each batch item sets only `agent`;
-it carries no per-item model argument. Resolve the effective route under
-[`issue-body`'s required-class policy](../../issue-body/references/omp.md#the-required-class):
+The `task` surface selects an `agent`, not a model. For mapped families, select
+the agent named for the required class (`mechanical`, `routine`,
+`intermediate`, `complex`, or `frontier`); each item sets only `agent`, with
+no per-item model argument. Apply
+[`issue-body`'s required-class policy](../../issue-body/references/omp.md#the-required-class).
 `task.agentModelOverrides[agentName]` takes precedence over discovered agent
-frontmatter, including a tagged-role assignment such as `@routine` or
-`@frontier`. Configured overrides and fallbacks are not checked against the
-required class after the initial selection.
+frontmatter, including tagged-role assignments such as `@routine` or
+`@frontier`. Reviewer and scout specialization and host helper inference are
+independent.
 
-If the known family is absent from the class table, prominently warn with the
-family, requested class, and retained provider/model. Continue immediately on
-the invoking model, provider, and effort without confirmation; class suitability
-is unverified. Do not dispatch a replacement to obtain a mapping. A class
-omitted from a mapped family follows the same warning-and-continue with
-unverified suitability; unknown identity and an explicitly cleared class remain
-gaps.
-Reviewer and scout specialization and host helper inference remain independent.
-
-A current measured class outranks handwritten guidance, and a measured class
-below the task's requirement excludes that route. An unmeasured, unreported,
-or stale row is unknown, not proof of suitability. For mapped families, use the
-operator's configured eligible preference without claiming measured capability.
-The absent-family continuation above explicitly leaves class suitability
-unverified; it does not waive tools, context, modality, availability, or
-credential requirements. Do not invent a freshness cutoff or use
-`modelRoles.task` as a universal implementor route.
-
-Missing assignments in a mapped family or unavailable credentials stop only
-the affected issue with a configuration gap; launch other eligible issues in
-the single concurrent batch. Never lower a task's class, alter shared roles, or
-restore a role the operator cleared to make a wave launch.
-
-Record the task's required class. Keep the selected agent/effective route and
-actual execution model distinct in the muster roll. Record `unreported` when
-execution identity is unavailable; a selector is not observed identity. If Omp
-reports a different model or fallback, record that observed model. `sonic` is a
-bundled agent, not a model role. Reviewers and scouts are not implementation
-routes.
+Record the required class, selected agent/effective route, and observed
+execution model separately. Use `unreported` when execution identity is
+unavailable; record an observed different model or fallback. `sonic` is a
+bundled agent, not a model role.
 
 
 Asking for help
@@ -174,14 +142,6 @@ agents report to the orchestrator, not the user. Recoverable errors, CI waits,
 reminders, progress and ordinary final replies do not notify. Notifications
 do not replace the record or chat handoff.
 
-**A live subagent's result or failure arrives as a wake of its own.** The
-orchestrator ends its turn holding the job IDs returned by `task`, and each
-implementor that finishes wakes it. Inspect a job without consuming delivery
-with `read proc://<job-id>`; cancel it with `write proc://<job-id>/kill`. Use
-`wait` with no arguments only when blocked. The GitHub state remains the
-durable record: a child issue's body and comments, plus a pull request where
-one exists, show whether work is moving or complete, and the epic graph shows
-whether each child is home.
 
 CI waiting uses `review-cycle`'s persistent named Bash service. Start the
 service once, request `persist` through `write proc://<name>/mode`, and
@@ -227,11 +187,7 @@ round on the head is.
 Recovering an implementor
 =========================
 
-A correction is a message to the implementor's identifier. Read its lifecycle
-before recovery; never start a replacement alongside a live writer. An ended
-implementor whose open draft still has permitted work resumes on the **same
-branch**. A failed implementor, or one finished with no pull request across two
-check-ins, uses the same route. Read the claim, any handoff and the PR head to
-resolve that branch. Do not relaunch for an unchanged prerequisite when all
-permitted work is complete. The replacement is posted to the epic, naming the
-subagent retired and the one that took over.
+Address corrections to the subagent identifier through agent messaging. Read
+its lifecycle using `proc://<job-id>`, cancel through
+`proc://<job-id>/kill`, and dispatch a replacement through `task` under
+`Recover a session`.

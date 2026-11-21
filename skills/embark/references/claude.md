@@ -24,9 +24,8 @@ The epic
 | `Post the muster roll` | Comment on the epic | `mcp__github__add_issue_comment` |
 | `Post the muster roll` | Mark the wave in the epic's body | `mcp__github__issue_write`, `method: update` |
 
-`method: update` replaces `body` outright rather than appending to it, so a
-wave marked `at sea` or `done` means sending the whole of the epic body back
-with that one heading changed.
+`method: update` replaces `body` outright: send the whole epic body with the
+wave heading changed to `in progress` or `done`.
 
 **The blocked-by edges are `issue-deps`'**, and on this harness the MCP
 answers them as counts only — which is a different question from *which*. Read
@@ -88,12 +87,6 @@ agents" while `get_session` showed two implementors running and connected.
 and `priority: later` succeeded and queued an event with `inbound_origin:
 mcp_send_message`.
 
-**Reachability is read from the send.** A `send_message` that errors is the
-signal. Then `get_session` decides. Reopen only a session it reports as
-archived, failed, or not found. A running or idle session whose send errors is
-interrupted, never reopened — a second session on its branch would collide
-with the one that still holds it — and the task is a stop under `Where it
-stops and waits`.
 
 Route assessment
 ----------------
