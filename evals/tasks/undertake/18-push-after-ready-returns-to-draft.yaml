@@ -11,7 +11,7 @@ tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
   PR #25 is ready for review for issue #24. Its review round is complete and
-  the completion notice is posted. I found a defect in `fetch.sh`: the retry
+  a clean submitted full review covers the head. I found a defect in `fetch.sh`: the retry
   loop never stops on a 404. Please fix it. What do you do, in order?
 
 agent:

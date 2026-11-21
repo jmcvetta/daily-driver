@@ -9,7 +9,7 @@ initial_prompt: >-
   Projection succeeded, there are no commit statuses or other workflow runs,
   required approving review count is zero, reviewDecision is empty, all review
   threads are resolved, and no human label or human-action blocker exists.
-  The review-cycle completion notice covers abc123. The implementor is active.
+  A clean submitted full review by the claim author covers abc123. The implementor is active.
   The prior muster roll did not yet record pending Checks. This isolated
   exercise has no GitHub or messaging client. State the landing decision,
   the muster-roll line, and how observation continues. Do not perform writes.

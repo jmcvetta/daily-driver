@@ -7,8 +7,8 @@ initial_prompt: >-
   ready PR #301 for task #201 at abc123 has mergeStateStatus BLOCKED. All CI
   sources are terminal and successful. Repository review policy requires one
   owner approval and reviewDecision is REVIEW_REQUIRED; that approval has not
-  been given. All review threads are resolved and the review-cycle completion
-  notice covers abc123. No human label or other human-action blocker exists.
+  been given. All review threads are resolved and a clean submitted full review
+  by the undertaking claim author covers abc123. No human label or other human-action blocker exists.
   Its implementor is active and still has already-authorized documentation
   work it can complete without that approval. The prior muster roll has no
   approval entry. This isolated exercise has no GitHub or messaging client.

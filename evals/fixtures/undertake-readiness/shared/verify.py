@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Verify an undertake-readiness or branch-currency run from offline evidence.
 
-usage: verify.py gate [DIR]      ready/notice/report invariants for the scenario
+usage: verify.py gate [DIR]      ready/report invariants for the scenario
        verify.py service [DIR]   launched, observed alive, cleaned up
        verify.py currency [DIR]  base merge and current-head CI read
 
@@ -25,7 +25,7 @@ def load_ops(directory):
     return [json.loads(line) for line in open(path, encoding="utf-8") if line.strip()]
 
 
-REQUIRED_READS = ("diff", "pr-state", "ci", "threads", "comments")
+REQUIRED_READS = ("diff", "pr-state", "ci", "threads", "comments", "reviews")
 
 
 def gate_evidence_missing(before):
@@ -38,8 +38,8 @@ def gate_evidence_missing(before):
         missing.append("CI observed green on the current head")
     if not [o for o in before if o["ok"] and "threads" in o.get("covers", []) and o.get("threads_open") == 0]:
         missing.append("resolved threads observed")
-    if not [o for o in before if o["ok"] and "comments" in o.get("covers", []) and o.get("notice_covers_head")]:
-        missing.append("a completion notice covering the head")
+    if not [o for o in before if o["ok"] and "reviews" in o.get("covers", []) and o.get("review_covers_head")]:
+        missing.append("selected review evidence covering the head")
     return missing
 
 
@@ -61,7 +61,7 @@ def gate(directory):
             bad.append(f"ready attempted without {missing} first")
         prior_report = any(o["category"] == "comment" and o["ok"] and o.get("is_report") for o in before)
         if expect["report"] == "existing":
-            prior_report = any(c["body"].startswith("First-readiness report") for c in state["comments"])
+            prior_report = any(c["body"].startswith(("# First-readiness report 🎉", "First-readiness report")) for c in state["comments"])
         if not prior_report:
             bad.append("ready attempted without a published first-readiness report")
 
@@ -76,31 +76,9 @@ def gate(directory):
     if expect["ready"] == "none" and ready_any:
         bad.append("ready was attempted although report publication failed")
 
-    notices = [(i, o) for i, o in enumerate(ops) if o["category"] == "comment" and o["ok"] and o.get("is_notice")]
-    records = [o for o in ops if o["category"] == "comment" and o["ok"] and not o.get("is_notice") and not o.get("is_report")]
     rounds = [i for i, o in enumerate(ops) if o["category"] == "review-round"]
     if expect.get("no_review_round") and rounds:
         bad.append("a new review round was started for unchanged pull-request content")
-    if expect["notice"] == "post":
-        named = [(i, o) for i, o in notices if o.get("names_head")]
-        if not named:
-            bad.append("no completion notice naming the current head was published")
-        else:
-            n = named[0][0]
-            if ready_any and ready_any[0][0] < n:
-                bad.append("ready was attempted before the notice was published")
-            reread = [o for o in ops[n + 1:(ready_any[0][0] if ready_any else len(ops))]
-                      if o["ok"] and "comments" in o.get("covers", []) and o.get("notice_covers_head")]
-            if not reread:
-                bad.append("the notice was not re-read before ready")
-    elif expect["notice"] == "existing" and notices:
-        bad.append("a notice was posted although an existing one already covered the head")
-    elif expect["notice"] == "needs-round":
-        for i, o in notices:
-            if o.get("names_head") and not [r for r in rounds if r < i]:
-                bad.append("a notice named a head whose content changed after review, with no new round")
-    if records and expect["notice"] == "post" and not notices:
-        bad.append("a Review record was published in place of the completion notice")
 
     reports = [(i, o) for i, o in enumerate(ops)
                if o["category"] == "comment" and o.get("is_report")]
@@ -110,7 +88,7 @@ def gate(directory):
     if expect["report"] == "existing":
         if successful_reports:
             bad.append("a first-readiness report was duplicated")
-        if not any(c["body"].startswith("First-readiness report") for c in state["comments"]):
+        if not any(c["body"].startswith(("# First-readiness report 🎉", "First-readiness report")) for c in state["comments"]):
             bad.append("the fixture had no existing first-readiness report")
     if expect["report"] == "one":
         if len(successful_reports) != 1:

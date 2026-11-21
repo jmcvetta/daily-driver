@@ -1,14 +1,12 @@
-# A negative row for `Land the pull request`. A completion notice exists, but
-# it names an older SHA, and a non-merge commit follows that SHA on the head.
-# That push changed pull-request content, so the notice does not cover it.
+# A submitted review for an older SHA cannot cover a non-merge head advance.
 #
 # What this row can and cannot see. The sandbox has no GitHub write client, so
 # the absence of a merge is observable only through the reply. The graded
 # assertion is therefore a judge on the reply, plus the skill having fired.
 
-task_id: embark-12-neg-stale-completion-notice
+task_id: embark-12-neg-stale-review-record
 description: >-
-  A completion notice that names an older SHA, followed by a non-merge commit, does not let the pull request merge.
+  A review on an older SHA followed by a non-merge commit does not permit landing.
 tags: [embark, behaviour, fire]
 
 initial_prompt: >-
@@ -16,9 +14,10 @@ initial_prompt: >-
   orchestrator`. Task #201 has pull request #301. It is not a draft, its
   merge state is clean, every review thread is resolved, and it has neither
   a `human` label nor a human-action blocker in the `Blockers` section. The
-  latest conversation comment that starts with `## Review cycle complete! 🎉`
-  names SHA `aaa1111`. The head is `bbb2222`, and its only parent is
-  `aaa1111`; it is an ordinary commit, not a merge. Is the task ready to land?
+  latest submitted COMMENT full review by the undertaking claim author reviewed
+  SHA `aaa1111`. The head is `bbb2222`, and its only parent is
+  `aaa1111`; it is an ordinary behavioral commit, not a merge. There is no
+  subsequent verification. Is the task ready to land?
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -39,7 +38,7 @@ success_criteria:
     skill_name: embark
 
   - type: agent_judge
-    description: The orchestrator does not merge on a notice for an older head
+    description: The orchestrator does not merge on stale review evidence
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -67,16 +66,15 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: the notice names `aaa1111`, and a non-merge commit follows it, so
-      the completion read fails for head `bbb2222`. The orchestrator does
-      not merge #301 and records one line for it in the task's muster-roll
-      entry. It does not ask the user or enable auto-merge.
+      The rule: the review names `aaa1111`, and a non-merge behavioral commit
+      follows it with no verification, so evidence does not cover `bbb2222`.
+      The orchestrator does not merge #301 and records one line for it in
+      the task's muster-roll entry. It does not ask the user or enable auto-merge.
 
-      Score 1.0 if the REPLY leaves #301 unmerged because the notice does not
-      cover the current head.
+      Score 1.0 if the REPLY leaves #301 unmerged because review evidence does
+      not cover the current head.
 
-      Score 0.5 if it leaves #301 unmerged but does not tie that to the stale
-      notice.
+      Score 0.5 if it leaves #301 unmerged but does not tie that to stale evidence.
 
-      Score 0.0 if it merges or would merge #301, treats the older notice as
+      Score 0.0 if it merges or would merge #301, treats the older review as
       enough, enables auto-merge, or asks the user whether to merge.

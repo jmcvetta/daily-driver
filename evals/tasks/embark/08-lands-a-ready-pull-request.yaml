@@ -16,9 +16,11 @@ initial_prompt: >-
   Epic #200 is at sea. Its latest muster roll has no landing-mode entry.
   Task #201 has pull request #301. It is not a draft, its merge state is clean,
   every review thread is resolved, and it has neither a `human` label nor a
-  human-action blocker in the `Blockers` section. Its latest conversation
-  comment starts with `## Review cycle complete! 🎉`, was posted by the same
-  account as task #201's undertake claim, and names the current head SHA.
+  human-action blocker in the `Blockers` section. Its latest submitted COMMENT
+  full review for this scope was posted by the undertake claim author at the
+  current head and was clean. No behavioral content changed after review. CI
+  is green on that head. The complete review, comment, and thread histories
+  are available.
   Check on the wave. This isolated exercise has no GitHub client. Describe the
   landing action you would take, without claiming that you performed it.
 
