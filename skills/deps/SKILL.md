@@ -1,19 +1,14 @@
 ---
 name: deps
 description: >-
-  This skill should be used whenever a repository's dependencies are being
-  upgraded in bulk, or whenever open Dependabot pull requests are the thing to
-  answer — including when the user says "/deps", "dependabot is complaining",
-  "upgrade the deps", "these dependency PRs are piling up", or "bump
-  everything". Noticing open Dependabot pull requests during other work is
-  worth a line to the user and is not itself a trigger: a bulk upgrade started
-  mid-task is scope nobody asked for. Supplies the one-branch bulk upgrade,
-  the bulk command each manager already has, green CI as the whole acceptance
-  test, and the boundary an unattended run stays inside — no merge, no code
-  edited around a breaking change, and nothing outside the pull request it
-  opens. Not for a single
-  named dependency, which is ordinary work, and not for a major version bump,
-  which this skill reports and hands to `undertake`.
+  Use for `/deps`, a bulk dependency upgrade, or open Dependabot pull requests
+  as the thing to answer. Noticing those pull requests during other work is
+  worth a line, not a bulk upgrade. Supplies the one-branch upgrade, the bulk
+  command each manager already has, green CI as the whole acceptance test, and
+  the unattended-run boundary: no merge, no code edited around a breaking
+  change, nothing outside the pull request it opens. Not for a single named
+  dependency, which is ordinary work, or a major version bump, which it
+  reports and hands to `undertake`.
 ---
 
 # Bulk dependency upgrade

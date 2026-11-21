@@ -1,18 +1,13 @@
 ---
 name: review-cycle
 description: >-
-  Use this skill whenever a pull request is reviewed, alone or then answered —
-  including "/review-cycle", "review the PR", "review the PR and fix what it
-  finds", "address the review feedback", "reply to the review comments",
-  "resolve those threads", or "does that need another review?", and before
-  invoking a pull-request review, recording a review finding, replying to or
-  resolving a review thread, or waiting for a pull request's checks. Supplies
-  the CI wait on the pushed head, the review invocation and its level, a
-  durable inline review record, the finding response protocol, bounded
-  independent verification of fix deltas, and the test for whether a later
-  push changes the full-review scope. Not for opening a pull request or
-  bringing one up to date — that is `pr` — nor for marking a draft ready,
-  which is the caller's gate.
+  Use for `/review-cycle` whenever a pull request is reviewed, alone or then
+  answered, its threads replied to or resolved, or its checks awaited. Supplies
+  the CI wait on the pushed head, the review invocation and level, a durable
+  inline record, the finding response protocol, bounded independent fix-delta
+  verification, and the test for whether a later push changes the full-review
+  scope. Not for opening or updating a pull request (`pr`) or marking a draft
+  ready, which is the caller's gate.
 ---
 
 # Review cycle

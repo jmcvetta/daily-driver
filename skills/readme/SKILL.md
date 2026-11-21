@@ -1,18 +1,13 @@
 ---
 name: readme
 description: >-
-  This skill should be used whenever a README is being written or revised —
-  including when the user says "/readme", "write a README", "update the
-  README", "document this directory", "the README is stale", or asks what
-  belongs in one, and on the agent's own initiative before creating or editing
-  any `README.md`, at the root of a repository or inside a directory within
-  one. Supplies the two questions a README answers, the shape that answers
-  them, the rule that decides how long one runs, and the list of what must
-  never appear in one —
-  work log, project history, specifications, test numbers, rejected ideas —
-  with the place each of those belongs instead. Not for a pull request body,
-  which is `pr-body`, and not for a design note, a planning document or
-  anything else under `docs/`.
+  Use for `/readme` whenever a README is written or revised, at a repository
+  root or inside a directory, including on the agent's own initiative before
+  creating or editing one. Supplies the two questions a README answers, the
+  shape that answers them, the rule that decides its length, and what must
+  never appear: work log, project history, specifications, test numbers,
+  rejected ideas. Not for a pull request body (`pr-body`) or anything under
+  `docs/`.
 ---
 
 # README
