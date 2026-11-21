@@ -1,14 +1,10 @@
 ---
 name: session-title
 description: >-
-  This skill should be used whenever the title of the current session is being
-  set or revised — including when the user says "/session-title", "set the
-  session title", "rename this session", "name this session", or "that session
-  title is wrong", and on the agent's own initiative when work on a GitHub issue
-  begins, when the session's subject changes materially, or on any call to the
-  harness's session-title tool. Supplies the character budget a title is written
-  to for a mobile list, and the three forms that title may take. Not the title
-  of a pull request — that is `pr-title`.
+  Use for `/session-title` whenever the current session's title is set or
+  revised, including on the agent's own initiative when an issue's work begins
+  or the subject changes materially. Supplies the 30-character budget and the
+  three title forms. Not for a pull request title (`pr-title`).
 ---
 
 # Session title

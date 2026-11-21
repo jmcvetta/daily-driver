@@ -1,19 +1,12 @@
 ---
 name: conventional-commits-type
 description: >-
-  This skill should be used whenever the Conventional Commits type of a change
-  is being chosen or checked — including when the user asks "is this a fix or
-  a feat?", "what type should this PR be?", "should this be a refactor?",
-  says "the type is wrong" or "that's not a fix", questions what version
-  merging will cut, or when a Projected Releases comment on a pull request
-  disagrees with what the author meant; and whenever `pr-title` needs the type
-  for a title it is writing. Supplies the three gates and the one test that
-  pick the type from what the change does, and what the type decides about
-  the next release — including the ships-versus-verifies boundary that
-  types test-only changes `test`.
-  Not for writing the title itself — that is `pr-title` —
-  and not for commit messages, which are not Conventional Commits in this
-  toolkit.
+  Use when the Conventional Commits type of a change is chosen or checked,
+  when a projected release disagrees with what the author meant, or when
+  `pr-title` needs the type. Supplies the gates that pick the type from the
+  change's effect and the release boundary that types test-only changes
+  `test`. Not for writing the title (`pr-title`) or for commit messages,
+  which are not Conventional Commits in this toolkit.
 ---
 
 # Conventional Commits Type

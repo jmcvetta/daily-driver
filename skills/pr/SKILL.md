@@ -1,16 +1,13 @@
 ---
 name: pr
 description: >-
-  Read before validation, proposing or changing CI enforcement, or opening or
-  updating a pull request. The policy applies without an issue or PR; reading it
-  does not start PR creation. For the current branch, triggers include
-  "/pr", "open a PR", "create a PR",
-  "raise a pull request", or "update the PR", and including any call the agent
-  makes on its own initiative before creating a pull request, or updating an
-  existing pull request beyond its title or body alone. Supplies the branch
-  guard, the existing-PR check, draft state, ongoing base-branch maintenance,
-  and the call on whether there is an issue to reference; the title comes
-  from `pr-title` and the body, issue reference included, from `pr-body`.
+  Read for `/pr` before validation, proposing or changing CI enforcement, or
+  opening or updating a pull request. The policy applies without an issue or
+  PR, and reading it starts neither. For the current branch, triggers include
+  opening, raising, or updating a PR and any agent-initiated call before
+  creating one or updating one beyond its title or body. Supplies the branch
+  guard, the existing-PR check, draft state, ongoing base maintenance, and the
+  issue-reference call; title is `pr-title` and body is `pr-body`.
 ---
 
 # PR Workflow

@@ -1,16 +1,10 @@
 ---
 name: issue-deps
 description: >-
-  This skill should be used whenever a relationship between GitHub issues is
-  being recorded, read, or relied upon — one issue blocking another, a
-  sub-issue or parent, or which pull request closes an issue. It fires on the
-  literal "/issue-deps", on natural phrasings ("this is blocked by #123",
-  "what's blocking this", "make it a sub-issue of the epic"), on noticing
-  while planning or writing a PR body that other work must land first, and
-  before recording or reading a blocked-by, sub-issue or parent edge, or
-  writing a `Closes #123` line in a pull request body. Supplies the client
-  selection rules and the rule that an edge the evidence supports is written
-  and reported rather than asked about.
+  Use for `/issue-deps` when a relationship between GitHub issues is recorded,
+  read, or relied upon: blocked-by, parent, sub-issue, or which pull request
+  closes an issue. Supplies client selection and the rule that an edge the
+  evidence supports is written and reported rather than asked about.
 ---
 
 # Issue relationships
