@@ -30,7 +30,7 @@ sandbox:
                   "closedByPullRequestsReferences": []
                 },
                 "990004": {
-                  "title": "[auto-filed] Empty config is rejected",
+                  "title": "Empty config is rejected",
                   "state": "OPEN",
                   "labels": ["bug"],
                   "body": "Component: cli/config_reader.py\nObserved: empty config raises a parse error.\n---\nModel: fixture-reporter\nHarness: Omp 18.4.1\nsession: fixture-session\n",
@@ -84,6 +84,17 @@ sandbox:
                   "parent": null,
                   "closedByPullRequestsReferences": []
                 },
+                "990009": {
+                  "title": "[auto-filed] Existing config task",
+                  "state": "OPEN",
+                  "labels": ["task"],
+                  "body": "Already settled task; not a bug report.\n",
+                  "comments": [],
+                  "blockedBy": {"nodes": []},
+                  "blocking": {"nodes": []},
+                  "parent": null,
+                  "closedByPullRequestsReferences": []
+                },
                 "991005": {
                   "title": "Unblock selector fix",
                   "state": "OPEN",
@@ -112,7 +123,7 @@ sandbox:
                   "comment_contains": ["fixed versus sliding expiry"]
                 },
                 "990004": {
-                  "title": "[auto-filed] Empty config is rejected",
+                  "title": "Empty config is rejected",
                   "labels": ["bug"],
                   "body_contains": ["empty config raises a parse error"],
                   "comment_contains": ["#990007"]
@@ -136,6 +147,11 @@ sandbox:
                   "title": "[auto-filed] Formatter drops the trailing newline",
                   "labels": ["bug"],
                   "body_contains": ["the final newline is dropped"]
+                },
+                "990009": {
+                  "title": "[auto-filed] Existing config task",
+                  "labels": ["task"],
+                  "body_contains": ["Already settled task; not a bug report."]
                 }
               },
               "required_actions": [
@@ -156,7 +172,9 @@ sandbox:
                 {"action": "edit", "number": "990004"},
                 {"action": "edit", "number": "990005"},
                 {"action": "edit", "number": "990006"},
-                {"action": "edit", "number": "990007"}
+                {"action": "edit", "number": "990007"},
+                {"action": "read", "number": "990009"},
+                {"action": "edit", "number": "990009"}
               ]
             }
 
@@ -175,11 +193,13 @@ run_limits:
 
 initial_prompt: >-
   Run the repository-local fix-daily-driver-bugs workflow against only issues
-  #990003 through #990008. These are offline fixtures. Use the supplied fake
-  gh only. Leave the unresolved decision, duplicate, blocked issue, claimed
-  issue, existing task/PR, and injected body-write failure unlaunched. The
-  verifier checks fixture state and recorded GitHub actions; run
-  `python3 .fixture/verify_state.py`. Do not access a live tracker.
+  #990003 through #990008. These are offline fixtures; #990004 is a manually
+  filed bug and #990009 is a prefixed non-bug outside the explicit selection.
+  Use the supplied fake gh only. Leave the unresolved decision, duplicate,
+  blocked issue, claimed issue, existing task/PR, and injected body-write
+  failure unlaunched. The verifier checks fixture state and recorded GitHub
+  actions; run `python3 .fixture/verify_state.py`. Do not widen selection to
+  #990009 or access a live tracker.
 
 success_criteria:
   - type: skill_triggered

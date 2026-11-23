@@ -1,6 +1,6 @@
 task_id: fix-daily-driver-bugs-01-promotes-independent-reports-omp
 description: >-
-  Promote two independent automatic reports, verify both task states, and
+  Promote prefixed and manually filed bug reports, verify both task states, and
   dispatch both tasks in one bounded Omp batch.
 tags: [fix-daily-driver-bugs, behaviour, omp-only, native, fire]
 
@@ -30,11 +30,10 @@ sandbox:
                   "closedByPullRequestsReferences": []
                 },
                 "990002": {
-                  "title": "[auto-filed] Empty config is read as invalid YAML",
+                  "title": "Empty config is read as invalid YAML",
                   "state": "OPEN",
                   "labels": ["bug"],
                   "body": "Component: cli/config_reader.py\nExpected: an empty config file uses the documented default configuration.\nObserved: the reader raises a YAML parse error on an empty file.\nReproduction: pass a zero-byte config file to load_config.\nVersion: daily-driver 0.49.2.\n---\nModel: fixture-reporter\nHarness: Omp 18.4.1\nsession: fixture-session\n",
-                  "comments": [],
                   "blockedBy": {"nodes": []},
                   "blocking": {"nodes": []},
                   "parent": null,
@@ -66,7 +65,7 @@ sandbox:
                   "title": "Empty config is read as invalid YAML",
                   "labels": ["task"],
                   "body_contains": [
-                    "Original automatic report title: [auto-filed] Empty config is read as invalid YAML",
+                    "Original bug report title: Empty config is read as invalid YAML",
                     "zero-byte config file",
                     "Model class",
                     "routine"
@@ -125,11 +124,12 @@ run_limits:
   task_timeout: 1200
 
 initial_prompt: >-
-  Triage the entire open automatic-report backlog with the repository-local
-  fix-daily-driver-bugs workflow. Use its default selection, not an explicit
-  issue-number list. The offline fixture has two independent eligible reports.
-  Use the supplied fake gh only; do not use a GitHub MCP, browser, or live
-  client. Inspect each fixture source and contract. Preserve each report and
+  Triage the entire open Daily Driver bug backlog with the repository-local
+  fix-daily-driver-bugs workflow. Use default selection, not an explicit
+  issue-number list. The offline fixture has two independent eligible bug
+  reports: one automatic report and one manually filed report. Use the supplied
+  fake gh only; do not use a GitHub MCP, browser, or live client. Inspect each
+  fixture source and contract. Preserve each report, exact manual title and
   provenance while promoting the same issue numbers. Run
   `python3 .fixture/verify_state.py` and dispatch both eligible tasks in one
   Omp task batch, one worker per issue, each instructed to `undertake` its
