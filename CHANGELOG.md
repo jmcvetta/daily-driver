@@ -60,6 +60,19 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.74.0](https://github.com/jmcvetta/daily-driver/compare/v0.73.0...v0.74.0) (2026-11-23)
+
+
+### Features
+
+* **review-cycle:** use native Open Code Review on Omp ([#1005](https://github.com/jmcvetta/daily-driver/issues/1005)) ([8ea9a22](https://github.com/jmcvetta/daily-driver/commit/8ea9a2293ff340d6f647681eb42ffbad04ae22b7))
+
+
+### Bug Fixes
+
+* **issue-body:** complete the readiness review before delivery ([#1009](https://github.com/jmcvetta/daily-driver/issues/1009)) ([b8679f8](https://github.com/jmcvetta/daily-driver/commit/b8679f8380439b3690c47fc977e63e76bcda6117))
+* **pr:** document Omp mechanical merge completion ([#1000](https://github.com/jmcvetta/daily-driver/issues/1000)) ([7cb029c](https://github.com/jmcvetta/daily-driver/commit/7cb029cc182b87094d96c1c86052dc682d78f5a1))
+
 ## [0.73.0](https://github.com/jmcvetta/daily-driver/compare/v0.72.0...v0.73.0) (2026-11-23)
 
 
