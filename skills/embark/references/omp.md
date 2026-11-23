@@ -173,9 +173,9 @@ The strong-model review
 At each implementor's ready gate, the round is run by a strong model — the
 orchestrator or the shared advisor, never the implementor. The implementor
 hands its head over the messaging above and waits; the surface is
-`review-cycle`'s own [`omp.md`](../../review-cycle/references/omp.md): the
-`reviewer` task agent, dispatched through `task`. Its findings go back to the
-implementor over the messaging above and are answered under the round's
+`review-cycle`'s own [`omp.md`](../../review-cycle/references/omp.md): native
+Open Code Review (`ocr`), invoked as that file specifies. Its findings go back
+to the implementor over the messaging above and are answered under the round's
 protocol; the ready gate is `undertake`'s, and it is not satisfied until the
 round on the head is.
 
