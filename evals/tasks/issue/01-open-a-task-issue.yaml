@@ -127,11 +127,14 @@ success_criteria:
         `sign_changed(current, previous, sign)` callback interface while
         reusing stored previous signatures.
       - It states concrete verification for unchanged, changed, new and
-        removed artifacts. The deterministic acceptance example is previous
-        manifest `{"a": "abc", "b": "old", "gone": "xyz"}` and current
-        manifest `{"a": "abc", "b": "new", "c": "abc"}`: only `b` and `c` are
-        signed; unchanged `a` is skipped; new `c` is signed even though its
-        digest equals `a`'s; absent `gone` is not signed. The existing
+        removed artifacts — named cases or exact assertions that establish
+        each one. Do not require the example manifests below to appear in the
+        body; use them to check that the stated verification covers the
+        behavior. The deterministic acceptance example is previous manifest
+        `{"a": "abc", "b": "old", "gone": "xyz"}` and current manifest
+        `{"a": "abc", "b": "new", "c": "abc"}`: only `b` and `c` are signed;
+        unchanged `a` is skipped; new `c` is signed even though its digest
+        equals `a`'s; absent `gone` is not signed. The existing
         empty-previous-manifest test remains valid.
 
       Score 1.0 if the reply explicitly selects `task` and the complete body
