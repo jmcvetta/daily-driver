@@ -133,9 +133,9 @@ or `git commit -a`. Before committing, confirm no unmerged paths remain and
 the index contains only the conflict resolutions. If unrelated staged work
 appeared, preserve it and coordinate rather than committing or resetting it.
 Once all conflict paths are resolved and staged, use plain `git commit` to
-conclude the in-progress merge. This is the narrow exception to Omp's normal
-selective-commit route: `commit.draft()` cannot create a merge commit. Do not
-skip hooks or signing. Push the task branch normally, restart the existing
+conclude the in-progress merge. This is the narrow exception to Omp's
+selective-commit helper, which refuses commits during an in-progress merge.
+Do not skip hooks or signing. Push the task branch normally, restart the
 maintenance watch, and send the changed content through `review-cycle`.
 A resolved merge is a content change: it still requires current-head CI and
 review.
