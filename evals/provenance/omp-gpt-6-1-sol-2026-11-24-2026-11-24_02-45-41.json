@@ -1,0 +1,372 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on a body being revised",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The update changes the affected requirement and preserves the rest",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The update changes the affected requirement and preserves the rest",
+            "duration_seconds": 9.94,
+            "findings": [
+              "Design specifies three retries with exponential backoff in upload_batch.",
+              "Scope, non-goal, verification, and routine Model class remain present.",
+              "Original provenance retains its concrete model, harness, and session fields."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2061ba0683efe7afb54c56ead8d6c0322f7bfb42b06060c6b838a96146074669",
+            "rationale": "ANCHOR: result The proposed body specifies exponential backoff while retaining the outcome, scope, auth-failure non-goal, verification requirements, and valid Model class. The original provenance remains intact, and no concrete Model or Effort field appears inside the task sections.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1991,
+              "output": 150
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "acfc8d0f9a44dd5d827cfa6ff917bbb6b837a7338bcac905e02dfa7fb007acfc"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-03-update-preserves-valid-requirements",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue` fires on an issue being opened",
+          "details": "observed='yes', expected='yes' (skill_name='issue')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on the body being written",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The delivered body is a settled worker handoff with model class metadata",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The delivered body is a settled worker handoff with model class metadata",
+            "duration_seconds": 8.85,
+            "findings": [
+              "Correctly preserves name-and-digest comparison, the callback interface, and existing stored signatures.",
+              "Names the existing test and offline pytest/CI gate.",
+              "Does not specify the required previous/current manifests and exact expected signing calls for b and c.",
+              "Concrete Model metadata appears only in the distinct provenance block, which is permitted."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "69cbf25ec148ae901a69fe5da1a029d0027341b2885878038b133b38f843f0a8",
+            "rationale": "ANCHOR: result. The reply selects `task` and provides a plausible handoff, but omits the required deterministic acceptance example, leaving a settled verification contract for the implementer to supply.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 3066,
+              "output": 192
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "acfc8d0f9a44dd5d827cfa6ff917bbb6b837a7338bcac905e02dfa7fb007acfc"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-01-open-a-task-issue",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires for task issue authoring",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Missing policy decisions are not delegated to a stronger class",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Missing policy decisions are not delegated to a stronger class",
+            "duration_seconds": 5.71,
+            "findings": [
+              "Preserves the retention goal and current 30-day default without inventing policy.",
+              "Clearly refuses implementation readiness regardless of model strength.",
+              "Requests the missing retention and early-deletion decision from the responsible owner."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "9a724d6076856920fb5d4181b61c5c879783a86ba3618a7e44e71bb09fcfefbe",
+            "rationale": "ANCHOR: result The final reply explicitly leaves retention duration and early deletion unresolved, blocks implementation pending product/legal decisions, and states that complex does not confer policy authority or readiness.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2001,
+              "output": 93
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "acfc8d0f9a44dd5d827cfa6ff917bbb6b837a7338bcac905e02dfa7fb007acfc"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-13-task-open-decision-blocks-readiness",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 50.830137968063354,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-03-update-preserves-valid-requirements",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 73600,
+        "output_tokens": 1158,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 19088
+      },
+      "tokens": 93846,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 47.907265424728394,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-01-open-a-task-issue",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 107520,
+        "output_tokens": 1341,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 39170
+      },
+      "tokens": 148031,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 47.18762803077698,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-13-task-open-decision-blocks-readiness",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 94208,
+        "output_tokens": 1050,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 24373
+      },
+      "tokens": 119631,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-24T02:48:07.198792",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "acfc8d0f9a44dd5d827cfa6ff917bbb6b837a7338bcac905e02dfa7fb007acfc",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v3",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 7058,
+      "output": 435
+    }
+  },
+  "plugin_revision": {
+    "commit": "1bb94ab0f799cb979af3697cbbf8af4dc68e0677",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-23T19:48:34.794786+00:00",
+  "run_id": "2026-11-24_02-45-41",
+  "schema_version": 5,
+  "started_at": "2026-11-24T02:45:41.255771",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-01-open-a-task-issue": [
+          0.5
+        ],
+        "issue-03-update-preserves-valid-requirements": [
+          1.0
+        ],
+        "issue-13-task-open-decision-blocks-readiness": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "issue-03-update-preserves-valid-requirements",
+        "issue-01-open-a-task-issue",
+        "issue-13-task-open-decision-blocks-readiness"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
