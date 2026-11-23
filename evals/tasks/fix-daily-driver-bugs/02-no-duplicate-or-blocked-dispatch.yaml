@@ -216,8 +216,9 @@ success_criteria:
 
   - type: command_executed
     description: The fixed coordinator title is applied exactly once
-    tool_name: Write
-    command_pattern: 'daily_driver_set_session_title.*Daily Driver bug fixes'
+    # Shell, direct tool, and legacy device calls have different tool names.
+    # The trace judge below checks the setter identity, exact title and order.
+    command_pattern: '(?:daily_driver_set_session_title.*Daily Driver bug fixes|"title"\s*:\s*"\\ud83d\\udc1b Daily Driver bug fixes")'
     min_count: 1
     max_count: 1
     require_success: true
@@ -240,10 +241,16 @@ success_criteria:
     prompt: |
       The separate skill-triggered criterion checks policy use. Inspect the
       actual tool-call trace, not assistant narration. Score 1.0 only if
-      exactly one successful Write call sets xd://daily_driver_set_session_title
-      to the exact JSON title "🐛 Daily Driver bug fixes", and that Write occurs
-      before the first GitHub `gh` read, write, or dispatch. Score 0.0 if the
-      Write is absent, late, repeated, failed, or uses any other title.
+      exactly one successful daily_driver_set_session_title invocation applies
+      the exact title "🐛 Daily Driver bug fixes" before the first GitHub issue
+      or pull-request read, write, or task dispatch. Accept a direct tool call
+      with a title field, a Bash invocation of the setter (plain positional
+      title or -j/--json arguments), or the legacy Write device
+      xd://daily_driver_set_session_title with JSON title content. Count setter
+      invocations, not enclosing Bash calls; ignore --help requests. Require
+      evidence that the setter succeeded, not only that a shell exited zero.
+      Score 0.0 if the setter is absent, late, repeated, failed, or applies any
+      other title. Assistant narration, echoes and unrelated writes do not count.
 
   - type: command_executed
     description: The verifier confirms preserved reports and no unsafe edits

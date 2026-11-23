@@ -33,12 +33,12 @@ A positive launch needs a successful tool result in the observed format
     - <job two>
 
 with the reported count equal to the entries requested and a complete list of
-distinct jobs. The runtime may then append its standard `Coordinate: N siblings
-are running together.` paragraph; this is outside the launch list and is
-accepted only when `N` matches the reported count. Any other success text, a
-mismatched count, or an agent that differs from the one requested leaves the
-launch state unknown, which never passes a `--require`. A failed or unresolved
-call launched nothing, but the assignment it carried still fails a `--forbid`.
+distinct jobs. The runtime may append its captured coordination paragraph or
+process-help footer. Any sibling count in that footer must match the launch.
+Unrecognised suffixes, a mismatched count, or an agent that differs from the
+one requested leave the launch state unknown, which never passes a
+`--require`. A failed or unresolved call launched nothing, but the assignment
+it carried still fails a `--forbid`.
 """
 
 from __future__ import annotations
@@ -67,6 +67,18 @@ _COORDINATE = re.compile(
     r"If their work overlaps, have them message each other via "
     r"`write agent://<id>` \(`agent://all` broadcasts\) before editing "
     r"shared files\. `read proc://` shows running jobs and agents\.$"
+)
+_PROCESS_HELP = (
+    "read proc:// lists jobs/services; read proc://<id> inspects status/output "
+    "without consuming delivery; write proc://<id>/kill with empty `content` cancels/stops.",
+    "Job IDs are process-local; delivered results expire shortly (~30s), unconsumed "
+    "results within ~5min. Agent output/transcripts remain readable at agent://<id> / "
+    "history://<id>. write agent://<id> messages a live agent.",
+)
+_SIBLINGS = re.compile(
+    r"^(\d+) siblings run together\. Overlapping files\? Give each file one owner via "
+    r"`write agent://<id>`; siblings message only to unblock, never to announce edits\. "
+    r"`read proc://` shows running jobs and agents\.$"
 )
 
 
@@ -117,8 +129,10 @@ def parse_launch(call: dict[str, Any], entry_count: int, agent: str | None) -> s
         return "unknown"
     trailing = lines[1 + reported :]
     if trailing:
-        coordinate = _COORDINATE.fullmatch(trailing[0])
-        if len(trailing) != 1 or coordinate is None or int(coordinate.group(1)) != reported:
+        coordinate = _COORDINATE.fullmatch(trailing[0]) if len(trailing) == 1 else None
+        if len(trailing) == 3 and tuple(trailing[:2]) == _PROCESS_HELP:
+            coordinate = _SIBLINGS.fullmatch(trailing[2])
+        if coordinate is None or int(coordinate.group(1)) != reported:
             return "unknown"
     return "launched"
 
