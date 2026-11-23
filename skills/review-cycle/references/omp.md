@@ -62,11 +62,43 @@ model reasoning parameters.
 
 Keep the rest of OCR's native pipeline at its stock defaults: rule resolution,
 file grouping, positioning, reflection, filtering, concurrency, timeouts,
-retries, and token budgets. The only integration-only invocation differences are
-immutable `--from` and `--to` commits, `--audience agent --format json`,
+retries, and token budgets. The integration-only invocation differences are
+immutable `--from` and `--to` commits, `--audience human --format json`,
 owner-only `--background-file` and `--output` files, and no `--analysis`
 (because the review cycle consumes findings rather than OCR's separate
-behavior-analysis report).
+behavior-analysis report). Apply the shared live-progress contract below to
+both analysis stages.
+
+Live progress in Omp
+--------------------
+
+Use Omp Bash's asynchronous notification route for both OCR commands. Pass the
+native command directly, without redirecting stderr or wrapping it in a PTY:
+
+```json
+{
+  "command": "ocr --color never review --repo <task-worktree> --from <base-sha> --to <head-sha> --audience human --format json --background-file <owner-only-context-file> --output <owner-only-result-file>",
+  "cwd": "<task-worktree>",
+  "pty": false,
+  "async": true,
+  "timeout": 0,
+  "notify": "(?i)^\\[ocr\\].*(file\\(s\\) changed, reviewing|reviewing [0-9]+|Skipping plan phase|Round [0-9]+/[0-9]+|Results written|error|failed)"
+}
+```
+
+The notification expression selects native lifecycle/progress markers and
+failure lines, not tool-call chatter. `--color never` keeps those lines
+matchable. Keep the returned job identity and use Omp's automatic progress and
+final-result delivery; do not poll, rerun OCR, tail a log, or add a heartbeat.
+The notification reports observed events only: it is not a completion verdict,
+percentage, estimate, or permission to publish. Silence does not establish a
+stall. Consume and validate the owner-only JSON output only after the original
+process finishes, retaining stderr diagnostics and its actual exit status.
+
+Progress uses human audience, but JSON findings remain the separate output
+artifact; OCR's native stream sends progress to stderr. Do not replace
+`--output`, merge stderr into the JSON file, change stock execution budgets,
+or relax the existing acceptance and publication rules.
 
 Full-review invocation and acceptance
 -------------------------------------
@@ -74,9 +106,12 @@ Full-review invocation and acceptance
 Compute `<merge-base-sha>` from the pull request's base ref and
 `<reviewed-head-sha>`, then run native OCR from the task worktree:
 
+Run this native command through Omp Bash using the shared live-progress
+contract above:
+
 ```sh
-ocr review --repo <task-worktree> --from <merge-base-sha> --to <reviewed-head-sha> \
-  --audience agent --format json \
+ocr --color never review --repo <task-worktree> --from <merge-base-sha> --to <reviewed-head-sha> \
+  --audience human --format json \
   --background-file <owner-only-context-file> --output <owner-only-result-file>
 ```
 
@@ -162,12 +197,13 @@ If either precondition fails, record `outcome: unavailable` with the precise
 precondition failure in `defects:`; do not run a full-PR audit or substitute the
 `reviewer` task agent.
 
-When eligible, run the same stock JSON command from the task worktree without
-`--model`, `--effort`, or `--analysis`:
+When eligible, run this native command from the task worktree through Omp Bash
+using the shared live-progress contract above. Keep OCR's saved model and effort
+unchanged; do not pass `--model`, `--effort`, or `--analysis`.
 
 ```sh
-ocr review --repo <task-worktree> --from <scope> --to <current> \
-  --audience agent --format json \
+ocr --color never review --repo <task-worktree> --from <scope> --to <current> \
+  --audience human --format json \
   --background-file <owner-only-context-file> --output <owner-only-result-file>
 ```
 
