@@ -1196,10 +1196,13 @@ title call before the first `gh` action. Cases 01 and 02 cover default
 selection, including a run with no eligible dispatch; case 03 covers explicit
 selection. The sandbox records the setter call and its order but cannot
 change a real Omp session name; a separate smoke verifies the applied name.
-The deterministic command filter matches stable ASCII title text because
-serialized tool parameters escape the emoji; the trace judge checks the exact
-Unicode title and call order. A separate `skill_triggered` criterion
-checks policy invocation because Skill tool paths can be truncated in the trace.
+The deterministic command filter accepts shell, direct-tool and legacy
+device title calls. It matches stable ASCII text in shell commands and the
+escaped Unicode title field in direct-tool parameters. The trace judge
+checks setter success, the exact Unicode title, one invocation, and call
+order; help requests and assistant narration are not setter calls. A separate
+`skill_triggered` criterion checks policy invocation because Skill tool paths
+can be truncated in the trace.
 Case 03 states that the `complex` agent has no route; the sandbox does not
 remove that route from the Omp configuration. Case 01 combines one successful
 `Agent` call with structured per-issue dispatch checks to prove one batch; it

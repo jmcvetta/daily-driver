@@ -1,19 +1,19 @@
 ---
 name: fix-daily-driver-bugs
 description: >-
-  Use when a maintainer asks to triage automatic Daily Driver bug reports,
+  Use when a maintainer asks to triage Daily Driver bug reports,
   promote actionable reports into ready tasks, or dispatch their implementation.
-  Reads and processes open [auto-filed] bug reports in jmcvetta/daily-driver,
-  or only the explicitly named reports, and dispatches eligible tasks through
-  undertake. Not for continuous background operation, reports in other
-  repositories, or implementing a single task already in hand.
+  Reads and processes open `bug` issues in jmcvetta/daily-driver, independent
+  of title or filing source, or only explicitly named issues, and dispatches
+  eligible tasks through undertake. Not for continuous background operation,
+  reports in other repositories, or implementing a single task already in hand.
 ---
 
 # Fix Daily Driver bugs
 
-Triage the Daily Driver automatic-report backlog in this repository. Convert
-confirmed, actionable reports in place to grounded `task` issues, then dispatch
-eligible independent tasks through `undertake`.
+Triage open Daily Driver bug reports in this repository. Convert confirmed,
+actionable reports in place to grounded `task` issues, then dispatch eligible
+independent tasks through `undertake`.
 
 This project-local skill is intentionally outside the published plugin skill
 set. It does not change how consumer reports are filed. The `issue` skill
@@ -39,15 +39,16 @@ An invocation authorizes triage and dispatch only in `jmcvetta/daily-driver`.
 It does not authorize a scheduled sweep, background process, changes to another
 repository, or automatic merging.
 
-- With no issue numbers, paginate all open issues and select every issue
-  matching either group:
-  - An unconverted automatic report: title begins with `[auto-filed]` and its
-    effective issue kind is `bug`.
-  - A previously converted automatic report: its task body preserves the
-    marker `Original automatic report title:` and the original prefixed title.
-- With issue numbers, inspect only those issue numbers. Each must be an open
-  automatic report or a previously converted task carrying that marker; do not
-  widen an explicit selection.
+- With no issue numbers, paginate all open issues and select every open issue
+  whose effective issue kind is `bug`, regardless of title, author, or filing
+  source, plus open previously converted `task` issues whose bodies carry
+  either recognized original-title record:
+  - `Original bug report title:` (the current filing-source-neutral marker).
+  - `Original automatic report title:` (the historical marker).
+- With issue numbers, inspect only those issue numbers. Each must be open and
+  either have effective kind `bug` or be a previously converted task carrying
+  one of the recognized original-title records; do not widen an explicit
+  selection. A title prefix alone never makes an issue eligible.
 - Read every selected issue's full body, comments, labels, parent and blocker
   relationships, and linked pull requests before deciding what to do. Follow
   pagination to completion. Read the claim comments and any earlier handling
@@ -83,7 +84,7 @@ state. Apply these outcomes:
 - **Duplicate:** preserve the report, identify its canonical task or pull
   request in a comment, and do not dispatch it. Do not create another task.
 - **Insufficient evidence or unresolved product decision:** keep the issue an
-  open `bug`, retain its `[auto-filed]` title prefix, and comment with the exact
+  open `bug`, retain its exact original title, and comment with the exact
   missing evidence or decision. Do not guess, promote, mark it ready, or silently
   discard it.
 - **More than one independently mergeable pull request:** use `epic`'s
@@ -99,9 +100,11 @@ skill. Do not add a blocker for a person, a decision, or a pull request.
 Use `issue` to update the same issue, and `issue-body` to write and validate its
 complete task handoff. Preserve the report's valid requirements, expected and
 observed behavior, error evidence, relevant context, all comments, and original
-provenance. Preserve the exact original title under the marker `Original
-automatic report title:` so later invocations can find converted reports.
-Append this writer's provenance without rewriting the report author's block.
+provenance. Preserve the exact original title under the marker `Original bug
+report title:` so later invocations can find converted reports. Recognize the
+historical `Original automatic report title:` marker on existing converted
+issues. Append this writer's provenance without rewriting the report author's
+block.
 Add a provider-neutral `Model class` and grounded rationale. State a reviewable
 scope, non-goals, settled design, acceptance conditions and verification.
 
@@ -110,27 +113,36 @@ Perform conversion as one guarded transaction in this order:
 1. Prepare and review the complete task body before writing. It must retain the
    report evidence and provenance and satisfy `issue-body`'s readiness test.
 2. Replace the body with the prepared task body. It carries the
-   `Original automatic report title:` marker, so a report whose later writes
-   fail is still found by the next invocation.
+   `Original bug report title:` marker, so a report whose later writes fail is
+   still found by the next invocation. Recognize both this marker and the
+   historical `Original automatic report title:` marker when resuming a partial
+   conversion.
 3. Replace the `bug` kind with `task`, preserving every unrelated label.
-4. Remove only the leading `[auto-filed]` notice and following separator
-   whitespace from the live title. Preserve the rest of the title exactly.
+4. Remove the leading `[auto-filed]` notice and its following separator
+   whitespace from the live title only when that notice is present. For other
+   titles, preserve the exact original title.
 5. Read the issue back. Require the original issue number, expected title,
    complete body, preserved evidence and provenance, and exactly one effective
    issue kind (`task`) before treating conversion as successful.
 
 If any write fails or read-back is partial, do not dispatch. Report the partial
 state and leave the issue for repair; never claim conversion succeeded. If the
-label replacement fails, do not edit the title. A report that was not
-successfully converted keeps its title prefix unless conversion is retried and
-verified.
+label replacement fails, do not edit the title. Never add an automatic-filing
+prefix; unresolved reports retain their exact original titles.
+
+On a later invocation, an issue left in a partial conversion state is found by
+either original-title record, whether its effective kind is `bug` or `task`.
+Use that record to determine the expected title and complete only the remaining
+conversion step. Do not rewrite already-correct task data. Require the full
+read-back contract before dispatch; a marker or `task` label alone is not proof
+of successful conversion.
 
 ## Dispatch safely
 
 Immediately before dispatch, reread each converted or previously converted
 candidate's body, labels, open state, parent and blocker edges, claim comments,
-and linked pull-request state. Find previously converted reports by the
-preserved original-title evidence, not only by the live title prefix.
+and linked pull-request state. Find previously converted reports by either
+recognized original-title record, not by the live title prefix.
 
 Exclude a task from a new launch if any blocker is open, any active `undertake`
 claim exists, or an implementation pull request is already open. A prior
