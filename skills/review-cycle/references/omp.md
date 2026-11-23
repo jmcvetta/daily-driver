@@ -15,6 +15,25 @@ and do not add a helper process, second provider framework, custom OCR rules, or
 second publication path. Omp continues to own CI waits, review history, GitHub
 publication, finding dispositions, and readiness records.
 
+Installation
+-------------
+
+Before either analysis stage, check whether `ocr` is on `PATH`. Reuse an
+existing installation without upgrading it. If missing, require Bun and install
+the published package in the user's global Bun installation:
+
+```sh
+bun add --global @alibaba-group/open-code-review
+```
+
+Ensure Bun's global executable directory is on `PATH`, then verify
+`ocr --version` before running a review. If Bun is absent, installation fails,
+or `ocr` remains unavailable, report the precise failure and the review as
+`unavailable`; do not silently switch package managers or reviewers.
+
+Installation does not configure a provider or supply credentials. Preserve
+existing OCR configuration and complete the provider setup below separately.
+
 Model and effort configuration
 ------------------------------
 
