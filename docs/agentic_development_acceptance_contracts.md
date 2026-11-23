@@ -4,21 +4,32 @@
 
 Agentic software development can generate and review code at volumes that make routine human code review impractical. Green CI and successful agentic reviews do not, by themselves, establish that the product is what its human engineers intended. The challenge is to preserve **human control of product behavior** without making specification maintenance as burdensome as implementation.
 
-> **Conversation can be production; writing is control.**
+> **Conversation can be production; executable writing is control.**
 
-Interactive conversations with agents can discover and produce features. A durable, human-authored acceptance contract is the engineering team's independent expression of what the product must do.
+Interactive conversations with agents can discover and produce features. The executable acceptance contract is the specification: a durable, human-owned expression of what the product must do. Planning documents and design notes can explain the work, but they are not a second behavioral specification and do not need to remain synchronized with it.
 
 ## Proposed approach
 
 Use **Acceptance Test-Driven Development (ATDD)** as the baseline, with lower-level BDD where useful (particularly around modules or services), and ordinary unit testing delegated largely to agents.
 
-1. **Human engineers own the acceptance contract.** Agents may propose scenarios and identify gaps, but cannot unilaterally change what constitutes acceptance.
+1. **Human engineers own the acceptance contract.** Agents may propose scenarios and identify gaps, but cannot silently redefine acceptance.
 2. **Acceptance tests are deterministic and executable.** They return objective pass/fail results, not an LLM's subjective assessment. Tests must control relevant state, time, randomness, dependencies, and asynchronous behavior.
 3. **Specify observable product behavior, not implementation.** A test should reject consequentially wrong behavior yet survive a complete rewrite of the implementation.
 4. **Protect the trusted execution layer.** Step definitions, fixtures, assertions, and CI configuration must not be silently weakened by implementation agents.
-5. **Automate implementation and review.** Agents write code, lower-level tests, and most verification machinery within defined authority boundaries. Human effort concentrates on consequential product decisions.
+5. **Automate implementation and review.** Agents write code, lower-level tests, and most verification machinery. Human effort concentrates on consequential product decisions.
 
-A new human-specification bottleneck is acceptable if it permits a very large increase in useful development output. Removing that bottleneck prematurely could also remove the mechanism of human control.
+Keep the process light: executable scenarios, implementation, ordinary CI, and review. Do not add a parallel Markdown specification, requirement registry, traceability matrix, or separate acceptance-evidence gate.
+
+## A typical feature, end to end
+
+1. **Discuss the behavior.** Settle consequential product questions in conversation. Small tasks need no additional specification ceremony; larger efforts can retain planning notes and issue dependencies.
+2. **Write scenarios on the task branch.** This is the `specification` activity. Express the agreed behavior in the project's acceptance format and review the concise scenario text with the human engineer. The scenarios are the deliverable, not a canonical prose document.
+3. **Establish the failing behavior.** Add or reuse step definitions and fixtures. New scenarios should fail because the feature is absent, while existing behavior stays green.
+4. **Implement in the same branch.** This is `undertake`. Make the scenarios and existing tests pass. If the contract is wrong or incomplete, discuss and change it openly; never edit it silently merely to accommodate the implementation.
+5. **Deliver one ordinary pull request.** Include the scenarios, bindings, implementation, and lower-level tests together. The PR description needs no acceptance traceability matrix; reviewers can read the scenarios directly.
+6. **Review and merge normally.** `review-cycle` reviews the scenarios, bindings, and implementation together. CI supplies the deterministic verdict; agentic review checks that the tests are meaningful and the implementation satisfies their intent. The human reviewer can focus on behavioral diffs and retains the merge decision.
+
+Later refactoring leaves the scenarios unchanged. New or changed observable behavior updates the scenarios in the same reviewed change as the implementation. The contract stays current because normal delivery executes it, not because anyone remembers to update a separate document.
 
 ## Choosing the right abstraction
 
