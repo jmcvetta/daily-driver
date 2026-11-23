@@ -94,9 +94,8 @@ The pull request
 | `The gate` | Read the branch against its base | `gh pr view <number> --json mergeStateStatus` |
 | `The gate` | Read CI on the head | `gh pr view <number> --json statusCheckRollup` |
 | `The gate` | Read the review threads | `review-cycle`'s `references/codex.md` owns them |
-| `The gate` | Read the review record | `gh pr view <number> --json comments` — the round's own `Review` and `Review verification` comments |
-| `The gate` | Read the completion notice | `gh pr view <number> --json comments`, to the last page — the latest `## Review cycle complete! 🎉` comment by the claim's author |
-| `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `gh pr comment <number>` |
+| `The gate` | Read review evidence | `review-cycle`'s complete submitted-review, conversation-comment and thread reads; read the claim author from the task issue |
+| `The gate` | Read first-parent ancestry | `git show -s --format=%P <sha>` in a checkout containing the head and its ancestors; unavailable objects fail the predicate |
 | `The gate` | Read the Blockers section | `gh pr view <number> --json body`, where `pr-body`'s Blockers section sits |
 | `The milestone` | Read the draft state and report head | `gh pr view <number> --json isDraft,headRefOid` |
 | `The milestone` | Read the existing comments | `gh pr view <number> --json comments` |
@@ -147,7 +146,7 @@ state and head with:
 
 `isDraft` must be true, and `headRefOid` is the SHA the report binds to. The
 gate already establishes branch currency, current-head CI, review completion,
-resolved threads, the completion notice and absence of human blockers.
+resolved threads and absence of human blockers.
 `mergeable` and `mergeStateStatus` are not readiness prerequisites here:
 draft states can mask the underlying result, and a post-ready `CLEAN` read
 would put the report after the transition it must precede.
@@ -163,7 +162,7 @@ same read. An issue with no recoverable claim leaves the timing `n/a`, per
 
 **Post the report before marking ready.** Read the existing comments with
 `gh pr view <number> --json comments` and look for the fixed
-`First-readiness report` marker. If none exists and the gate holds, write the
+`# First-readiness report 🎉` or historical unheaded marker. If none exists and the gate holds, write the
 report as a pull-request comment:
 
     gh pr comment <number> --body-file <path>
@@ -185,9 +184,8 @@ The cadence
 owns the common watch and its no-durable-wake limit. This undertaking invokes
 that maintenance; it does not claim or start a timer or autonomous review.
 
-Undertaking-specific continuation stays here. When current-head CI is green,
-post a missing review completion notice before continuing the ready-gate work.
-Use `review-cycle` for review and fix-delta work, then apply `Ready for review`
+Undertaking-specific continuation stays here. Use `review-cycle` for review
+and fix-delta work, then apply `Ready for review`
 and `The milestone` below. State unfinished work and the owner-resume
 requirement; never call a clean branch, an up-to-date response, or a draft
 completion.

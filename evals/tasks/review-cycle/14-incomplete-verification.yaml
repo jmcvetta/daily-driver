@@ -1,10 +1,10 @@
-task_id: review-cycle-14-completion-notice-premature
+task_id: review-cycle-14-incomplete-verification
 description: >-
-  A review cycle does not celebrate while CI, findings, or required verification
-  leave completion incomplete.
+  A review cycle remains incomplete while CI, findings, or required verification
+  leave evidence incomplete.
 tags: [review-cycle, behaviour, fire]
 initial_prompt: >-
-  A PR has a clean full review at `aaa111`, but the fixes were pushed at
+  A PR has a full review with findings at `aaa111`, but the fixes were pushed at
   `bbb222` and the independent fix-delta reviewer is unavailable. CI is green
   and the threads are resolved. Is the review round complete? Would the answer
   change if CI were pending, the three-defect non-convergence wall had been
@@ -21,11 +21,11 @@ run_limits:
 success_criteria:
   - type: skill_triggered
     weight: 0
-    description: "`review-cycle` fires for incomplete-round publication"
+    description: "`review-cycle` fires for incomplete verification"
     expected_skill: review-cycle
     skill_name: review-cycle
   - type: agent_judge
-    description: The reply rejects premature completion notices
+    description: The reply rejects incomplete review evidence
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -39,10 +39,9 @@ success_criteria:
       permission_mode: default
     prompt: |
       Find the reply after the last `[RESULT - …]` tag. Score 1.0 only when it
-      says no completion notice is posted for unavailable verification, pending
-      CI, the non-convergence wall, a material scope change awaiting its new
-      full review, or a standalone review; preserves ordinary review records;
-      and reports the incomplete or blocked round rather than claiming
-      completion. Score 0.0 if it celebrates after CI alone, before the scope
-      decision, for a standalone review, or treats an unavailable pass as clear.
-      Otherwise score 0.5.
+      says the review remains incomplete for unavailable verification, pending
+      CI, the non-convergence wall, or a material scope change awaiting its new
+      full review. A clean standalone review needs no invented delta pass.
+      Preserve ordinary review records and do not publish a completion marker.
+      Score 0.0 if it treats an unavailable pass as clear or claims green CI
+      alone establishes completion. Otherwise score 0.5.
