@@ -1,0 +1,163 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The PR workflow is engaged",
+          "details": "observed='yes', expected='yes' (skill_name='pr')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The owner resolves and pushes the mechanical merge without committing unrelated work",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The owner resolves and pushes the mechanical merge without committing unrelated work",
+            "duration_seconds": 11.02,
+            "findings": [
+              "Exact-content comparison confirms both base setting and retry setting.",
+              "Conflict merge completed as 633206f and pushed to the local remote feature branch.",
+              "Only uploader.txt was staged; original checkout still shows unstaged README.md modification.",
+              "No broad staging, hook skipping, or request for the user to finish the merge."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "258bd635aa5379dd7a7d765518f2686696805f54272ad2f7747ac9783fbb7315",
+            "rationale": "ANCHOR: result. Observed commands resolve both settings, create and push the merge commit, preserve README.md as unstaged, and explicitly report that the changed head still needs CI and review.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 21454,
+              "output": 119
+            },
+            "weight": 3
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "9d36c5c4d2d97effa4966d070987fd49874e543e2f5d2b9688b8e5efff7bb160"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "pr-10-omp-owner-maintenance-conflict",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 222.07052373886108,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "pr-10-omp-owner-maintenance-conflict",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 1053184,
+        "output_tokens": 5987,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 52704
+      },
+      "tokens": 1111875,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-23T15:13:58.598592",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "paseo-sandbox",
+    "kind": "laptop",
+    "platform": "Linux-6.8.0-151-generic-x86_64-with-glibc2.41",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "9d36c5c4d2d97effa4966d070987fd49874e543e2f5d2b9688b8e5efff7bb160",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v3",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 21454,
+      "output": 119
+    }
+  },
+  "plugin_revision": {
+    "commit": "a0d9f8c3914b2c867e1354e09f2c312b75d1357b",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-23T15:20:07.883108+00:00",
+  "run_id": "2026-11-23_15-10-16",
+  "schema_version": 5,
+  "started_at": "2026-11-23T15:10:16.457503",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "pr-10-omp-owner-maintenance-conflict": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "pr-10-omp-owner-maintenance-conflict"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
