@@ -131,8 +131,13 @@ function reviewAttribution(body, reviewer) {
 	if (!reviewer) return body;
 	const value = (field) => typeof field === "string" && field.trim() && !/[\r\n]/u.test(field)
 		? field.trim() : "unreported";
-	const record = `Reviewer model: ${value(reviewer.model)}\nReviewer provider: ${value(reviewer.provider)}\nReviewer session: ${value(reviewer.session)}`;
-	const pattern = /(?:^|\n)Reviewer model: [^\r\n]*\r?\nReviewer provider: [^\r\n]*\r?\nReviewer session: [^\r\n]*/gu;
+	const record = [
+		`Reviewer model: ${value(reviewer.model)}`,
+		`Reviewer provider: ${value(reviewer.provider)}`,
+		`Reviewer session: ${value(reviewer.session)}`,
+		...(reviewer.identitySource ? [`Reviewer identity source: ${reviewer.identitySource}`] : []),
+	].join("\n");
+	const pattern = /(?:^|\n)Reviewer model: [^\r\n]*\r?\nReviewer provider: [^\r\n]*\r?\nReviewer session: [^\r\n]*(?:\r?\nReviewer identity source: [^\r\n]*)?/gu;
 	const previous = [...body.matchAll(pattern)];
 	if (previous.some((match) => match[0].trim() !== record)) {
 		throw new Error("Review body contains conflicting reviewer attribution.");
@@ -145,6 +150,45 @@ function reviewAttribution(body, reviewer) {
 		});
 	}
 	return `${body}${body.endsWith("\n\n") || !body ? "" : body.endsWith("\n") ? "\n" : "\n\n"}${record}`;
+}
+
+function reviewerFromOcrResult(path, cwd, reviewer) {
+	if (typeof path !== "string" || !path.trim()) {
+		throw new Error("OCR reviewer result path must not be empty.");
+	}
+	let result;
+	try {
+		result = JSON.parse(readFileSync(resolve(cwd || process.cwd(), path), "utf8"));
+	} catch (error) {
+		throw new Error(`OCR reviewer result is unreadable or invalid JSON: ${error.message}`);
+	}
+	if (!result || typeof result !== "object" || Array.isArray(result)) {
+		throw new Error("OCR reviewer result must be a JSON object.");
+	}
+	if (result.llm !== undefined && (!result.llm || typeof result.llm !== "object" || Array.isArray(result.llm))) {
+		throw new Error("OCR reviewer result has an invalid `llm` identity object.");
+	}
+	const identity = {
+		model: result.llm?.model,
+		provider: result.llm?.provider,
+		session: result.session_id,
+	};
+	for (const [field, value] of Object.entries(identity)) {
+		if (value !== undefined && (typeof value !== "string" || !value.trim() || /[\r\n]/u.test(value))) {
+			throw new Error(`OCR reviewer result has an invalid ${field} identity.`);
+		}
+	}
+	const { ocrResultPath: _ocrResultPath, ...explicit } = reviewer;
+	for (const field of ["model", "provider", "session"]) {
+		if (explicit[field] !== undefined && identity[field] !== undefined && explicit[field] !== identity[field]) {
+			throw new Error(`Explicit reviewer ${field} conflicts with the OCR result.`);
+		}
+	}
+	return {
+		...explicit,
+		...Object.fromEntries(Object.entries(identity).filter(([, value]) => value !== undefined)),
+		identitySource: "OCR requested/configured; backend-served identity unverified",
+	};
 }
 
 function attributedBody(body, attribution, reviewer) {
@@ -326,6 +370,11 @@ export function createGitHubWriteRunner({ spawnProcess = spawn, versionReader = 
 		if (!Array.isArray(args) || args.some((arg) => typeof arg !== "string")) {
 			throw new Error("`args` must be an array of `gh` argument strings.");
 		}
+		if (reviewer?.ocrResultPath !== undefined) reviewer = reviewerFromOcrResult(reviewer.ocrResultPath, ctx?.cwd, reviewer);
+		else if (reviewer) reviewer = Object.fromEntries(
+			Object.entries(reviewer).filter(([key, value]) => key !== "ocrResultPath" && value !== undefined),
+		);
+		if (reviewer && Object.keys(reviewer).length === 0) reviewer = undefined;
 		versionPromise ??= Promise.resolve().then(versionReader).then((value) => {
 			const version = typeof value === "string"
 				? value.trim().replace(/^omp[\/\s]+/iu, "")

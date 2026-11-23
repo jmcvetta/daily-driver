@@ -134,12 +134,14 @@ Preserve existing repeat-finding reconciliation, replies, resolution, and
 provenance. A clean result has no `comments` entry and uses the submitted
 summary.
 
-Pass `reviewerSession` from OCR's `session_id` (omit only when absent),
-`reviewerModel: "unreported"`, and no `reviewerProvider` to
-`daily_driver_gh_write`. OCR's configured `llm.model`, `llm.provider`, and
-manifest execution identity are requested identity, not proof of the
-backend-served identity. Keep each review and verification pass paired with its
-own OCR session. The normal Omp publisher block remains automatic.
+Pass `reviewerOcrResult` as the path to the same completed JSON result used for
+publication. The writer reads `llm.model`, `llm.provider`, and `session_id`
+from that per-run artifact, preferring them to persistent OCR configuration.
+OCR's `llm.model` and `llm.provider` are requested/configured identity, not
+proof of backend-served identity; the reviewer attribution labels that
+distinction. Do not also pass explicit reviewer fields that conflict with the
+artifact. Keep each review and verification pass paired with its own OCR
+session. The normal Omp publisher block remains automatic.
 
 
 Fix-delta verification
@@ -186,9 +188,9 @@ Require the same manifest validation: JSON parsing succeeds,
 `manifest.coverage.failed` is empty.
 
 The author records the pass with `daily_driver_gh_write({ args: ["pr",
-"comment", <number>, "--body-file", <path>], reviewerModel: "unreported",
-reviewerSession: <ocr session_id> })` (omitting `reviewerProvider`, and omitting
-`reviewerSession` when absent):
+"comment", <number>, "--body-file", <path>], reviewerOcrResult:
+<ocr-result-file> })`, using the same OCR JSON artifact that produced the
+verification result.
 
 ```text
 Review verification
@@ -215,9 +217,10 @@ Map OCR's result to `outcome` and `defects` as follows:
 meanings; `findings` lists the original IDs and dispositions. Compute `wall`
 under the existing consecutive-defective-pass rule, not from OCR prose. Set
 `usage` from `summary.total_tokens`, with input/output counts when present, or
-`unavailable` when absent. Pass reviewer identity to `daily_driver_gh_write`
-exactly as for the full review (`reviewerModel: "unreported"`, `reviewerSession`
-from OCR's `session_id` when present, and no `reviewerProvider`).
+`unavailable` when absent. Pass `reviewerOcrResult` as the same completed
+per-run JSON artifact used for this verification result. The writer reads only
+`llm.model`, `llm.provider`, and `session_id`; configured model/provider values
+are labeled as requested identity, not verified backend-served identity.
 
 OCR's result is independent evidence. The author records OCR's result only after
 receiving it and must not replace it with its own verdict. Ineligible,
@@ -401,10 +404,10 @@ review:
 
 Run `daily_driver_gh_write({ args: ["api", "--method", "POST",
 "/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"],
-reviewerModel: "unreported", reviewerSession: <ocr session_id> })` (omitting
-`reviewerProvider`, and omitting `reviewerSession` when absent). The wrapper
-labels the reviewer and publisher on the summary and every inline comment in the
-JSON body. Use `start_side` and `start_line` for a valid increasing line range.
+reviewerOcrResult: <ocr-result-file> })`. The writer reads reviewer identity
+from the same completed OCR artifact used for the review. It labels configured
+model/provider values as requested identity, not verified backend-served
+identity, and keeps the OCR session separate from Omp publisher provenance.
 A clean or unanchorable review has no `comments` entry and uses the submitted
 summary. Never invent an anchor. On changed head, invalid anchor, absent `gh`,
 or GitHub failure, retain the findings and report publication as incomplete.
@@ -413,7 +416,7 @@ or GitHub failure, retain the findings and report publication as incomplete.
 | --------- | ---- |
 | Read reviews | `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews` |
 | Read threads | paginated `gh api graphql` query of `PullRequest.reviewThreads` |
-| Publish review | `daily_driver_gh_write({ args: ["api", "--method", "POST", "/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"], reviewerModel: "unreported", reviewerSession: <ocr session_id> })` |
+| Publish review | `daily_driver_gh_write({ args: ["api", "--method": "POST", "/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"], reviewerOcrResult: <ocr-result-file> })` |
 | Reply on a thread | `daily_driver_gh_write({ args: ["api", "-X", "POST", "/repos/{owner}/{repo}/pulls/{n}/comments/{comment_id}/replies", "--input", "reply.json"] })` |
 | Resolve a thread | `gh api graphql` with the `resolveReviewThread` mutation |
 
