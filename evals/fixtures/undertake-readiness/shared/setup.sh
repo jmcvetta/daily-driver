@@ -33,10 +33,10 @@ git add README.md
 git commit -qm 'docs: readme'
 git switch -q issue-24-uploader-retry
 case "${scenario}" in
-  missing-notice | covered-ancestor | ci-wrong-head)
+  missing-review-record | covered-ancestor | rejected-only | ancestry-unavailable | ci-wrong-head)
     git merge -q --no-ff master -m 'Merge master into issue-24-uploader-retry'
     ;;
-  stale-notice-content)
+  stale-review-record | verified-fix | superseded-defective | superseded-incomplete | wrong-scope | wrong-verification-author)
     printf 'more\n' >>uploader.txt
     git commit -qam 'fix: handle a zero-length body'
     ;;

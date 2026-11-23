@@ -3,7 +3,7 @@
 
 It answers from `.fixture/state.json` and appends one JSON line per call to
 `.fixture/ops.log`: the arguments, a category, whether the call succeeded, and
-what the call showed (head, draft state, merge state, CI, notice coverage). The
+what the call showed (head, draft state, merge state, CI, review coverage). The
 verifier reads that log; nothing here contacts a network or reads a credential.
 State transitions are real: `pr ready` clears the draft flag, `pr comment`
 appends a comment the next read returns.
@@ -20,8 +20,8 @@ STATE = os.path.join(ROOT, "state.json")
 LOG = os.path.join(ROOT, "ops.log")
 PUBLISHED = os.path.join(ROOT, "published")
 REPO = "acme/widgets"
-NOTICE = "## Review cycle complete! 🎉"
-REPORT = "First-readiness report"
+REPORT = "# First-readiness report 🎉"
+HISTORICAL_REPORT = "First-readiness report"
 
 
 def load():
@@ -52,22 +52,31 @@ def merge_state(state):
     return "DRAFT" if pr["draft"] else pr["post_ready_merge_state"]
 
 
-def notice_covers_head(state):
-    """The latest notice by the claim account names the head or a clean-merge ancestor."""
-    head = state["pr"]["head"]
-    covered = {head}
-    sha = head
-    while True:
-        parents = state["commits"].get(sha, {}).get("parents", [])
-        if len(parents) != 2:
-            break
-        sha = parents[0]
-        covered.add(sha)
-    notices = [c for c in state["comments"] if c["body"].startswith(NOTICE) and c["author"] == state["claim_author"]]
-    if not notices:
+def review_covers_head(state):
+    """Select claim-author evidence and check first-parent merge-only coverage."""
+    reviews = [r for r in state["reviews"] if r["state"] == "COMMENTED" and r["user"]["login"] == state["claim_author"]]
+    if not reviews:
         return False
-    named = [s for s in re.findall(r"\b[0-9a-f]{7,40}\b", notices[-1]["body"])]
-    return any(any(full.startswith(n) for n in named) for full in covered)
+    scope = reviews[-1]["commit_id"]
+    evidence = scope
+    if state["behavior_changed"]:
+        records = []
+        for comment in state["comments"]:
+            fields = dict(re.findall(r"(?m)^(scope reviewed|verified|outcome|defects|wall):\s*(\S+)", comment["body"]))
+            if comment["author"] == state["claim_author"] and comment["body"].startswith("Review verification") and fields.get("scope reviewed") == scope:
+                records.append(fields)
+        if not records or any(records[-1].get(k) != v for k, v in (("outcome", "clear"), ("defects", "none"), ("wall", "open"))):
+            return False
+        evidence = records[-1].get("verified")
+    sha = state["pr"]["head"]
+    while sha != evidence:
+        if "commits" in state["fail_reads"]:
+            return False
+        parents = state["commits"].get(sha, {}).get("parents", [])
+        if len(parents) < 2:
+            return False
+        sha = parents[0]
+    return True
 
 
 def ci_green(state):
@@ -86,9 +95,9 @@ def seen(state):
         "merge_state": merge_state(state),
         "ci_green_for_head": ci_green(state),
         "ci_in_flight": state.get("ci_in_flight", False),
-        "notice_covers_head": notice_covers_head(state),
+        "review_covers_head": review_covers_head(state),
         "threads_open": threads_open(state),
-        "reports": sum(1 for c in state["comments"] if c["body"].startswith(REPORT)),
+        "reports": sum(1 for c in state["comments"] if c["body"].startswith((REPORT, HISTORICAL_REPORT))),
     }
 
 
@@ -131,7 +140,7 @@ def pr_json(state):
         "reviewDecision": "REVIEW_REQUIRED" if merge_state(state) == "BLOCKED" else "",
         "labels": [],
         "comments": [{"author": {"login": c["author"]}, "body": c["body"]} for c in state["comments"]],
-        "reviews": [],
+        "reviews": [{"id": r["id"], "author": r["user"], "state": r["state"], "commit": {"oid": r["commit_id"]}, "submittedAt": r["submitted_at"], "body": r["body"]} for r in state["reviews"]],
         "files": [{"path": p} for p in state["files"]],
     }
 
@@ -154,7 +163,7 @@ def read_failed(state, *categories):
 
 
 FIELD_COVERS = {
-    "statusCheckRollup": "ci", "comments": "comments", "files": "diff",
+    "statusCheckRollup": "ci", "comments": "comments", "reviews": "reviews", "files": "diff",
     "isDraft": "pr-state", "mergeStateStatus": "pr-state", "mergeable": "pr-state",
     "headRefOid": "pr-state", "headRefName": "pr-state", "baseRefName": "pr-state",
     "state": "pr-state", "reviewDecision": "pr-state",
@@ -183,10 +192,10 @@ def do_ready(args, state, undo):
 
 def do_comment(args, state, body):
     first = body.splitlines()[0] if body else ""
-    is_notice, is_report = first.startswith(NOTICE), first.startswith(REPORT)
+    is_report = first == REPORT
     if state["fail_comment"]:
         record(args, "comment", False, **seen(state), body_first_line=first,
-               is_notice=is_notice, is_report=is_report)
+               is_report=is_report)
         print("fixture gh: HTTP 403: comment refused", file=sys.stderr)
         sys.exit(1)
     state["comments"].append({"author": state["claim_author"], "body": body})
@@ -196,7 +205,7 @@ def do_comment(args, state, body):
         fh.write(body)
     named = re.findall(r"\b[0-9a-f]{7,40}\b", body)
     record(args, "comment", True, **seen(state), body_first_line=first,
-           is_notice=is_notice, is_report=is_report,
+           is_report=is_report,
            names_head=any(state["pr"]["head"].startswith(n) for n in named))
     print("https://github.com/acme/widgets/pull/25#issuecomment-fixture")
 
@@ -345,9 +354,8 @@ def main(argv):
 
     if group == "issue" and verb == "view":
         record(args, "issue", True, **seen(state))
-        print("#24 Add retry to the uploader\n\nAcceptance and verification: uploader retries; test added.")
+        print("#24 Add retry to the uploader\n\nAcceptance and verification: uploader retries; test added.\n\nundertake claim by " + state["claim_author"])
         return
-
     if group == "api":
         path = api_path(args)
         fields, method = api_fields(args[1:])
@@ -377,10 +385,14 @@ def main(argv):
                 "number": 25, "draft": pr["draft"], "state": "open", "mergeable_state": merge_state(state).lower(),
                 "head": {"sha": pr["head"], "ref": pr["branch"]}, "body": pr["body"],
             }
-        elif tail == "issues/25/comments":
+        elif tail == "issues/24/comments":
+            category, payload = "issue", [{"id": 1, "user": {"login": state["claim_author"]}, "body": "undertake claim"}]
+        elif tail.split("?")[0] == "issues/25/comments":
             category, payload = "comments", comments_json(state)
-        elif tail in ("pulls/25/comments", "pulls/25/reviews"):
-            category, payload = "reviews", []
+        elif tail.split("?")[0] == "pulls/25/reviews":
+            category, payload = "reviews", state["reviews"]
+        elif tail.split("?")[0] == "pulls/25/comments":
+            category, payload = "review-comments", []
         elif re.fullmatch(r"actions/runs\?head_sha=[0-9a-f]+(&per_page=100)?", tail):
             sha = re.search(r"head_sha=([0-9a-f]+)", tail).group(1)
             runs = []

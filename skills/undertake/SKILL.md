@@ -665,31 +665,9 @@ preserving unrelated labels and every still-valid requirement. Continue the
 next permitted action without repeating unchanged approval requests.
 
 
-**Retain the stop decision, not only its conclusion.** Use the existing claim,
-orchestrator and stop-decision records to preserve the current owner, exact
-operation, failure evidence or restriction source, authorization checked,
-actions attempted, smallest external contribution,
-independent work completed or still actionable, and concrete resumption path.
-Keep private approval and secret material out of public records. Reuse observed
-failures rather than rerunning them to populate a record. A runtime record is
-not proof of arbitrary claims: source validity and semantic sufficiency are
-separate. The active harness reference names the supported storage and
-stop-time enforcement; never assume another harness has it or that private
-active-branch records are a cross-session authority service.
 
-An unsupported unfinished stop earns a targeted correction, not a generic
-request to try harder. Runtime corrections are bounded at two per unchanged
-condition, retained through resume. Agent-rewritten descriptions do not reset
-the bound. Exhaustion is an execution failure, not missing user approval or
-completion. Preserve the unfinished result and concrete resume requirement;
-do not reset the bound by launching a replacement. Existing review and retry
-bounds, explicit safety restrictions, and user cancellation take precedence.
-A queued correction never restarts cancelled work.
-
-**The push is what runs the project's gates.** The constitution's *Before you
-call it done* sends them to CI rather than to this machine, so no local gate
-step comes before this one. A red check is answered at `Fix, answer, resolve,
-push`, and the ready gate below is what it has to satisfy in the end.
+**The push runs the project's gates.** The constitution's validation rules
+send them to CI. A red check returns to `Fix, answer, resolve, push`.
 
 7–9 — `Review the head`, `Fix, answer, resolve, push`, `Verify the fix delta`
 ----------------------------------------------------------------------------
@@ -720,10 +698,7 @@ owns the content comparison and rejected-finding evidence rule.
 ---------------------
 
 The harness pull-request client takes it out of draft only after `The gate`
-below holds. It does not review; `review-cycle` supplies the full review and
-independent verification that the gate consumes. The completion notice is one
-of the gate's reads, so a round that closed without posting it is not yet
-ready.
+below holds. `review-cycle` supplies the review evidence the gate consumes.
 
 Before reporting completion, confirm the requested work and required review
 and approval are complete. Report checks, attributed judgments, failures,
@@ -741,41 +716,11 @@ discharges the leaving-draft trigger in its description: it fires on exactly
 the moment this step occupies, and a round already run on this head is that
 trigger already answered.
 
-**A verified human dependency stops readiness here.** First revalidate each
-reported blocker against current evidence, including on resume. Do not treat
-the old body, label or an earlier agent claim as proof that the action remains
-outstanding. If evidence shows it is satisfied or stale, update the body and
-remove only its `human` label, preserving other labels; keep any separate,
-valid requirement. Otherwise run the review round to its end first. Its
-completion comment names the exact blocked step, the attempted permitted
-route and observed failure, or the restriction that precluded an attempt, and
-the smallest human contribution needed. The pull request stays a draft.
-Complete independent permitted work before pausing unless a safety rule
-requires an immediate stop. On resume, the person's contribution must be
-reflected in current branch evidence — for Tofu, the apply and committed
-updated state — and the changed head earns its review round before returning
-through the gate. Pending CI and other external waits are not human
-dependencies; follow their existing continuation instead.
-
-**A missing tool is an unknown route, not yet a capability gap.** This holds
-whichever step the session entered at, a resume included. Before a required
-verification is called unmet for lack of a tool, apply `Open the draft`'s
-escalation rule to it: inspect the repository's setup, install and Makefile
-routes for that tool, and attempt the available, permitted ones in turn until
-one provides it. Read each result. A failed `which` or `command -v` is not
-evidence of a gap. A gap is established by an attempted route's observed
-failure, by the exact restriction that precluded an attempt, or by an
-inspection that found no documented route.
-
-**A current-session capability gap is not a human dependency.** If a required
-verification remains unmet because this session lacks credentials,
-connectivity or another capability, use an available authorized-agent
-handoff. If none exists, keep the pull request draft and report the exact
-prerequisite and concrete handoff or resumption path; do not ask for a laptop
-or apply the PR `human` label solely because this session lacks access. Finish
-independent permitted work and the review round before pausing, unless a
-safety rule requires an immediate stop. The gate remains unmet until the
-required verification evidence is recorded.
+Apply `Open the draft`'s operational escalation to outstanding dependencies.
+A genuine human dependency or unmet capability keeps the pull request draft;
+complete independent permitted work and publish the required handoff before
+pausing. On resume, revalidate the evidence and return through the gate.
+Pending CI and other external waits use their existing continuation.
 
 When the gate clears, the milestone's moment has arrived: publish the
 first-readiness report through `The milestone` below, before marking the pull
@@ -816,13 +761,9 @@ After the merge
 Follow `pr`'s `After the merge` for current-head CI and its continuation
 route. Failed checks return to `Fix, answer, resolve, push`.
 
-**A clean merge earns no new notice either.** A completion notice that names
-the pre-merge head still covers the merged head, by the first-parent walk
-through merge commits that `The gate` reads. Where no notice exists at all, the
-round at `Review the head` closed unpublished: post the notice naming the
-current head once CI is green on it. Red CI after the merge goes to `Fix,
-answer, resolve, push` as above, and the push that fixes it is a new head that
-the round covers in the normal way.
+An unchanged-content merge retains applicable review evidence under
+`review-cycle`'s content comparison. A fix pushed after red CI is reviewed
+and verified as required for its changed content.
 
 
 A round after ready goes back to draft
@@ -832,9 +773,8 @@ A round after ready goes back to draft
 pull-request content** — a fix, a conflict resolution, a new commit — and so
 before `Review the head` runs. Ready again through `The gate` below when the
 round closes — the same gate, not a second one. A ready pull request is liable
-to be merged without notice, and a person merging from the GitHub UI reads no
-completion notice. Pushing to it first leaves unreviewed content on a pull
-request that says it is ready. A pull request under review is not ready for
+to be merged without notice. Pushing to it first leaves unreviewed content on
+a pull request that says it is ready. A pull request under review is not ready for
 review, and a reviewer must not be reading a branch that is changing
 underneath them.
 
@@ -858,10 +798,8 @@ Ready is a gate, not a step
 ---------------------------
 
 "After fixing, set the PR to ready" reads as unconditional. It is not. It is
-also not a judgement: **the gate is a read**. Eight conditions decide it, seven
-reads answer them, and every read is a call the reference file for the harness
-in use names. A gate that has to be weighed is a gate that gets taken to the
-user, and the user is not the one who can answer it.
+also not a judgement: **the gate is a read**. The harness reference names the
+calls that answer its conditions.
 
 Take the reads in this order. The first that does not hold is where the
 sequence stops, and the reason is stated in one line. Cite a read by its
@@ -883,7 +821,7 @@ the report and ready writes below. "Final gate pending" without a named unmet
 condition is not a blocker, and an earlier agent-authored hold is not user
 approval that must be renewed.
 
-1. **The head carries the whole of the issue's work.** Four parts, each a call
+- **The head carries the whole of the issue's work.** Four parts, each a call
    or a comparison of two texts the session already holds:
    - The task worktree has no uncommitted change: `git status --porcelain`
      in the task worktree prints nothing.
@@ -907,7 +845,7 @@ approval that must be renewed.
    read and a person will merge. A head that is not whole is not that head,
    so reads taken on it answer about a commit that will not be the one
    merged — the same reasoning the merge read gives for its own place.
-2. **The branch against its base**, for the condition that it is current and
+- **The branch against its base**, for the condition that it is current and
    merges cleanly. GitHub's merge state answers it, and only three of its
    values are this read's: `behind` is a base the branch does not carry, so
    `Keep it current` runs its merge and this read is taken again; `dirty` is
@@ -930,7 +868,7 @@ approval that must be renewed.
    **`clean` is not a gate condition**: the report is published while the PR is
    still a draft, after the gate's independent reads establish currency and
    green CI. The milestone does not wait for a post-ready merge-state read.
-2. **CI on the head commit**, for the condition that it is green. Read the
+- **CI on the head commit**, for the condition that it is green. Read the
    checks themselves rather than inferring them from the merge state, which
    reports a draft's status before its checks': the union of check runs and
    commit statuses that `review-cycle`'s wait reads is the same union here,
@@ -938,40 +876,59 @@ approval that must be renewed.
    is not green** — wait for it the way `How to wait` says, rather than
    treating an unreported check as either answer. The mechanism has one
    home, and it is not this one.
-3. **Every review thread**, from any reviewer and not only from the round at
-   `Review the head`. This read answers two conditions, which is why six
-   reads close over seven: no thread is unanswered or unresolved, and every
-   finding that round raised is fixed, or rejected with a reason on its
-   thread, or deferred with the user's agreement. An open thread is work at
-   `Fix, answer, resolve, push`, never a reason to stay draft.
-4. **The review record on the pull request.** The independent verification
-   record for the scope is clear on the current behavioral head: the last
-   pushed fix has a pass that found nothing. The bound on those passes is
-   `review-cycle`'s, cited here rather than restated — and its wall is the
-   opposite of this condition, never a way through it. A walled scope has
-   outstanding defects and stays a draft, as do an incomplete pass and an
-   unavailable reviewer. **A full review that raised no actionable finding
-   leaves nothing to verify**, and this condition is satisfied with no pass
-   owed — a clean review produces no verification record, so waiting for one
-   waits forever.
-5. **The completion notice covers the current head.** Read the pull request's
-   conversation comments to the last page and take the latest comment that
-   starts with `## Review cycle complete! 🎉` and is written by the account
-   that posted the claim. The read holds when the SHA it names is the current
-   head, or an ancestor of it reached by walking the head's first parents
-   through merge commits only.
-   This is the test `embark`'s `Land the pull request` applies in its fourth
-   read, cited here rather than restated. **A missing notice is work, not a
-   stop.** When the earlier reads hold and this one does not, the round
-   closed unpublished: post the notice for the current head through
-   `review-cycle`'s notice route, then take this read again. The gate never
-   marks ready on a notice it has not read.
-6. **The pull request waits on no human action.** The `Blockers` section's human-action
+- **Every review thread**, from any reviewer and not only from the round at
+  `Review the head`: no thread is unanswered or unresolved, and every finding
+  is fixed, rejected with a reason on its thread, or deferred with the user's
+  agreement. An open thread returns to `Fix, answer, resolve, push`.
+- **The independent review evidence covers the head.** Apply `Review evidence`
+  below. Missing or stale evidence returns to the applicable `review-cycle`
+  stage and keeps the PR draft.
+- **The pull request waits on no human action.** The `Blockers` section's human-action
    bullet marks a pull request whose Tofu changes must be applied, and the
    updated state committed, before it merges — a bar only a person clears,
    and unlike a pending check nothing will ever report it. `Ready for review`
    pauses on it; this condition is what the sequence returns to once the
    branch carries the result.
+
+Review evidence
+---------------
+
+This predicate is shared by this gate and `embark`'s `Land the pull request`.
+CI, finding dispositions and resolved threads are separate conditions.
+
+1. Read the complete submitted-review, conversation-comment and review-thread
+   histories through the active harness's paginated routes. A transcript, CI,
+   review decision or historical completion notice is not review evidence.
+2. Select the latest submitted `COMMENT` full review for the current review
+   scope published by the account that posted the task issue's `undertake`
+   claim. Its GitHub review ID is the durable identifier and its `commit_id`
+   is the **scope SHA**. Other authors, human `APPROVE` or `CHANGES_REQUESTED`
+   verdicts and comments without a submitted review do not substitute. A
+   material scope change starts a new scope; earlier records do not count.
+3. Determine behavioral changes after that review from the review record,
+   finding dispositions and pushed-head history. A clean full review, or only
+   rejected or user-deferred findings without an implemented behavioral fix,
+   requires no `Review verification`; comment edits and thread resolution
+   alone do not require one. In that case the scope SHA is the evidence SHA.
+   Otherwise, for an implemented fix, CI or bot correction, conflict resolution
+   or other behavioral change, select the latest `Review verification`
+   comment by the claim author whose `scope reviewed` equals the scope SHA.
+   It must have `outcome: clear`, `defects: none`, and `wall: open`; its
+   `verified` SHA is the **evidence SHA**. A later defective, incomplete,
+   unavailable or walled record supersedes an earlier clear record for that
+   scope. A record for another scope does not count.
+4. The evidence covers the current head only if the evidence SHA equals it,
+   or walking first parents backward from the head reaches the evidence SHA
+   through merge commits only. A non-merge commit after the evidence SHA,
+   rewritten history removing that ancestry, an unavailable ancestry read, or
+   a non-merge conflict resolution makes evidence stale. Never substitute a
+   three-dot content comparison for this predicate; reviewers use that
+   comparison to classify a delta.
+5. The condition holds only when the selected review and any required
+   verification satisfy these rules. Missing, wrong-author, wrong-scope,
+   defective, incomplete, unavailable, walled or stale evidence returns to
+   the applicable full-review or fix-delta stage. Do not publish a replacement
+   completion marker or ask the user to certify the evidence.
 
 **When the reads agree and no explicit user hold applies, publish the
 first-readiness report if none exists, then mark the pull request ready in the
@@ -1028,35 +985,8 @@ before the comment existed, and a base-branch advance after it runs the same
 update, CI wait, and return through the gate as any other.
 
 
-Ready-for-review gate, not merge readiness
------------------------------------------
-
-The report states that the ready-for-review gate passed. It does not state
-that the pull request has already left draft or that every later merge
-requirement is satisfied. It is published only when all of these hold on the
-current head:
-
-- `The gate` holds — the round at `Review the head` has completed
-  successfully, and every condition in the gate is satisfied on this head.
-- The pull request is still a draft. The report is the required action before
-  the harness marks it ready.
-- The branch is current with its base and has no unresolved conflict, as
-  established by the gate's currency read and `Keep it current`. The report
-  does not wait for the post-ready mergeability answer.
-- Current-head CI is green, review threads are resolved, the completion notice
-  covers the head, and no human action remains owed. A pending check, an
-  unresolved thread, a missing notice or a human blocker keeps the report
-  unpublished.
-
-The draft merge-state value is not affirmative evidence: `DRAFT` and
-`BLOCKED` can mask branch currency or other mergeability. The gate uses its
-independent reads for currency, CI, reviews, threads, the completion notice
-and blockers. It does not infer that a masked state is clean or wait for a
-post-ready `CLEAN` state before reporting.
-
-Any missing condition keeps the comment unpublished and the sequence watching.
-A report that says the ready-for-review gate passed while a check is pending
-is the same false claim a red pull request marked ready would be.
+The report records readiness for review, not merge readiness. Publish it only
+while the PR is draft, after `The gate` holds.
 
 
 What the report carries
@@ -1094,10 +1024,11 @@ Once per undertaking
 
 The report posts once for an undertaking and its pull request. Before posting,
 read the pull request's existing comments and look for the comment that opens
-with the fixed line `First-readiness report`. That line is the marker, written
-the same way every time. A resumed sequence, a failed ready transition, or a
-later return through draft finds the original report and does not duplicate or
-overwrite it. An existing report does not replace current-head gate evidence:
+with the fixed line `# First-readiness report 🎉`. Also recognize the historical
+unheaded `First-readiness report` marker for deduplication. A resumed sequence,
+a failed ready transition, or a later return through draft finds the original
+report and does not duplicate or overwrite it. An existing report does not
+replace current-head gate evidence:
 re-read every condition before attempting to mark the pull request ready.
 
 Post the report only after all gate conditions hold. If the report write fails,
@@ -1312,9 +1243,8 @@ qualify. Notification does not replace the required record or chat handoff.
 - **More than one distinct existing task branch** on the issue's record, or a
   pull request from a fork the session cannot push to, at `Read the issue and
   its edges`. Report the branches and ask which to resume; never guess.
-- **More than one designated branch** for this repository, at `Cut the
-  branch`'s first source. Guessing which one the harness will accept risks a
-  claim already posted at `Claim the issue` that no push can honour.
+- **More than one designated branch** for this repository, at
+  `task-worktree`'s branch selection. Report the collision before claiming.
 - **The approach failing mid-implementation**, at `Implement`, is not itself
   a stop. Apply *Errors and unfinished stops*: diagnose, revise the
   plan and continue. Escalate only an evidenced dependency under the rules
@@ -1328,29 +1258,10 @@ qualify. Notification does not replace the required record or chat handoff.
   never met. Where both sides changed the same logic, picking either loses
   behaviour, and that is the constitution's rule against guessing at intent:
   name the conflicting files and wait.
-- **A genuine human dependency still owed**, at `Ready for review` or the
-  operation that exposes it. `undertake` owns escalation: classify the
-  blocked step, investigate unknown routes, attempt available permitted
-  routes, and repair ordinary failures within scope. Stop without an attempt
-  only where an explicit prohibition or required approval precludes it. Never
-  probe production or a dangerous operation. A genuine escalation names the
-  attempted route and observed failure, or exact restriction, and asks only
-  for the missing human contribution. Finish independent permitted work first
-  unless safety requires an immediate stop. On resume, revalidate current
-  evidence and clear satisfied or stale blocker text and its PR `human` label
-  without removing unrelated labels or valid outstanding requirements. A
-  Tofu apply and updated-state commit remain human-only.
-- **A current-session capability or access gap with no authorized-agent
-  handoff**, at `Ready for review`. This is not proof the work needs a human.
-  A missing tool is not this stop until `Open the draft`'s escalation rule
-  has run on it: its documented routes were attempted and failed, a
-  restriction precluded them, or inspection found none.
-  State the exact required credential, connectivity, tool or authorization
-  capability, and the concrete handoff or resumption path. Do not describe a
-  step as laptop-, local-, cloud- or human-only when capabilities, not device
-  or actor, are the requirement. Do not invent a dispatch facility or transfer
-  secrets. Keep the PR draft until the verification evidence exists, and do
-  not add the PR `human` label solely because this session lacks access.
+- **A genuine human dependency or current-session capability gap**, at
+  `Ready for review` or the operation that exposes it. Apply `Open the
+  draft`'s operational escalation; keep the PR draft and publish the
+  required handoff or concrete resumption path.
 - **Pending CI and other external waits** are not human actions; retain
   ownership and use the existing continuation rules.
 

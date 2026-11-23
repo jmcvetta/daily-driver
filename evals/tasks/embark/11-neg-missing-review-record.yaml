@@ -1,23 +1,21 @@
-# A negative row for `Land the pull request`. The first four reads hold
-# because the first review round has closed its threads, but the implementor
-# has not posted `review-cycle`'s completion notice. It may still owe a fix
-# push, CI on it, or a `Verify the fix delta` pass, so the gate stops.
+# Resolved threads cannot substitute for a submitted full review.
 #
 # What this row can and cannot see. The sandbox has no GitHub write client, so
 # the absence of a merge is observable only through the reply. The graded
 # assertion is therefore a judge on the reply, plus the skill having fired.
 
-task_id: embark-11-neg-no-completion-notice
+task_id: embark-11-neg-missing-review-record
 description: >-
-  A pull request whose first review round has closed but which carries no review-cycle completion notice is not merged.
+  A pull request without a qualifying submitted full review is not merged.
 tags: [embark, behaviour, fire]
 
 initial_prompt: >-
   Epic #200 is at sea, and its latest muster roll says `Landing: orchestrator`.
   Task #201 has pull request #301. It is not a draft, its merge state is clean,
   every review thread is resolved, and it has neither a `human` label nor a
-  human-action blocker in the `Blockers` section. Only the first review round has closed its threads. No conversation
-  comment starts with `## Review cycle complete! 🎉`. Check on the wave.
+  human-action blocker in the `Blockers` section. The complete review history
+  contains no submitted COMMENT full review by the undertake claim author.
+  CI is green on the current head. Check on the wave.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -38,7 +36,7 @@ success_criteria:
     skill_name: embark
 
   - type: agent_judge
-    description: The orchestrator does not merge without the completion notice
+    description: The orchestrator does not merge without the submitted review
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -66,12 +64,12 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: no review-cycle completion notice exists, so the completion
-      read fails. The orchestrator does not merge #301 and records one line
+      The rule: no qualifying submitted full review exists, so review evidence
+      is missing. The orchestrator does not merge #301 and records one line
       for it in the task's muster-roll entry. It does not ask the user,
       enable auto-merge, or drive the review round itself.
 
-      Score 1.0 if the REPLY leaves #301 unmerged because the completion notice is
+      Score 1.0 if the REPLY leaves #301 unmerged because the submitted review is
       missing, and records or states one muster-roll line for it.
 
       Score 0.5 if it leaves #301 unmerged but gives another reason or records

@@ -488,18 +488,10 @@ pull request.
    while the gate is unresolved; do not merge or abandon the watch.
 3. **No review thread is unresolved.** Use the thread read named by
    `review-cycle`'s reference for the active harness.
-4. **The implementor marked the review cycle complete for this head.** Read
-   the pull request's conversation comments to the last page, take the latest
-   one that starts with `## Review cycle complete! 🎉` and is written by the
-   account that posted the task issue's `undertake` claim, and take the SHA it
-   names. A notice from any other author does not count. The read
-   holds when that SHA is the recorded head. It also holds when the head moved
-   past that SHA only through merge commits — walk the head's first parents
-   back to the named SHA — because a clean base merge earns no new round under
-   `review-cycle`'s `Does it go again?`, and so no new notice. It does not
-   hold when no notice exists or a non-merge commit follows the named SHA:
-   threads resolved after the first round do not say the implementor's fix
-   push, its CI, or its `Verify the fix delta` pass is done.
+4. **The current head has complete review evidence.** Apply `undertake`'s
+   `Review evidence` predicate without a separate author or head-coverage
+   rule. Check CI, finding dispositions and threads separately. Missing or
+   stale evidence fails this read and returns to the applicable review stage.
 5. **No human action is owed.** The pull request carries neither the `human`
    label nor `pr-body`'s human-action blocker.
 
@@ -624,7 +616,7 @@ dependency.** Leave the epic open and classify the gap before selecting a stop:
 - **Exhausted recovery:** report execution failure and the resume requirement;
   do not retry automatically or claim completion.
 
-Apply `undertake`'s operational escalation and stop-decision record: preserve
+Apply `undertake`'s operational escalation policy: preserve
 the owner, evidence, original authority and limits, outstanding requirements,
 recovery counts and next action. Complete independent permitted work first
 unless safety requires an immediate stop. On resume recheck current evidence

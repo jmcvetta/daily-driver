@@ -15,7 +15,7 @@ initial_prompt: >-
   items: a retry loop in `fetch.sh`, a test for the retry limit, and a README
   line. The branch carries the retry loop and the README line, and no test.
   Master is merged, CI is green on the merged head, every review thread is
-  resolved, the round is recorded clean, the completion notice is on the head,
+  resolved, and a clean submitted full review by the claim author covers the head,
   and nothing is uncommitted or unpushed. What happens now, before you end this
   turn?
 

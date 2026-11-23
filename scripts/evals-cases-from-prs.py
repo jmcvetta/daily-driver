@@ -217,7 +217,7 @@ def read_model_class(issue_body: str | None) -> str:
     return match.group(1).lower() if match else "unlabelled"
 
 
-_READINESS_MARKER = "First-readiness report"
+_READINESS_MARKERS = ("# First-readiness report 🎉", "First-readiness report")
 _HOUR_MINUTE_RE = re.compile(r"(\d+)\s*hours?\D{0,12}?(\d+)\s*minutes?", re.IGNORECASE)
 _MINUTE_ONLY_RE = re.compile(r"(\d+)\s*minutes?", re.IGNORECASE)
 
@@ -235,7 +235,7 @@ def read_elapsed_minutes(comments: list[dict[str, Any]]) -> int | None:
     """
     for comment in comments:
         body = str(comment.get("body") or "")
-        if not body.lstrip().startswith(_READINESS_MARKER):
+        if not body.lstrip().startswith(_READINESS_MARKERS):
             continue
         for line in body.splitlines():
             lowered = line.lower()
@@ -1367,6 +1367,10 @@ def _test_read_elapsed_minutes() -> None:
         }
     ]
     assert read_elapsed_minutes(bullet_form) == 31
+
+    # The current heading must not hide the elapsed time from eval generation.
+    current_form = [{"body": "# First-readiness report 🎉\n\nElapsed: 22 minutes"}]
+    assert read_elapsed_minutes(current_form) == 22
 
     timing_form = [
         {

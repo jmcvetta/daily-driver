@@ -146,8 +146,8 @@ def find_claim_comment(comments: list[dict[str, Any]]) -> dict[str, Any] | None:
 
 
 _READINESS_MARKER = "First-readiness report"
-# Current shapes: "first merge readiness" in historical reports and
-# "first ready-for-review gate" in reports published before the ready write.
+_READINESS_HEADING = "# First-readiness report 🎉"
+# Only the exact H1 is current; historical reports used the unheaded marker.
 _READINESS_TIMES_RE = re.compile(
     r"from claim \((?P<claimed>[^)]+)\) to (?:first merge readiness|first ready-for-review gate) \((?P<ready>[^)]+)\)"
 )
@@ -169,10 +169,11 @@ def _parse_iso(text: str) -> datetime | None:
 
 
 def find_readiness_report(comments: list[dict[str, Any]]) -> dict[str, Any] | None:
-    """The pull request's `First-readiness report` comment, or None."""
+    """The pull request's current or historical first-readiness report."""
     for comment in comments:
         body = str(comment.get("body") or "")
-        if body.lstrip().startswith(_READINESS_MARKER):
+        first_line = body.lstrip().splitlines()[0] if body.lstrip() else ""
+        if first_line in {_READINESS_HEADING, _READINESS_MARKER}:
             return comment
     return None
 
