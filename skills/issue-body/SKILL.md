@@ -213,7 +213,10 @@ Run the pass from the assigned worker's class, with the task question above as
 its test, and read the draft as that worker: a decision left unstated, a
 repository fact or inference only the author holds, an edge contract the
 worker would have to invent, or acceptance and verification too thin to
-execute is a gap.
+execute is a gap. Name the files, symbols, tests and gates the worker will
+use; an existing test, command or gate described only by category leaves the
+worker to rediscover it. A routine local choice remains the implementer's, and
+refusing readiness over one is the same failure in the other direction.
 
 Answer every repository-answerable gap now, in the body or in the
 authoritative document it references; on the specification-backed variant keep
@@ -303,7 +306,9 @@ Updating a body
 
 An update preserves valid content. The user's content and requirements that
 still hold stay; the affected specification changes; and readiness runs again.
-Unrelated text is not reflowed and existing issues are not swept.
+Unrelated text is not reflowed and existing issues are not swept. The trailing
+provenance block also stays below the body's closing rule; a revision never
+moves those fields into the task sections.
 
 A deliberately revised task emits the new section and removes its trailing
 task `Model:` field — the legacy class-metadata field below `## Human brief`, never
