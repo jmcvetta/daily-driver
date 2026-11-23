@@ -19,10 +19,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import tree_sitter_bash
-from tree_sitter import Language, Parser
 
-from evals_costs import uses_omp_codex_subscription
+from evals_costs import uses_codex_cli_subscription, uses_omp_codex_subscription
 
 try:
     import yaml
@@ -326,6 +324,7 @@ def case_price(
     model: str,
     prices: dict[str, dict[str, Any]],
     client_name: str,
+    billing_source: str | None = None,
 ) -> tuple[float | None, str]:
     """The USD price of one task result and its source.
 
@@ -342,6 +341,12 @@ def case_price(
     task = row_label(row)
     if uses_omp_codex_subscription(client_name, "omp", model):
         return None, "subscription"
+    if uses_codex_cli_subscription(client_name, billing_source):
+        return None, "subscription"
+    # Go's catalog rates describe allowance consumption, not cash paid. The
+    # adapter's estimated agent_cost_usd does not establish the billing source.
+    if client_name == "omp" and model.startswith("opencode-go/"):
+        return None, "unreported"
     if _number(row.get("agent_cost_usd")):
         total = row.get("total_cost_usd")
         figure = float(total) if _number(total) else float(row["agent_cost_usd"])
@@ -398,6 +403,7 @@ def run_cases(
     client_name: str,
     prices: dict[str, dict[str, Any]],
     sources: dict[str, str] | None = None,
+    billing_source: str | None = None,
 ) -> list[dict[str, Any]]:
     """One row per task result in `run`: model, settings, class, outcome,
     elapsed seconds, tokens, price and the price's source, plus the pull
@@ -410,7 +416,7 @@ def run_cases(
         model_served = "unreported" if client_name == "omp" else (row.get("model_used") or "unreported")
         tokens = row.get("total_tokens")
         model_requested = requested.get(variant_id, "unknown")
-        cost, cost_source = case_price(row, model_requested, prices, client_name)
+        cost, cost_source = case_price(row, model_requested, prices, client_name, billing_source)
         elapsed = row.get("duration")
         if not _number(elapsed) or elapsed <= 0:
             raise ValueError(
@@ -474,7 +480,6 @@ _GIT_REF_COMMANDS = {
 _GH_REPO_COMMANDS = {"pr", "issue", "repo", "browse", "run", "release", "workflow"}
 
 
-_BASH_LANGUAGE = Language(tree_sitter_bash.language())
 
 
 def _shell_nodes(root: Any) -> list[Any]:
@@ -517,7 +522,10 @@ def _heredoc_expansion(body: str) -> str:
 
 def _shell_ast(command: str) -> list[tuple[Any, bytes]]:
     """Parse shell syntax, executable shell scripts, and here-document substitutions."""
-    parser = Parser(_BASH_LANGUAGE)
+    import tree_sitter_bash
+    from tree_sitter import Language, Parser
+
+    parser = Parser(Language(tree_sitter_bash.language()))
     pending = [command.encode("utf-8")]
     trees = []
     while pending:
@@ -782,6 +790,17 @@ def run_attempts(run_dir: Path, run: dict[str, Any], root: Path) -> list[dict[st
             "early_stop": artifact.get("early_stop"),
             "max_turns_exhausted": artifact.get("max_turns_exhausted", False),
         }
+        environment = artifact.get("environment_info")
+        if isinstance(environment, dict) and "omp_model" in environment:
+            attempt["omp_route"] = {
+                "effective_model": environment.get("omp_effective_model", "unreported"),
+                "effective_thinking": environment.get("omp_effective_thinking", "unreported"),
+                "skills_loaded": environment.get("omp_skills_loaded", "unreported"),
+            }
+        if isinstance(environment, dict):
+            billing_source = environment.get("codex_billing_source")
+            if isinstance(billing_source, str):
+                attempt["codex_billing_source"] = billing_source
         if attempt["max_turns_exhausted"]:
             attempt["coder_eval_status"] = attempt["final_status"]
             attempt["final_status"] = "ERROR"
@@ -1036,7 +1055,23 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path, prices: dict[
     if not isinstance(historical_client_version, str) or not historical_client_version:
         historical_client_version = "unknown"
     session_present = "CLAUDE_CODE_SESSION_ID" in os.environ
-    cases = run_cases(run, experiment["experiment_id"], requested, client_name, prices, task_sources(run_dir, run))
+    billing_source = next(
+        (
+            attempt["codex_billing_source"]
+            for attempt in attempts
+            if isinstance(attempt.get("codex_billing_source"), str)
+        ),
+        None,
+    )
+    cases = run_cases(
+        run,
+        experiment["experiment_id"],
+        requested,
+        client_name,
+        prices,
+        task_sources(run_dir, run),
+        billing_source,
+    )
     apply_judge(attempts, variants, cases, judge_sidecar_rows)
     judge = judge_block(judge_manifest, judge_sidecar_rows, attempts, root)
     record = {

@@ -1,132 +1,117 @@
 # `coder-eval-codex`
 
 A `codex-daily-driver` agent kind for
-[`coder_eval`](https://github.com/UiPath/coder_eval), so the suites in
-[`evals/tasks/`](../tasks) can be run against
-[Codex](https://github.com/openai/codex) as well as Claude Code and Omp. It is a
-test instrument, not part of the plugin: nothing here ships to a user, and
-nothing here is imported by a skill.
+[`coder_eval`](https://github.com/UiPath/coder_eval), driving the installed
+[Codex CLI](https://github.com/openai/codex) so the suites in
+[`evals/tasks/`](../tasks) can be measured on the same subscription and model
+as the Omp arm. It is a test instrument, not part of the plugin: nothing here
+ships to a user, and nothing here is imported by a skill.
 
 ```
 coder-eval-codex/
 ├── pyproject.toml                  the `coder_eval.plugins` entry point
 └── src/coder_eval_codex/
+    ├── events.py                   the JSONL stream, reduced — pure, and tested
+    ├── discovery.py                login and model-catalog parsing — pure, and tested
+    ├── skills.py                   plugin skills linked for the CLI — pure, and tested
     ├── transcript.py               the judge's anchor — pure, and tested
     ├── plugins.py                  the plugin root, resolved — pure, and tested
-    ├── agent.py                    the built-in agent, subclassed
+    ├── agent.py                    the driver: spawn, stream, resume, record
     └── plugin.py                   register(registry)
 ```
 
-## Why it exists, and why it is so small
+## Why it is a driver rather than a subclass
 
-`coder_eval` 0.11.6 already ships a `codex` kind. It drives the Codex SDK, links
-a `plugins:` root's skills into `<cwd>/.agents/skills/`, and records command
-telemetry in the vocabulary the criteria are written in. This package inherits
-all of it. What it adds is two corrections and a record — and each correction
-is a silent zero rather than an error if it is missing.
+`coder_eval` 0.11.6 ships a `codex` kind that drives the Codex **SDK**. The
+comparison this arm exists for is the shipped **CLI** — the executable a user
+runs — so the SDK is not a substitute. The SDK has its own transport,
+authentication and session model, and a result from it cannot answer whether the
+CLI behaves the same as Omp. `0015` records the decision; this package is the
+execution path.
 
-**The judge must find the reply.** Every judge rubric under `evals/tasks/`
-locates the reply at the last `[RESULT - …]` tag and scores 0.0 where there is
-none — deliberately, so a drifted harness reports nothing rather than something
-plausible. `coder_eval` builds that tagged transcript for its Claude Code agent
-only; its Codex agent hands the judge `result_text`, the turn's assistant
-deltas joined and nothing else. `transcript.render_agent_output` emits the
-tagged shape, so one rubric reads the same on all three harnesses.
+The kind is still registered separately from the built-in `codex`, for the
+reason the SDK subclass was: the registry rejects two implementations claiming
+one kind, and a distinct name makes each experiment's `agent.type` match its arm
+tag.
 
-**The plugin root must be absolute before the built-in sees it.**
-`CodexAgent._setup_skills` links each skill with `target.symlink_to(skill_dir)`,
-where `skill_dir` is built from `config.plugins[].path` exactly as written. The
-experiments here write `path: ".."`, relative to the `evals/` directory the run
-targets `cd` into — which is right for the Claude agent, because `coder_eval`
-resolves plugin paths before that agent is built, and wrong for the Codex one,
-which never goes through that resolution.
+## The turn
 
-Measured against this repository's real layout: a relative root makes every
-link body relative too, so `.agents/skills/pr -> ../skills/pr` resolves back
-to the link's own directory and points at itself. One entry per skill is
-created and not one has a readable `SKILL.md`; the treated arm runs with no
-skills and every trigger row scores 0, at full price. `_setup_skills`'s own
-"0 skills linked" warning counts `iterdir()` entries, so it stays silent.
-`plugins.resolve_local_plugins` makes the root absolute in `start()` before
-delegating, and `start()` then raises — rather than warning — when plugins were
-declared and no readable skill arrived.
+One process per `communicate()`:
 
-Both raises are `coder_eval`'s typed `AgentConfigError`, never a bare
-`RuntimeError`. Measured: `coder_eval` categorises a bare `RuntimeError` as
-`agent_api_error`, which carries three retries at 5/10/20s with the Codex client
-re-spawned each time, and a mistyped plugin root retried three times is a
-mistyped plugin root three times over, finally reported as a network problem.
-`AgentConfigError` is routed by `isinstance` to `agent_config_error`, whose
-retry count is zero.
+```sh
+codex exec --json --skip-git-repo-check -C <task-dir> -s workspace-write \
+  -c approval_policy="never" -m <model> -c model_reasoning_effort="<effort>" -
+```
 
-**It is registered as a new kind, not as a replacement for `codex`.** The
-registry rejects two implementations claiming one kind, so shadowing the
-built-in would change what every other `coder_eval` user's `codex` means. The
-distinct kind also makes the routing readable: each experiment's `agent.type`
-must match its arm tag.
+The prompt is written to stdin and the process is read line by line. Later
+turns resume the same thread:
 
-## The normalisation that is not here
+```sh
+codex exec ... resume <thread_id> -
+```
 
-Issue #185 asked for a second one: a mapping of `skill://<name>`, the URL Omp
-engages a skill through, so `skill_triggered` could see it. Codex does not use
-that spelling, and the criterion already sees the one it does.
+`events.py` reduces the documented stream — `thread.started`, `turn.started`,
+`item.started`, `item.completed`, `turn.completed`, `turn.failed`, `error` —
+into plain values, so the parsing is testable without an authenticated binary.
+`error` is not always fatal: a live run against a flaky transport emits
+reconnect notices and then completes, so only a stream with no `turn.completed`
+is a failed turn.
 
-The spike in [#181](https://github.com/jmcvetta/daily-driver/issues/181)
-measured both halves. Codex has no skill tool: the model is handed a skills
-table in a developer message and opens `SKILL.md` with an ordinary shell call,
-and a `skill://` mention in a prompt reaches the model as literal text. On the
-other side, `coder_eval`'s `skill_triggered` matches `skills/<name>/` in any
-string tool parameter — its own docstring names Codex as the agent that branch
-was written for. `CodexAgent._setup_skills` links each skill at
-`.agents/skills/<name>/`, the Codex SDK types `CommandExecutionThreadItem.command`
-as `str`, and `_extract_command_telemetry` puts that string in
-`parameters["command"]`. The substring is there to match, with nothing to
-rename.
+Item types map to the canonical vocabulary every criterion is written against:
+`command_execution` → `Bash`, `file_change` → `Write`, `mcp_tool_call` → `Mcp`,
+`web_search` → `WebSearch`. Unknown item types are recorded as a bounded sample
+rather than dropped.
 
-## What it records
+## Evidence before inference
 
-`0013`'s rule for the Omp arm holds here too: a red arm and an arm whose plugin
-never arrived must not read alike. One field lands in each run's
-`environment_info`, beside the routing keys the built-in already records.
+`start()` asks the binary, not the account metadata:
 
-| Field | What it answers |
+| Field | Source |
 | --- | --- |
-| `codex_skills_linked` | the skills with a readable `SKILL.md` under `.agents/skills/` after `start()` |
+| `codex_cli_version` | `codex --version` |
+| `codex_login_status`, `codex_auth_mode` | `codex login status` |
+| `codex_model_catalog_checked` | `codex debug models` |
+| `codex_skills_linked` | the linked `.agents/skills` tree |
+| `codex_billing_source` | `subscription` when the login is a subscription |
 
-`codex_skills_linked` is read from the directory, not from the session. The
-Codex app-server exposes no query for the skills it discovered, so unlike the
-Omp arm's `omp_skills_loaded` this says what was *offered* rather than what was
-taken up. It requires a readable `SKILL.md` rather than counting directory
-entries, which is what makes it an answer: broken symlinks still count as
-entries.
+It fails closed when the answer contradicts the arm: no executable, an
+unrecognized login, an API key in `CODEX_API_KEY`/`OPENAI_API_KEY`, or a model
+the catalog does not list. A missing catalog is recorded as unchecked, not
+treated as proof of absence.
 
-**Only one field, and that is a constraint rather than a choice.** `coder_eval`
-merges `get_environment_info()` into the result once, during setup, right after
-`start()` and before any turn runs. So a counter incremented in `communicate()`
-would always be recorded as zero — a field that says nothing while looking like
-a measurement. `codex_skills_linked` is recordable precisely because `start()`
-fills it.
+Subscription usage records tokens and no cash cost. The CLI reports no charge
+for allowance, and coder_eval's rate card is a list price, not a bill.
 
-The drift that a counter would have alarmed on is logged where it happens
-instead: the first turn to arrive already carrying the `[RESULT - …]` anchor
-warns, once per session. Under the pinned `CODER_EVAL_VERSION` that never
-happens; when it starts happening the built-in has begun rendering the
-transcript itself and this package is a no-op worth deleting.
+## Skills
+
+`skills.link_skills` resolves each `plugins:` root against the process working
+directory (the experiments write `path: ".."`, relative to `evals/`) and
+symlinks every `skills/<name>/` into `<task dir>/.agents/skills/<name>`. The CLI
+scans that directory from the working directory up to the repository root and
+follows symlinks.
+
+This replaces a measured defect from the SDK subclass: a relative root made
+every link body relative, so `.agents/skills/pr -> ../skills/pr` resolved back
+to its own directory. One entry per skill was created and not one had a readable
+`SKILL.md`; the treated arm ran untreated and every trigger row scored 0. Here
+the root is resolved before use, and a declared root with no readable skill
+raises a configuration error instead of warning.
 
 ## What is tested, and what is not
 
-`transcript.py` and `plugins.py` import nothing — not `coder_eval`, not the
-Codex SDK — so their transcript normalization and plugin-root resolution are
-independent of those runtime dependencies.
+`events.py`, `discovery.py`, `skills.py`, `transcript.py` and `plugins.py`
+import nothing outside the standard library, so their reduction, parsing and
+linking are exercised offline by
+[`tests/test_codex_cli_contract.py`](tests/test_codex_cli_contract.py).
 
-`agent.py` cannot be reached without a `coder-eval` install and the Codex SDK,
-and CI here has neither. What it holds is the subclass: two overrides, a
-directory read, and the calls into the two modules above.
+`agent.py` needs an installed, subscription-authenticated `codex` binary and
+cannot run in CI. It holds the spawn/stream/settle loop and the event-to-record
+mapping; the load-bearing pieces it calls are the pure modules above.
 
 ## Installing it
 
-`make evals-install` does it, with `uv tool install --with`, so the kind lands in
-the same environment as the pinned `coder-eval`. The Codex SDK comes with it —
-this package depends on `coder-eval[codex]`, because the built-in agent imports
-`openai_codex` inside `start()` and fails at run time without it. There is
-nothing to publish and nothing to release.
+`make evals-install` puts the kind in the same environment as the pinned
+`coder-eval` with `uv tool install --with`. The Codex SDK is deliberately not a
+dependency: the CLI is installed and authenticated on the machine that runs the
+arm (`npm install -g @openai/codex`, then `codex login`). There is nothing to
+publish and nothing to release.

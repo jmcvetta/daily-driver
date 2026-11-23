@@ -1,0 +1,13 @@
+experiment_id: classes-kimi-k3-1-pro-code
+description: Fixed merged-PR cases on Kimi K3.1 Pro through Kimi Code at high effort.
+defaults:
+  repeats: 3
+  run_limits: {max_turns: 30, task_timeout: 780, turn_timeout: 600}
+  agent:
+    type: omp
+    model: kimi-code/k3.1-pro
+    extra_args: ["--thinking", "high"]
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+variants:
+  - variant_id: default

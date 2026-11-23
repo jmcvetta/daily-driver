@@ -10,6 +10,27 @@ the decisions taken while building the arm, in
 the shape this one follows, and [`0011`](0011-two-harnesses-one-skill-tree.md),
 which made the skills portable in the first place.
 
+**Revised 2026-11-21 by issue #695.** The SDK subclass this note originally
+decided is retired as the execution path. The user replaced the SDK comparison
+with the CLI workflow on 2026-10-31, and an SDK run cannot answer the question
+the comparison asks: it has its own transport, authentication and session
+model, not the executable a user runs. `evals/coder-eval-codex/` is now a
+driver for the installed `codex` executable through `codex exec --json`, and
+`make evals-run-codex` is its CLI-backed entry point. The measurements and
+decisions below remain as the record of the SDK arm; they are not evidence
+about the CLI. Where they conflict, the CLI driver and
+`evals/README.md#the-codex-arm` are current.
+
+The cutover preserves the two things the SDK arm got right, because both are
+rubric contracts rather than harness trivia: the `[RESULT - …]` transcript the
+judge anchors on, and an absolute plugin root whose skills resolve. It drops the
+SDK dependency from `coder-eval-codex` entirely, so an accidental SDK import
+cannot make the retired path look available. What the CLI arm must prove before
+its runs count — direct CLI execution, subscription authentication, skill
+treatment, real tool execution and terminal grading — is listed in `evals/README.md`.
+
+The original decision follows.
+
 `0013` said it for Omp and it is true again for Codex: a trigger that stops
 firing on a harness reads exactly like a skill that never fires. The Claude and
 Omp arms say nothing about the third harness. This arm is the measurement.

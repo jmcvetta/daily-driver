@@ -1,25 +1,18 @@
 """Plugin roots, resolved — with no `coder_eval` in sight.
 
-Pure, for the reason `transcript.py` is: the agent cannot be exercised without a
-`coder_eval` install and the Codex SDK. The plugin-root resolution lives here.
+Pure, for the reason `transcript.py` is: the agent cannot be exercised without
+an installed, subscription-authenticated `codex` executable. The plugin-root
+resolution lives here and is consumed by `skills.py` before the CLI starts.
 
-**What it is for.** `CodexAgent._setup_skills` links a plugin root's skills into
-`<task cwd>/.agents/skills/<name>` with `target.symlink_to(skill_dir)`, and
-`skill_dir` is built from `config.plugins[].path` exactly as written. The
-experiments here write `path: ".."`, relative to the `evals/` directory both run
-targets `cd` into — which is correct for the Claude agent, because
-`coder_eval` resolves plugin paths before that agent sees them, and wrong for
-the Codex one, which does not go through that resolution.
-
-Measured, with the repository's real layout: a relative root makes every link
-body relative too, so `.agents/skills/pr -> ../skills/pr` resolves back to the
-link's own directory and points at itself. One entry per skill is created and
-not one has a readable `SKILL.md`. The treated arm then runs with no skills at
-all, every trigger row scores 0, and the run costs full price — which is the
-silent zero this whole arm exists to prevent, arriving through the arm itself.
-
-`_setup_skills`'s own "0 skills linked" warning does not fire on it: broken
-links still count as directory entries.
+**Why a root must be absolute.** The CLI scans `<cwd>/.agents/skills` and every
+parent up to the repository root, following symlinks. A relative root makes
+every link body relative too, so `.agents/skills/pr -> ../skills/pr` resolves
+back to the link's own directory and points at itself. One entry per skill is
+created and not one has a readable `SKILL.md`; the treated arm then runs with no
+skills and every trigger row scores 0, at the run's full allowance cost. The
+experiments write `path: ".."`, relative to the `evals/` directory every run
+target changes into, so resolution against that base is what keeps the arm
+treated.
 """
 
 from __future__ import annotations

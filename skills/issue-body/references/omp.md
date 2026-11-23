@@ -91,7 +91,7 @@ class labels do not imply benchmark support.
 | claude-sonnet-5-5 | classes-sonnet-high | routine | 9/9 | 9/9 | $0.34 | 2026-10-01_11-14-25 | 2026-10-01 |
 | claude-sonnet-5-5 | classes-sonnet-low | routine | 9/9 | 9/9 | $0.27 | 2026-10-01_11-05-50 | 2026-10-01 |
 | cocktail | classes-cocktail | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
-| cocktail.gpts-choice | classes-cocktail-gpts-choice | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
+| cocktail.gpts-choice | classes-cocktail.gpts-choice | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | glm | classes-glm | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | google-antigravity/gemini-3.1-pro:high | classes-gemini-3-1-pro | mechanical | 1/1 | 0/1 | unreported | 2026-10-09_21-01-52 | 2026-10-09 |
 | google-antigravity/gemini-3.8-flash:high | classes-gemini-3-8-flash | none | 0/2 | 0/2 | unreported | 2026-10-08_18-49-13 | 2026-10-08 |

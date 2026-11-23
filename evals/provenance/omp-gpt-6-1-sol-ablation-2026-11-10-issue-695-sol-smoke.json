@@ -1,0 +1,380 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='no', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply sets the title in one call, with no id looked up first",
+            "duration_seconds": 3.82,
+            "findings": [
+              "Does not name daily_driver_set_session_title.",
+              "States that no title-setting call was made."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "9e410841d0442f3535374f31a69be631f3c56198695a9cabfddfb765037abab4",
+            "rationale": "ANCHOR: result The reply names no specific title-setting call, so it fails the rule.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1081,
+              "output": 56
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "b9fdcf5788def314b64b333eaeaeb17b7bbd95cd87bb85ab661df8c81afda4f8"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='yes', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply sets the title in one call, with no id looked up first",
+            "duration_seconds": 4.05,
+            "findings": [
+              "Names the required title-setting call.",
+              "Provides only a title argument.",
+              "Explicitly states there is no session-ID lookup."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "9e410841d0442f3535374f31a69be631f3c56198695a9cabfddfb765037abab4",
+            "rationale": "ANCHOR: result. The reply names daily_driver_set_session_title with the title as its only argument and describes no preceding session-ID lookup.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 946,
+              "output": 70
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "b9fdcf5788def314b64b333eaeaeb17b7bbd95cd87bb85ab661df8c81afda4f8"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on its own slash command",
+          "details": "observed='no', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "session-title-01-slash-session-title",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on its own slash command",
+          "details": "observed='yes', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "early_stop": {
+        "armed_criteria": [
+          "skill_triggered: `session-title` fires on its own slash command"
+        ],
+        "deciding_criterion_description": "`session-title` fires on its own slash command",
+        "deciding_criterion_type": "skill_triggered",
+        "elapsed_seconds": 3.110551837999992,
+        "gate_threshold": 1.0,
+        "reason": "criterion_passed",
+        "sdk_turn_index": 1,
+        "tool_call_index": 1,
+        "turns_remaining_at_stop": 4
+      },
+      "final_status": "SUCCESS",
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "session-title-01-slash-session-title",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 70.5136787891388,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol-ablation",
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 123392,
+        "output_tokens": 947,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 34092
+      },
+      "tokens": 158431,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 14.005763053894043,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol-ablation",
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 18816,
+        "output_tokens": 196,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 7575
+      },
+      "tokens": 26587,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 21.931228637695312,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol-ablation",
+      "task_id": "session-title-01-slash-session-title",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 2688,
+        "output_tokens": 383,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 2926
+      },
+      "tokens": 5997,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 4.056417465209961,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol-ablation",
+      "task_id": "session-title-01-slash-session-title",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 27,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 4340
+      },
+      "tokens": 4367,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.18.6",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-10T21:36:12.543773",
+  "experiment_id": "omp-gpt-6-1-sol-ablation",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "b9fdcf5788def314b64b333eaeaeb17b7bbd95cd87bb85ab661df8c81afda4f8",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v2",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 2027,
+      "output": 126
+    }
+  },
+  "plugin_revision": {
+    "commit": "29ece688fbf96ba10e376bd5d1e7c5876ab765b9",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-10T14:36:28.840481+00:00",
+  "run_id": "issue-695-sol-smoke",
+  "schema_version": 5,
+  "started_at": "2026-11-10T21:34:22.027959",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "session-title-01-slash-session-title": [
+          0.0
+        ],
+        "session-title-07-one-call-sets-the-title-omp": [
+          0.0
+        ]
+      },
+      "task_ids": [
+        "session-title-07-one-call-sets-the-title-omp",
+        "session-title-01-slash-session-title"
+      ],
+      "variant_id": "bare"
+    },
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "session-title-01-slash-session-title": [
+          1.0
+        ],
+        "session-title-07-one-call-sets-the-title-omp": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "session-title-07-one-call-sets-the-title-omp",
+        "session-title-01-slash-session-title"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

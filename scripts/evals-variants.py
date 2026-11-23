@@ -34,9 +34,9 @@ WHAT IT FLAGS
 WHAT IT DOES NOT FLAG
 
     Whether the arm then works. A registered kind can still fail to start
-    `omp` or the Codex app-server, fail to install the plugin, or load nothing;
-    those failures are loud at run time by design, and `environment_info`
-    records what loaded.
+    `omp` or the `codex` executable, fail to install the plugin, or load
+    nothing; those failures are loud at run time by design, and
+    `environment_info` records what loaded.
     That the RIGHT Codex kind is named. `codex` is a registered built-in and
     resolves cleanly, and it is the wrong kind for these suites: it hands the
     judge bare text, so every judged row scores 0.0. `evals/experiments/codex.yaml`
