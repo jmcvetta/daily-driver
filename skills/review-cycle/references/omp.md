@@ -8,52 +8,187 @@ session running in Oh My Pi. Claude Code's routes are in
 The review surface
 ==================
 
-The **`reviewer`** task agent, dispatched through the `task` tool: a
-code-review specialist, taking the review brief for the pull request and
-reading the diff through `pr://`.
+Native [Open Code Review](https://github.com/alibaba/open-code-review) (`ocr`
+CLI) is the review surface for both `Review the head` and eligible `Verify the
+fix delta` passes. Never dispatch or fall back to Omp's `reviewer` task agent,
+and do not add a helper process, second provider framework, custom OCR rules, or
+second publication path. Omp continues to own CI waits, review history, GitHub
+publication, finding dispositions, and readiness records.
 
-**It takes no effort level.** The round names the agent and nothing more, and
-the depth judgement is the agent's. `SKILL.md`'s `Name the level` has nothing
-to bind here — there is no remembered level to override.
+Installation
+-------------
 
-**Its findings return locally and must be published as a GitHub review.** They
-are not a transcript-only degradation. Give the reviewer the complete history,
-reviewed SHA, and current head; the publication route below turns its findings
-into the submitted threads that `Fix, answer, resolve, push` answers.
+Before either analysis stage, check whether `ocr` is on `PATH`. Reuse an
+existing installation without upgrading it. If missing, require Bun and install
+the published package in the user's global Bun installation:
 
-For each completed reviewer task, retain its execution identity with that
-result. Task result `outputPath` names its artifact; the sibling `.jsonl`
-is the persisted child session. Read the assistant `message.model` and
-`message.provider` fields from successful review turns in that session and
-the session ID from its header. If the transcript is unavailable or those
-fields are missing or disagree across the review, report the affected field
-as `unreported`. A task's `resolvedModel` and `resolvedModelIdentity` describe
-resolution, not proof of the model that served the review. Never substitute
-the configured role, publisher, or the reviewer's own claim.
+```sh
+bun add --global @alibaba-group/open-code-review
+```
 
-Pass the observed values as `reviewerModel`, `reviewerProvider`, and
-`reviewerSession` to the publication calls below. Use
-`reviewerModel: "unreported"` when no actual model is available; omit unknown
-provider or session values. Keep each review and verification pass paired with
-its own result. The normal `Model:` block identifies the publisher, not the
-reviewer.
+Ensure Bun's global executable directory is on `PATH`, then verify
+`ocr --version` before running a review. If Bun is absent, installation fails,
+or `ocr` remains unavailable, report the precise failure and the review as
+`unavailable`; do not silently switch package managers or reviewers.
+
+Installation does not configure a provider or supply credentials. Preserve
+existing OCR configuration and complete the provider setup below separately.
+
+Model and effort configuration
+------------------------------
+
+OCR and its provider setup are local prerequisites; credentials stay outside Git
+and GitHub issues. Persistent model and review-round effort live in
+`~/.opencodereview/config.json`:
+
+```sh
+ocr config set model <vercel-model-slug>
+ocr config set effort low
+```
+
+The initial local configuration uses Vercel AI Gateway (configured once as an
+OpenAI-compatible provider with its base URL as documented by OCR) with the
+operator's current Mistral model and OCR `effort low` (one review round per
+subtask). `ocr config unset effort` restores OCR's default `medium`, or the
+operator may save `medium` or `high` later.
+
+**Daily Driver invokes `ocr review` without `--model` or `--effort`.** OCR
+resolves both from its own persistent configuration on every full review and
+fix-delta pass, so changing either saved setting changes the next review without
+editing this skill. Operator manual runs may still pass `--model` or `--effort`,
+but this route does not set them. `SKILL.md`'s `Name the level` does not apply
+here: do not infer `medium` or `high` from the diff, and do not infer separate
+model reasoning parameters.
+
+Keep the rest of OCR's native pipeline at its stock defaults: rule resolution,
+file grouping, positioning, reflection, filtering, concurrency, timeouts,
+retries, and token budgets. The only integration-only invocation differences are
+immutable `--from` and `--to` commits, `--audience agent --format json`,
+owner-only `--background-file` and `--output` files, and no `--analysis`
+(because the review cycle consumes findings rather than OCR's separate
+behavior-analysis report).
+
+Full-review invocation and acceptance
+-------------------------------------
+
+Compute `<merge-base-sha>` from the pull request's base ref and
+`<reviewed-head-sha>`, then run native OCR from the task worktree:
+
+```sh
+ocr review --repo <task-worktree> --from <merge-base-sha> --to <reviewed-head-sha> \
+  --audience agent --format json \
+  --background-file <owner-only-context-file> --output <owner-only-result-file>
+```
+
+Store `<owner-only-context-file>` and `<owner-only-result-file>` outside the
+checkout and build artifacts with owner-only permissions (`0600`). The context
+file contains the complete submitted-review and thread history, dispositions,
+reviewed SHA, current head, and applicable requirement context. OCR rejects
+sanitized background content over 8,000 characters: on that error, report the
+full review `unavailable`; do not truncate, retry with less history, or fall
+back to the `reviewer` task agent.
+
+Accept a full-review result only when all of the following hold:
+
+- JSON parsing succeeds.
+- `manifest.terminal_state` is `complete`.
+- `manifest.input.resolved_base` equals `<merge-base-sha>` and
+  `manifest.input.resolved_head` equals `<reviewed-head-sha>`.
+- `manifest.coverage.failed` is empty.
+
+A usable JSON result that fails any of those checks is `incomplete`; a CLI or
+authentication failure, background-size rejection, or missing or unparseable
+JSON is `unavailable`. Never submit an `incomplete` or `unavailable` result as a
+completed full review. Report its findings and coverage gap locally and name
+publication incomplete; it cannot satisfy readiness.
+
+Full-review publication and reviewer identity
+---------------------------------------------
+
+OCR findings return locally and must be published as one submitted `COMMENT`
+review through `daily_driver_gh_write` (see `Review history, publication, and
+threads` below) with `commit_id` equal to `<reviewed-head-sha>`. They are not a
+transcript-only degradation.
+
+The submitted review summary names the OCR session (`OCR session:
+<session_id>`), the OCR version and requested model when reported, complete
+coverage, and files reviewed. Including `OCR session: <session_id>` lets a
+resumed run compare that identifier and `<reviewed-head-sha>` against review
+history and avoid duplicate publication.
+
+Map each OCR comment as follows:
+
+- Positive equal `start_line` and `end_line`: `path`, `side: "RIGHT"`, and
+  `line` equal to that line.
+- Positive increasing lines (`0 < start_line < end_line`): `path`,
+  `start_side: "RIGHT"`, `start_line`, `side: "RIGHT"`, and `line` equal to
+  `end_line`.
+- Both lines zero, reversed lines, or an anchor absent from the pull request
+  diff: put the finding in the submitted summary; never invent an anchor.
+- Inline body: severity, category, and `content`; append `suggestion_code` as a
+  GitHub suggestion block only when present and useful. Never publish
+  `thinking`.
+
+Re-read the head and revalidate every anchor immediately before publication.
+Preserve existing repeat-finding reconciliation, replies, resolution, and
+provenance. A clean result has no `comments` entry and uses the submitted
+summary.
+
+Pass `reviewerSession` from OCR's `session_id` (omit only when absent),
+`reviewerModel: "unreported"`, and no `reviewerProvider` to
+`daily_driver_gh_write`. OCR's configured `llm.model`, `llm.provider`, and
+manifest execution identity are requested identity, not proof of the
+backend-served identity. Keep each review and verification pass paired with its
+own OCR session. The normal Omp publisher block remains automatic.
 
 
 Fix-delta verification
 ======================
 
-Dispatch exactly one `reviewer` task agent with a bounded brief. Give it the
-pull request, base branch, full-review SHA, current SHA, original findings,
-dispositions, and pass number. Require it to compare the pull request's
-three-dot content at the reviewed SHA with its three-dot content at the current
-SHA, exclude changes attributable only to the base branch, and inspect affected
-callers. It reports only whether each implemented finding is solved and any
-concrete regressions in that delta. It must not perform a full-PR audit or offer
-style improvements.
+First apply `SKILL.md`'s content classification (`Verify the fix delta`): pure
+formatting and unchanged pull-request content need no pass. Never dispatch or
+substitute the `reviewer` task agent.
 
-The author records the result with `daily_driver_gh_write({ args: ["pr",
-"comment", <number>, "--body-file", <path>], reviewerModel: <pass model>,
-reviewerProvider: <pass provider>, reviewerSession: <pass session> })`:
+For a behavioral delta, let `<scope>` be the full-review SHA and `<current>` be
+the current SHA. Native OCR may run only when both preconditions hold:
+
+- `git merge-base <scope> <current>` equals `<scope>` (excludes rewritten
+  ancestry).
+- `git merge-base <base-ref> <scope>` equals `git merge-base <base-ref>
+  <current>` (excludes a delta mixed with newer base-branch content, which OCR's
+  commit-range review cannot separate).
+
+If either precondition fails, record `outcome: unavailable` with the precise
+precondition failure in `defects:`; do not run a full-PR audit or substitute the
+`reviewer` task agent.
+
+When eligible, run the same stock JSON command from the task worktree without
+`--model`, `--effort`, or `--analysis`:
+
+```sh
+ocr review --repo <task-worktree> --from <scope> --to <current> \
+  --audience agent --format json \
+  --background-file <owner-only-context-file> --output <owner-only-result-file>
+```
+
+OCR's saved model and effort apply unchanged. Store the context and output files
+outside the checkout and artifacts with owner-only permissions (`0600`). The
+context file contains the original findings, dispositions, base branch,
+`<scope>`, `<current>`, pass number, and this bounded instruction: report only
+unsolved implemented findings and concrete regressions in the delta, inspect
+affected callers, and do not restart a full-PR audit or offer style work. If OCR
+rejects sanitized background content over 8,000 characters, record
+`outcome: unavailable`; do not truncate, retry with less history, or fall back.
+
+Require the same manifest validation: JSON parsing succeeds,
+`manifest.terminal_state` is `complete`, `manifest.input.resolved_base` equals
+`<scope>`, `manifest.input.resolved_head` equals `<current>`, and
+`manifest.coverage.failed` is empty.
+
+The author records the pass with `daily_driver_gh_write({ args: ["pr",
+"comment", <number>, "--body-file", <path>], reviewerModel: "unreported",
+reviewerSession: <ocr session_id> })` (omitting `reviewerProvider`, and omitting
+`reviewerSession` when absent):
 
 ```text
 Review verification
@@ -64,13 +199,30 @@ findings: <finding ids and dispositions>
 outcome: <clear|defects|incomplete|unavailable>
 defects: <none|concise list>
 wall: <open|reached>
-usage: unavailable
+usage: <summary.total_tokens (with input/output counts when present)|unavailable>
 ```
 
-The task agent's result is independent evidence. The author writes this record
-only after receiving it; it must not invent a verdict. Omp exposes no reviewer
-token-usage value, so `usage: unavailable` is required. The wrapper adds
-provenance; do not add a block to the record.
+Map OCR's result to `outcome` and `defects` as follows:
+
+| Condition | `outcome` | `defects` |
+| --- | --- | --- |
+| Complete exact delta and zero OCR comments | `clear` | `none` |
+| Complete exact delta and one or more OCR comments | `defects` | Concise OCR findings |
+| Usable OCR JSON with missing/mismatched identity or incomplete coverage | `incomplete` | Known defects, otherwise the coverage gap |
+| Failed precondition, CLI/authentication failure, or missing/unparseable JSON | `unavailable` | Precise failure, or `unavailable` |
+
+`scope reviewed`, `verified`, `pass`, and `findings` retain their existing
+meanings; `findings` lists the original IDs and dispositions. Compute `wall`
+under the existing consecutive-defective-pass rule, not from OCR prose. Set
+`usage` from `summary.total_tokens`, with input/output counts when present, or
+`unavailable` when absent. Pass reviewer identity to `daily_driver_gh_write`
+exactly as for the full review (`reviewerModel: "unreported"`, `reviewerSession`
+from OCR's `session_id` when present, and no `reviewerProvider`).
+
+OCR's result is independent evidence. The author records OCR's result only after
+receiving it and must not replace it with its own verdict. Ineligible,
+incomplete, unavailable, or defective results do not approve the head. The
+wrapper adds provenance; do not add a block to the record.
 
 The wait
 ========
@@ -218,16 +370,17 @@ after a user stop performs no work.
 Review history, publication, and threads
 ========================================
 
-Before dispatch, read every submitted review with `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews`. Read the complete thread graph with a
+Before running OCR, read every submitted review with `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews`. Read the complete thread graph with a
 paginated GraphQL `PullRequest.reviewThreads` query, including `id`,
 `isResolved`, `isOutdated`, review/comment IDs, replies, SHAs, paths, lines,
 and bodies. A REST comments page alone is not complete history and does not
 contain the `PRRT_…` ID needed to resolve a thread.
 
-After the reviewer returns, re-read the head and its diff anchors. Compare the
-returned findings with the review history and recorded review identifier before
-posting; a resumed run must not duplicate a review already submitted for that
-SHA. Put line-specific findings in `review.json` and create one submitted
+After OCR returns an accepted full-review result, re-read the head and
+revalidate every diff anchor. Compare the OCR session (`OCR session:
+<session_id>`) and reviewed SHA against the review history before posting; a
+resumed run must not duplicate a review already submitted for that OCR session
+and SHA. Put mapped inline findings in `review.json` and create one submitted
 review:
 
 ```json
@@ -248,19 +401,19 @@ review:
 
 Run `daily_driver_gh_write({ args: ["api", "--method", "POST",
 "/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"],
-reviewerModel: <review model>, reviewerProvider: <review provider>,
-reviewerSession: <review session> })`. The wrapper labels the reviewer and
-publisher on the summary and every inline comment in the JSON body.
-Use `start_side` and `start_line` for a valid range. A clean or unanchorable
-review has no `comments` entry and uses the submitted summary. Never invent an
-anchor. On changed head, invalid anchor, absent `gh`, or GitHub failure, retain
-the findings and report publication as incomplete.
+reviewerModel: "unreported", reviewerSession: <ocr session_id> })` (omitting
+`reviewerProvider`, and omitting `reviewerSession` when absent). The wrapper
+labels the reviewer and publisher on the summary and every inline comment in the
+JSON body. Use `start_side` and `start_line` for a valid increasing line range.
+A clean or unanchorable review has no `comments` entry and uses the submitted
+summary. Never invent an anchor. On changed head, invalid anchor, absent `gh`,
+or GitHub failure, retain the findings and report publication as incomplete.
 
 | Operation | Call |
 | --------- | ---- |
 | Read reviews | `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews` |
 | Read threads | paginated `gh api graphql` query of `PullRequest.reviewThreads` |
-| Publish review | `daily_driver_gh_write({ args: ["api", "--method", "POST", "/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"], reviewerModel: <review model>, reviewerProvider: <review provider>, reviewerSession: <review session> })` |
+| Publish review | `daily_driver_gh_write({ args: ["api", "--method", "POST", "/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"], reviewerModel: "unreported", reviewerSession: <ocr session_id> })` |
 | Reply on a thread | `daily_driver_gh_write({ args: ["api", "-X", "POST", "/repos/{owner}/{repo}/pulls/{n}/comments/{comment_id}/replies", "--input", "reply.json"] })` |
 | Resolve a thread | `gh api graphql` with the `resolveReviewThread` mutation |
 

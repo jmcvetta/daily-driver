@@ -18,11 +18,11 @@ do not. Every finding is answered, and a behavioral fix is verified without
 repeatedly auditing unchanged pull-request content. A standalone review records its
 findings and stops; it does not turn into an implementation run.
 
-The analysis is the harness's own review surface, and this skill does not
-supply it. What it supplies is the six things around it — the wait for CI, the
-level, the durable review record, the thread protocol, bounded fix verification,
-and the full-review test — none of which any review surface has an opinion
-about.
+The analysis is the review surface named by the active harness route, and this
+skill does not supply it. What it supplies is the six things around it — the
+wait for CI, the level, the durable review record, the thread protocol, bounded
+fix verification, and the full-review test — none of which any review surface
+has an opinion about.
 
 **The routes are per harness, and they live beside this file.** Every operation
 below is named in words here and resolved to a call there:
@@ -188,11 +188,13 @@ fires on a renamed CI job, and misses the one-line change to a comparison that
 decides access. At `high` that guess is cheap and worth making. Above it, the
 same guess is not.
 
-**Where the surface takes no level, the round names the surface and nothing
-more**, and the depth judgement is the surface's. The two rules above then have
-nothing to bind: they exist because a level can be remembered, and a surface
-with no level remembers none. The reference file says which case the harness in
-use is.
+**Where the surface takes no level, or where the active harness route names an
+external review surface whose model and effort belong to persistent operator
+configuration, the round names the surface without supplying a level.** The two
+rules above then have nothing to bind: the round neither infers `medium` or
+`high` from the diff nor overrides the operator's saved settings, and depth
+remains with the surface or its saved configuration. The reference file says
+which case the harness in use is.
 
 Review record, not transcript
 -----------------------------
@@ -203,13 +205,15 @@ every subagent here, through `SubagentStart` — it is a dispatch with no rubric
 bounding what it reviews and no route landing its findings as resolvable
 threads under a submitted `COMMENT` review. What stays forbidden is a dispatch missing either half.
 
-**At `Review the head` the reviewer is still the harness's named review
-surface, and only that surface.** It supplies both by being named, along with
-the effort level `Name the level` binds and the measured resolvable-thread
-contract; whether a panel of briefed subagents should replace it is a
-question this rule does not answer. `Verify the fix delta` is where a briefed
-subagent is a reviewer: the reference file states its brief and its
-publication route rather than leaving either assumed.
+**At `Review the head` the reviewer is still the active harness route's named
+review surface, and only that surface** — whether built into the harness or an
+external review surface configured by the operator. It supplies both by being
+named, along with the effort boundary the reference states and the measured
+resolvable-thread contract; whether a panel of briefed subagents should replace
+it is a question this rule does not answer. At `Verify the fix delta`, the
+reference file names whether the pass uses that review surface or a briefed
+subagent, and states its brief and its publication route rather than leaving
+either assumed.
 
 **Read the complete GitHub review history before each review.** Read submitted
 reviews and every inline thread, including resolved and outdated threads, their
