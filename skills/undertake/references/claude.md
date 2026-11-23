@@ -97,9 +97,8 @@ The pull request
 | `The gate` | Read the branch against its base | `mcp__github__pull_request_read`, method `get` — `mergeable_state` |
 | `The gate` | Read CI on the head | `mcp__github__pull_request_read`, **both** `get_check_runs` and `get_status` |
 | `The gate` | Read the review threads | `mcp__github__pull_request_read`, `get_reviews`, `get_review_comments` and `get_comments` — `review-cycle`'s reference owns them |
-| `The gate` | Read the review record | `mcp__github__pull_request_read`, method `get_comments` — the round's own `Review` and `Review verification` comments |
-| `The gate` | Read the completion notice | `mcp__github__pull_request_read`, method `get_comments`, to the last page — the latest `## Review cycle complete! 🎉` comment by the claim's author |
-| `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `mcp__github__add_issue_comment` |
+| `The gate` | Read review evidence | `review-cycle`'s complete submitted-review, conversation-comment and thread reads; read the claim author from the task issue |
+| `The gate` | Read first-parent ancestry | `git show -s --format=%P <sha>` in a checkout containing the head and its ancestors; unavailable objects fail the predicate |
 | `The gate` | Read the Blockers section | `mcp__github__pull_request_read`, method `get` — `body`, where `pr-body`'s Blockers section sits |
 | `The milestone` | Read the draft state and report head | `mcp__github__pull_request_read`, method `get` — `draft`, `head.sha` |
 | `The milestone` | Read the existing comments | `mcp__github__pull_request_read`, method `get_comments` |
@@ -200,7 +199,7 @@ before `Ready for review` marks it ready.
 `mergeable_state` is not a milestone condition. The gate uses it only for
 `behind`, `dirty` and `unknown`; `draft` and `blocked` do not answer branch
 currency or readiness. The independent gate reads for currency, current-head
-CI, review completion, threads, the completion notice and blockers decide
+CI, review evidence, threads and blockers decide
 whether the report may be posted. Do not wait for a post-ready `clean` read.
 
 **The start is the claim comment's `created_at`.** Read the issue's comments
@@ -214,7 +213,7 @@ read anyway; an issue with no recoverable claim leaves the timing `n/a`, per
 
 **Post the report before marking ready.** Read the PR's comments with
 `mcp__github__pull_request_read`, method `get_comments`, and find the fixed
-`First-readiness report` marker before writing. If it is absent and the gate
+`# First-readiness report 🎉` or historical unheaded marker before writing. If absent and the gate
 holds, post with `mcp__github__add_issue_comment`. Only after that write
 succeeds, call `mcp__github__update_pull_request` with `draft: false`. A
 failed report write leaves the PR draft; a failed ready write preserves the
@@ -261,9 +260,8 @@ The cadence
 [`pr`'s `Keep it current` route](../../pr/references/claude.md#keep-it-current)
 owns the common watch; this undertaking invokes it and does not start another.
 
-Undertaking-specific continuation stays here. When current-head CI is green,
-post a missing review completion notice before continuing the ready-gate work.
-Use `review-cycle` for review and fix-delta work, then apply `Ready for review`
+Undertaking-specific continuation stays here. Use `review-cycle` for review
+and fix-delta work, then apply `Ready for review`
 and `The milestone` below. A capped wait, review wall, or human action reports
 unfinished work and its resume path; it never becomes completion.
 

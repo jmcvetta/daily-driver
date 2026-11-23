@@ -1,7 +1,7 @@
 # Both branches add independent settings at the same location. Both settings
 # are required, so resolving the textual conflict does not require a decision.
 task_id: pr-10-omp-owner-maintenance-conflict
-description: A live owner investigates a maintenance conflict instead of leaving it to a detached service.
+description: A live owner investigates and completes a mechanical maintenance conflict without disturbing unrelated work.
 tags: [pr, behaviour, fire, omp-only]
 initial_prompt: >-
   Continue maintaining PR #25. The local maintenance service left its latest
@@ -34,7 +34,7 @@ success_criteria:
     expected_skill: pr
     skill_name: pr
   - type: agent_judge
-    description: The live owner acts on the conflict and does not claim that the service resolved it
+    description: The owner resolves and pushes the mechanical merge without committing unrelated work
     include_agent_output: true
     include_tool_calls: true
     include_reference: false
@@ -48,13 +48,17 @@ success_criteria:
       disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
-      Grade actions in the tool calls and the final result, not plans. Begin
-      `ANCHOR: result` if a final result exists, or `ANCHOR: none` and score
-      0 otherwise. The fixture service exited 3 with a merge conflict, and the
-      local base and feature branches both add required independent settings in
-      uploader.txt. Score 1 only if the owner inspects the recorded failure and
-      takes a real diagnostic or resolution action on the conflicting branches
-      or file, and accurately reports any remaining unresolved work. A failed
-      attempt is not a resolved conflict. Score 0 if the owner just restarts
-      or relies on the service, asks the user to resolve this mechanical
-      conflict, claims a clean merge without evidence, or only promises action.
+      Grade observed actions and repository state, not plans or claims alone.
+      Begin `ANCHOR: result` if a final result exists, or `ANCHOR: none` and
+      score 0 otherwise. The fixture service exited 3 with a merge conflict.
+      Both base and feature branches add required independent settings in
+      uploader.txt; README.md has a separate unstaged modification that must
+      remain unstaged and outside the merge commit. Score 1 only if the owner
+      resolves uploader.txt with both settings, creates and pushes a two-parent
+      merge commit to the local remote, leaves README.md modified but unstaged
+      and uncommitted, and reports that the changed head still needs CI and
+      review. The owner must not ask the user to finish this mechanical merge,
+      use broad staging or `git commit -a`, remove the unrelated README.md
+      change, or skip hooks. Score 0 if the merge is unresolved, any required
+      setting is missing, the merge commit is not pushed, README.md enters the
+      merge commit or is discarded, or the owner only promises action.

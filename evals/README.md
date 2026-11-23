@@ -1619,7 +1619,7 @@ route after planning `experiments/with-without.yaml` directly; the normal
 project checks remain CI's gate.
 
 The readiness rows `undertake/08-cadence-stops-at-ready-omp.yaml`,
-`10-ready-is-marked-not-asked.yaml`, `13-gate-reads-the-completion-notice.yaml`,
+`10-ready-is-marked-not-asked.yaml`, `13-gate-reads-the-review-record.yaml`,
 and `20-report-write-failure-keeps-draft.yaml` through
 `22-existing-report-is-not-duplicated.yaml` measure actions, not narration.
 `fixtures/undertake-readiness/shared` supplies a stateful offline `gh` for
@@ -1631,12 +1631,12 @@ successful report while the PR is still draft, and only then a ready write.
 A refused report forbids a ready attempt; a refused ready write preserves the
 report. Separate scenarios cover an existing report, post-ready `BLOCKED` or
 `UNKNOWN` merge states, CI on another head, and failed reads. The verifier
-rejects a substitute review record, early or duplicate reports, missing
-notice rereads, and a new review round for a clean merge.
+rejects missing or stale review evidence, early or duplicate reports, and a
+new review round for a clean merge.
 
 The positive readiness row uses `covered-ancestor`: the PR head already
-contains the base, while the completion notice covers the reviewed head through
-ancestry. A no-op base update leaves CI green; the fixture marks CI in flight
+contains the base, while the submitted review covers the head through
+merge-only ancestry. A no-op base update leaves CI green; the fixture marks CI in flight
 only when the head changes. The row's deterministic verifier checks gate reads
 and report-before-ready order. Its judge reads the transcript without a
 separate tool-call payload, which exceeded the judge's 120,000-byte limit in

@@ -9,7 +9,7 @@
 #
 # What the row measures. The sandbox carries an offline, stateful `gh`
 # PR #25 is a draft whose head includes the base branch, whose CI is green,
-# whose threads are resolved, and whose completion notice covers the reviewed
+# whose threads are resolved, and whose submitted review covers the current
 # head through ancestry. Reads return real fixture state, `gh pr ready 25`
 # clears the draft flag, and a first-readiness report comment is returned by
 # the next read. The verifier checks the complete record: required gate reads

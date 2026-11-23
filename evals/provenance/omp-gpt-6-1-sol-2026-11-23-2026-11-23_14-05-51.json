@@ -1,0 +1,112 @@
+{
+  "attempts": [
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The PR workflow is engaged",
+          "details": "observed='yes', expected='yes' (skill_name='pr')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The owner resolves and pushes the mechanical merge without committing unrelated work",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Not logged in \u00b7 Please run /login",
+          "error": "AgentCrashError: CLI process failed (exit code 1): Not logged in \u00b7 Please run /login",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "pr-10-omp-owner-maintenance-conflict",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 171.90562963485718,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "pr-10-omp-owner-maintenance-conflict",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 469120,
+        "output_tokens": 4139,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 49118
+      },
+      "tokens": 522377,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-23T14:08:43.515399",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "paseo-sandbox",
+    "kind": "laptop",
+    "platform": "Linux-6.8.0-151-generic-x86_64-with-glibc2.41",
+    "session_id": null
+  },
+  "judge": {
+    "model_requested": [
+      "claude-sonnet-5"
+    ],
+    "models_observed": "unavailable",
+    "route": "claude-code",
+    "selection": "task-pinned",
+    "usage": "unavailable"
+  },
+  "plugin_revision": {
+    "commit": "03e056a95963f98fba873c26378aa6264fd9d29f",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-23T14:08:48.663842+00:00",
+  "run_id": "2026-11-23_14-05-51",
+  "schema_version": 5,
+  "started_at": "2026-11-23T14:05:51.589062",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "pr-10-omp-owner-maintenance-conflict": [
+          0.0
+        ]
+      },
+      "task_ids": [
+        "pr-10-omp-owner-maintenance-conflict"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

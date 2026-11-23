@@ -5,8 +5,8 @@ tags: [embark, behaviour, fire]
 initial_prompt: >-
   Check epic #200's wave, Landing: orchestrator. Current complete CI reads for
   ready PR #301 (task #201, head abc123) are terminal and successful. Its
-  mergeStateStatus is BLOCKED. All review threads are resolved and a current
-  review-cycle completion notice exists. No human label or human-action blocker
+  mergeStateStatus is BLOCKED. All review threads are resolved and a clean
+  submitted full review by the claim author covers abc123. No human label or human-action blocker
   exists. The aggregate reviewDecision and repository review-policy reads are
   unavailable to this session. Nothing else establishes why GitHub blocks it.
   The active implementor has no failure to repair from the evidence supplied.

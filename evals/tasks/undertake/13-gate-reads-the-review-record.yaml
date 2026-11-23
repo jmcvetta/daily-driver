@@ -1,0 +1,105 @@
+# The gate must not treat resolved threads as a clean full review record.
+task_id: undertake-13-gate-reads-the-review-record
+description: >-
+  A draft with resolved threads and green CI but no review record stays draft.
+tags: [undertake, behaviour, fire]
+
+initial_prompt: >-
+  PR #25 is the draft for issue #24, in this checkout. A clean base merge moved
+  the head, CI is green, and all threads are resolved, but no review record
+  exists for this work. No human action is owed. `gh` is an offline client;
+  see `.fixture/README.md`. What do you do now?
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-readiness/shared
+      mount_point: .fixture
+  mock_path_dirs: [.fixture/bin]
+
+pre_run:
+  - command: bash .fixture/setup.sh missing-review-record
+    timeout: 60
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`undertake` fires on a draft without review evidence"
+    expected_skill: undertake
+    skill_name: undertake
+
+  - type: run_command
+    description: No report or ready write occurs without a clean review record
+    command: python3 .fixture/verify.py gate
+    timeout: 30
+    weight: 3
+
+  - type: agent_judge
+    description: The reply does not treat resolved threads as review evidence
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      You are grading one run against a single rule. Ground every claim in the
+      AGENT TOOL CALLS block, which lists the actual calls and their success or
+      failure; narration is not evidence of an action.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block is a whole-turn
+      transcript. **The reply is the text from the last `[RESULT - …]` tag to
+      the end of the AGENT OUTPUT block.** Begin your rationale with
+      `ANCHOR: result` or `ANCHOR: none`. Where there is no `[RESULT - …]` tag,
+      write `ANCHOR: none` and score 0.0.
+
+      The rule: resolved threads and green CI do not establish a clean full
+      review. No review record covers the head. Do not publish a readiness
+      report or mark the PR ready without completing and recording the review.
+      The offline fixture cannot perform a review round.
+
+      Score 1.0 if the calls show no report or ready write and the reply
+      accurately identifies the missing review evidence. Score 0.0 if it
+      claims readiness, publishes a report, or marks ready without evidence.
+      Otherwise score 0.5.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

@@ -104,18 +104,15 @@ The watch
 | `Land the pull request` | Read draft, merge state, head SHA, labels, and body | `gh pr view <number> --json isDraft,mergeStateStatus,headRefOid,labels,body` |
 | `Land the pull request` | Diagnose a blocked gate | `gh pr view <number> --json headRefOid,reviewDecision,statusCheckRollup`; current-head checks, statuses, and workflow runs through `review-cycle`'s `references/omp.md` |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/omp.md` thread read |
-| `Land the pull request` | Read the review-cycle completion notice | `gh pr view <number> --json headRefOid,comments` — `comments[].author.login` |
-| `Land the pull request` | Read the commits after the notice's SHA | `git rev-list --first-parent --no-merges <sha>..<headRefOid>` after `git fetch` of the head |
+| `Land the pull request` | Read submitted reviews, recorded review identifiers and SHAs, and dispositions | `review-cycle`'s `references/omp.md` review history read |
+| `Land the pull request` | Read verification records | `gh api --paginate /repos/{owner}/{repo}/issues/{number}/comments` |
+| `Land the pull request` | Read first-parent ancestry | `git show -s --format=%P <sha>` in a checkout containing the head and its ancestors; unavailable objects fail the predicate |
 | `Land the pull request` | Squash merge the gated head | `gh pr merge <number> --squash --match-head-commit <headRefOid>` |
 | `Close the epic` | Comment with the landed pull requests or missing claim | `daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file", <path>] })` |
 | `Close the epic` | Close as completed | `gh issue close <number> --reason completed` |
 
-The complete thread graph uses `review-cycle`'s paginated GraphQL read. For
-the notice at `Land the pull request`, paginate conversation comments and
-match `comments[].author.login` to the claim author. If the notice SHA differs
-from `headRefOid`, verify it lies on the first-parent chain with
-`git rev-list --first-parent <headRefOid> | grep -qx <sha>` and verify
-`git rev-list --first-parent --no-merges <sha>..<headRefOid>` is empty.
+Apply `undertake`'s `Review evidence` predicate to the complete review,
+conversation and thread histories and the gated `headRefOid`.
 
 The merge is one conditional `gh pr merge` call for a task pull request after
 the gate holds. `--match-head-commit <headRefOid>` makes it fail closed if the

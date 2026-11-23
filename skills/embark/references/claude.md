@@ -167,8 +167,8 @@ The watch
 | `Land the pull request` | Diagnose blocked CI | `review-cycle`'s `references/claude.md` checks and status reads |
 | `Land the pull request` | Read the aggregate review decision when available | Authenticated `gh pr view <number> --repo <owner>/<repo> --json headRefOid,reviewDecision`; if unavailable, report that evidence gap |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/claude.md` thread read |
-| `Land the pull request` | Read the review-cycle completion notice | `mcp__github__pull_request_read`, method `get_comments`, every page — `user.login` |
-| `Land the pull request` | Read the commits after the notice's SHA | `mcp__github__get_commit`, from `head.sha` back along first parents — `parents` |
+| `Land the pull request` | Read submitted reviews, recorded review identifiers and SHAs, dispositions, and verification records | `review-cycle`'s `references/claude.md` review history and conversation-comment reads, all pages |
+| `Land the pull request` | Read first-parent ancestry | `git show -s --format=%P <sha>` in a checkout containing the head and its ancestors; unavailable objects fail the predicate |
 | `Land the pull request` | Squash merge the gated PR | `mcp__github__merge_pull_request`, `merge_method: squash`, `expectedHeadSha: <head.sha>` |
 | `Close the epic` | Comment with outcome evidence or an unsupported claim | `mcp__github__add_issue_comment` |
 | `Close the epic` | Close as completed | `mcp__github__issue_write`, `method: update`, `state: closed`, `state_reason: completed` |
@@ -184,11 +184,8 @@ Landing and close
 -----------------
 
 The PR `get` supplies `draft`, `mergeable_state`, `head.sha`, labels and body.
-Use `review-cycle`'s complete paginated thread read. For the notice in `Land
-the pull request`, paginate conversation comments and match `user.login` to
-the claim author. If its SHA differs from `head.sha`, walk `get_commit` from
-the head along first parents to that SHA; every intervening commit must have
-two `parents`, and the walk must reach the SHA.
+Apply `undertake`'s `Review evidence` predicate to the complete review,
+conversation and thread histories and the gated `head.sha`.
 
 The merge call is made only for a task pull request,
 after those reads hold. `expectedHeadSha` makes it fail closed if the task
