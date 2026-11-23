@@ -101,8 +101,8 @@ DEFAULT_MAX_PROMPT_BYTES = 120_000
 DEFAULT_MAX_FILE_CHARS = 20_000
 DEFAULT_MAX_DIALOG_CHARS = 100_000
 
-# Bump when JUDGE_SYSTEM_PROMPT or the envelope changes: it is part of `freeze_sha`.
-PROMPT_VERSION = "omp-judge-v2"
+# Bump when the rubric envelope or rendered transcript changes; this is part of `freeze_sha`.
+PROMPT_VERSION = "omp-judge-v3"
 
 JUDGE_SYSTEM_PROMPT = """\
 You are a strict grader. You grade one transcript of a coding agent against one \
@@ -360,7 +360,7 @@ def truncate_agent_output(text: str, limit: int) -> str:
 
 
 def summarize_commands(commands: list[dict[str, Any]]) -> str | None:
-    """Render complete tool evidence; the route byte limit rejects oversized prompts."""
+    """Render tool evidence without repeating the large text returned by Skill calls."""
     if not commands:
         return None
     lines = []
@@ -369,7 +369,11 @@ def summarize_commands(commands: list[dict[str, Any]]) -> str | None:
             "tool_name": cmd.get("tool_name", "unknown"),
             "result_status": cmd.get("result_status") or "unknown",
             "parameters": cmd.get("parameters") or {},
-            "result_summary": cmd.get("result_summary"),
+            "result_summary": (
+                "[skill contents omitted]"
+                if cmd.get("tool_name") == "Skill"
+                else cmd.get("result_summary")
+            ),
             "error_message": cmd.get("error_message"),
         }
         lines.append(f"  {i}. {json.dumps(evidence, ensure_ascii=False, sort_keys=True)}")
