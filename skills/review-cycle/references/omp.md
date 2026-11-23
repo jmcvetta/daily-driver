@@ -9,11 +9,58 @@ The review surface
 ==================
 
 Native [Open Code Review](https://github.com/alibaba/open-code-review) (`ocr`
-CLI) is the review surface for both `Review the head` and eligible `Verify the
-fix delta` passes. Never dispatch or fall back to Omp's `reviewer` task agent,
-and do not add a helper process, second provider framework, custom OCR rules, or
+CLI) is the default review surface for both `Review the head` and eligible
+`Verify the fix delta` passes. Do not silently dispatch or fall back to Omp's
+`reviewer` task agent. An explicit operator selection overrides that default
+for its stated scope through `Operator-selected review method` below. For OCR,
+do not add a helper process, second provider framework, custom OCR rules, or
 second publication path. Omp continues to own CI waits, review history, GitHub
 publication, finding dispositions, and readiness records.
+All OCR-specific prerequisites, manifest checks, identity mapping, and range
+restrictions below apply only when OCR is the selected method.
+
+Operator-selected review method
+--------------------------------
+
+Record the operator's selected method and scope; stop a superseded OCR invocation
+before starting its replacement. Do not require OCR installation, configuration,
+or a successful OCR result to use a different selected method. Do not install a
+replacement framework or change persistent configuration as part of the switch.
+
+When the operator selects Omp's `reviewer` subagent, dispatch one read-only
+`reviewer` through `task`, rooted in the task worktree. Give it the pull request,
+actual base branch, immutable reviewed and current SHAs, complete submitted
+reviews and inline-thread history (including resolved and outdated threads),
+dispositions, and applicable issue or specification requirements. For a full
+review, require inspection of the complete three-dot pull-request diff, affected
+callers, and relevant tests for concrete correctness defects and unmet
+requirements, not style changes. Require a result bound to the reviewed SHA,
+coverage and limitations, findings with valid diff anchors where available, and
+observed reviewer identity and usage when exposed. It must not edit files or
+run project checks; the author owns CI. Apply `SKILL.md`'s effort rule only if
+the selected surface exposes an effort control.
+
+For a fix-delta pass, give the reviewer the full-review SHA, current SHA, original
+findings, dispositions, and pass number. Require comparison of the pull request's
+three-dot content at both SHAs, excluding base-only changes even after rewritten
+ancestry or a newer base. Inspect affected callers; report only unsolved
+implemented findings and concrete regressions in that delta. Do not restart a
+full audit or accept the author's verdict as evidence.
+
+Other explicitly selected independent methods must receive the same stage brief
+and return the same evidence. A failed invocation is `unavailable`; a result
+with partial coverage or a mismatched SHA is `incomplete`. Neither satisfies
+readiness. Do not silently switch again on failure.
+
+Publish returned findings through `Review history, publication, and threads`
+below as one submitted `COMMENT` review, including a clean summary when there
+are no findings. Use the selected method's review/session identifier and reviewed
+SHA for duplicate detection, and record the returned GitHub review ID. Pass
+observed reviewer identity to `daily_driver_gh_write`, using
+`reviewerModel: "unreported"` when unknown and omitting unknown provider/session
+fields; never infer served identity from a configured model. Record each delta
+pass in the existing `Review verification` format below, deriving its outcome
+from the independent report and its usage from exposed counts or `unavailable`.
 
 Installation
 -------------
@@ -146,8 +193,9 @@ Fix-delta verification
 ======================
 
 First apply `SKILL.md`'s content classification (`Verify the fix delta`): pure
-formatting and unchanged pull-request content need no pass. Never dispatch or
-substitute the `reviewer` task agent.
+formatting and unchanged pull-request content need no pass. For an explicit
+alternative selection, use `Operator-selected review method`; the OCR-only
+preconditions and result mapping below do not govern that alternative.
 
 For a behavioral delta, let `<scope>` be the full-review SHA and `<current>` be
 the current SHA. Native OCR may run only when both preconditions hold:
@@ -370,18 +418,18 @@ after a user stop performs no work.
 Review history, publication, and threads
 ========================================
 
-Before running OCR, read every submitted review with `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews`. Read the complete thread graph with a
+Before running the selected reviewer, read every submitted review with `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews`. Read the complete thread graph with a
 paginated GraphQL `PullRequest.reviewThreads` query, including `id`,
 `isResolved`, `isOutdated`, review/comment IDs, replies, SHAs, paths, lines,
 and bodies. A REST comments page alone is not complete history and does not
 contain the `PRRT_…` ID needed to resolve a thread.
 
-After OCR returns an accepted full-review result, re-read the head and
-revalidate every diff anchor. Compare the OCR session (`OCR session:
-<session_id>`) and reviewed SHA against the review history before posting; a
-resumed run must not duplicate a review already submitted for that OCR session
-and SHA. Put mapped inline findings in `review.json` and create one submitted
-review:
+After an accepted full-review result, re-read the head and revalidate every diff
+anchor. Compare the method's review/session identifier and reviewed SHA against
+the review history before posting; a resumed run must not duplicate a review
+already submitted for that identifier and SHA. For OCR use `OCR session:
+<session_id>`. Put mapped inline findings in `review.json` and create one
+submitted review:
 
 ```json
 {
@@ -401,8 +449,10 @@ review:
 
 Run `daily_driver_gh_write({ args: ["api", "--method", "POST",
 "/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"],
-reviewerModel: "unreported", reviewerSession: <ocr session_id> })` (omitting
-`reviewerProvider`, and omitting `reviewerSession` when absent). The wrapper
+reviewerModel: <observed model or "unreported">,
+reviewerSession: <observed session when known>,
+reviewerProvider: <observed provider when known> })`. Use the selected method's
+identity mapping above; omit unknown provider and session fields. The wrapper
 labels the reviewer and publisher on the summary and every inline comment in the
 JSON body. Use `start_side` and `start_line` for a valid increasing line range.
 A clean or unanchorable review has no `comments` entry and uses the submitted
@@ -413,7 +463,7 @@ or GitHub failure, retain the findings and report publication as incomplete.
 | --------- | ---- |
 | Read reviews | `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews` |
 | Read threads | paginated `gh api graphql` query of `PullRequest.reviewThreads` |
-| Publish review | `daily_driver_gh_write({ args: ["api", "--method", "POST", "/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"], reviewerModel: "unreported", reviewerSession: <ocr session_id> })` |
+| Publish review | `daily_driver_gh_write({ args: ["api", "--method", "POST", "/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"], reviewerModel: <observed model or "unreported"> })`, with known reviewer provider/session fields under the selected method's identity mapping |
 | Reply on a thread | `daily_driver_gh_write({ args: ["api", "-X", "POST", "/repos/{owner}/{repo}/pulls/{n}/comments/{comment_id}/replies", "--input", "reply.json"] })` |
 | Resolve a thread | `gh api graphql` with the `resolveReviewThread` mutation |
 
