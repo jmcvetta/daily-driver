@@ -2737,12 +2737,21 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 			reviewerModel: z.string().optional().describe("Observed reviewer model, or unreported when unknown"),
 			reviewerProvider: z.string().optional().describe("Observed reviewer provider, when known"),
 			reviewerSession: z.string().optional().describe("Observed reviewer session, when known"),
+			reviewerOcrResult: z.string().optional().describe("Path to the JSON result for this OCR review; identity is read from that completed run"),
 		}),
 		execute: async (_toolCallId, params, signal, _onUpdate, ctx) => {
 			try {
-				const reviewer = params.reviewerModel === undefined ? undefined : {
-					model: params.reviewerModel, provider: params.reviewerProvider, session: params.reviewerSession,
-				};
+				const reviewer = params.reviewerModel !== undefined ||
+					params.reviewerProvider !== undefined ||
+					params.reviewerSession !== undefined ||
+					params.reviewerOcrResult !== undefined
+					? {
+						model: params.reviewerModel,
+						provider: params.reviewerProvider,
+						session: params.reviewerSession,
+						ocrResultPath: params.reviewerOcrResult,
+					}
+					: undefined;
 				const result = await runGitHubWrite(params.args, params.stdin, ctx, signal, reviewer);
 				const content = [];
 				if (result.stdout) content.push({ type: "text", text: result.stdout });
