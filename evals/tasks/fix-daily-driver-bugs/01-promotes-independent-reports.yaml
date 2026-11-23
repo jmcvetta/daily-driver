@@ -51,7 +51,7 @@ sandbox:
                   "title": "Unknown selector returns default handler",
                   "labels": ["priority:normal", "task"],
                   "body_contains": [
-                    "Original automatic report title: [auto-filed] Unknown selector returns default handler",
+                    "Original bug report title: [auto-filed] Unknown selector returns default handler",
                     "get_selector('missing') returns the default handler",
                     "Model: fixture-reporter",
                     "Harness: Omp 18.4.1",
