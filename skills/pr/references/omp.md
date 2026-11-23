@@ -122,11 +122,23 @@ and user instructions; a satisfied condition no longer holds readiness. An
 explicit user hold remains in force until the user releases it; a status
 question does not release it.
 
-A stopped maintenance service is unfinished owner work, not a successful
-watch. Exit 3 requires conflict inspection: resolve a plain mechanical
-conflict under the existing policy; ask only for a semantic decision. Other
-failures require diagnosis before restart. Report the agent state separately
-from service state; a detached process alone does not establish active review.
+If the detached service exits 3 for a conflict, inspect its recorded output
+and the local task worktree. For a plain mechanical conflict, finish the base
+merge locally in that worktree; do not ask the user to commit it. Start from
+the PR's actual base with a clean index. Leave unrelated unstaged work in place:
+do not stage, reset, stash, restore, or commit it. Resolve only the mechanical
+conflict already established by the existing policy, and stage each resolved
+path explicitly with `git add -- <path>` — never use `git add .`, `git add -A`,
+or `git commit -a`. Before committing, confirm no unmerged paths remain and
+the index contains only the conflict resolutions. If unrelated staged work
+appeared, preserve it and coordinate rather than committing or resetting it.
+Once all conflict paths are resolved and staged, use plain `git commit` to
+conclude the in-progress merge. This is the narrow exception to Omp's normal
+selective-commit route: `commit.draft()` cannot create a merge commit. Do not
+skip hooks or signing. Push the task branch normally, restart the existing
+maintenance watch, and send the changed content through `review-cycle`.
+A resolved merge is a content change: it still requires current-head CI and
+review.
 
 Timers are cleared on session shutdown. This reminder supplies live-session
 continuation, not cross-shutdown recovery. If scheduling fails, diagnose the
