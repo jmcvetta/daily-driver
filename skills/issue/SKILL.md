@@ -135,8 +135,10 @@ next time somebody remembers.
 
 **The body.** `issue-body` owns what a body must carry. It fires on this
 skill's writes and on direct edits alike, so there is no route past it. Its
-class metadata and readiness rules apply before publishing or revising any
-ready assignment; issue creation and body revision cannot bypass them.
+class metadata applies to every task draft, and its readiness review is part of
+completing an authoring write rather than something a later readiness question
+turns on: `issue-body`'s `The readiness test` owns when that pass runs, and
+issue creation and body revision cannot bypass it.
 
 **The edges.** `issue-deps` owns blocked-by, parent and sub-issue. A body
 never states in prose what an edge records; that rule is `issue-deps`'s, cited

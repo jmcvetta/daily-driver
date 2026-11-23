@@ -200,6 +200,45 @@ an unstated product or architecture decision?
 - For `epic`, use both existing epic decomposition gates and confirm the graph
   agrees with its rendered waves.
 
+**A complete task draft includes that pass before it is delivered.** Every
+complete task body — a new draft and a deliberate revision alike — gets a
+review-and-repair pass before publication or delivery to the user. This holds
+for standalone tasks and for epic task children, and it holds when the user
+asked only to open or update an issue and never said “ready”. Withholding a
+live write does not exempt a complete draft delivered in conversation. A
+partial draft the user explicitly asked for may stay partial, but it is not
+presented as a complete handoff.
+
+Run the pass from the assigned worker's class, with the task question above as
+its test, and read the draft as that worker: a decision left unstated, a
+repository fact or inference only the author holds, an edge contract the
+worker would have to invent, or acceptance and verification too thin to
+execute is a gap. Name the files, symbols, tests and gates the worker will
+use; an existing test, command or gate described only by category leaves the
+worker to rediscover it. A routine local choice remains the implementer's, and
+refusing readiness over one is the same failure in the other direction.
+
+Answer every repository-answerable gap now, in the body or in the
+authoritative document it references; on the specification-backed variant keep
+that document's ownership and cite it rather than copying it whole. Where a
+repair changes a requirement, reassess the affected parts and repeat until the
+handoff passes, or until only a genuine unavailable prerequisite or a
+user-owned decision is left.
+
+Authoring does not complete with a repair list for the user to request or the
+worker to discover. It does not complete by raising the model class, narrowing
+scope, weakening a check, or inventing intent to make an unready task read as
+ready. When a genuine gap survives the pass, name it precisely, keep the valid
+content, and say the draft is not ready; ask only for the missing user-owned
+input under the existing rules. Do not publish it as a ready assignment. This
+adds no permission to publish an explicitly unready task and no new approval
+checkpoint.
+
+A declaration that the draft was reviewed, a checklist, a narrated
+self-review or an added body section is not evidence of readiness and is not
+required; the handoff itself is what is judged. Existing issue shape,
+provenance, dependency edges and the other kinds' contracts are unchanged.
+
 The detailed contracts for research, bug, proposal, specification, and human are in
 [`references/kind-contracts.md`](references/kind-contracts.md). The epic
 contract remains in [`epic/SKILL.md`](../epic/SKILL.md#the-epic-body).
@@ -267,7 +306,9 @@ Updating a body
 
 An update preserves valid content. The user's content and requirements that
 still hold stay; the affected specification changes; and readiness runs again.
-Unrelated text is not reflowed and existing issues are not swept.
+Unrelated text is not reflowed and existing issues are not swept. The trailing
+provenance block also stays below the body's closing rule; a revision never
+moves those fields into the task sections.
 
 A deliberately revised task emits the new section and removes its trailing
 task `Model:` field — the legacy class-metadata field below `## Human brief`, never
