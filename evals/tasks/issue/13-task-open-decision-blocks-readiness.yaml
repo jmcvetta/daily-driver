@@ -9,7 +9,7 @@ initial_prompt: >-
   current default is 30 days, but nobody has decided the required retention
   period or whether users can delete reports early. This affects legal policy.
   Choose the `complex` model class so the agent can decide those questions.
-  Do not post; show the body and tell me whether it is ready.
+  Do not post; show the body.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
