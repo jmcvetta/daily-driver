@@ -1,0 +1,614 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The repository-local bug triage skill is loaded",
+          "details": "observed='yes', expected='yes' (skill_name='fix-daily-driver-bugs')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The existing session-title policy is invoked",
+          "details": "observed='yes', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The fixed coordinator title is applied exactly once",
+          "details": "Matched 1 matches (allowed range 1..1) commands (filters: pattern=/(?:daily_driver_set_session_title.*Daily Driver bug fixes|\"title\"\\s*:\\s*\"\\\\ud83d\\\\udc1b Daily Driver bug fixes\")/, require_success=True)\nExamples: [\"daily_driver_set_session_title '\ud83d\udc1b Daily Driver bug fixes'\"]",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The session-title policy and fixed title precede issue reads and dispatch",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The verifier confirms the tasks were read and not rewritten",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/python3 .fixture/verify_state.py/, require_success=True)\nExamples: ['gh issue view 990009 --repo jmcvetta/daily-driver --json number,title,body,state,labels,comments,blockedBy,parent,closed']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Fixture state and recorded GitHub operations pass",
+          "details": "Pattern '^PASS$' found in file (matched: 'PASS')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The routable task #990009 is assigned to the routine agent exactly once",
+          "details": "Command: python3 .fixture/check_dispatch.py --require 990009 --agent routine\nExit code: 0 (expected: 0)\nStdout:\nPASS: #990009 dispatched once\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The routable task #990011 is assigned to the routine agent exactly once",
+          "details": "Command: python3 .fixture/check_dispatch.py --require 990011 --agent routine\nExit code: 0 (expected: 0)\nStdout:\nPASS: #990011 dispatched once\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The task with no available route, #990010, is never assigned",
+          "details": "Command: python3 .fixture/check_dispatch.py --forbid 990010\nExit code: 0 (expected: 0)\nStdout:\nPASS: #990010 not assigned\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The unroutable task is reported as a configuration gap at its required class",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The session-title policy and fixed title precede issue reads and dispatch",
+            "duration_seconds": 7.82,
+            "findings": [
+              "Call 21 set '\ud83d\udc1b Daily Driver bug fixes' and returned 'Session titled: \ud83d\udc1b Daily Driver bug fixes'.",
+              "The first GitHub issue read occurred at call 27; task dispatch occurred at call 39.",
+              "Call 20 requested setter help only and does not count as an invocation."
+            ],
+            "index": 3,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "f40b84fd8d743cf3dfaccc14cef9fd4728f2b5e90eec07f53f6e2a1b94033088",
+            "rationale": "Exactly one setter invocation applied the exact required title successfully before any GitHub issue or pull-request operation or task dispatch.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 9427,
+              "output": 104
+            },
+            "weight": 2
+          },
+          {
+            "description": "The unroutable task is reported as a configuration gap at its required class",
+            "duration_seconds": 12.99,
+            "findings": [
+              "#990009 and #990011 reported as dispatched, not fixed or review-ready.",
+              "#990010 remains complex and is not dispatched.",
+              "Missing explicit configuration-gap characterization."
+            ],
+            "index": 9,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "a76ba8c6aa561060f6565f1361965e99b9b12cd85a6cf19af572211a33daac3a",
+            "rationale": "ANCHOR: result The reply correctly reports both routine tasks as dispatched and preserves #990010 as complex and undispatched because its route is unavailable. However, it does not explicitly identify the unavailable route as a configuration gap, as required for full credit.",
+            "score": 0.8,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2603,
+              "output": 163
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "0d62cbfffe902f22880e362c0ae6ca349e75704659f1dd86f8ede25d04086fcf"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.971429,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The repository-local bug triage skill is loaded",
+          "details": "observed='yes', expected='yes' (skill_name='fix-daily-driver-bugs')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The existing session-title policy is invoked",
+          "details": "observed='yes', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The fixed coordinator title is applied exactly once",
+          "details": "Matched 1 matches (allowed range 1..1) commands (filters: pattern=/(?:daily_driver_set_session_title.*Daily Driver bug fixes|\"title\"\\s*:\\s*\"\\\\ud83d\\\\udc1b Daily Driver bug fixes\")/, require_success=True)\nExamples: ['daily_driver_set_session_title \\'\ud83d\udc1b Daily Driver bug fixes\\'; export PATH=\"$PWD/.fixture:$PATH\"; command -v gh; gh --versio']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The session-title policy and fixed title precede backlog reads and dispatch",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The evaluator state verifier runs successfully",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/python3 .fixture/verify_state.py/, require_success=True)\nExamples: ['daily_driver_gh_write -j \\'{\"args\":[\"issue\",\"edit\",\"990002\",\"--repo\",\"jmcvetta/daily-driver\",\"--body-file\",\"/tmp/daily-dr']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The recorded issue state passes all conversion assertions",
+          "details": "Pattern '^PASS$' found in file (matched: 'PASS')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "Both independent issues are dispatched in one Omp batch",
+          "details": "Matched 1 matches (allowed range 1..1) commands (filters: tool_name=Agent, require_success=True)\nExamples: ['Agent({\"context\": \"# Goal\\\\nImplement the independently promoted Daily Driver issues th)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "Issue",
+          "details": "Command: python3 .fixture/check_dispatch.py --require 990001 --agent routine\nExit code: 0 (expected: 0)\nStdout:\nPASS: #990001 dispatched once\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "Issue",
+          "details": "Command: python3 .fixture/check_dispatch.py --require 990002 --agent routine\nExit code: 0 (expected: 0)\nStdout:\nPASS: #990002 dispatched once\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The session-title policy and fixed title precede backlog reads and dispatch",
+            "duration_seconds": 8.95,
+            "findings": [
+              "Call 30 sets '\ud83d\udc1b Daily Driver bug fixes' and reports 'Session titled: \ud83d\udc1b Daily Driver bug fixes'.",
+              "The first gh issue list follows the setter in the same sequential Bash command.",
+              "Call 29 is help-only; no repeated setter invocation appears."
+            ],
+            "index": 3,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "f40b84fd8d743cf3dfaccc14cef9fd4728f2b5e90eec07f53f6e2a1b94033088",
+            "rationale": "Exactly one non-help setter invocation applied the exact required title, with explicit success evidence, before the first GitHub issue read.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 17767,
+              "output": 99
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "0d62cbfffe902f22880e362c0ae6ca349e75704659f1dd86f8ede25d04086fcf"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "fix-daily-driver-bugs-01-promotes-independent-reports-omp",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The repository-local bug triage skill is loaded",
+          "details": "observed='yes', expected='yes' (skill_name='fix-daily-driver-bugs')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The existing session-title policy is invoked",
+          "details": "observed='yes', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The fixed coordinator title is applied exactly once",
+          "details": "Matched 1 matches (allowed range 1..1) commands (filters: pattern=/(?:daily_driver_set_session_title.*Daily Driver bug fixes|\"title\"\\s*:\\s*\"\\\\ud83d\\\\udc1b Daily Driver bug fixes\")/, require_success=True)\nExamples: [\"daily_driver_set_session_title '\ud83d\udc1b Daily Driver bug fixes'; command -v gh; .fixture/gh --version; .fixture/gh auth status\"]",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The session-title policy and fixed title precede backlog reads and dispatch",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The verifier confirms preserved reports and no unsafe edits",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/python3 .fixture/verify_state.py/, require_success=True)\nExamples: ['daily_driver_gh_write -j \\'{\"args\":[\"issue\",\"comment\",\"990004\",\"--repo\",\"jmcvetta/daily-driver\",\"--body\",\"Duplicate of ca']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Fixture states and recorded GitHub operations pass",
+          "details": "Pattern '^PASS$' found in file (matched: 'PASS')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "No excluded issue is dispatched",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/undertake #99000[3-8]/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The session-title policy and fixed title precede backlog reads and dispatch",
+            "duration_seconds": 8.06,
+            "findings": [
+              "Call 20 reports: Session titled: \ud83d\udc1b Daily Driver bug fixes.",
+              "The first GitHub issue reads occur in call 21.",
+              "Call 19 requests setter help only and does not count as an invocation."
+            ],
+            "index": 3,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "f40b84fd8d743cf3dfaccc14cef9fd4728f2b5e90eec07f53f6e2a1b94033088",
+            "rationale": "Exactly one setter invocation applied the exact required title before any GitHub issue or pull-request operation. Its output explicitly confirms success.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 8674,
+              "output": 87
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "0d62cbfffe902f22880e362c0ae6ca349e75704659f1dd86f8ede25d04086fcf"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "fix-daily-driver-bugs-02-no-duplicate-or-blocked-dispatch-omp",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 86.17028617858887,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 414080,
+        "output_tokens": 2612,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 60774
+      },
+      "tokens": 477466,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 157.679785490036,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "fix-daily-driver-bugs-01-promotes-independent-reports-omp",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 817280,
+        "output_tokens": 5356,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 70580
+      },
+      "tokens": 893216,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 83.52168536186218,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "fix-daily-driver-bugs-02-no-duplicate-or-blocked-dispatch-omp",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 376192,
+        "output_tokens": 2196,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 48857
+      },
+      "tokens": 427245,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-23T18:52:21.225303",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "paseo-sandbox",
+    "kind": "laptop",
+    "platform": "Linux-6.8.0-151-generic-x86_64-with-glibc2.41",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "0d62cbfffe902f22880e362c0ae6ca349e75704659f1dd86f8ede25d04086fcf",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v3",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 38471,
+      "output": 453
+    }
+  },
+  "plugin_revision": {
+    "commit": "480a01d50451f0215bbe911806925514fd1d543b",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-23T18:53:04.411797+00:00",
+  "run_id": "2026-11-23_18-46-53",
+  "schema_version": 5,
+  "started_at": "2026-11-23T18:46:53.804378",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "fix-daily-driver-bugs-01-promotes-independent-reports-omp": [
+          1.0
+        ],
+        "fix-daily-driver-bugs-02-no-duplicate-or-blocked-dispatch-omp": [
+          1.0
+        ],
+        "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp": [
+          0.971429
+        ]
+      },
+      "task_ids": [
+        "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+        "fix-daily-driver-bugs-01-promotes-independent-reports-omp",
+        "fix-daily-driver-bugs-02-no-duplicate-or-blocked-dispatch-omp"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

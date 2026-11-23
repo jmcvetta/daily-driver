@@ -213,10 +213,10 @@ synthesized.
 the supported `run_command` criterion, one assignment per `tasks[]` entry,
 using only each entry's `task` text. It requires a complete list of distinct
 jobs after the successful `Spawned N background agents using <agent>.` header.
-It accepts the observed Omp `Coordinate` paragraph only in its captured form
-and with a count matching the launch. Other suffixes, or extra launch-like
-lines after it, stay unknown and cannot pass. Captured dispatch examples live
-under `fixtures/fix-daily-driver-bugs/dispatch-evidence/`.
+It accepts the captured Omp `Coordinate` paragraph or process-help footer,
+with a sibling count matching the launch. Other suffixes, including extra
+launch-like lines after a known footer, stay unknown and cannot pass.
+Captured dispatch examples live under `fixtures/fix-daily-driver-bugs/dispatch-evidence/`.
 
 ## Reviewer-child telemetry
 
