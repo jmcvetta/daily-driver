@@ -111,7 +111,7 @@ sandbox:
           content: |
             class Cache:
                 def __init__(self):
-                self._entries = {}
+                    self._entries = {}
 
                 def put(self, key, value):
                     self._entries[key] = value

@@ -127,15 +127,15 @@ Perform conversion as one guarded transaction in this order:
 
 If any write fails or read-back is partial, do not dispatch. Report the partial
 state and leave the issue for repair; never claim conversion succeeded. If the
-label replacement fails, do not edit the title. A report that was not
-successfully converted keeps its title prefix unless conversion is retried and
-verified.
+label replacement fails, do not edit the title. Never add an automatic-filing
+prefix; unresolved reports retain their exact original titles.
 
-On a later invocation, a previously converted task left in a partial state is
-found by either original-title record. Use that record to determine the expected
-title and complete only the remaining conversion step. Do not rewrite
-already-correct task data. Require the full read-back contract before dispatch;
-a marker or `task` label alone is not proof of successful conversion.
+On a later invocation, an issue left in a partial conversion state is found by
+either original-title record, whether its effective kind is `bug` or `task`.
+Use that record to determine the expected title and complete only the remaining
+conversion step. Do not rewrite already-correct task data. Require the full
+read-back contract before dispatch; a marker or `task` label alone is not proof
+of successful conversion.
 
 ## Dispatch safely
 
