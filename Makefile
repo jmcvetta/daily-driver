@@ -262,6 +262,7 @@ check-scripts:
 # Exercise the real Omp keep-current loop against an offline GitHub client.
 check-pr-keep-current:
 	python3 scripts/test-pr-keep-current.py
+	python3 scripts/test-pr-supervisor.py
 
 # Exercise the live Omp title barrier with a local provider.
 # The title barrier needs native issue:// access rather than the eval guard.

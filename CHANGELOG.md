@@ -4,6 +4,8 @@
 
 ### Changed
 
+* Add an opt-in read-only PR supervision ledger and isolated Omp cold-resume probe; retain the existing maintenance route because lifecycle hosting, live-owner delivery and cutover remain unfinished ([#1038](https://github.com/jmcvetta/daily-driver/issues/1038)).
+
 * Simplify independent review evidence and finding records while retaining current-content coverage and substantive dispositions ([#1025](https://github.com/jmcvetta/daily-driver/issues/1025)).
 * Allow independent review and fix-delta verification while CI runs, while keeping current-head green CI mandatory for readiness ([#1033](https://github.com/jmcvetta/daily-driver/issues/1033)).
 * Remove mandatory first-readiness reports and their draft transition dependency while preserving readiness gates and historical telemetry ([#1026](https://github.com/jmcvetta/daily-driver/issues/1026)).
