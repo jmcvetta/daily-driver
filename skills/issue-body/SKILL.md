@@ -214,14 +214,14 @@ overrides. A subject selector alone does not establish a non-default judge:
 when `JUDGE` is unset, the task-pinned `agent_judge` remains in effect. Check
 the selected judge's execution session and authorization boundary as well as
 route compatibility. When the default route is not authorized, do not present
-an unqualified command as executable. The issue body itself must either use a
+an unqualified command as executable. The issue body must either use a
 supported validated alternative `JUDGE=<id>` in the execution, recording and
-rerun paths, or leave selection with the operator and state that no command is
-ready for unattended execution until a judge is selected. Omit the unqualified
-command or mark it explicitly as non-executable. A warning outside the body
-does not make an unsafe command ready. Do not infer a judge from the subject,
-invent a selector, alter grading criteria, disable semantic grading, or treat
-the handoff itself as approval.
+rerun paths, or include this exact sentence: “Not ready for unattended
+execution; the operator must select an authorized judge before any run.”
+Omit the unqualified command or mark it explicitly as non-executable until
+selection. A warning outside the body does not make an unsafe command ready.
+Do not infer a judge from the subject, invent a selector, alter grading
+criteria, disable semantic grading, or treat the handoff itself as approval.
 Preserve a caller-supplied valid judge, subject selection, bounds,
 rerun restrictions, provenance, approval conditions and required record
 fields, including the run identifier, requested and observed identities, and

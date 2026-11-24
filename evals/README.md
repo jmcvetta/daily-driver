@@ -123,6 +123,11 @@ still failed both variants with score 0. Its body named a validated alternative
 but kept the bare command and put the not-ready warning only outside the issue
 body. The shared guidance now requires the issue body to omit or label that
 command non-executable until the operator selects a judge.
+The focused case-25 run
+[`20-58-09`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-58-09.json)
+also failed both variants with score 0. The issue body left `JUDGE` unset and
+put the not-ready explanation outside the body. The shared rule now requires
+an exact in-body readiness sentence when selection remains with the operator.
 
 
 

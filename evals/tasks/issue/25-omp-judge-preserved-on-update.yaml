@@ -76,8 +76,10 @@ success_criteria:
       attribution and requested/observed identity reporting. Preserve the
       `routine` class and trailing provenance. Do not add an approval gate.
       The revised body may instead leave judge selection to the operator only
-      if the body itself says the command is not ready for unattended
-      execution; a warning outside the body does not satisfy this condition.
+      if it omits the unqualified command or labels it non-executable and
+      includes the exact sentence `Not ready for unattended execution; the
+      operator must select an authorized judge before any run.` A warning
+      outside the body does not satisfy this condition.
       Score 1 only if every condition holds; 0.5 if useful but one minor
       condition is missing; 0 if the default route is presented as authorized
       or ready, or valid requirements or provenance are lost.
