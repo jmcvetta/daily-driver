@@ -3,10 +3,10 @@ task_id: atdd-01-bootstrap-guidance
 description: ATDD gives the supported Cucumber bootstrap and execution route.
 tags: [atdd, behaviour, fire]
 initial_prompt: >-
-  I have a clean TypeScript repository with package.json and package-lock.json,
-  no acceptance harness, and Node 24. Help me establish executable acceptance
-  contracts and run my own first scenario. Explain the concrete setup and
-  execution without changing files or running commands.
+  I have a clean TypeScript repository at /workspace/pilot with package.json
+  and package-lock.json, no acceptance harness, and Node 24. Help me establish
+  executable acceptance contracts and run my own first scenario. Explain the
+  concrete setup and execution without changing files or running commands.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
@@ -30,8 +30,9 @@ success_criteria:
       Score 1 only if the answer selects the TypeScript Cucumber ATDD skill,
       resolves its bundled bootstrap using the active harness reference, and
       gives `node <resolved-skill-path>/scripts/bootstrap-typescript.mjs
-      <target-repository>` or an equivalent concrete resolved invocation. It
-      identifies npm from package-lock.json, Cucumber and tsx, the acceptance
+      /workspace/pilot` or an equivalent concrete invocation. The target is
+      hypothetical: accept the stated manifest, lockfile and Node facts without
+      requiring filesystem inspection. It identifies npm from package-lock.json, Cucumber and tsx, the acceptance
       configuration and directories, and explains that the operator supplies
       product-specific Gherkin scenarios and TypeScript step bindings, then runs
       `npm run acceptance`. It integrates acceptance into the repository's

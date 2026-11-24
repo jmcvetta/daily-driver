@@ -7,9 +7,9 @@ initial_prompt: >-
   offline editing scenarios, bindings and implementation. The issue allocates
   saving edits but excludes conflict resolution. The implementation violates an
   agreed scenario, a binding misstates another, and a reviewer proposes a
-  missing case that changes behavior. Explain how CI provides evidence and how
-  an ambiguous scenario and material scope change are handled. Explain only;
-  do not perform or submit a review.
+  missing case that changes behavior. Explain how CI provides evidence, how
+  an ambiguous scenario and material scope change are handled, and where an
+  agreed change lands. Explain only; do not perform or submit a review.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]

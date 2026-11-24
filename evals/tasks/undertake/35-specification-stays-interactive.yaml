@@ -3,10 +3,11 @@ task_id: undertake-35-specification-stays-interactive
 description: Undertake stops and routes specification issues to interactive collaboration.
 tags: [undertake, specification, behaviour, fire]
 initial_prompt: >-
-  Undertake issue #91, which has exactly the specification kind label and asks
-  us to agree executable offline editing scenarios collaboratively before handing
-  them to an implementation task. What is the route and completion boundary?
-  Explain only; no GitHub writes, branch or worktree creation.
+  Undertake issue #91, a separate specification issue with exactly the
+  specification kind label. It asks us to agree executable offline editing
+  scenarios collaboratively before handing them to a separate implementation
+  task. What is the route and completion boundary? Explain only; no GitHub
+  writes, branch or worktree creation.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]

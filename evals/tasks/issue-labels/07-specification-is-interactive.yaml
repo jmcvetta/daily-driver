@@ -31,9 +31,10 @@ success_criteria:
       Score 1 only if the answer selects specification, distinguishes it from
       unattended task, decision-or-handoff proposal, evidenced-answer research
       and person-only human, and permits agent collaboration but not unattended
-      undertake or embark dispatch. Completion requires operator-agreed
-      scenarios and a recorded handoff naming the implementation task issue,
-      task branch, scenario paths, and applicable allocations or exclusions;
-      it does not wait for implementation or merge. Score 0 for claimed writes,
+      undertake or embark dispatch. Explain that a separate specification issue
+      completes on operator-agreed scenarios and a recorded handoff naming the
+      implementation task issue, task branch, scenario paths, and applicable
+      allocations or exclusions; it does not wait for implementation or merge.
+      The prompt asks for explanation only, not actual issue writes. Score 0 for claimed writes,
       unattended dispatch or a merged-document prerequisite; otherwise 0.5 for
       a material omission.

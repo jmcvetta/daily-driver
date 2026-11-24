@@ -6,7 +6,9 @@ initial_prompt: >-
   Use specification to collaborate on offline editing in a supported TypeScript
   repository without an acceptance harness. Conflict resolution is undecided.
   A separate specification issue and implementation task are planned. Explain
-  the next steps, agreement and handoff; do not write files or claim actions.
+  the next steps, branch establishment, agreement and handoff; propose concise
+  candidate scenarios for review without deciding conflict behavior. Do not
+  write files or claim actions.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
