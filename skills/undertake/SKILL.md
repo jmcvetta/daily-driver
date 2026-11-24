@@ -317,7 +317,7 @@ repository content; continue from the current checkout.
 
 Otherwise invoke `task-worktree`. The issue now supplies the task identity, and
 no repository research has begun. That skill owns the feature branch, its base,
-the sibling worktree, and every later operation's root.
+the dedicated non-primary worktree, and every later operation's root.
 
 `task-worktree` establishes the remote push branch and, only where its harness
 route permits, a separate local execution branch. `Claim the issue` names both

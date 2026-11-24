@@ -35,7 +35,7 @@ const workflowToolConsumers = {
   'Install Worktrunk': ['check-git-sync', 'check-worktrunk-install'],
   'Install OpenTofu': ['check-infra'],
   'Install Checkov': ['check-checkov'],
-  'Install uv': ['check-checkov', 'check-zizmor'],
+  'Install uv': ['check-checkov', 'check-zizmor', 'check-omp-plugin'],
   'Install zizmor': ['check-zizmor'],
   'Install Omp': ['check-omp-plugin', 'check-omp-embark-title-live'],
 }
