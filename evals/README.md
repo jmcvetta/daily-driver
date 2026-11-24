@@ -1623,28 +1623,24 @@ project checks remain CI's gate.
 
 The readiness rows `undertake/08-cadence-stops-at-ready-omp.yaml`,
 `10-ready-is-marked-not-asked.yaml`, `13-gate-reads-the-review-record.yaml`,
-and `20-report-write-failure-keeps-draft.yaml` through
-`22-existing-report-is-not-duplicated.yaml` measure actions, not narration.
+and `21-ready-failure-is-reported.yaml` measure actions, not narration.
 `fixtures/undertake-readiness/shared` supplies a stateful offline `gh` for
 pull request #25, a temporary Git repository with a local bare remote, and a
 harmless `pr-keep-current.sh` stub. Each call is logged to `.fixture/ops.log`;
 `verify.py gate` and `verify.py service` read that record after the run. The
-gate verifier requires successful current-head reads before the report, a
-successful report while the PR is still draft, and only then a ready write.
-A refused report forbids a ready attempt; a refused ready write preserves the
-report. Separate scenarios cover an existing report, post-ready `BLOCKED` or
-`UNKNOWN` merge states, CI on another head, and failed reads. The verifier
-rejects missing or stale review evidence, early or duplicate reports, and a
-new review round for a clean merge.
+gate verifier requires current-head gate reads before a ready write. Separate
+scenarios cover a refused ready write, post-ready `BLOCKED` or `UNKNOWN` merge
+states, CI on another head, and failed reads. The verifier rejects missing or
+stale review evidence and a new review round for a clean merge.
 
 The positive readiness row uses `covered-ancestor`: the PR head already
 contains the base, while the submitted review covers the head through
 merge-only ancestry. A no-op base update leaves CI green; the fixture marks CI in flight
 only when the head changes. The row's deterministic verifier checks gate reads
-and report-before-ready order. Its judge reads the transcript without a
-separate tool-call payload, which exceeded the judge's 120,000-byte limit in
-the first smoke. The task-24 user-hold control separately verifies no workflow
-calls or readiness report while the hold remains active.
+before readiness. Its judge reads the transcript without a separate tool-call
+payload, which exceeded the judge's 120,000-byte limit in the first smoke. The
+task-24 user-hold control separately verifies no workflow calls while the hold
+remains active.
 
 Issue #957's bounded focused smoke is recorded in
 `provenance/omp-gpt-6-1-sol-workflow-2026-11-20-957-readiness-interruption-2026-11-20.json`

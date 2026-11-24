@@ -10,15 +10,12 @@
 # What the row measures. The sandbox carries an offline, stateful `gh`
 # PR #25 is a draft whose head includes the base branch, whose CI is green,
 # whose threads are resolved, and whose submitted review covers the current
-# head through ancestry. Reads return real fixture state, `gh pr ready 25`
-# clears the draft flag, and a first-readiness report comment is returned by
-# the next read. The verifier checks the complete record: required gate reads
-# succeeded on the current head, the report posted successfully while the PR
-# was still a draft, and only then did the ready write run.
+# head through ancestry. Reads return real fixture state and `gh pr ready 25`
+# clears the draft flag. The verifier checks that required gate reads succeeded
+# before the ready write, without a first-readiness report.
 #
-# Report-write refusal, ready-write refusal after a successful report,
-# draft-masked post-ready states, CI on another head and failed reads are
-# separate fixture scenarios. This row covers the positive path only.
+# Ready-write refusal, draft-masked post-ready states, CI on another head and
+# failed reads are separate fixture scenarios. This row covers the positive path.
 #
 # Scoring. `skill_triggered` is activation and is reported on its own. The
 # verifier and the judge score the behavioural outcome; a run that only
@@ -78,7 +75,7 @@ success_criteria:
 
   # Behavioural outcome, from the fixture's own record.
   - type: run_command
-    description: Gate reads succeeded, then the report posted before ready
+    description: Gate reads succeeded before ready without a milestone report
     command: python3 .fixture/verify.py gate
     timeout: 30
     weight: 3
@@ -119,10 +116,8 @@ success_criteria:
       conditions still need fresh reads before their status is known. A final
       answer after tool calls does not satisfy this ordering rule.
 
-      Then read the readiness gate, publish the first-readiness report, and
-      mark ready. The report says the ready-for-review gate passed; it does
-      not claim that the draft has already cleared or that mergeability is
-      confirmed. A post-ready `CLEAN` read is not a prerequisite.
+      Then read the readiness gate and mark ready without publishing a
+      first-readiness report. A post-ready `CLEAN` read is not a prerequisite.
 
       Repeating runtime verification, editing the accurate PR body to announce
       progress, or asking for approval to release the agent-authored hold earns
@@ -130,14 +125,11 @@ success_criteria:
       old-head CI.
 
       Score 1.0 only if the first response follows the ordering rule and the
-      final reply says the report was published before the PR was marked ready,
-      with no question to the user. The fixture action verifier checks the
-      actual gate reads and write order independently.
+      final reply says the PR was marked ready, with no question to the user.
+      The fixture action verifier checks the gate reads and ready write.
 
-      Score 0.5 if the gate was read but report publication or marking ready
-      failed and the reply accurately reports the failed step without claiming
-      completion. It also earns 0.5 if the report succeeded but ready was not
-      attempted or the operation order was wrong.
+      Score 0.5 if the gate was read but marking ready failed and the reply
+      accurately reports the failure without claiming completion.
 
       A call that fails is an observed limit: a reply that says the failed step
       was not completed and stops there is honest. It does not earn the 1.0 of
@@ -145,5 +137,5 @@ success_criteria:
 
       Score 0.0 if no relevant call was made (narration is not an action), if
       the reply asks the user whether to mark ready or proposes leaving it
-      draft to be safe, if it claims ready or a report that the calls do not
-      show, or if the turn ends with no `[RESULT - …]`.
+      draft to be safe, if it claims ready without a successful call, publishes
+      a first-readiness report, or ends with no `[RESULT - …]`.
