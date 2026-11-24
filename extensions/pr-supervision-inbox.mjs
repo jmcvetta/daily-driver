@@ -1,16 +1,22 @@
-import { lstatSync } from "node:fs";
+import { lstatSync, readFileSync, realpathSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { installPrSupervisorTools } from "./pr-supervisor-tools.mjs";
 
 const executeFile = promisify(execFile);
 const supervisorScript = resolve(dirname(fileURLToPath(import.meta.url)), "../scripts/pr-active-supervisor.py");
 
 /** Install an opt-in durable receipt inbox on this bound Omp owner only. */
-export default function installPrSupervisionInbox(pi, { databasePath = process.env.DAILY_DRIVER_PR_INBOX, initialize, bindLegacyAdmissionReader } = {}) {
+export default function installPrSupervisionInbox(pi, { databasePath = process.env.DAILY_DRIVER_PR_INBOX, initialize, recovery, bindLegacyAdmissionReader } = {}) {
 	if (!databasePath) return;
+	if (!recovery) {
+		const controls = installPrSupervisorTools(pi, { databasePath });
+		recovery = controls.recovery;
+		initialize ??= controls.initialize;
+	}
 	const processIdentity = randomUUID();
 	let database;
 	let legacyAdmissionQuery;
@@ -19,6 +25,7 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 	let timer;
 	let active;
 	let carrier = false;
+	let bound = false;
 	const z = pi.zod;
 	const now = () => Date.now() / 1000;
 	bindLegacyAdmissionReader?.((identity, token, epoch) => {
@@ -45,6 +52,37 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 		const source = ctx.modelRegistry.authStorage.keys.source(model.provider, { env: "aliases" });
 		return source?.kind === "env" ? `env:${source.envVar}` : source?.kind ?? "unknown";
 	}
+	function binding(ctx) {
+		return {kind:ctx.agent.kind,id:ctx.agent.id,name:ctx.agent.name,parentId:ctx.agent.parentId};
+	}
+
+	function route(ctx) {
+		const model = ctx.models.current();
+		return {cwd:ctx.cwd,provider:model.provider,model:model.id,effort:pi.getThinkingLevel(),
+			authentication:authentication(ctx,model)};
+	}
+
+	function persisted(ctx, existing) {
+		const file = ctx.sessionManager.getSessionFile();
+		if (!file || existing && realpathSync(file) !== realpathSync(existing.file)) {
+			throw new Error("PR inbox persisted session file changed; refusing replacement");
+		}
+		const header = readFileSync(file, "utf8").split("\n").slice(0, 3).filter(Boolean)
+			.map(line => JSON.parse(line)).find(entry => entry.type === "session");
+		if (header?.id !== owner) throw new Error("PR inbox persisted session identity changed");
+		return file;
+	}
+
+	recovery.request = ctx => {
+		if (!bound || !database || ctx.sessionManager.getSessionId() !== owner) throw new Error("PR inbox live owner differs");
+		const existing = database.query("SELECT * FROM owners WHERE session=?").get(owner);
+		if (!existing || JSON.stringify(binding(ctx)) !== JSON.stringify(JSON.parse(existing.agent))) {
+			throw new Error("PR inbox agent binding changed; refusing replacement");
+		}
+		return {session:owner,target:carrier ? process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_OWNER : owner,
+			file:persisted(ctx,existing),agent:binding(ctx),process:processIdentity,...route(ctx)};
+	};
+	recovery.accept = () => { recovery.state = "ready"; };
 
 	function valid(delivery, admittedOnly = false) {
 		if (!database || !delivery) return false;
@@ -61,14 +99,15 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 
 	function tick(ctx) {
 		if (!database || ctx.sessionManager.getSessionId() !== owner) return;
-		const model = ctx.models.current();
-		const updated = database.query(`UPDATE owners SET heartbeat=?,provider=?,model=?,effort=?,authentication=?
-			WHERE session=? AND process=?`)
-			.run(now(), model.provider, model.id, pi.getThinkingLevel(), authentication(ctx, model), owner, processIdentity);
+		const actual = route(ctx);
+		const updated = recovery.state === "ready" ? database.query(`UPDATE owners SET heartbeat=?,provider=?,model=?,effort=?,authentication=?
+			WHERE session=? AND process=?`).run(now(), actual.provider, actual.model, actual.effort, actual.authentication, owner, processIdentity) :
+			database.query("UPDATE owners SET heartbeat=? WHERE session=? AND process=?").run(now(), owner, processIdentity);
 		if (updated.changes !== 1) {
 			if (active) ctx.abort();
 			throw new Error("PR inbox owner was fenced; no delivery is allowed");
 		}
+		if (recovery.state !== "ready" || carrier) return;
 		if (active && !valid(active)) {
 			active = undefined;
 			ctx.abort();
@@ -118,9 +157,12 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 		legacyAdmissionQuery = undefined;
 		owner = undefined;
 		active = undefined;
+		bound = false;
+		recovery.state = "unavailable";
 	}
 
 	pi.on("session_start", async (_event, ctx) => {
+		recovery.state = "unavailable";
 		if (initialize) await initialize();
 		({ Database } = await import("bun:sqlite"));
 		const metadata = lstatSync(databasePath);
@@ -148,58 +190,74 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 		}
 		owner = ctx.sessionManager.getSessionId();
 		carrier = process.env.DAILY_DRIVER_PR_INBOX_PARENT === owner;
-		if (carrier) {
-			const expected = JSON.parse(process.env.DAILY_DRIVER_PR_INBOX_PARENT_ROUTE);
-			const model = ctx.models.current();
-			const binding = {kind:ctx.agent.kind,id:ctx.agent.id,name:ctx.agent.name,parentId:ctx.agent.parentId};
-			if (ctx.agent.kind !== "main" || JSON.stringify(binding) !== JSON.stringify(expected.agent) ||
-				model.provider !== expected.provider || model.id !== expected.model || pi.getThinkingLevel() !== expected.effort ||
-				authentication(ctx,model) !== expected.authentication) {
-				throw new Error("PR recovery parent identity, route or effort changed; refusing fallback");
-			}
-			return;
-		}
-		if (process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_OWNER &&
-			owner !== process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_OWNER) {
-			database.close();
-			database = undefined;
-			throw new Error("PR inbox expected owner differs; refusing a fork or replacement");
-		}
-		const sessionFile = ctx.sessionManager.getSessionFile();
-		const model = ctx.models.current();
-		if (!sessionFile || !model?.provider || !model?.id) throw new Error("PR inbox requires a persisted routed owner");
-		const route = authentication(ctx, model);
-		if (process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_AUTH &&
-			route !== process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_AUTH) {
-			throw new Error("PR inbox authentication route changed; refusing fallback");
-		}
-		if (process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_ROUTE) {
-			const expected = JSON.parse(process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_ROUTE);
-			if (model.provider !== expected.provider || model.id !== expected.model ||
-				pi.getThinkingLevel() !== expected.effort || ctx.cwd !== expected.cwd) {
-				throw new Error("PR inbox model, provider or effort changed; refusing fallback");
-			}
-		}
-		const binding = {kind:ctx.agent.kind,id:ctx.agent.id,name:ctx.agent.name,parentId:ctx.agent.parentId};
-		if (process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_AGENT &&
-			JSON.stringify(binding) !== process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_AGENT) {
+		const target = process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_OWNER ?? owner;
+		if (!carrier && target !== owner) throw new Error("PR inbox expected owner differs; refusing a fork or replacement");
+		const expected = carrier ? JSON.parse(process.env.DAILY_DRIVER_PR_INBOX_PARENT_ROUTE) :
+			process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_ROUTE ? JSON.parse(process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_ROUTE) : {};
+		const expectedAgent = carrier ? expected.agent :
+			process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_AGENT ? JSON.parse(process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_AGENT) : undefined;
+		if (carrier && ctx.agent.kind !== "main" || expectedAgent && JSON.stringify(binding(ctx)) !== JSON.stringify(expectedAgent)) {
 			throw new Error("PR inbox agent binding changed; refusing replacement");
 		}
+		const existing = database.query("SELECT * FROM owners WHERE session=?").get(owner);
+		if (existing && JSON.stringify(binding(ctx)) !== JSON.stringify(JSON.parse(existing.agent))) {
+			throw new Error("PR inbox recorded agent binding changed; refusing replacement");
+		}
+		const sessionFile = persisted(ctx,existing);
+		const actual = route(ctx);
+		if (!actual.provider || !actual.model) throw new Error("PR inbox requires a persisted routed owner");
+		if (carrier) {
+			let child = database.query("SELECT * FROM owners WHERE session=?").get(target);
+			const childBinding = JSON.parse(process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_AGENT);
+			if (!existing || !child || JSON.stringify(JSON.parse(child.agent)) !== JSON.stringify(childBinding)) {
+				throw new Error("PR recovery child identity changed; refusing replacement");
+			}
+			const visited = new Set();
+			while (child.session !== owner) {
+				if (visited.has(child.session)) throw new Error("PR recovery parent chain contains a cycle");
+				visited.add(child.session);
+				const header = readFileSync(child.file, "utf8").split("\n").filter(Boolean).slice(0, 3)
+					.map(line => JSON.parse(line)).find(entry => entry.type === "session");
+				const agent = JSON.parse(child.agent);
+				const parent = header?.parentSession && database.query("SELECT * FROM owners WHERE file=?").get(header.parentSession);
+				if (header?.id !== child.session || agent.kind !== "sub" || !parent ||
+					agent.parentId !== JSON.parse(parent.agent).id) {
+					throw new Error("PR recovery parent/child identity changed; refusing replacement");
+				}
+				child = parent;
+			}
+		}
+		const stopped = database.query(`SELECT count(*) AS count FROM records WHERE json_extract(context,'$.session')=? AND stopped IS NOT NULL`).get(target).count;
+		const running = database.query(`SELECT count(*) AS count FROM records WHERE json_extract(context,'$.session')=? AND stopped IS NULL`).get(target).count;
+		if (stopped && !running) throw new Error("Stopped PR actor cannot recover");
+		const expectedRoute = {...expected,authentication:carrier ? expected.authentication :
+			process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_AUTH};
+		const recoveryState = Object.keys(actual).some(field => existing && existing[field] !== actual[field] ||
+			expectedRoute[field] !== undefined && expectedRoute[field] !== actual[field]) ? "rebind-required" : "ready";
 		database.transaction(() => {
-			const existing = database.query("SELECT * FROM owners WHERE session=?").get(owner);
 			if (existing && existing.process !== processIdentity && existing.heartbeat > now() - 10) {
 				throw new Error("PR inbox owner is live; refusing takeover");
 			}
-			database.query(`INSERT INTO owners (session,file,cwd,provider,model,effort,process,heartbeat,authentication,agent)
-				VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(session) DO UPDATE SET file=excluded.file,
-				cwd=excluded.cwd,provider=excluded.provider,model=excluded.model,effort=excluded.effort,
-				process=excluded.process,heartbeat=excluded.heartbeat,authentication=excluded.authentication,agent=excluded.agent`)
-				.run(owner, sessionFile, ctx.cwd, model.provider, model.id, pi.getThinkingLevel(), processIdentity, now(), route, JSON.stringify(binding));
+			if (existing) {
+				// Claim the live process, not its changed route. Only explicit rebind
+				// may replace recovery metadata after identity checks succeed.
+				database.query("UPDATE owners SET process=?,heartbeat=? WHERE session=?")
+					.run(processIdentity,now(),owner);
+			} else {
+				database.query(`INSERT INTO owners (session,file,cwd,provider,model,effort,process,heartbeat,authentication,agent)
+					VALUES (?,?,?,?,?,?,?,?,?,?)`).run(owner,sessionFile,actual.cwd,actual.provider,actual.model,
+					actual.effort,processIdentity,now(),actual.authentication,JSON.stringify(binding(ctx)));
+			}
 		}).immediate();
+		bound = true;
+		recovery.state = recoveryState;
 		timer = ctx.setInterval(() => tick(ctx), 1000);
+		if (recovery.state === "ready") recovery.accept(ctx);
+		else ctx.ui?.notify?.("PR inbox rebind-required: use supervisor status and explicit rebind; no work is admitted", "warning");
 	});
 	pi.on("session_shutdown", (_event, ctx) => close(ctx));
 	pi.on("before_agent_start", (event, ctx) => {
+		if (recovery.state !== "ready" && event.prompt?.includes("DAILY_DRIVER_PR_DELIVERY")) { ctx.abort(); return; }
 		const token = event.prompt?.match(/DAILY_DRIVER_PR_DELIVERY (\S+) (\d+) (\d+) (\S+)/);
 		if (!token) { active = undefined; return; }
 		active = {identity: token[1], generation: Number(token[2]), fence: Number(token[3]), admission: token[4]};
@@ -209,6 +267,10 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 		}
 	});
 	pi.on("tool_call", (event) => {
+		if (recovery.state !== "ready") {
+			if (event.toolName === "daily_driver_pr_supervisor_control" && ["status","rebind"].includes(event.input.operation)) return;
+			return {block:true,reason:"PR inbox rebind-required; only supervisor status and rebind are admitted"};
+		}
 		if (carrier) {
 			if (event.toolName === "wait") return;
 			const target = process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_OWNER;
@@ -252,14 +314,14 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 		description: "Persist receipt of a still-current fenced PR delivery. This is not work completion, CI or readiness evidence.",
 		parameters: z.object({ identity: z.string(), generation: z.number().int(), fence: z.number().int(), admission: z.string() }),
 		execute: async (_id, params) => {
-			const received = database?.transaction(() => {
+			const received = recovery.state === "ready" && (database?.transaction(() => {
 				if (!valid(params, true)) return false;
 				const row = database.query("SELECT payload FROM deliveries WHERE identity=?").get(params.identity);
 				if (JSON.parse(row.payload).kind === "pr-supervisor-work") return false;
 				database.query("UPDATE deliveries SET status='received',receipt=?,last_error=NULL WHERE identity=?")
 					.run(now(), params.identity);
 				return true;
-			}).immediate() ?? false;
+			}).immediate() ?? false);
 			if (received) {
 				pi.appendEntry("daily-driver-pr-inbox-receipt", params);
 			}
@@ -273,7 +335,7 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 		description: "Freshly read authoritative GitHub state and acknowledge only a current, unstopped supervisor generation. Use the returned observed evidence as work input; this does not mark readiness, close issues or merge a PR.",
 		parameters: z.object({ identity: z.string(), generation: z.number().int(), fence: z.number().int(), admission: z.string() }),
 		execute: async (_id, params, signal) => {
-			if (!valid(params, true)) return {content: [{type:"text", text:"Stale or stopped delivery; do no work"}], details:{acknowledged:false}};
+			if (recovery.state !== "ready" || !valid(params, true)) return {content: [{type:"text", text:"Stale, suspended or stopped delivery; do no work"}], details:{acknowledged:false}};
 			const result = await executeFile("python3", [supervisorScript, "--database", databasePath, "acknowledge", params.identity,
 				"--generation", String(params.generation), "--fence", String(params.fence), "--admission", params.admission],
 				{encoding:"utf8", timeout:180000, signal});

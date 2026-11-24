@@ -86,6 +86,11 @@ function validateRecord(record) {
 	if (!new RegExp(`^${UUID}$`, "iu").test(record.registrationId)) throw new Error("Invalid registrationId");
 	const key = canonicalKey(record.key);
 	positive(record.revision, "revision");
+	if (record.tombstone === true) {
+		if (record.lifecycle !== "stopped") throw new Error("A watch tombstone must be stopped");
+		return { schema: 1, sessionId: record.sessionId, registrationId: record.registrationId,
+			key, revision: record.revision, lifecycle: "stopped", tombstone: true };
+	}
 	if (!["active", "stopped"].includes(record.lifecycle)) throw new Error("Invalid watch lifecycle");
 	if (!Number.isSafeInteger(record.deadline) || record.deadline < 0) throw new Error("Invalid watch deadline");
 	delay(record.delaySeconds);
@@ -156,7 +161,11 @@ export function installWatchContinuations(pi, { now = Date.now } = {}) {
 			if (Number.isSafeInteger(record.revision)) revisions.set(record.registrationId, Math.max(revisions.get(record.registrationId) ?? 0, record.revision));
 			if (record.lifecycle === "stopped" && typeof record.registrationId === "string") {
 				// Even a damaged stop must not revive the registration on rewind.
-				stops.set(record.registrationId, record);
+				const prior = stops.get(record.registrationId);
+				try {
+					if (prior) validateRecord(prior);
+					else stops.set(record.registrationId, record);
+				} catch { stops.set(record.registrationId, record); }
 			}
 		}
 		for (const entry of branch) {
@@ -172,14 +181,15 @@ export function installWatchContinuations(pi, { now = Date.now } = {}) {
 			}
 		}
 		const records = new Map();
-		const suspended = new Set();
+		const suspended = new Map();
 		for (const [key, raw] of latest) {
 			try {
-				const record = validateRecord(raw);
-				const stopped = stops.get(record.registrationId);
-				records.set(key, stopped ? validateRecord(stopped) : record);
+				const stopped = stops.get(raw.registrationId);
+				records.set(key, stopped ? validateRecord(stopped) : validateRecord(raw));
 			} catch (error) {
-				suspended.add(key);
+				const registrationId = typeof raw.registrationId === "string" &&
+					new RegExp(`^${UUID}$`, "iu").test(raw.registrationId) ? raw.registrationId : undefined;
+				suspended.set(key, { key, registrationId, sessionId: id, diagnostic: error.message });
 				const diagnostic = `${id}:${key}:${raw.revision}:${error.message}`;
 				if (!diagnostics.has(diagnostic)) { diagnostics.add(diagnostic); report(ctx, `Suspended ${key}: ${error.message}`); }
 			}
@@ -352,10 +362,24 @@ export function installWatchContinuations(pi, { now = Date.now } = {}) {
 				if (params.action === "register" && (!replacement || params.delaySeconds === undefined)) throw new Error("register requires state and delaySeconds");
 				bind(ctx);
 				const facts = journal(ctx);
-				if (facts.suspended.has(key)) throw new Error(`Watch ${key} is suspended because its latest journal entry is invalid`);
+				const suspension = facts.suspended.get(key);
+				if (suspension) {
+					if (params.action === "get") return response(`Watch ${key} is suspended: ${suspension.diagnostic}`,
+						{ found: true, suspended: true, ...suspension });
+					if (params.action !== "stop") throw new Error(`Watch ${key} is suspended: ${suspension.diagnostic}`);
+					if (!suspension.registrationId) throw new Error("Cannot stop a damaged watch without a known registration identity");
+					epoch++;
+					clearTimer();
+					let stopped;
+					try {
+						stopped = persist(ctx, { schema: 1, key, sessionId: facts.id,
+							registrationId: suspension.registrationId, lifecycle: "stopped", tombstone: true }, facts);
+					} finally { arm(ctx, facts); }
+					return response(`Stopped suspended watch ${key}.`, { stopped: true, ...metadata(stopped) });
+				}
 				const existing = facts.records.get(key);
 				if (params.action === "get") return response(existing ? `Watch ${key}: ${existing.lifecycle}.` : `Watch ${key} not found.`, existing ? { found: true, record: structuredClone(existing) } : { found: false });
-				if (replacement && existing && replacement.ownerIssue !== existing.state.ownerIssue) throw new Error("Watch owner identity cannot change");
+				if (replacement && existing?.state && replacement.ownerIssue !== existing.state.ownerIssue) throw new Error("Watch owner identity cannot change");
 				if (params.action === "stop") {
 					if (!existing || existing.lifecycle === "stopped") return response("No active watch to stop.", { stopped: false, found: !!existing });
 					epoch++;

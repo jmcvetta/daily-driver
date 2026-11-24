@@ -98,6 +98,7 @@ check-pr-keep-current:
   - 'scripts/pr-active-supervisor.py'
   - 'scripts/test-pr-active-supervisor.py'
   - 'scripts/test-pr-supervisor-tools.mjs'
+  - 'scripts/test-pr-recovery.mjs'
   - 'extensions/pr-supervisor-tools.mjs'
   - 'extensions/daily-driver.js'
 check-model-telemetry:

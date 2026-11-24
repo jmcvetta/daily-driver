@@ -49,6 +49,8 @@
 
 ### Fixed
 
+* Keep same-owner PR recovery operable through explicit route rebinding without changing holds, stops or task authority, and allow damaged watches to be inspected and stopped safely ([#1076](https://github.com/jmcvetta/daily-driver/issues/1076)).
+
 * Allow read-only research during epic title recovery and accept matching structured `gh issue view` identity evidence without releasing dispatch protection ([#1083](https://github.com/jmcvetta/daily-driver/issues/1083)).
 * Classify report-only requests as `bug` and keep settled implementation requests as `task`; preserve filing and implementation as distinct purposes ([#1085](https://github.com/jmcvetta/daily-driver/issues/1085)).
 * Retry failed Omp notification delivery without persisting a duplicate-suppression entry; retain one durable entry after successful delivery ([#1091](https://github.com/jmcvetta/daily-driver/issues/1091)).
