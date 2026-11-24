@@ -130,9 +130,10 @@ wake itself after the turn ends, so this harness is the one `SKILL.md` names
 under `How to wait`: *a surface that can neither block nor wake itself cannot
 wait*.
 
-So, unattended: **read the checks once, and where they have not all reported,
-say so and stop.** Do not review — an unreported check is the thing the wait
-exists not to guess at.
+So, unattended: **read the checks once and report any pending checks and the
+continuation limit.** Proceed with review of the stable pushed head; do not
+mark the PR ready until current-head CI is green. The owner must resume the
+readiness check when results are available.
 
 | Half | Call |
 | ---- | ---- |

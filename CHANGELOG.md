@@ -4,6 +4,7 @@
 
 ### Changed
 
+* Allow independent review and fix-delta verification while CI runs, while keeping current-head green CI mandatory for readiness ([#1033](https://github.com/jmcvetta/daily-driver/issues/1033)).
 * Remove mandatory first-readiness reports and their draft transition dependency while preserving readiness gates and historical telemetry ([#1026](https://github.com/jmcvetta/daily-driver/issues/1026)).
 
 * Reject serialized JSON argument objects and arrays as Omp session titles, show the direct-call, quoted shell, and `-j` command forms in the title instructions and gate messages, and keep ordinary prose containing braces or brackets ([#978](https://github.com/jmcvetta/daily-driver/issues/978)).
@@ -40,6 +41,8 @@
 * Distinguish delegated reviewer identity from publisher provenance in Omp reviews and verification records ([#973](https://github.com/jmcvetta/daily-driver/issues/973)).
 
 * Answer readiness interruptions before workflow reads and retain completed evidence until its inputs change; treat satisfied agent reminders as expired, not as user holds ([#957](https://github.com/jmcvetta/daily-driver/issues/957)).
+
+* Admit bounded literal title recovery and attributed bug reporting during pending Omp explicit-embark startup without releasing the barrier ([#1039](https://github.com/jmcvetta/daily-driver/issues/1039)).
 
 * Preserve evidence for unchanged criteria across contract revisions while requiring fresh observations for changed criteria ([#883](https://github.com/jmcvetta/daily-driver/issues/883)).
 
