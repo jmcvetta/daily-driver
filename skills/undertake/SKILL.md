@@ -692,10 +692,9 @@ owns the content comparison and rejected-finding evidence rule.
 
 The harness pull-request client takes it out of draft only after `The gate`
 below holds. `review-cycle` supplies the review evidence the gate consumes.
-The transition and its report are ordered: mark the pull request ready, observe
-that the write succeeded, then send a dedicated user-visible readiness report.
-The report does not add a gate condition. A failed write or unmet gate never
-produces a success report.
+After the ready write succeeds, deliver a concise completion report through
+the available user-facing route. It does not add a gate condition; a failed
+write or unmet gate never produces a success report.
 
 Before reporting completion, confirm the requested work and required review
 and approval are complete. Report checks, attributed judgments, failures,
@@ -720,10 +719,12 @@ pausing. On resume, revalidate the evidence and return through the gate.
 Pending CI and other external waits use their existing continuation.
 
 When the gate clears, mark the pull request ready. Existing supervision
-continues without a second owner. After success, deliver the dedicated
-`Ready for review` report described below to the user, and copy it to the
-orchestrator when an address was supplied. A failed delivery does not undo
-readiness or cause a retry loop.
+continues without a second owner. Report the task, linked pull request,
+successful `Ready for review` transition, and any material limitations once.
+A normal completion response is sufficient; do not require a fixed opening or
+duplicate the report for separate recipients. If a child’s output reaches only
+its orchestrator, the orchestrator must visibly relay it to the user. A failed
+delivery does not undo readiness or cause a retry loop.
 
 11 — Keep it current
 --------------------
@@ -1020,45 +1021,18 @@ In order:
 2. **Secure the work.** The rules are `stand-down`'s `Secure the work`: commit
    work in progress to the existing task branch, stage named files, skip no
    hook and no test, and push. A branch with nothing new is pushed as it is.
-3. **Write the handoff.** One comment on the task issue:
-
-   ```markdown
-   ## Handoff — undertaking stopped <UTC timestamp>
-
-   This session stopped at the user's instruction. The work is yours to reclaim.
-
-   - Branch: `<remote push branch>` — <link>. Local execution branch:
-     `<local branch>` (omit this line when it is the same branch). Pushed head:
-     `<sha>`.
-   - Pull request: <#N and state (draft / ready), or "none open">.
-   - Unsecured work: <local-only commit SHA and worktree path, uncommitted
-     work and failed push reason; or "none known"; unknown where not observed>.
-   - Reached: <the last step of the sequence completed>.
-   - Outstanding: <what is blocked, failing, or unverified — failed checks,
-     open review threads, a human action owed — or "nothing known">.
-   - Environment: <each tool or credential the outstanding work needs, with
-     the repository route that sets it up, e.g. "`omp`: `make evals-install
-     && make evals-setup-omp`" — or "the checkout alone">.
-   - Authorization: <task-scoped operation and target, original authority
-     reference, limits and conditions, including expiry or revocation; or
-     "none recorded">. Keep private source contents out of public comments.
-   - Stop evidence: <blocked operation and evidence reference, route
-     disposition, independent work remaining, and smallest external
-     contribution; or "user-requested stop — no blocker claimed">.
-   - Resume: <the concrete next action, e.g. "run `/undertake #N`; it resumes
-     on the branch above">.
-   ```
-
-   The active route appends `provenance`'s block; on Omp the wrapper handles
-   it, so the handoff body must not format or include one. A user-action
-   handoff carries no verse, because somebody acts on it. A push that fails is
-   stated here: `Pushed head:` names the last observed remote head, never the
-   local tip by assumption; `Unsecured work:` names the local commit, worktree
-   and failure when known. Record an unavailable remote head as unknown.
-   **The handoff is filled from what this session already knows**, plus the
-   git read the reference names for `Pushed head:`. No test or CI check is
-   run, no CI wait is finished, and nothing else is investigated to fill a
-   field: what is not known is written as unknown.
+3. **Write the handoff.** Post one concise issue comment headed
+   `Handoff — undertaking stopped <UTC timestamp>`. Include applicable
+   recovery facts: the task branch and worktree, observed remote head,
+   unsecured local work or failed push, and pull-request state when relevant.
+   State that no unsecured work remains only when observed. Note the last
+   completed stage and a concrete next action, with applicable original
+   authorization and stop limits. Include worker lifecycle only when it
+   affects safe recovery. Never infer the remote head from the local tip; name
+   any local-only commit, worktree and push failure, and a failed remote read
+   when it affects safe recovery. Omit inapplicable facts instead of filling
+   empty or unknown fields. Do not run checks or investigate beyond the git
+   read needed to establish the pushed head.
 4. **Stop.** The undertaking does not mark the pull request ready, does not
    close the issue, and does not call the work complete.
 
@@ -1077,26 +1051,23 @@ orchestrator`. `stand-down` applies the same equivalence test to that handoff.
 Reporting to an orchestrator
 ============================
 
-An undertaking `embark` dispatched may be handed the address of the session
-that dispatched it — its orchestrator. **User delivery of the first readiness
-report is unconditional**, whether or not an orchestrator address exists.
-When one exists, send the same report to both recipients. Other reports in
-this section remain conditional on the address:
+An undertaking dispatched by `embark` may receive the orchestrator’s session
+address. Deliver the first readiness report once through an available
+user-facing route. Other reports in this section remain conditional on that
+address:
 
 - **Every stop**, from `Where it stops and waits` or from `review-cycle`'s own,
   with the question it asks or the condition it reports.
 - **`Open the draft`**, once the draft exists.
-- **`Ready for review`**, once the pull request is marked ready; send this
-  report to the user and, when addressed, the orchestrator.
+- **`Ready for review`**, once the pull request is marked ready.
 
-Each report opens with the fixed line `Implementor report for #<task issue>`,
-then names the pull request where one exists, the moment reached, and the
-question or condition where there is one. The readiness report includes the
-task identity, linked pull request, and explicit moment `Ready for review`.
-Use the available user-facing conversation route. A child whose output reaches
-only its parent must have that orchestrator visibly relay the readiness report
-to the user's conversation; parent-only delivery is not user delivery. Do not
-invent a remote session address.
+For readiness, report the task identity, linked pull request, successful
+`Ready for review` transition, and material limitations. No fixed opening or
+separate duplicate recipient format is required. Use one available route: send
+the report to the user when the implementor has a user-facing channel; when a
+child’s output reaches only its orchestrator, return the report to that
+orchestrator, which must visibly relay it to the user. Do not invent a remote
+session address.
 
 Ordinary catch-up does not repeat an initial readiness report when session
 history already shows it. Do not add a durable marker, timestamp, timer or
