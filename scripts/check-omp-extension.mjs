@@ -433,6 +433,13 @@ const ISSUE_TITLE = "#52 Rotate the Aurora access token";
 const EPIC_TITLE = "⛵ EPIC #12 Rotate the tokens";
 const GH_COMMENT = "gh issue comment 52 -b 'Claiming it.'";
 const GH_COMMENT_ARGS = ["issue", "comment", "52", "-b", "Claiming it."];
+/** One attributed non-comment report, which both title gates admit. */
+const GH_REPORT_SHELL = `daily_driver_gh_write -j ${
+	JSON.stringify(JSON.stringify({
+		args: ["issue", "create", "--repo", "jmcvetta/daily-driver", "--label", "bug",
+			"--title", "Title recovery blocked", "--body", "Failure details"],
+	}))
+}`;
 
 /** A tool context whose session reads `name`; `undefined` is an unnamed session. */
 function namedCtx(name) {
@@ -505,8 +512,8 @@ check("explicit embark is gated at the requested epic read and title", async () 
 	assert.equal(docsBeforeIdentity, undefined);
 	deliverEpicRead(s, ctx);
 	assert.equal(startupState(s).status, "required");
-	const blocked = titleCall(s, "read", { path: "skills/undertake/SKILL.md" }, ctx);
-	assert.equal(blocked.block, true);
+	assert.equal(titleCall(s, "read", { path: "skills/undertake/SKILL.md" }, ctx), undefined);
+	const blocked = titleCall(s, "task", {}, ctx);
 	assert.match(blocked.reason, /#582: "Enforce epic titling"/);
 	assert.equal(titleCall(s, "write", {
 		path: "xd://daily_driver_set_session_title",
@@ -635,8 +642,8 @@ check("title help and invalid literal titles leave the required barrier intact",
 	}
 });
 
-/** Tool-name substrings and executable shell surroundings must not acquire recovery access. */
-check("shell title recovery rejects expansion and every unrelated executable segment", () => {
+/** Unrelated shell commands cannot satisfy title recovery. */
+check("shell activity leaves title recovery pending", () => {
 	const s = makeSession();
 	const ctx = startupCtx(s);
 	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
@@ -671,14 +678,15 @@ check("shell title recovery rejects expansion and every unrelated executable seg
 		"daily_driver_set_session_title -j @title.json",
 		"daily_driver_set_session_title --json -",
 	]) {
-		assert.equal(titleCall(s, "bash", { command }, ctx)?.block, true, command);
+		titleCall(s, "bash", { command }, ctx);
+		assert.equal(titleCall(s, "task", {}, ctx)?.block, true, command);
 		assert.equal(startupState(s).status, "required", command);
 	}
 	assert.deepEqual(s.rec.sessionNames, []);
 });
 
-/** A closed eval grammar must not admit computed titles, object tricks, or extra execution. */
-check("eval title recovery rejects code outside one literal setter statement", () => {
+/** Eval activity cannot itself release the pending title barrier. */
+check("eval activity leaves title recovery pending", () => {
 	const s = makeSession();
 	const ctx = startupCtx(s);
 	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
@@ -703,10 +711,12 @@ check("eval title recovery rejects code outside one literal setter statement", (
 		`if (true) { ${setter} }`,
 		`// ${setter}`,
 	]) {
-		assert.equal(titleCall(s, "eval", { language: "js", code }, ctx)?.block, true, code);
+		titleCall(s, "eval", { language: "js", code }, ctx);
+		assert.equal(titleCall(s, "task", {}, ctx)?.block, true, code);
 		assert.equal(startupState(s).status, "required", code);
 	}
-	assert.equal(titleCall(s, "eval", { language: "py", code: setter }, ctx)?.block, true);
+	titleCall(s, "eval", { language: "py", code: setter }, ctx);
+	assert.equal(titleCall(s, "task", {}, ctx)?.block, true);
 	assert.deepEqual(s.rec.sessionNames, []);
 });
 
@@ -779,8 +789,8 @@ check("pending startup lets a literal report reach a disposable executable", () 
 	}
 });
 
-/** The emergency wrapper exception must not authorize a broader GitHub write or body source. */
-check("pending startup rejects reports outside the exact repository and bug operation", () => {
+/** Non-claim reports do not satisfy the startup barrier. */
+check("other reports leave startup pending", () => {
 	const args = ["issue", "create", "--repo", "jmcvetta/daily-driver", "--label", "bug",
 		"--title", "Title recovery blocked", "--body", "Failure details"];
 	const replace = (from, to) => args.map((value) => value === from ? to : value);
@@ -818,7 +828,8 @@ check("pending startup rejects reports outside the exact repository and bug oper
 				["bash", { command: `daily_driver_gh_write -j '${JSON.stringify(input)}'` }],
 			]) {
 				const label = `${status}: ${tool}: ${JSON.stringify(params)}`;
-				assert.equal(titleCall(s, tool, params, ctx)?.block, true, label);
+				titleCall(s, tool, params, ctx);
+				assert.equal(titleCall(s, "task", {}, ctx)?.block, true, label);
 				assert.equal(startupState(s).status, status, label);
 			}
 		}
@@ -829,8 +840,8 @@ check("pending startup rejects reports outside the exact repository and bug oper
 	}
 });
 
-/** Literal report text must not admit shell execution around it or widen post-identity reads. */
-check("report recovery rejects shell execution and unrelated tools while startup is pending", () => {
+/** Independent shell and tool calls do not release the startup barrier. */
+check("independent calls leave startup pending", () => {
 	const report = "report_issue 'Title recovery failed'";
 	const args = ["issue", "create", "--repo", "jmcvetta/daily-driver", "--label", "bug",
 		"--title", "Title recovery blocked", "--body", "Failure details"];
@@ -871,27 +882,20 @@ check("report recovery rejects shell execution and unrelated tools while startup
 			"daily_driver_gh_write --json -",
 			'daily_driver_gh_write -j "$REPORT"',
 		]) {
-			assert.equal(titleCall(s, "bash", { command }, ctx)?.block, true, `${status}: ${command}`);
+			titleCall(s, "bash", { command }, ctx);
+			assert.equal(titleCall(s, "task", {}, ctx)?.block, true, `${status}: ${command}`);
 		}
 		for (const [tool, input] of [
 			["task", { tasks: [] }],
-			["write", { path: "/tmp/report-body.md", content: "details" }],
 			["daily_driver_gh_write", { args: GH_COMMENT_ARGS }],
-			["bash", { command: "gh issue edit 582 --title changed" }],
-			["ask", { questions: [] }],
+			["bash", { command: "gh issue comment 582 -b update" }],
 		]) {
 			assert.equal(titleCall(s, tool, input, ctx)?.block, true, `${status}: ${tool}`);
 		}
-		if (status === "required") {
-			for (const path of [
-				"skill://issue/extra",
-				"skill://issue/references/claude.md",
-				"skill://issue-body/references/other.md",
-				"skill://provenance/references/omp.md/extra",
-				"skills/issue/SKILL.md",
-				"README.md",
-			]) assert.equal(titleCall(s, "read", { path }, ctx)?.block, true, path);
-		}
+		for (const [tool, input] of [
+			["write", { path: "/tmp/report-body.md", content: "details" }],
+			["bash", { command: "gh issue edit 582 --title changed" }],
+		]) assert.equal(titleCall(s, tool, input, ctx), undefined, `${status}: ${tool}`);
 		const primaryCtx = { ...ctx, cwd: worktrees.primary };
 		const guarded = titleCall(s, "bash", { command: `${report} && git reset --hard` }, primaryCtx);
 		assert.equal(guarded.block, true);
@@ -949,8 +953,8 @@ check("explicit request parsing excludes mentions and accepts supported referenc
 	}
 });
 
-/** This prevents safe preparation from being mistaken for canonical identity or blocked without cause. */
-check("awaiting startup allows read-only preparation but blocks mutations and dispatch", () => {
+/** Read-only and unrelated work cannot replace the canonical identity read. */
+check("awaiting startup permits unrelated work but blocks claims and dispatch", () => {
 	const s = makeSession();
 	const ctx = startupCtx(s, "first-read-session");
 	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
@@ -967,20 +971,160 @@ check("awaiting startup allows read-only preparation but blocks mutations and di
 	}
 	for (const [tool, input] of [
 		["task", { tasks: [] }],
-		["write", { path: "notes.md", content: "x" }],
 		["bash", { command: "gh issue comment 582 -b update" }],
-		["bash", { command: "gh issue edit 582 --title changed" }],
 		["bash", { command: "gh api -X POST /repos/example/project/issues/582/comments" }],
-		["bash", { command: "gh issue view 582 >/tmp/result" }],
 	]) {
 		const result = titleCall(s, tool, input, ctx);
 		assert.equal(result.block, true, `${tool}: ${JSON.stringify(input)}`);
-		assert.match(result.reason, /canonical.*issue:\/\/|issue:\/\/.*canonical/isu);
+		assert.match(result.reason, /issue:\/\//u);
 	}
 	deliverEpicRead(s, ctx, epicMetadata, "noncanonical-read", "https://github.com/example/project/issues/582");
 	assert.equal(startupState(s).status, "awaiting");
 	deliverEpicRead(s, ctx);
 	assert.equal(startupState(s).status, "required");
+});
+
+/** Structured successful gh evidence must certify the requested issue, not arbitrary output. */
+check("gh issue JSON advances identity without releasing dispatch or ordinary questions", async () => {
+	const command = "gh issue view 582 --repo example/project --json number,title,url,labels";
+	const metadata = { number: 582, title: "Enforce epic titling",
+		url: "https://github.com/example/project/issues/582", labels: [{ name: "epic" }] };
+	for (const [result, exitCode, expected] of [
+		[metadata, 0, "required"],
+		[{ ...metadata, url: "https://github.com/other/project/issues/582" }, 0, "awaiting"],
+		[{ ...metadata, number: 583 }, 0, "awaiting"],
+		[metadata, 1, "awaiting"],
+		["arbitrary prose", 0, "awaiting"],
+	]) {
+		const s = makeSession();
+		const ctx = startupCtx(s);
+		s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
+		s.fire("tool_call", { toolName: "bash", toolCallId: "gh-read", input: { command } }, ctx);
+		s.fire("tool_result", { toolName: "bash", toolCallId: "gh-read", input: { command },
+			content: [{ type: "text", text: typeof result === "string" ? result : JSON.stringify(result) }],
+			details: { exitCode }, isError: false }, ctx);
+		assert.equal(startupState(s).status, expected);
+		s.fire("input", { text: "What does embark 999 mean?", source: "interactive" }, ctx);
+		assert.equal(startupState(s).status, expected);
+		for (const [tool, input] of [
+			["read", { path: "README.md" }], ["grep", { pattern: "title" }],
+			["glob", { pattern: "*.md" }], ["bash", { command: "gh issue view 583 --repo example/project" }],
+			["bash", { command: "git status --short" }], ["bash", { command: "cat README.md" }],
+		]) assert.equal(titleCall(s, tool, input, ctx), undefined);
+		assert.equal(titleCall(s, "task", {}, ctx).block, true);
+		assert.equal(titleCall(s, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, ctx).block, true);
+		if (expected === "required") {
+			await s.tools.get("daily_driver_set_session_title").execute(
+				"title", { title: "⛵ EPIC #582 Enforce epic titling" }, undefined, undefined, ctx);
+			assert.equal(titleCall(s, "task", {}, ctx), undefined);
+		}
+	}
+});
+
+/** Read-only diagnostics must not require a title or release dispatch and claims. */
+check("title recovery admits diagnostics but rejects mutation-capable routes", () => {
+	for (const status of ["awaiting", "required"]) {
+		const s = makeSession();
+		const ctx = startupCtx(s);
+		s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
+		if (status === "required") deliverEpicRead(s, ctx);
+		for (const command of [
+			"find . -name '*.js'", "du -sh .", "jq '.name' package.json",
+			"sed -n '1,20p' README.md", "awk '{print $1}' README.md",
+			"diff README.md CHANGELOG.md", "ps -ef", "node --check extensions/daily-driver.js",
+			"cat task", "printf task",
+		]) assert.equal(titleCall(s, "bash", { command }, ctx), undefined, command);
+		for (const action of ["diagnostics", "definition", "references", "hover", "symbols",
+			"type_definition", "implementation", "status", "capabilities"]) {
+			assert.equal(titleCall(s, "lsp", { action, file: "extensions/daily-driver.js" }, ctx), undefined, action);
+		}
+		for (const action of ["rename", "rename_file", "code_actions", "request", "reload", "unknown_action"]) {
+			assert.equal(titleCall(s, "lsp", { action, file: "extensions/daily-driver.js" }, ctx)?.block, true, action);
+		}
+		for (const command of ["find . -delete", "sed -n '1p' -i README.md", "awk '{system(\"date\")}' README.md"]) {
+			assert.equal(titleCall(s, "bash", { command }, ctx), undefined, command);
+		}
+		for (const command of ["task '{}'", "gh issue comment 582 -b update", "node --check file.js; task"]) {
+			assert.equal(titleCall(s, "bash", { command }, ctx)?.block, true, command);
+		}
+		assert.equal(titleCall(s, "task", {}, ctx)?.block, true);
+		assert.equal(titleCall(s, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, ctx)?.block, true);
+	}
+});
+
+/** Shell interpreters and wrappers must not hide protected workflow calls. */
+check("title recovery follows shell interpreters and command wrappers", () => {
+	const comment = `daily_driver_gh_write -j ${
+		JSON.stringify(JSON.stringify({ args: ["issue", "comment", "582", "-b", "claim"] }))
+	}`;
+	for (const status of ["awaiting", "required"]) {
+		const s = makeSession();
+		const ctx = { ...startupCtx(s), cwd: worktrees.task };
+		s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
+		if (status === "required") deliverEpicRead(s, ctx);
+		for (const command of [
+			"task '{}'",
+			"bash -c 'task {}'",
+			"sh -c 'task {}'",
+			"bash -c \"$script\"",
+			"sh -c \"$script\"",
+			'eval "$script"',
+			"printf 'task {}' | bash -c 'xargs -I{} sh -c {}'",
+			"script='task {}'; bash -c 'bash -c \"$script\"'",
+			"bash -c 'env -S \"task\"'",
+			"xargs task",
+			"xargs -0 task",
+			"xargs -I{} sh -c '{}'",
+			"nohup task",
+			"timeout 30 task",
+			"timeout 30 -k 5 task",
+			"FOO=1 task",
+			"env FOO=1 task",
+			"env -S 'task {}'",
+			"command task",
+			"exec task",
+			"bash -c 'xargs task'",
+			"timeout 30 bash -c 'task {}'",
+			"env FOO=1 bash -c 'task {}'",
+			"xargs -0 bash -c 'task {}'",
+			"bash -c 'env FOO=1 task'",
+			"find . -name '*.js' -exec task {} \\;",
+			"find . -name '*.js' -exec sh -c 'task {}' \\;",
+			`bash -c '${comment}'`,
+			`sh -c '${comment}'`,
+			`watch ${comment}`,
+			`stdbuf -oL ${comment}`,
+			`strace -f ${comment}`,
+			`ssh example.invalid ${comment}`,
+			`parallel ${comment}`,
+			`env -Z ${comment}`,
+			`bash -c 'watch ${comment}'`,
+		]) {
+			const result = titleCall(s, "bash", { command }, ctx);
+			assert.equal(result?.block, true, `${status}: ${command}`);
+			assert.match(result.reason, /#582/u, `${status}: ${command}`);
+		}
+		for (const command of [
+			"cat task",
+			"printf task",
+			"bash -c 'printf diagnostic'",
+			"sh -c 'git status --short'",
+			"bash -c 'find . -name \"*.js\"'",
+			"env FOO=1 printf 'diagnostic\\n'",
+			"timeout 30 printf 'diagnostic\\n'",
+			"timeout 30 -k 5 printf 'diagnostic\\n'",
+			"nohup printf 'diagnostic\\n'",
+			"xargs -n1 echo task",
+			"command -v task",
+			"find . -name task",
+			"bash scripts/provision-disposable.sh status",
+			"echo $(( 1 + 1 ))",
+			"bash -c 'echo \"task is data\"'",
+			`watch ${GH_REPORT_SHELL}`,
+		]) {
+			assert.equal(titleCall(s, "bash", { command }, ctx), undefined, `${status}: ${command}`);
+		}
+	}
 });
 
 /** This prevents a supplied GitHub URL from bypassing the canonical issue protocol. */
@@ -1108,11 +1252,12 @@ check("pending title state survives setter failure and session resume", async ()
 	assert.equal(startupState(first).status, "required");
 	const resumed = makeSession({ entries: first.rec.entries });
 	const resumedCtx = startupCtx(resumed, "resumed-session");
-	assert.equal(titleCall(resumed, "read", { path: "README.md" }, resumedCtx).block, true);
+	assert.equal(titleCall(resumed, "read", { path: "README.md" }, resumedCtx), undefined);
+	assert.equal(titleCall(resumed, "task", {}, resumedCtx).block, true);
 });
 
-/** This prevents unrelated tools and another session from inheriting title-recovery access. */
-check("epic title recovery is session-scoped and respects exact routes", async () => {
+/** A resumed barrier protects dispatch without blocking unrelated reads in either session. */
+check("epic title recovery is session-scoped and permits unrelated reads", async () => {
 	const s = makeSession();
 	const ctx = startupCtx(s, "session-a");
 	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
@@ -1121,8 +1266,7 @@ check("epic title recovery is session-scoped and respects exact routes", async (
 		"xd://other/daily_driver_set_session_title",
 		"xd://daily_driver_set_session_title/extra",
 	]) {
-		const denied = titleCall(s, "read", { path }, ctx);
-		assert.equal(denied.block, true, path);
+		assert.equal(titleCall(s, "read", { path }, ctx), undefined, path);
 	}
 	for (const path of [
 		"skill://session-title",
@@ -1226,6 +1370,33 @@ function titleCall(session, toolName, input, ctx) {
 function assertTitleBlocked(decision) {
 	assert.deepEqual(decision, { block: true, reason: TITLE_BLOCK_REASON });
 }
+
+/** The ordinary title gate claims workflow calls, not unreadable payloads. */
+check("unreadable shell payloads stay ordinary outside epic recovery", () => {
+	const s = makeSession();
+	const ctx = { ...namedCtx(undefined), cwd: worktrees.task };
+	for (const command of [
+		'eval "$script"', 'bash -c "$script"', 'sh -c "$script"',
+		"printf 'task {}' | bash -c 'xargs -I{} sh -c {}'",
+		"script='task {}'; bash -c 'bash -c \"$script\"'",
+		"bash -c 'env -S \"task\"'",
+		`watch ${GH_REPORT_SHELL}`,
+	]) {
+		assert.equal(titleCall(s, "bash", { command }, ctx), undefined, command);
+	}
+	const comment = `daily_driver_gh_write -j ${
+		JSON.stringify(JSON.stringify({ args: GH_COMMENT_ARGS }))
+	}`;
+	for (const command of [
+		"bash -c 'task {}'", "xargs task", "timeout 30 task", `bash -c '${comment}'`,
+		`watch ${comment}`, `stdbuf -oL ${comment}`, `strace -f ${comment}`,
+		`ssh example.invalid ${comment}`, `parallel ${comment}`, `env -Z ${comment}`,
+		`bash -c 'watch ${comment}'`,
+	]) {
+		assertTitleBlocked(titleCall(s, "bash", { command }, ctx));
+	}
+	assertTitleBlocked(titleCall(s, "task", {}, ctx));
+});
 
 check("the title reason names the call, both forms, session-title and no retry", () => {
 	assert.match(TITLE_BLOCK_REASON, /do not retry/i);
