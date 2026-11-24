@@ -3715,6 +3715,13 @@ for (const [command, blocked] of [
 	[`env -C "${worktrees.primary}" sh -c "$script"`, true],
 	[`env -C "${worktrees.outside}" sh -c "$script"`, true],
 	[`env -C "${worktrees.task}" sh -c "$script"`, false],
+	// `sudo -C` is close-from: a value that names a directory is still data and
+	// must not move the child, so the task worktree keeps its exemption.
+	['sudo -C 3 sh -c "$script"', false],
+	['sudo -C .. sh -c "$script"', false],
+	[`sudo -D "${worktrees.primary}" sh -c "$script"`, true],
+	[`sudo --chdir="${worktrees.primary}" sh -c "$script"`, true],
+	[`sudo -D "${worktrees.task}" sh -c "$script"`, false],
 	['env -S "$script"; git switch feature/other', false],
 	['command "$program"; git switch feature/other', true],
 	['command eval "$script"; git switch feature/other', true],
@@ -4136,6 +4143,31 @@ checkGuard(
 	true,
 	"bash",
 	{ command: "(( x = 1 << 2 ))\ngit switch master\n2\n" },
+	worktrees.primary,
+);
+
+// A `(` inside arithmetic groups the expression and does not open a command.
+// When it did, a nested `<<` became a here-document whose delimiter line
+// swallowed the command that followed the arithmetic.
+for (const [name, command] of [
+	["an evaluation", "(( (1<<2) ))\ngit switch master\n2\n"],
+	["an expansion", "echo $(( (1<<2) ))\ngit switch master\n2\n"],
+	["a reset behind an expansion", "echo $(( (1<<2) ))\ngit reset --hard\n2\n"],
+]) {
+	checkGuard(
+		`a nested arithmetic shift in ${name} does not unguard the commands after it`,
+		true,
+		"bash",
+		{ command },
+		worktrees.primary,
+	);
+}
+
+checkGuard(
+	"an expansion in nested arithmetic is not a command the guard must read",
+	false,
+	"bash",
+	{ command: "n=1; echo $(( ( $n + 1 ) * 2 ))" },
 	worktrees.primary,
 );
 

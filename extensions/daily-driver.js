@@ -903,8 +903,18 @@ function shellSegments(command) {
 				// one. None of them is a stored brace body.
 				pendingFunctionBody = false;
 			}
-			if (char === "(") openGroup("command", char);
-			else closeGroup(char);
+			if (char === "(") {
+				// A plain `(` inside arithmetic groups the expression; it does
+				// not open a command. Only `$(` and a backtick substitution run
+				// commands there. The nested group must stay arithmetic at every
+				// depth, or its `<<` reads as a here-document and swallows the
+				// commands that follow the arithmetic.
+				const nestedArithmetic = groupKinds.at(-1) === "arithmetic" &&
+					command[index - 1] !== "$";
+				openGroup(nestedArithmetic ? "arithmetic" : "command", char);
+			} else {
+				closeGroup(char);
+			}
 			continue;
 		}
 		if (
@@ -1948,7 +1958,12 @@ function shellExecution(words, cwd) {
 				if (name === "env" && (flag === "S" || flag === "split-string" || flag === "env0-from")) {
 					unreadable("a wrapper constructs its command from input");
 				}
-				if (["env", "sudo"].includes(name) && ["C", "D", "chdir"].includes(flag)) {
+				// `env -C`/`--chdir` and `sudo -D`/`--chdir` place the child.
+				// `sudo -C` is close-from: its value names no directory.
+				const changesDirectory =
+					(name === "env" && (flag === "C" || flag === "chdir")) ||
+					(name === "sudo" && (flag === "D" || flag === "chdir"));
+				if (changesDirectory) {
 					cwd = value.literal ? resolveAgainst(cwd, value.text) : null;
 				}
 				if (name === "sudo" && ["R", "chroot"].includes(flag)) cwd = null;
