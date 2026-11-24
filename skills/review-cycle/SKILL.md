@@ -90,8 +90,9 @@ findings is not standalone and follows the relevant later stage.
 checks are not passing checks, but do not prevent independent review. Review
 and CI may proceed concurrently. Bind review evidence to the reviewed SHA;
 if the head changes, apply the review-scope and fix-delta rules below. An
-observed CI failure goes to `Fix, answer, resolve, push`. Current-head green
-CI remains required by the caller's readiness gate.
+observed CI failure goes to `Fix, answer, resolve, push`. The caller's
+readiness gate requires current-head green CI or established no-applicable-CI
+evidence.
 
 Reuse an existing review or CI watch for the same head rather than starting
 duplicates. An unavailable CI wait does not prevent review.
