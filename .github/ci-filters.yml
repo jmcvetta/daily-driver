@@ -71,6 +71,7 @@ check-omp-guard-differential:
   - 'scripts/check-omp-guard-differential.mjs'
   - 'extensions/daily-driver.js'
   - 'extensions/role-default-helper.mjs'
+  - 'extensions/watch-continuation.mjs'
 check-omp-cache-clean:
   - 'scripts/check-omp-cache-clean.py'
 check-git-sync:
