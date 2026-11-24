@@ -109,10 +109,9 @@ routine pre-push check is not such an experiment. Safety, authorization, test
 and CI requirements remain in force.
 
 New CI checks recur in execution, review, triage and maintenance. Read `pr`
-before validation or any CI-enforcement change: it owns recurring-cost
-approval, the routine-integration exemption, effective-command-chain
-inspection, and the fields a proposed expansion carries. A policy-only read
-starts no PR and no issue work.
+before validation or any CI-enforcement change: it gives concise cost and
+value guidance, including when material recurring spending needs owner
+approval. A policy-only read starts no PR and no issue work.
 
 Never bypass established validation to save effort; disclose coverage lost when
 an explicit owner instruction reduces CI scope, without hiding failures or
