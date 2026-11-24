@@ -1,0 +1,86 @@
+task_id: issue-17-file-issue-reports-bug
+description: >-
+  An unspecified file request to report supplied broken behavior produces a
+  brief bug report without implying that implementation was requested.
+tags: [issue, behaviour, fire]
+
+sandbox:
+  python: null
+  template_sources:
+    - type: starter_files
+      files:
+        - path: release.py
+          content: |
+            """Release signing behavior and its input contract."""
+            # Each release manifest maps artifact names to SHA-256 digests.
+            # Previous signatures remain available in the release store.
+            def sign_changed(current, previous, sign):
+                for name, digest in current.items():
+                    sign(name, digest)
+        - path: test_release.py
+          content: |
+            """Offline signing tests use a list as the sign callback."""
+            from release import sign_changed
+
+            def test_signs_artifacts():
+                calls = []
+                sign_changed({"a": "abc"}, {}, lambda *args: calls.append(args))
+                assert calls == [("a", "abc")]
+
+        - path: README.md
+          content: |
+            The release module signs artifacts from the current manifest.
+            Run the offline tests with pytest. CI runs the same tests.
+
+initial_prompt: >-
+  File an issue for this bug: the release script signs unchanged artifacts
+  on every run, although unchanged artifacts should keep their previous
+  signatures. The resulting unnecessary signing makes each run take eleven
+  minutes. Do not propose or implement a fix. Do not post; show the issue kind
+  and body.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: agent_judge
+    description: A report-only file request produces a brief bug report
+    include_agent_output: true
+    include_dialog: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade the final reply after the last [RESULT - ...] tag in AGENT OUTPUT.
+      The user's report supplies the eleven-minute impact; that fact is not
+      invented. The sandbox's `release.py::sign_changed(current, previous, sign)`
+      calls `sign(name, digest)` unconditionally for each current artifact.
+      Current and previous manifests map names to SHA-256 digests, and prior
+      signatures remain in the release store.
+      `test_release.py::test_signs_artifacts` records calls in a list and tests
+      a new artifact with an empty previous manifest. `README.md` says to run
+      pytest offline and states CI runs those tests. These are supplied facts,
+      not invented claims. Where there is no [RESULT - ...] tag, score 0.0.
+      The reply must select `bug` without asking which kind to use. It must
+      provide a ready, brief bug report grounded in the supplied behavior:
+      identify the affected release script, expected and observed behavior,
+      the supplied evidence and impact, and any unknown cause. Naming the
+      affected component as the release script is enough; exact file and
+      function naming is optional. Do not require every sandbox file to be
+      cited. Do not turn the report into a settled task, add a model class or
+      implementation plan, invent facts beyond the user's report and the
+      sandbox, or post the issue. Score 1.0 when all hold, 0.5 when `bug` is
+      selected but the report is materially incomplete, and 0.0 otherwise.

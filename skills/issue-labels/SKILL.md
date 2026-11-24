@@ -59,17 +59,21 @@ and in `infra/github/labels.tf` — and `scripts/check-labels.py` fails
 Picking one
 ===========
 
-For a user request to create, open, or file an issue without a specified kind,
-select `task`. A description of broken behavior does not by itself request a
-bug report. Prepare the task through `issue-body`, including its readiness
-test; ask for unresolved user-owned decisions rather than inventing them or
-silently changing the kind. Do not ask which kind the user wants solely
-because the request omitted it.
+Classify an unspecified issue request by its purpose, not by the act of filing it.
+A request to report observed broken behavior, with no correction supplied or
+requested, selects `bug`, even when the report does not specify a cause or fix.
+A request to implement a settled outcome selects `task`; an evidence-seeking
+question selects `research`; an open capability selects `proposal`. A request
+that states the change to make — "skip unchanged artifacts" — is an
+implementation request even when it also describes the fault; the fault does
+not turn it into a bug report. Use the existing ordered questions below to
+distinguish these purposes. Do not ask which kind the user wants when the
+supplied purpose answers it, and do not infer implementation authorization
+from filing a report.
 
 An explicitly requested kind takes precedence. Automatic Daily Driver bug
-reports retain `issue`'s separate bug-report route. This creation default does
-not change the classification of existing issues or explicit epic workflows.
-The questions below apply to those other classification decisions.
+reports retain `issue`'s separate bug-report route. This purpose-based
+classification does not change existing issues or explicit epic workflows.
 
 Ask the question in this order. The first answer that holds is the label.
 
@@ -86,7 +90,9 @@ Ask the question in this order. The first answer that holds is the label.
    A `proposal` is also discussion rather than a reserved person-only action.
    This question precedes `bug`, `research` and `task`, which promise an agent
    may start the work.
-3. **Is it a bug report?** Then `bug`. Nothing here defines the word.
+3. **Is the request to report broken behavior, with no correction supplied or
+   requested?** Then `bug`. Where the request also tells the agent what change
+   to make, its purpose is implementation and this question does not hold.
 4. **Does it close on an answer rather than on a change?** A question to
    settle, an option to compare, a spike to run — `research`. What the answer
    produces is not fixed: a note under `docs/`, a set of task issues and an
