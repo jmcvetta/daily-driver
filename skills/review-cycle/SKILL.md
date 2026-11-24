@@ -127,14 +127,18 @@ discipline each mechanism needs. What follows holds whichever one is in use.
   names a workflow-run read, a run for the head that is not terminal blocks the
   verdict, and a read that cannot establish what has registered is an incomplete
   observation, not a pass. The calls are the reference's.
-- **An empty answer is not an answer.** Nothing from either endpoint, on a head
-  pushed seconds ago, means nothing has registered yet rather than that
-  everything passed — *every check has reported* is otherwise vacuously true of
-  a pull request nothing has looked at. Keep an actual continuation for another read.
-  **The exception is a partial watch that cannot observe registration and
-  cannot wake itself.** Its reference must say so; it rejects the empty result
-  and stops under *A surface that can neither block nor wake itself cannot
-  wait*, rather than hiding an unbounded poll behind the word *waiting*.
+- **An empty inventory is unknown until absence is established.** A newly
+  pushed head may still register checks. Establish a no-applicable-CI result
+  only from complete, current repository workflow configuration, applicable
+  required-check context (including branch rules and rulesets), and the
+  event, base, head and changed paths that select workflows for this change.
+  Account for other configured check providers too. If any applicable check
+  may still register, keep the result pending; a known missing required check
+  is never a pass. Denied, malformed, truncated or failed reads leave absence
+  unknown. Record the evidence and conclusion as **no applicable CI**, not
+  as checks passed. Reassess it when the head or relevant configuration changes.
+  A partial watch that cannot establish absence or wake itself reports its
+  continuation limit rather than hiding an unbounded poll.
 - **A wake that is not about a check is still just a read.** The round is its
   own loudest source of the other kind: a review that posts a thread per
   finding, and a reply to every one. None of that is a check reporting, so none
