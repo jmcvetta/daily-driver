@@ -1,11 +1,12 @@
 # A merged specification alone must not promote or dispatch staged work.
 task_id: epic-08-discovery-promotion
-description: Discovery preserves lineage and gates implementation publication.
+description: Discovery preserves lineage and stages directly bound implementation.
 tags: [epic, discovery, behaviour, fire]
 initial_prompt: >-
   Use epic: parent #10 is a discovery with two completed research children and
   an interactive specification child. The operator approved and merged the spec
-  to master. How do we publish implementation without losing parent identity?
+  to master, with an explicit approval comment URL. No parent publication record
+  exists. How do we publish implementation without losing parent identity?
   Explain only; do not write or claim external actions.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -22,9 +23,11 @@ success_criteria:
     turn_timeout: 120
     agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
     prompt: |
-      Score 1 only if the answer retains parent #10 and lineage, records approval,
-      exact merged master commit and document path in one identifiable parent
-      publication record, and stages separately agreed tasks referencing it with
-      IDs and exclusions. Verify revision, allocations, readiness and graph before
-      atomic promotion. Staged tasks cannot dispatch while the parent is discovery.
-      Score 0 for promotion solely on merge or prior dispatch; otherwise 0.5.
+      Score 1 only if the answer retains parent #10 and lineage, stages
+      separately agreed tasks with the canonical path and exact merged master
+      SHA, explicit operator approval URL, IDs and exclusions, and does not
+      require a parent publication record. Verify merge, approval, revision,
+      allocations, readiness and graph before atomic promotion. Staged tasks
+      cannot dispatch while the parent is discovery. Score 0 for accepting
+      silent merge as approval, requiring a parent record, or dispatching
+      before promotion; otherwise 0.5.
