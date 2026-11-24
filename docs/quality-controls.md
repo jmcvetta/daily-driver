@@ -322,8 +322,9 @@ undeclared import fails.
 
 ### QC-DOC-COMMENTS — documented public symbols
 
-Every public symbol carries a doc comment, and every test says which fault it
-catches.
+Every public symbol carries a doc comment. Tests are judged by their behavioral
+coverage, not by a required explanatory statement: a test's intent is clear
+from its name, arrangement, assertions, or a comment where needed.
 
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
