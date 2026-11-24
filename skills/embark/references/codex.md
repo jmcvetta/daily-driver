@@ -43,7 +43,6 @@ exists to reach.
 | ---- | --------- | ---- |
 | `Open the sessions` | Dispatch one implementor per eligible child issue, concurrently | `multi_agent_v1`, one delegation per child issue in a single wave |
 | `Post the muster roll` | Comment on the epic | `gh issue comment <number> --body-file <path>` |
-| `Post the muster roll` | Mark the wave in the epic's body | `gh issue edit <number> --body-file <path>` |
 | `Take the wave` | Read each child body and claim comments | `gh issue view <number> --json body,comments,state` |
 | `Land the pull request` | Read draft, merge state, head SHA, labels, and body | `gh pr view <number> --json isDraft,mergeStateStatus,headRefOid,labels,body` |
 | `Land the pull request` | Diagnose a blocked gate | `gh pr view <number> --json headRefOid,reviewDecision,statusCheckRollup`; current-head checks, statuses, and workflow runs through `review-cycle`'s `references/codex.md` |

@@ -98,10 +98,9 @@ The wave
 | `Open the sessions` | Dispatch one implementor per eligible child, concurrently | `task`, one item per child issue in a single batch |
 | `Open the sessions` | Name the implementor | the item's `name`, in `session-title`'s form |
 | `Post the muster roll` | Comment on the epic | `daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file", <path>] })` |
-| `Post the muster roll` | Mark the wave in the epic's body | `daily_driver_gh_write({ args: ["issue", "edit", <number>, "--body-file", <path>] })` |
 
-The wrapper appends and deduplicates provenance for both writes; submit the
-body or comment without a new attribution block.
+The wrapper appends and deduplicates provenance for the comment; submit it
+without a new attribution block.
 
 
 The dispatch is one batch, never one call per child: the items run
