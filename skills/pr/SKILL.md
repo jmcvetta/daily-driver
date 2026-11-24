@@ -2,11 +2,11 @@
 name: pr
 description: >-
   Read for `/pr` before PR operations and before proposing or changing CI
-  enforcement. It applies with or without an issue; reading it starts neither.
-  opening, raising, or updating a PR and any agent-initiated call before
-  creating one or updating one beyond its title or body. Supplies the branch
-  guard, the existing-PR check, draft state, ongoing base maintenance, and the
-  issue-reference call; title is `pr-title` and body is `pr-body`.
+  enforcement. It applies with or without an issue; reading starts neither.
+  For the current branch, triggers include opening, raising, or updating a PR,
+  and agent-initiated calls before creating one or updating it beyond title or
+  body. Supplies the branch guard, existing-PR check, draft state, ongoing base
+  maintenance, and issue-reference call; title is `pr-title`, body is `pr-body`.
 ---
 
 # PR Workflow
