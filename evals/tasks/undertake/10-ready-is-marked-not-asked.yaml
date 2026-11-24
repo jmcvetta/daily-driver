@@ -98,8 +98,10 @@ success_criteria:
     prompt: |
       The AGENT OUTPUT block is an ordered transcript. `[ASSISTANT] …`
       blocks include tool-call events; use the first plain-language response
-      to evaluate precedence. The fixture action verifier, not narration,
-      establishes whether the gate writes succeeded.
+      to evaluate precedence. A sibling `run_command` criterion grades the
+      fixture action verifier for the gate reads and ready write; this
+      criterion does not receive that output and must not fail the reply for
+      its absence.
 
       FIRST, FIND THE REPLY. The AGENT OUTPUT block is a whole-turn
       transcript. `[ASSISTANT] …` starts each block of the agent thinking
@@ -132,11 +134,11 @@ success_criteria:
       0.0. Dynamic gate reads are still required; do not reward trusting
       old-head CI.
 
-      Score 1.0 only if the first response follows the ordering rule, the
-      fixture shows the successful ready write after gate reads, and the final
-      reply delivers that concise result once without a question to the user.
-      The fixture verifier checks gate reads and ready write; transcript order
-      is the evidence for user-facing delivery.
+      Score 1.0 only if the first response follows the ordering rule and the
+      final reply delivers that concise result once without a question to the
+      user. The sibling verifier, not this criterion, establishes the gate
+      reads and ready write; transcript order is the evidence for user-facing
+      delivery.
 
       Score 0.5 if the gate was read but marking ready failed and the reply
       accurately reports the failure without claiming completion.
@@ -147,6 +149,6 @@ success_criteria:
 
       Score 0.0 if no relevant call was made (narration is not an action), if
       the reply asks the user whether to mark ready or proposes leaving it
-      draft to be safe, if it claims ready without a successful call, omits the
-      task, linked PR, outcome, or material limitations, or ends with no
-      `[RESULT - …]`.
+      draft to be safe, if it claims ready while the transcript shows no ready
+      call, omits the task, linked PR, outcome, or material limitations, or
+      ends with no `[RESULT - …]`.
