@@ -52,6 +52,7 @@ success_criteria:
   - type: agent_judge
     description: A report-only file request produces a brief bug report
     include_agent_output: true
+    include_dialog: true
     include_reference: false
     weight: 2
     max_turns: 5
@@ -64,19 +65,22 @@ success_criteria:
       permission_mode: default
     prompt: |
       Grade the final reply after the last [RESULT - ...] tag in AGENT OUTPUT.
-      The sandbox's `release.py::sign_changed(current, previous, sign)` calls
-      `sign(name, digest)` unconditionally for each current artifact. Current
-      and previous manifests map names to SHA-256 digests, and prior signatures
-      remain in the release store. `test_release.py::test_signs_artifacts`
-      records calls in a list and tests a new artifact with an empty previous
-      manifest. `README.md`
-      says to run pytest offline and states CI runs those tests. These are
-      supplied facts, not invented claims. Begin with ANCHOR: result, or
-      ANCHOR: none if the final reply is absent.
+      The user's report supplies the eleven-minute impact; that fact is not
+      invented. The sandbox's `release.py::sign_changed(current, previous, sign)`
+      calls `sign(name, digest)` unconditionally for each current artifact.
+      Current and previous manifests map names to SHA-256 digests, and prior
+      signatures remain in the release store.
+      `test_release.py::test_signs_artifacts` records calls in a list and tests
+      a new artifact with an empty previous manifest. `README.md` says to run
+      pytest offline and states CI runs those tests. These are supplied facts,
+      not invented claims. Where there is no [RESULT - ...] tag, score 0.0.
       The reply must select `bug` without asking which kind to use. It must
       provide a ready, brief bug report grounded in the supplied behavior:
       identify the affected release script, expected and observed behavior,
-      the supplied evidence and impact, and any unknown cause. Do not turn the
-      report into a settled task, add a model class or implementation plan,
-      invent facts, or post the issue. Score 1.0 when all hold, 0.5 when `bug`
-      is selected but the report is incomplete, and 0.0 otherwise.
+      the supplied evidence and impact, and any unknown cause. Naming the
+      affected component as the release script is enough; exact file and
+      function naming is optional. Do not require every sandbox file to be
+      cited. Do not turn the report into a settled task, add a model class or
+      implementation plan, invent facts beyond the user's report and the
+      sandbox, or post the issue. Score 1.0 when all hold, 0.5 when `bug` is
+      selected but the report is materially incomplete, and 0.0 otherwise.

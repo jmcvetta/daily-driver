@@ -33,10 +33,11 @@ sandbox:
 
 
 initial_prompt: >-
-  Open an issue for this: the release script re-signs every artifact even
-  when nothing changed, and each run takes eleven minutes. Skip artifacts
-  whose checksum matches the previous release. Do not post anything — show
-  me the issue kind and the exact issue body you would open.
+  Open an issue to make this change: the release script re-signs every
+  artifact even when nothing changed, and each run takes eleven minutes.
+  Change it to skip artifacts whose checksum matches the previous release.
+  Do not post anything — show me the issue kind and the exact issue body you
+  would open.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
@@ -83,8 +84,7 @@ success_criteria:
       the AGENT OUTPUT block**, starting after the tag on its own line.
       Nothing outside the AGENT OUTPUT block is the agent's.
 
-      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
-      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+      Where there is no `[RESULT - …]` tag, score 0.0.
 
       The user reports an eleven-minute release run. The sandbox's
       `release.py::sign_changed(current, previous, sign)` calls
@@ -111,7 +111,9 @@ success_criteria:
       add decorative or duplicate diagrams, progress checklists, or a second
       hand-maintained dependency record, and the diagram must not replace the
       textual acceptance criteria or the dependency graph.
-      The final provenance block below `---` is distinct and must be retained.
+      A provenance block below `---`, where the reply carries one, is distinct
+      and must be retained. An unposted draft need not fabricate one; on Omp
+      the posting wrapper supplies it.
 
       The delivered body itself must carry the settled handoff. A body that
       only promises a later review, or that leaves these contracts for the
@@ -120,8 +122,9 @@ success_criteria:
       equivalent prose.
 
       - It names the real symbol `sign_changed` in `release.py` and the
-        existing gate `test_release.py::test_signs_artifacts`, run offline with
-        pytest and in CI. A nonexistent path, symbol, test or gate fails.
+        existing test module `test_release.py`, run offline with pytest and in
+        CI. Naming the exact test function is optional. A nonexistent path,
+        symbol, test or gate fails.
       - It settles the comparison by artifact name and checksum together,
         never by checksum alone, and keeps the existing
         `sign_changed(current, previous, sign)` callback interface while
@@ -137,10 +140,14 @@ success_criteria:
         equals `a`'s; absent `gone` is not signed. The existing
         empty-previous-manifest test remains valid.
 
-      Score 1.0 if the reply explicitly selects `task` and the complete body
-      meets the rule. Score 0.5 if it selects `task` and provides a plausible
-      handoff but misses one minor body requirement outside those contracts.
-      Score 0.0 if it selects another kind, asks the user to choose a kind,
-      lacks a task body or class section, puts concrete model or effort
-      metadata in the task sections, invents repository evidence, or leaves
-      one of the settled contracts above to the worker.
+      Score 1.0 if the reply explicitly selects `task`, asks no kind question,
+      and provides a ready handoff with the required structure, a valid class
+      section, the settled name-and-checksum comparison, and acceptance
+      covering unchanged, changed, and new artifacts plus the existing
+      empty-previous test. A missing diagram, an omitted removed-artifact
+      enumeration, or an absent provenance block in an unposted draft is not a
+      failure. Score 0.5 if it selects `task` but the handoff is materially
+      incomplete. Score 0.0 if it selects another kind, asks the user to
+      choose a kind, lacks a task body or class section, puts concrete model
+      or effort metadata in the task sections, invents repository evidence, or
+      leaves the settled comparison to the worker.

@@ -60,11 +60,14 @@ Picking one
 ===========
 
 Classify an unspecified issue request by its purpose, not by the act of filing it.
-A request to report observed broken behavior selects `bug`, even when the
-report does not specify a cause or fix. A request to implement a settled
-outcome selects `task`; an evidence-seeking question selects `research`; an
-open capability selects `proposal`. Use the existing ordered questions below
-to distinguish these purposes. Do not ask which kind the user wants when the
+A request to report observed broken behavior, with no correction supplied or
+requested, selects `bug`, even when the report does not specify a cause or fix.
+A request to implement a settled outcome selects `task`; an evidence-seeking
+question selects `research`; an open capability selects `proposal`. A request
+that states the change to make — "skip unchanged artifacts" — is an
+implementation request even when it also describes the fault; the fault does
+not turn it into a bug report. Use the existing ordered questions below to
+distinguish these purposes. Do not ask which kind the user wants when the
 supplied purpose answers it, and do not infer implementation authorization
 from filing a report.
 
@@ -87,8 +90,9 @@ Ask the question in this order. The first answer that holds is the label.
    A `proposal` is also discussion rather than a reserved person-only action.
    This question precedes `bug`, `research` and `task`, which promise an agent
    may start the work.
-3. **Is the request to report broken behavior, rather than implement a settled
-   correction?** Then `bug`.
+3. **Is the request to report broken behavior, with no correction supplied or
+   requested?** Then `bug`. Where the request also tells the agent what change
+   to make, its purpose is implementation and this question does not hold.
 4. **Does it close on an answer rather than on a change?** A question to
    settle, an option to compare, a spike to run — `research`. What the answer
    produces is not fixed: a note under `docs/`, a set of task issues and an
