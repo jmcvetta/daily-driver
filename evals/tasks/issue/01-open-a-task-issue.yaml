@@ -1,7 +1,7 @@
 task_id: issue-01-open-a-task-issue
 description: >-
-  An ordinary request must select an assignable task for a concrete change.
-  The sandbox supplies the release code and existing verification context.
+  An unspecified-kind request for a concrete implementation selects an
+  assignable task, even when it describes broken behavior.
 tags: [trigger-accuracy, issue, fire, behaviour]
 sandbox:
   python: null

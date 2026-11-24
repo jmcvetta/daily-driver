@@ -4,6 +4,7 @@
 
 ### Changed
 
+
 * Fetch Projected Releases commit history in batches of 25 using the shared release-please configuration ([#1071](https://github.com/jmcvetta/daily-driver/issues/1071)).
 * Add opt-in fenced PR supervision with fresh-read work acknowledgment, parent-mediated Omp child recovery, bounded activation retries, and rollback-compatible timer/watch/service transfer; retain existing maintenance until per-PR transfer and prove restart/stop behavior only in an isolated harness ([#1038](https://github.com/jmcvetta/daily-driver/issues/1038)).
 
@@ -46,6 +47,7 @@
 
 ### Fixed
 
+* Classify report-only requests as `bug` and keep settled implementation requests as `task`; preserve filing and implementation as distinct purposes ([#1085](https://github.com/jmcvetta/daily-driver/issues/1085)).
 * Preserve Omp commit provenance through selective commits, local conflict-resolution merges, and explicitly prepared squash landing messages; keep GitHub-authored update-branch messages distinct ([#1029](https://github.com/jmcvetta/daily-driver/issues/1029)).
 
 * Distinguish delegated reviewer identity from publisher provenance in Omp reviews and verification records ([#973](https://github.com/jmcvetta/daily-driver/issues/973)).
