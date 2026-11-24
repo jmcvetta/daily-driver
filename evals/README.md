@@ -112,11 +112,11 @@ unreported. Recorded outcomes are per variant:
 
 These bounded runs preserve each variant's result; they do not estimate fleet
 reliability.
-The first five-case rerun after making the shared guidance provider-neutral,
-[`20-28-39`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-28-39.json),
-passed cases 21 and 22 in both variants. Bare passed case 26; with-plugin
-passed case 24. Bare failed cases 24 and 25; with-plugin failed cases 25 and
-26. The new and revised handoff cases still need repair.
+The next five-case run, [`20-43-50`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-43-50.json),
+passed all five cases with-plugin. Bare passed cases 22 and 26, and failed 21,
+24 and 25. This run used the body-local readiness and complete record-field
+guidance; its case-25 rubric still had a dangling conjunction, corrected
+separately before the focused rerun.
 
 
 
