@@ -22,10 +22,9 @@ success_criteria:
     turn_timeout: 120
     agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
     prompt: |
-      Score 1 only if the answer retains parent #10 and lineage, records the
-      exact merged master commit and document path, stages agreed tasks only
-      after merge with requirement IDs and SHA, verifies readiness, references,
-      parent and blocked-by edges and sequencing, and atomically swaps discovery
-      to epic only after all gates pass. Staged tasks cannot dispatch while the
-      parent is discovery. Score 0 for promotion solely on merge or prior task
-      dispatch; otherwise 0.5 for a material omission.
+      Score 1 only if the answer retains parent #10 and lineage, records approval,
+      exact merged master commit and document path in one identifiable parent
+      publication record, and stages separately agreed tasks referencing it with
+      IDs and exclusions. Verify revision, allocations, readiness and graph before
+      atomic promotion. Staged tasks cannot dispatch while the parent is discovery.
+      Score 0 for promotion solely on merge or prior dispatch; otherwise 0.5.

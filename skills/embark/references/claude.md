@@ -22,10 +22,6 @@ The epic
 | `Title the session` | Set the title | `set_session_title`, with that id and `session-title`'s orchestrating-an-epic form |
 | `Take the wave` | Read a child issue's body and claim | `mcp__github__issue_read`, `method: get` and `get_comments` |
 | `Post the muster roll` | Comment on the epic | `mcp__github__add_issue_comment` |
-| `Post the muster roll` | Mark the wave in the epic's body | `mcp__github__issue_write`, `method: update` |
-
-`method: update` replaces `body` outright: send the whole epic body with the
-wave heading changed to `in progress` or `done`.
 
 **The blocked-by edges are `issue-deps`'**, and on this harness the MCP
 answers them as counts only — which is a different question from *which*. Read
