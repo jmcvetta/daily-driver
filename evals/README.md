@@ -48,6 +48,7 @@ evals/
 │   ├── task-worktree/   … before repository-changing work, and not for read-only work?
 │   ├── stand-down/      … when an embarked fleet is stood down, and not one undertaking?
 │   ├── constitution/    does the constitution reach a subagent, and land?
+│   ├── rectify-names/    … when naming corrections are scoped and scaled to risk?
 │   └── model-classes/   does this model finish real delegated work? see below
 
 ├── fixtures/
@@ -66,6 +67,11 @@ evals/
 ├── coder-eval-omp/      the `omp` agent kind, so the same cases run on Omp
 └── coder-eval-codex/    `coder_eval`'s Codex agent, with the judge's anchor put back
 ```
+
+`tasks/rectify-names/` covers the proportionality boundary: a scoped, agreed
+internal rename uses one evidence record and the ordinary issue-to-PR path,
+while public, persisted-state and cross-session work keeps durable candidates,
+compatibility review and coordinated planning.
 
 `tasks/issue/` covers the eight kind-specific body contracts and their
 boundaries: settled versus unresolved task intent, bounded research and

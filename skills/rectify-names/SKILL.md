@@ -113,9 +113,11 @@ bounded condition above. It also includes in particular:
 - Multiple independently useful corrections that need coordination.
 
 A structured audit keeps the full record: stable candidate IDs, separate
-judgment, a durable planning record with the issue mapping, and `epic`'s
-planning and sequencing gates. Its compatibility review covers the boundaries
-above before implementation begins.
+judgment, and a durable planning record mapping candidates to issues. Review
+compatibility across the boundaries above before implementation. Use `epic`'s
+planning and sequencing gates when multiple independently useful corrections
+need coordination; a single reviewable correction stays one task, not an
+artificial epic.
 
 Finish the consumer tracing before choosing the route when the surface is
 uncertain. Uncertainty is not permission to take the lighter route. An
@@ -177,11 +179,12 @@ A bounded correction agrees it directly with the operator and, when an issue
 is needed, records it under `issue-body` as one coherent task. It does not
 require `epic`.
 
-A structured audit presents the selected candidates and each complete
-correction scope for agreement through `epic`. Keep candidate decisions and the
-mapping to issues in the durable planning record so another session can resume
-without reconstructing the audit. A zero-candidate result is a supported
-no-change outcome.
+A structured audit presents the selected candidates and complete correction
+scopes for operator agreement. Keep candidate decisions and the mapping to
+issues in the durable planning record so another session can resume without
+reconstructing the audit. Use `epic` to coordinate only when its decomposition
+gates hold; otherwise agree the single correction directly. A zero-candidate
+result is a supported no-change outcome.
 
 After agreement, search for existing issues before creating one per selected
 candidate. Use `issue`, `issue-body`, `issue-labels` and `issue-deps` for issue
