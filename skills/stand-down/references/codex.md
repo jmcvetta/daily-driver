@@ -45,6 +45,10 @@ Inspect `git -C <worktree> status --short` before applying the shared
 `Secure the work` rule. This harness has no archive operation; an unmeasured
 cancellation refusal is a residual.
 
+Read `git -C <worktree> rev-parse HEAD` and `git ls-remote origin <branch>`
+separately. Record the observed remote head and any local-only commit and
+worktree path in the task handoff; an unavailable read is unknown.
+
 
 The watches
 ===========
@@ -54,9 +58,8 @@ The watches
 measured that, and a stand-down inherits the finding rather than re-measuring
 it — so the backstop timer has no identifier and nothing to cancel. No
 pull-request subscription surface exists, and no persistent watcher process
-is kept by this skill on Codex. The watches step on this harness is empty
-by measurement, not by omission, and the epic's stand-down comment records
-"none" where another harness would record identifiers.
+is kept by this skill on Codex. Do not manufacture a watch residual or record
+successful transient identifiers.
 
 Provenance: `codex-cli 0.154.0`, read on 2026-09-12, through
 [#181](https://github.com/jmcvetta/daily-driver/issues/181) — the same
