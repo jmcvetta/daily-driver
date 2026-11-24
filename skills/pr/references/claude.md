@@ -15,10 +15,10 @@ Codex's in [`codex.md`](codex.md).
   `draft: true` for the initial state this skill requires. For the mapped
   path, set its `head` to the designated push branch in its resolved remote
   repository. Never let GitHub infer the head from the local execution name.
-- **Updating an existing pull request as a whole** — title and body
-  together. `mcp__github__update_pull_request`, called once both are decided
-  (`pr-title`, `pr-body`). Keep the identified remote push head; do not create
-  a second PR for the execution branch.
+- **Updating an existing pull request.** Inspect title and body first, then
+  call `mcp__github__update_pull_request` only with stale or incorrect fields
+  set. Make no update when both are accurate; keep the identified remote push
+  head and do not create a second PR for the execution branch.
  
 Keep it current
 ===============
@@ -35,14 +35,16 @@ pending trigger or schedule the same prompt two minutes out before taking the
 reads below. Retain the new identifier. A wake with no successor loses
 maintenance after one tick.
 
-Immediately after create/update, and on each wake or return, read
-`mcp__github__pull_request_read` with method `get` for `state`, `draft`,
-`mergeable_state`, and `head.sha`. If the PR is merged or closed, cancel the
-wake and exit. If the user has stopped the watch, cancel it and exit before
-any update. For `behind`, `draft`, `blocked`, or an indeterminate merge state,
-call `mcp__github__update_pull_request_branch` even when current-head CI is in
-flight. For `dirty`, stop before the update and escalate the conflict. For
-`clean` or `unstable`, do not update the branch.
+Read the PR's state, repository, actual base ref and SHA, head SHA and conflict
+state. Stop on terminal state, user stop or conflict. Compare the pinned base
+and head through GitHub's compare endpoint in the PR base repository. A
+validated merge base equal to the base SHA proves currency; a consistent
+positive `behind_by` proves staleness. An unavailable or inconsistent
+comparison is unknown, never permission to write. Immediately before a stale
+update, re-read authority, state, both SHAs, base ref, conflict and comparison.
+Only the same proven stale pair permits an expected-head update-branch request;
+CI is not a prerequisite. A 202 is pending, not completion: observe without
+replaying until settled, and compare again after any later base advance.
 
 After an update that can move the head, read `head.sha`, `get_check_runs`, and
 `get_status` again. The CI wait and result assessment use `review-cycle`'s

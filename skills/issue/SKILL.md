@@ -133,6 +133,10 @@ carries after the change — is what the rest of the sequence works from: a
 `proposal` becoming a `task` is a task body from that edit onward, not the
 next time somebody remembers.
 
+When a request asks only to report observed broken behavior, filing it does
+not also authorize implementation. `issue-labels` selects the kind from the
+request's purpose; this skill keeps its body contract and readiness separate.
+
 **The body.** `issue-body` owns what a body must carry. It fires on this
 skill's writes and on direct edits alike, so there is no route past it. Its
 class metadata applies to every task draft, and its readiness review is part of

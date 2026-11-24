@@ -166,34 +166,15 @@ past the one bounded attempt.
 ---------------------
 
 After the work is secured, so the record describes the pushed tip rather
-than a tip about to move. **Template fill only**: the handoff is written
-from the record and the harness's issue and pull-request state, never from
-what an implementor could be asked — no implementor is messaged for a
-summary, because the answer is a wait and this skill has none. The one
-message this skill does send is `Secure the work`'s wrap-up instruction, and
-it asks for a commit and a push, never for a summary or an answer.
-
-**One handoff comment per task issue at sea**, in this shape:
-
-```markdown
-## Handoff — fleet stood down <UTC timestamp>
-
-Implementor `<id>` (<session|subagent>): <confirmed retired or lifecycle
-unknown/live>. The work awaits safe recovery.
-
-- Branch: `<remote push branch>` — <link>; observed remote pushed head:
-  `<sha>` or "unknown". Local execution branch: `<branch>` when different.
-- Pull request: <#N and state, or "none open" or "unknown">.
-- Unsecured work: <local-only commit SHA and worktree path, uncommitted work,
-  failed push and its reason, or "none known"; mark unknown facts "unknown">.
-- Worker: <retired, or live/unknown with address and failed stop>.
-- Outstanding: <unverified work, risks and outstanding approvals; or "unknown">.
-- Authorization and stop limits: <original task-scoped operations, targets,
-  authority references, conditions, expiry and revocations; or "unknown">.
-- Next action: <concrete recovery or explicit resume action, including
-  reconciliation of local-only work before another writer is dispatched>.
-
-```
+than a tip about to move. Write one concise recovery record on each task
+issue, using observed facts; do not ask an implementor to summarize. Include
+the branch and worktree, observed remote head, any unsecured work or failed
+push, and pull-request state when relevant. Name the tool and setup route that
+outstanding work needs when they matter. Say that no unsecured work remains
+only when observed. Add worker lifecycle only when it affects recovery, along
+with applicable authorization or stop limits and a concrete next action. Omit
+inapplicable facts; state an uncertainty only when it affects safe recovery.
+Never infer the remote head from the local tip.
 
 The active route adds `provenance` to each comment. Omp's wrapper appends its
 block after the authored body, including the envoi; both blocks name this
@@ -205,23 +186,24 @@ does not grant permission, and an unavailable private source is not verified
 authority. Do not delay stand-down to reconstruct missing records or request
 approval.
 
-**One stand-down comment on the epic** records the landing preference,
-affected ownership transitions, links to the task handoffs and exceptional
-residuals such as a failed push, failed stop, unknown worker lifecycle or live
-watch. Do not repeat the full task handoffs or successful transient timer IDs.
-Say "none known" only when no residual was observed; mark unknowns as unknown.
-Do not claim a worker retired when its stop was not confirmed.
+**One stand-down comment on the epic** records the landing preference, links
+to the task handoffs, and exceptional residuals such as a failed push, failed
+stop, unresolved worker lifecycle, or live watch. Do not repeat the task
+handoffs, worker lifecycle already recorded there, or successful transient
+timer IDs. Add a residual only when observed, and omit that line when none
+remain. Do not claim a worker retired when its stop was not confirmed.
 
 ```markdown
 ## Stand-down — <UTC timestamp>
 
 Landing: <orchestrator|by hand>
 
-| Task and handoff | Worker transition |
-| ---------------- | ----------------- |
-| #144 — <handoff link> | `session_01AbC` — retired |
+Task handoffs:
+- #144 — <handoff link>
 
-Exceptional residuals: <failed stops, unsecured work or live watches; or none known>.
+Exceptional residuals: <observed failed stop, unsecured work, or live watch;
+include this line only when one exists>
+
 Resume: an explicit `/embark <epic>` reads these records and checks lifecycle
 and current claims before dispatch; a later wake alone does not resume work.
 ```
@@ -232,11 +214,11 @@ Resolve unsecured local-only work before dispatching another writer.
 
 **The stand-down comment ends with an envoi in its authored body**: a brief
 farewell stanza for the watch, each line italicised as
-[`HAIKU.md`](../../HAIKU.md) shows. It is last so the rows and the resume line
-are found first. Omp's wrapper appends provenance after the envoi; other
-routes place the block before it. The handoff comments on the task issues carry
-no verse: each hands work to whoever reclaims it, and verse never attaches to a
-write somebody has to act on.
+[`HAIKU.md`](../../HAIKU.md) shows. It is last so the task handoffs and resume
+line are found first. Omp's wrapper appends provenance after the envoi; other
+routes place the block before it. Task handoffs carry no verse: each hands
+work to whoever reclaims it, and verse never attaches to a write somebody has
+to act on.
 
 The landing mode is copied unchanged from the latest record into this
 superseding comment. A resumed `embark` therefore reads the same opt-out or
