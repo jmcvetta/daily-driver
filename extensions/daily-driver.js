@@ -2321,8 +2321,85 @@ function serializedTitleReason(kind) {
 	);
 }
 
+// These literal words exclude shell expansion even inside double quotes. The
+// narrow grammar complements shellSegments, which intentionally strips control
+// keywords and grouping for its broader worktree analysis.
+const RECOVERY_QUOTED_WORD = String.raw`(?:'[^']*'|"(?:[^"\\$` + "`" + String.raw`]|\\["\\])*")`;
+const RECOVERY_SETTER = String.raw`daily_driver_set_session_title`;
+const RECOVERY_SET = String.raw`${RECOVERY_SETTER}\s+(?:(?:-j|--json)\s+)?${RECOVERY_QUOTED_WORD}`;
+const RECOVERY_HELP = String.raw`${RECOVERY_SETTER}\s+--help`;
+const RECOVERY_SHELL_TITLE = new RegExp(
+	String.raw`^\s*(?:${RECOVERY_HELP}(?:\s*&&\s*${RECOVERY_SET})?|${RECOVERY_SET})\s*$`, "u",
+);
+const RECOVERY_SHELL_REPORT = new RegExp(
+	String.raw`^\s*report_issue\s+${RECOVERY_QUOTED_WORD}\s*$`, "u",
+);
+const RECOVERY_SHELL_GITHUB = new RegExp(
+	String.raw`^\s*daily_driver_gh_write\s+(?:-j|--json)\s+${RECOVERY_QUOTED_WORD}\s*$`, "u",
+);
+const RECOVERY_EVAL_TITLE = /^\s*await\s+tool\.daily_driver_set_session_title\s*\(\s*\{\s*title\s*:\s*(?:'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")\s*\}\s*\)\s*;?\s*$/u;
+const RECOVERY_REPORT_SKILLS = new Set([
+	"skill://issue", "skill://issue/references/omp.md",
+	"skill://issue-body", "skill://issue-body/references/omp.md",
+	"skill://issue-body/references/kind-contracts.md",
+	"skill://issue-labels", "skill://issue-labels/references/omp.md",
+	"skill://provenance", "skill://provenance/references/omp.md",
+]);
+
+/** Recognize only an attributed inline bug report to this repository. */
+function embarkBugReport(input) {
+	if (!input || typeof input !== "object" || Array.isArray(input) ||
+		Object.keys(input).some((key) => key !== "args") ||
+		!Array.isArray(input.args)) return false;
+	const args = input.args;
+	if (args[0] !== "issue" || args[1] !== "create" || args.length !== 10) return false;
+	const options = new Map();
+	for (let i = 2; i < args.length; i += 2) {
+		const key = args[i];
+		const value = args[i + 1];
+		if (!["--repo", "--label", "--title", "--body"].includes(key) ||
+			options.has(key) || typeof value !== "string" || !value.trim()) return false;
+		options.set(key, value);
+	}
+	return options.get("--repo") === "jmcvetta/daily-driver" &&
+		options.get("--label") === "bug";
+}
+
+/** Recognize whole, literal shell commands without interpreting their source. */
+function embarkRecoveryShell(command, allowTitle) {
+	if (typeof command !== "string") return false;
+	const { segments, functions, unreadable } = shellSegments(command);
+	if (unreadable !== null || functions.length || segments.some((segment) =>
+		segment.group || segment.words.some((word) => !word.literal))) return false;
+	if (allowTitle && RECOVERY_SHELL_TITLE.test(command)) {
+		return segments.length === 1 || (segments.length === 2 && segments[0].separator === "&&");
+	}
+	if (segments.length !== 1) return false;
+	if (RECOVERY_SHELL_REPORT.test(command)) return true;
+	if (!RECOVERY_SHELL_GITHUB.test(command)) return false;
+	try {
+		return embarkBugReport(JSON.parse(segments[0].words[2].text));
+	} catch {
+		return false;
+	}
+}
+
+/** Admission does not alter startup state or bypass the reporting wrapper. */
+function embarkReportRecoveryRoute(event) {
+	const input = event.input ?? {};
+	if (event.toolName === "read") return RECOVERY_REPORT_SKILLS.has(input.path);
+	if (event.toolName === "daily_driver_gh_write") return embarkBugReport(input);
+	return event.toolName === "bash" && embarkRecoveryShell(input.command, false);
+}
+
 /** Resolve only exact title-recovery tool and device routes. */
 function embarkTitleRecoveryRoute(event, state) {
+	if (embarkReportRecoveryRoute(event)) return true;
+	if (event.toolName === "bash") return embarkRecoveryShell(event.input?.command, true);
+	if (event.toolName === "eval") {
+		return event.input?.language === "js" &&
+			typeof event.input?.code === "string" && RECOVERY_EVAL_TITLE.test(event.input.code);
+	}
 	if (event.toolName === "daily_driver_get_session" || event.toolName === "daily_driver_set_session_title") {
 		return true;
 	}
@@ -2387,9 +2464,13 @@ function persistEmbarkState(pi, ctx, state) {
 /** Return actionable startup denial text for the active state. */
 function embarkTitleReason(state) {
 	const target = state.target;
+	const reporting = "\nFor a harness defect report use `report_issue 'message'`. " +
+		"For an attributed bug use `daily_driver_gh_write -j " +
+		`'{"args":["issue","create","--repo","jmcvetta/daily-driver","--label","bug","--title","title","--body","body"]}'` +
+		" (or the same direct tool arguments). Reporting does not release the gate.";
 	if (state.status === "awaiting") {
 		return `${EMBARK_READ_REASON}\nRequested issue: #${target.number}` +
-			(target.repository ? ` (${target.repository})` : "");
+			(target.repository ? ` (${target.repository})` : "") + reporting;
 	}
 	return (
 		`The requested epic is #${target.number}: ${JSON.stringify(target.title)}. ` +
@@ -2400,7 +2481,10 @@ function embarkTitleReason(state) {
 		"`daily_driver_set_session_title({ title })`, with the title as plain " +
 		"text; in a shell command quote that title as the positional argument " +
 		"or use `-j`, never a positional JSON argument object. " +
-		"Reads of `session-title`, its Omp reference, the title-tool documentation, and the same issue are allowed."
+		"Eval JavaScript may call `await tool.daily_driver_set_session_title({title: '⛵ EPIC #" +
+		`${target.number} Short title'});` + "` with no other statements. " +
+		"Reads of `session-title`, its Omp reference, the title-tool documentation, and the same issue are allowed." +
+		reporting
 	);
 }
 
@@ -2686,6 +2770,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 				pendingIssueReads.set(event.toolCallId, { path });
 				return undefined;
 			}
+			if (embarkReportRecoveryRoute(event)) return undefined;
 			if (["read", "grep", "glob", "daily_driver_get_session"].includes(event.toolName) ||
 				(event.toolName === "bash" &&
 					typeof event.input?.command === "string" &&

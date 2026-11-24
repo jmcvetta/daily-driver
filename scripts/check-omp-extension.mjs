@@ -532,6 +532,381 @@ check("explicit embark is gated at the requested epic read and title", async () 
 	assert.equal(titleCall(s, "read", { path: "skills/undertake/SKILL.md" }, ctx), undefined);
 });
 
+/** A setter call whose rename does not take effect must not satisfy the startup barrier. */
+check("recovery admission and a returned setter cannot replace matching name readback", async () => {
+	let renameCalls = 0;
+	const s = makeSession({ setSessionName: async () => { renameCalls++; } });
+	const ctx = startupCtx(s);
+	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
+	deliverEpicRead(s, ctx);
+	const pending = structuredClone(startupState(s));
+	for (const [tool, input] of [
+		["bash", { command: "daily_driver_set_session_title '⛵ EPIC #582 Enforce epic titling'" }],
+		["eval", { language: "js", code: "await tool.daily_driver_set_session_title({title: '⛵ EPIC #582 Enforce epic titling'});" }],
+	]) {
+		assert.equal(titleCall(s, tool, input, ctx), undefined);
+		await s.tools.get("daily_driver_set_session_title").execute(
+			"unapplied-title", { title: "⛵ EPIC #582 Enforce epic titling" }, undefined, undefined, ctx,
+		);
+		assert.deepEqual(startupState(s), pending);
+		assert.equal(s.rec.sessionName, undefined);
+		assert.equal(titleCall(s, "task", {}, ctx).block, true);
+	}
+	assert.equal(renameCalls, 2, "the admitted routes still reach the real title executor");
+});
+
+/** Recovery admission must not certify identity or stand in for a successful rename. */
+check("literal shell and eval recovery stays pending until the real setter succeeds", async () => {
+	for (const number of [582, 947]) {
+		const title = `⛵ EPIC #${number} Enforce epic titling`;
+		for (const [tool, input] of [
+			["bash", { command: `daily_driver_set_session_title '${title}'` }],
+			["bash", { command: `daily_driver_set_session_title "${title}"` }],
+			["bash", { command: `daily_driver_set_session_title -j '${JSON.stringify({ title })}'` }],
+			["bash", { command: `daily_driver_set_session_title --json '${JSON.stringify({ title })}'` }],
+			["bash", { command: `daily_driver_set_session_title --help && daily_driver_set_session_title '${title}'` }],
+			["bash", { command: `daily_driver_set_session_title --help && daily_driver_set_session_title -j '${JSON.stringify({ title })}'` }],
+			["eval", { language: "js", code: `await tool.daily_driver_set_session_title({title: '${title}'});` }],
+			["eval", { language: "js", code: ` \nawait tool.daily_driver_set_session_title ( { title : "${title}" } ) \n` }],
+		]) {
+			const s = makeSession();
+			const ctx = startupCtx(s);
+			s.fire("input", { text: `embark ${number}`, source: "rpc" }, ctx);
+			deliverEpicRead(s, ctx, epicMetadata.replaceAll("582", String(number)), "epic-read", `issue://${number}`);
+			const pending = structuredClone(startupState(s));
+			const label = `${tool}: ${JSON.stringify(input)}`;
+			assert.equal(titleCall(s, tool, input, ctx), undefined, label);
+			assert.deepEqual(startupState(s), pending, label);
+			assert.equal(s.rec.sessionName, undefined, label);
+			assert.deepEqual(s.rec.sessionNames, [], label);
+			assert.equal(titleCall(s, "task", { tasks: [] }, ctx).block, true, label);
+			const result = await s.tools.get("daily_driver_set_session_title").execute(
+				"recovered-title", { title }, undefined, undefined, ctx,
+			);
+			assert.equal(result.isError, undefined, label);
+			assert.equal(result.details.titled, title, label);
+			assert.deepEqual(s.rec.sessionNames, [title], label);
+			assert.equal(s.rec.sessionName, title, label);
+			assert.equal(startupState(s).status, "satisfied", label);
+			assert.equal(titleCall(s, "task", { tasks: [] }, ctx), undefined, label);
+			assert.equal(titleCall(s, "read", { path: "README.md" }, ctx), undefined, label);
+			assert.equal(titleCall(s, "write", { path: "/tmp/embark-notes.md", content: "ready" }, ctx), undefined, label);
+		}
+	}
+});
+
+/** Help and executor errors must not silently release dispatch or overwrite the active name. */
+check("title help and invalid literal titles leave the required barrier intact", async () => {
+	const s = makeSession();
+	const ctx = startupCtx(s);
+	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
+	deliverEpicRead(s, ctx);
+	const pending = structuredClone(startupState(s));
+	assert.equal(titleCall(s, "bash", { command: "daily_driver_set_session_title --help" }, ctx), undefined);
+	assert.deepEqual(startupState(s), pending);
+	assert.equal(titleCall(s, "task", {}, ctx).block, true);
+	for (const title of [
+		"⛵ EPIC #583 Wrong epic",
+		"#582 Missing epic prefix",
+		"⛵ EPIC #582 ",
+		"",
+		'{"title":"⛵ EPIC #582 Serialized object"}',
+		'["⛵ EPIC #582 Serialized array"]',
+	]) {
+		for (const [tool, input] of [
+			["daily_driver_set_session_title", { title }],
+			["bash", { command: `daily_driver_set_session_title '${title}'` }],
+			["bash", { command: `daily_driver_set_session_title -j '${JSON.stringify({ title })}'` }],
+			["bash", { command: `daily_driver_set_session_title --help && daily_driver_set_session_title '${title}'` }],
+			["eval", { language: "js", code: `await tool.daily_driver_set_session_title({title: ${JSON.stringify(title)}});` }],
+		]) {
+			const label = `${tool}: ${JSON.stringify(input)}`;
+			assert.equal(titleCall(s, tool, input, ctx), undefined, label);
+			const result = await s.tools.get("daily_driver_set_session_title").execute(
+				"invalid-title", { title }, undefined, undefined, ctx,
+			);
+			assert.equal(result.isError, true, label);
+			assert.deepEqual(startupState(s), pending, label);
+			assert.equal(s.rec.sessionName, undefined, label);
+			assert.deepEqual(s.rec.sessionNames, [], label);
+			assert.equal(titleCall(s, "task", {}, ctx).block, true, label);
+		}
+	}
+});
+
+/** Tool-name substrings and executable shell surroundings must not acquire recovery access. */
+check("shell title recovery rejects expansion and every unrelated executable segment", () => {
+	const s = makeSession();
+	const ctx = startupCtx(s);
+	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
+	deliverEpicRead(s, ctx);
+	const setter = "daily_driver_set_session_title '⛵ EPIC #582 Enforce epic titling'";
+	for (const command of [
+		`echo "${setter}"`,
+		`true && ${setter}`,
+		`${setter} && true`,
+		`${setter}; true`,
+		`${setter}\ntrue`,
+		`${setter} || true`,
+		`${setter} &`,
+		`${setter} | cat`,
+		`${setter} >/tmp/title-result`,
+		`${setter} </tmp/title-input`,
+		`(${setter})`,
+		`{ ${setter}; }`,
+		`recover() { ${setter}; }; recover`,
+		`env ${setter}`,
+		`command ${setter}`,
+		`bash -c "${setter}"`,
+		`${setter} extra`,
+		"daily_driver_set_session_title $TITLE",
+		'daily_driver_set_session_title "$TITLE"',
+		'daily_driver_set_session_title "$(printf title)"',
+		"daily_driver_set_session_title `printf title`",
+		"daily_driver_set_session_title 'unterminated",
+		"daily_driver_set_session_title --help && true",
+		`daily_driver_set_session_title --help && ${setter} && true`,
+		`daily_driver_set_session_title --help; ${setter}`,
+		"daily_driver_set_session_title -j @title.json",
+		"daily_driver_set_session_title --json -",
+	]) {
+		assert.equal(titleCall(s, "bash", { command }, ctx)?.block, true, command);
+		assert.equal(startupState(s).status, "required", command);
+	}
+	assert.deepEqual(s.rec.sessionNames, []);
+});
+
+/** A closed eval grammar must not admit computed titles, object tricks, or extra execution. */
+check("eval title recovery rejects code outside one literal setter statement", () => {
+	const s = makeSession();
+	const ctx = startupCtx(s);
+	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
+	deliverEpicRead(s, ctx);
+	const setter = "await tool.daily_driver_set_session_title({title: '⛵ EPIC #582 Enforce epic titling'});";
+	for (const code of [
+		`console.log(${JSON.stringify(setter)})`,
+		"await tool.daily_driver_set_session_title({title: title});",
+		"await tool.daily_driver_set_session_title({title: '⛵ EPIC #582 ' + title});",
+		"await tool.daily_driver_set_session_title({title: `⛵ EPIC #582 ${title}`});",
+		"await tool.daily_driver_set_session_title({title: `⛵ EPIC #582 Literal template`});",
+		"await tool.daily_driver_set_session_title({['title']: '⛵ EPIC #582 Computed key'});",
+		"await tool.daily_driver_set_session_title({...params, title: '⛵ EPIC #582 Spread'});",
+		"await tool.daily_driver_set_session_title({title: '⛵ EPIC #582 Extra key', other: true});",
+		"await tool.daily_driver_set_session_title({title: '⛵ EPIC #582 First', title: '⛵ EPIC #582 Second'});",
+		"await tool.daily_driver_set_session_title({get title() { return '⛵ EPIC #582 Getter'; }});",
+		"await tool.daily_driver_set_session_title({title: String('⛵ EPIC #582 Call')});",
+		"await tool['daily_driver_set_session_title']({title: '⛵ EPIC #582 Computed tool'});",
+		`const title = '⛵ EPIC #582 Variable'; ${setter}`,
+		`${setter} await tool.task({tasks: []});`,
+		`${setter} ${setter}`,
+		`if (true) { ${setter} }`,
+		`// ${setter}`,
+	]) {
+		assert.equal(titleCall(s, "eval", { language: "js", code }, ctx)?.block, true, code);
+		assert.equal(startupState(s).status, "required", code);
+	}
+	assert.equal(titleCall(s, "eval", { language: "py", code: setter }, ctx)?.block, true);
+	assert.deepEqual(s.rec.sessionNames, []);
+});
+
+/** Emergency reporting must leave both pre-identity and post-identity startup gates pending. */
+check("bounded defect reporting and its published skill reads leave startup pending", () => {
+	const args = ["issue", "create", "--repo", "jmcvetta/daily-driver", "--label", "bug",
+		"--title", "Embark title recovery blocked", "--body", "The title barrier rejects its documented recovery."];
+	const message = "daily_driver_set_session_title: embark startup barrier denies its documented title-setting recovery through\nboth bash and eval; epic 1032 cannot be titled or dispatched";
+	for (const status of ["awaiting", "required"]) {
+		const s = makeSession();
+		const ctx = startupCtx(s);
+		s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
+		if (status === "required") deliverEpicRead(s, ctx);
+		const pending = structuredClone(startupState(s));
+		for (const path of [
+			"skill://issue",
+			"skill://issue/references/omp.md",
+			"skill://issue-body",
+			"skill://issue-body/references/omp.md",
+			"skill://issue-body/references/kind-contracts.md",
+			"skill://issue-labels",
+			"skill://issue-labels/references/omp.md",
+			"skill://provenance",
+			"skill://provenance/references/omp.md",
+		]) {
+			assert.equal(titleCall(s, "read", { path }, ctx), undefined, `${status}: ${path}`);
+		}
+		for (const [tool, input] of [
+			["bash", { command: `report_issue '${message}'` }],
+			["bash", { command: 'report_issue "Title recovery failed"' }],
+			["daily_driver_gh_write", { args }],
+			["bash", { command: `daily_driver_gh_write -j '${JSON.stringify({ args })}'` }],
+			["bash", { command: `daily_driver_gh_write --json '${JSON.stringify({ args })}'` }],
+		]) {
+			const label = `${status}: ${tool}: ${JSON.stringify(input)}`;
+			assert.equal(titleCall(s, tool, input, ctx), undefined, label);
+			assert.deepEqual(startupState(s), pending, label);
+			assert.equal(s.rec.sessionName, undefined, label);
+			assert.deepEqual(s.rec.sessionNames, [], label);
+			assert.equal(titleCall(s, "task", {}, ctx).block, true, label);
+		}
+	}
+});
+
+/** An admitted multiline report must reach its literal executable unchanged. */
+check("pending startup lets a literal report reach a disposable executable", () => {
+	const directory = mkdtempSync(join(tmpdir(), "embark-report-"));
+	const executable = join(directory, "report_issue");
+	const recording = join(directory, "message");
+	writeFileSync(executable, '#!/bin/sh\nprintf "%s" "$1" > "$RECORDING"\n');
+	chmodSync(executable, 0o755);
+	try {
+		const message = "daily_driver_set_session_title: embark startup barrier denies its documented title-setting recovery through\nboth bash and eval; epic 1032 cannot be titled or dispatched";
+		const command = `report_issue '${message}'`;
+		for (const status of ["awaiting", "required"]) {
+			const s = makeSession();
+			const ctx = startupCtx(s);
+			s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
+			if (status === "required") deliverEpicRead(s, ctx);
+			assert.equal(titleCall(s, "bash", { command }, ctx), undefined);
+			const execution = spawnSync("/bin/bash", ["-c", command], {
+				env: { ...process.env, PATH: directory, RECORDING: recording }, encoding: "utf8",
+			});
+			assert.equal(execution.status, 0, execution.stderr);
+			assert.equal(readFileSync(recording, "utf8"), message);
+			assert.equal(startupState(s).status, status);
+		}
+	} finally {
+		rmSync(directory, { recursive: true, force: true });
+	}
+});
+
+/** The emergency wrapper exception must not authorize a broader GitHub write or body source. */
+check("pending startup rejects reports outside the exact repository and bug operation", () => {
+	const args = ["issue", "create", "--repo", "jmcvetta/daily-driver", "--label", "bug",
+		"--title", "Title recovery blocked", "--body", "Failure details"];
+	const replace = (from, to) => args.map((value) => value === from ? to : value);
+	for (const status of ["awaiting", "required"]) {
+		const s = makeSession();
+		const ctx = startupCtx(s);
+		s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
+		if (status === "required") deliverEpicRead(s, ctx);
+		for (const input of [
+			{ args: replace("jmcvetta/daily-driver", "other/project") },
+			{ args: args.filter((_, index) => index !== 2 && index !== 3) },
+			{ args: replace("create", "edit") },
+			{ args: replace("issue", "pr") },
+			{ args: ["issue", "comment", "582", "--repo", "jmcvetta/daily-driver", "--body", "comment"] },
+			{ args: ["api", "-X", "POST", "repos/jmcvetta/daily-driver/issues", "-f", "body=report"] },
+			{ args: replace("bug", "task") },
+			{ args: replace("bug", "bug,task") },
+			{ args: [...args, "--label", "task"] },
+			{ args: [...args, "--label", "bug"] },
+			{ args: [...args, "--repo", "other/project"] },
+			{ args: [...args, "--title", "Duplicate title"] },
+			{ args: [...args, "--body", "Duplicate body"] },
+			{ args: replace("--body", "--body-file") },
+			{ args: replace("--label", "--repo") },
+			{ args: replace("--label", "--title") },
+			{ args: replace("--body", "--body-file").map((value) => value === "Failure details" ? "-" : value) },
+			{ args: replace("Failure details", "") },
+			{ args: replace("Title recovery blocked", " ") },
+			{ args: [...args, "--assignee", "@me"] },
+			{ args, stdin: "unrelated input" },
+			{ args, reviewerModel: "unrelated reviewer" },
+		]) {
+			for (const [tool, params] of [
+				["daily_driver_gh_write", input],
+				["bash", { command: `daily_driver_gh_write -j '${JSON.stringify(input)}'` }],
+			]) {
+				const label = `${status}: ${tool}: ${JSON.stringify(params)}`;
+				assert.equal(titleCall(s, tool, params, ctx)?.block, true, label);
+				assert.equal(startupState(s).status, status, label);
+			}
+		}
+		assert.equal(titleCall(s, "bash", {
+			command: "gh issue create --repo jmcvetta/daily-driver --label bug --title report --body details",
+		}, ctx)?.block, true);
+		assert.deepEqual(s.rec.sessionNames, []);
+	}
+});
+
+/** Literal report text must not admit shell execution around it or widen post-identity reads. */
+check("report recovery rejects shell execution and unrelated tools while startup is pending", () => {
+	const report = "report_issue 'Title recovery failed'";
+	const args = ["issue", "create", "--repo", "jmcvetta/daily-driver", "--label", "bug",
+		"--title", "Title recovery blocked", "--body", "Failure details"];
+	const wrapper = `daily_driver_gh_write -j '${JSON.stringify({ args })}'`;
+	for (const status of ["awaiting", "required"]) {
+		const s = makeSession();
+		const ctx = startupCtx(s);
+		s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
+		if (status === "required") deliverEpicRead(s, ctx);
+		for (const command of [
+			`echo "${report}"`,
+			`true && ${report}`,
+			`${report} && true`,
+			`${report}; true`,
+			`${report}\ntrue`,
+			`${report} || true`,
+			`${report} &`,
+			`${report} | cat`,
+			`${report} >/tmp/report-result`,
+			`${report} </tmp/report-input`,
+			`(${report})`,
+			`{ ${report}; }`,
+			`report() { ${report}; }; report`,
+			`env ${report}`,
+			`${report} extra`,
+			"report_issue",
+			"report_issue $MESSAGE",
+			'report_issue "$MESSAGE"',
+			'report_issue "$(printf failure)"',
+			"report_issue `printf failure`",
+			"report_issue 'unterminated",
+			`${wrapper} && true`,
+			`true && ${wrapper}`,
+			`${wrapper} >/tmp/report-result`,
+			`(${wrapper})`,
+			`${wrapper} extra`,
+			"daily_driver_gh_write -j @report.json",
+			"daily_driver_gh_write --json -",
+			'daily_driver_gh_write -j "$REPORT"',
+		]) {
+			assert.equal(titleCall(s, "bash", { command }, ctx)?.block, true, `${status}: ${command}`);
+		}
+		for (const [tool, input] of [
+			["task", { tasks: [] }],
+			["write", { path: "/tmp/report-body.md", content: "details" }],
+			["daily_driver_gh_write", { args: GH_COMMENT_ARGS }],
+			["bash", { command: "gh issue edit 582 --title changed" }],
+			["ask", { questions: [] }],
+		]) {
+			assert.equal(titleCall(s, tool, input, ctx)?.block, true, `${status}: ${tool}`);
+		}
+		if (status === "required") {
+			for (const path of [
+				"skill://issue/extra",
+				"skill://issue/references/claude.md",
+				"skill://issue-body/references/other.md",
+				"skill://provenance/references/omp.md/extra",
+				"skills/issue/SKILL.md",
+				"README.md",
+			]) assert.equal(titleCall(s, "read", { path }, ctx)?.block, true, path);
+		}
+		const primaryCtx = { ...ctx, cwd: worktrees.primary };
+		const guarded = titleCall(s, "bash", { command: `${report} && git reset --hard` }, primaryCtx);
+		assert.equal(guarded.block, true);
+		assert.match(guarded.reason, /primary checkout/u);
+		const denial = titleCall(s, "task", {}, ctx);
+		assert.match(denial.reason, /report_issue/u);
+		assert.match(denial.reason, /daily_driver_gh_write/u);
+		if (status === "required") {
+			assert.match(denial.reason, /daily_driver_set_session_title/u);
+			assert.match(denial.reason, /await tool\.daily_driver_set_session_title/u);
+		}
+		assert.equal(startupState(s).status, status);
+		assert.deepEqual(s.rec.sessionNames, []);
+	}
+});
+
 /** This prevents skill-body examples from activating while preserving real command forms. */
 check("explicit request parsing excludes mentions and accepts supported references", () => {
 	const cases = [
@@ -1061,6 +1436,46 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 		assert.equal(inline.result.details.stdout, "fake stdout\n");
 		assert.equal(inline.result.details.stderr, "fake stderr\n");
 		assert.equal(existsSync(injectionPath), false, "body text was not interpreted by a shell");
+
+		// A report admitted by startup must still use the real attributed runner,
+		// including its failure result, without completing the title requirement.
+		for (const status of ["awaiting", "required"]) {
+			const pendingCtx = {
+				...startupCtx(session, `report-${status}`),
+				cwd: root,
+				model: ctx.model,
+				models: ctx.models,
+			};
+			session.fire("input", { text: "embark 582", source: "rpc" }, pendingCtx);
+			if (status === "required") deliverEpicRead(session, pendingCtx);
+			const pending = structuredClone(startupState(session));
+			const reportArgs = ["issue", "create", "--repo", "jmcvetta/daily-driver", "--label", "bug",
+				"--title", "Embark title recovery blocked", "--body", "The documented recovery failed."];
+			for (const exitCode of [0, 9]) {
+				nextExitCode = exitCode;
+				assert.equal(titleCall(session, "daily_driver_gh_write", { args: reportArgs }, pendingCtx), undefined);
+				const report = await tool.execute(
+					`pending-report-${status}-${exitCode}`, { args: reportArgs }, undefined, undefined, pendingCtx,
+				);
+				const capture = JSON.parse(readFileSync(capturePath, "utf8"));
+				assert.equal(capture.args[capture.args.indexOf("--repo") + 1], "jmcvetta/daily-driver");
+				assert.equal(capture.args[capture.args.indexOf("--label") + 1], "bug");
+				assert.equal(capture.args[capture.args.indexOf("--title") + 1], "Embark title recovery blocked");
+				assert.ok(capture.body.startsWith("The documented recovery failed."));
+				assert.ok(capture.body.includes(
+					`Model: model-a\nProvider: provider-a\nHarness: Omp 19.4.2\nSession: report-${status}`,
+				));
+				assert.equal(report.isError, exitCode === 0 ? undefined : true);
+				assert.equal(report.details.exitCode, exitCode);
+				assert.equal(report.details.stdout, "fake stdout\n");
+				assert.equal(report.details.stderr, "fake stderr\n");
+				assert.deepEqual(startupState(session), pending);
+				assert.equal(session.rec.sessionName, undefined);
+				assert.deepEqual(session.rec.sessionNames, []);
+				assert.equal(titleCall(session, "task", {}, pendingCtx).block, true);
+			}
+		}
+		nextExitCode = 0;
 
 		const history = "Issue detail\n\n---\nModel: historical\nHarness: Omp 18.0\nsession: old-session";
 		const duplicateBody = `${history}\n\n---\nModel: historical\nHarness: Omp 18.0\nsession: old-session\n\n---\nModel: model-a\nProvider: provider-a\nHarness: Omp 19.4.2\nsession: session-a\n\n---\nModel: model-a\nProvider: provider-a\nHarness: Omp 19.4.2\nsession: session-a`;
