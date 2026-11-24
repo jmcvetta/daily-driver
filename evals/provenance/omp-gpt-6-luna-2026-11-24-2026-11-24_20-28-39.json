@@ -1,0 +1,927 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The revision preserves scope without inventing an extra paid-run gate",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The revision preserves scope without inventing an extra paid-run gate",
+            "duration_seconds": 4.63,
+            "findings": [
+              "Includes an offline report-format check without invoking the alpha route.",
+              "Specifies one metered alpha run of two cases and prohibits expanding the target or count.",
+              "Requires retaining the assignment source.",
+              "Preserves the model, harness, and session attribution."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "a57bba20a11ab43664024d562090f055b03633f0e7299df2dfb6f572bf4add9b",
+            "rationale": "The final reply contains the updated task body with every required constraint and the existing attribution. It neither requires a separate paid-run grant nor presents the handoff as user approval.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1273,
+              "output": 100
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "15535ec3c221f67a44ac329a22af7de850ca8b74f800a515755af9d71bbf8768"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-21-campaign-bound-survives-update",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The revision preserves scope without inventing an extra paid-run gate",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The revision preserves scope without inventing an extra paid-run gate",
+            "duration_seconds": 4.94,
+            "findings": [
+              "Requires an offline report-format check without network requests or alpha invocation.",
+              "Specifies one metered alpha campaign using the configured route exactly once for exactly two cases.",
+              "Prohibits expanding the target or case count and retains the assignment source.",
+              "Preserves the model, harness, and session attribution."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "a57bba20a11ab43664024d562090f055b03633f0e7299df2dfb6f572bf4add9b",
+            "rationale": "The final reply includes the updated task body with every required element and preserves the existing attribution. It neither requires a separate paid-run grant nor treats the handoff as user approval.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1353,
+              "output": 111
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "15535ec3c221f67a44ac329a22af7de850ca8b74f800a515755af9d71bbf8768"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-21-campaign-bound-survives-update",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The two drafts retain their distinct approval boundaries",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The two drafts retain their distinct approval boundaries",
+            "duration_seconds": 5.01,
+            "findings": [
+              "Both tasks specify enabling the monitor plugin.",
+              "Task 1 has no approval requirement.",
+              "Task 2 requires fresh confirmation before enabling."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "331d4d6968d45ccfe064ff2dafc2fad456d04ed0531a797798ef732e15f7ad56",
+            "rationale": "The final reply drafts both tasks with the named monitor plugin enable operation. Task 1 adds no approval checkpoint, while Task 2 explicitly requires fresh confirmation before enabling.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1072,
+              "output": 77
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "15535ec3c221f67a44ac329a22af7de850ca8b74f800a515755af9d71bbf8768"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-22-plugin-approval-checkpoints",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The two drafts retain their distinct approval boundaries",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The two drafts retain their distinct approval boundaries",
+            "duration_seconds": 4.49,
+            "findings": [
+              "Both task drafts include the plugin-enabling operation.",
+              "Task 1 proceeds without requesting approval.",
+              "Task 2 prohibits enabling without fresh, explicit confirmation and excludes the assignment or earlier approval."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "331d4d6968d45ccfe064ff2dafc2fad456d04ed0531a797798ef732e15f7ad56",
+            "rationale": "The final reply drafts both tasks and includes enabling the named monitor plugin in each. The first has no approval checkpoint, while the second explicitly requires fresh user confirmation before enabling.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1677,
+              "output": 89
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "15535ec3c221f67a44ac329a22af7de850ca8b74f800a515755af9d71bbf8768"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-22-plugin-approval-checkpoints",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The revised handoff names a judge and preserves the valid requirements",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The revised handoff names a judge and preserves the valid requirements",
+            "duration_seconds": 5.11,
+            "findings": [
+              "Execution command omits JUDGE=omp-gpt-6.1-sol.",
+              "Declares unattended execution ready despite acknowledging the unauthorized Claude default.",
+              "Adds the case-outcome check and preserves routine classification, run bounds, identity reporting, and provenance."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "10b9500a72d4e60d8ba43c7ea871acbb613ed71307a94c5dd88f2cbd2427fa96",
+            "rationale": "ANCHOR: result The final reply presents an execution command with the known Claude default as ready for unattended execution, despite explicitly prohibiting Claude. It never sets the validated non-Claude judge in the command or required recording/rerun path.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1877,
+              "output": 114
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "15535ec3c221f67a44ac329a22af7de850ca8b74f800a515755af9d71bbf8768"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-25-omp-judge-preserved-on-update",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The revised handoff names a judge and preserves the valid requirements",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The revised handoff names a judge and preserves the valid requirements",
+            "duration_seconds": 17.26,
+            "findings": [
+              "Execution command leaves JUDGE unset; recording and repair reruns do not explicitly select a non-Claude judge.",
+              "Unattended-execution warning appears outside the updated body.",
+              "Provenance is retained but is no longer trailing.",
+              "Task, subject, routine class, run bounds, repair-only reruns, and identity reporting are retained."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "10b9500a72d4e60d8ba43c7ea871acbb613ed71307a94c5dd88f2cbd2427fa96",
+            "rationale": "ANCHOR: result The final reply adds the case-outcome check and warns against unattended execution, but the updated body itself neither selects an authorized judge nor explicitly declares its command unready. It also places repository evidence after the required trailing provenance.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2050,
+              "output": 264
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "15535ec3c221f67a44ac329a22af7de850ca8b74f800a515755af9d71bbf8768"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-25-omp-judge-preserved-on-update",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Explicit valid judge and authorized Claude route remain valid independently",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Explicit valid judge and authorized Claude route remain valid independently",
+            "duration_seconds": 10.48,
+            "findings": [
+              "Task A retains omp-gpt-6.1-sol, the exact task path, one repeat and one job, and all required run-record fields.",
+              "Task B retains the authorized claude-code-sonnet-5 route and requires recording the judge identity and Claude Code execution session.",
+              "Neither task adds an approval condition or a separate recording command."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "522d1ac649814b371f10d52d66b35aeaf4a37f32bf018e8cdf2c1aedff6d5579",
+            "rationale": "ANCHOR: result Both complete task bodies provide exact executable commands, preserve their distinct authorized judges, and explicitly carry JUDGE into automatic recording without a second recording command.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1963,
+              "output": 221
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "15535ec3c221f67a44ac329a22af7de850ca8b74f800a515755af9d71bbf8768"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-26-judge-selection-controls",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Explicit valid judge and authorized Claude route remain valid independently",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Explicit valid judge and authorized Claude route remain valid independently",
+            "duration_seconds": 7.7,
+            "findings": [
+              "Task A retains the exact judge, task list, one repeat, and one job, with all required record fields.",
+              "Task B preserves the authorized Claude Code route and requires the recorded judge session and identity.",
+              "Both bodies explicitly pass JUDGE through the target's automatic evals-record invocation.",
+              "Task B does not explicitly require the remaining run provenance fields and per-case outcomes."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "522d1ac649814b371f10d52d66b35aeaf4a37f32bf018e8cdf2c1aedff6d5579",
+            "rationale": "ANCHOR: result Both complete task bodies preserve their distinct authorized judges and executable commands, including automatic recording without a second command. Task B has a reporting omission: it requires judge session and identity but not the run identifier, requested/observed identities, or each case outcome.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2527,
+              "output": 190
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "15535ec3c221f67a44ac329a22af7de850ca8b74f800a515755af9d71bbf8768"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-26-judge-selection-controls",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The new Omp task names an authorized compatible judge or stays unready",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The new Omp task names an authorized compatible judge or stays unready",
+            "duration_seconds": 5.85,
+            "findings": [
+              "Uses JUDGE=evals/judges/omp-gpt-6.1-sol.yaml without validation and explicitly declares the command ready.",
+              "Preserves the named task, one repeat and job, restricted reruns, run identity, and requested/observed identities."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "f1175f6130a01de37fdc7a31069b57a915d9152f3b165234363ca22b42c17102",
+            "rationale": "ANCHOR: result The final draft presents an unattended-ready command using an unvalidated judge selector path rather than the required JUDGE=omp-gpt-6.1-sol. No supplied evidence establishes that the path is a compatible selector, so the executable command does not satisfy the judge-selection boundary.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1776,
+              "output": 131
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "15535ec3c221f67a44ac329a22af7de850ca8b74f800a515755af9d71bbf8768"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-24-omp-judge-selected-for-new-task",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The new Omp task names an authorized compatible judge or stays unready",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The new Omp task names an authorized compatible judge or stays unready",
+            "duration_seconds": 6.26,
+            "findings": [
+              "Command explicitly sets JUDGE=omp-gpt-6.1-sol, the named task, REPEATS=1, and JOBS=1.",
+              "Claude use is explicitly excluded without adding approval requirements.",
+              "Reruns require repair and retain the same execution bounds.",
+              "Recording preserves run identity, separate requested and observed subject/judge identities, and failures."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "f1175f6130a01de37fdc7a31069b57a915d9152f3b165234363ca22b42c17102",
+            "rationale": "ANCHOR: result The final reply drafts a bounded task with an explicit independent non-Claude judge selection and preserves all required execution and recording constraints.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2261,
+              "output": 117
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "15535ec3c221f67a44ac329a22af7de850ca8b74f800a515755af9d71bbf8768"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-24-omp-judge-selected-for-new-task",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 37.486886739730835,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-21-campaign-bound-survives-update",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 5504,
+        "output_tokens": 534,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 6503
+      },
+      "tokens": 12541,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 45.248993158340454,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-21-campaign-bound-survives-update",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 17280,
+        "output_tokens": 1497,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 15728
+      },
+      "tokens": 34505,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 25.127516746520996,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-22-plugin-approval-checkpoints",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 2560,
+        "output_tokens": 588,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 6045
+      },
+      "tokens": 9193,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 64.42999625205994,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-22-plugin-approval-checkpoints",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 19200,
+        "output_tokens": 2919,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 21160
+      },
+      "tokens": 43279,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 14.403401613235474,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-25-omp-judge-preserved-on-update",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 605,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 3079
+      },
+      "tokens": 3684,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 35.18212103843689,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-25-omp-judge-preserved-on-update",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 5632,
+        "output_tokens": 1507,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 12462
+      },
+      "tokens": 19601,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 15.106638669967651,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-26-judge-selection-controls",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 717,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 3049
+      },
+      "tokens": 3766,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 35.989163637161255,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-26-judge-selection-controls",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 15360,
+        "output_tokens": 1446,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 15303
+      },
+      "tokens": 32109,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 31.9122097492218,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-24-omp-judge-selected-for-new-task",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 2816,
+        "output_tokens": 1325,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 3692
+      },
+      "tokens": 7833,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 64.66944551467896,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-24-omp-judge-selected-for-new-task",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 30848,
+        "output_tokens": 2593,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 16614
+      },
+      "tokens": 50055,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-24T20:34:49.532242",
+  "experiment_id": "omp-gpt-6-luna",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "15535ec3c221f67a44ac329a22af7de850ca8b74f800a515755af9d71bbf8768",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v3",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 17829,
+      "output": 1414
+    }
+  },
+  "plugin_revision": {
+    "commit": "d37000ad787151ccd0867779f3c7607ee1f69814",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-24T13:36:02.696034+00:00",
+  "run_id": "2026-11-24_20-28-39",
+  "schema_version": 5,
+  "started_at": "2026-11-24T20:28:39.957647",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-21-campaign-bound-survives-update": [
+          1.0
+        ],
+        "issue-22-plugin-approval-checkpoints": [
+          1.0
+        ],
+        "issue-24-omp-judge-selected-for-new-task": [
+          0.0
+        ],
+        "issue-25-omp-judge-preserved-on-update": [
+          0.0
+        ],
+        "issue-26-judge-selection-controls": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "issue-21-campaign-bound-survives-update",
+        "issue-22-plugin-approval-checkpoints",
+        "issue-25-omp-judge-preserved-on-update",
+        "issue-26-judge-selection-controls",
+        "issue-24-omp-judge-selected-for-new-task"
+      ],
+      "variant_id": "bare"
+    },
+    {
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-21-campaign-bound-survives-update": [
+          1.0
+        ],
+        "issue-22-plugin-approval-checkpoints": [
+          1.0
+        ],
+        "issue-24-omp-judge-selected-for-new-task": [
+          1.0
+        ],
+        "issue-25-omp-judge-preserved-on-update": [
+          0.0
+        ],
+        "issue-26-judge-selection-controls": [
+          0.5
+        ]
+      },
+      "task_ids": [
+        "issue-21-campaign-bound-survives-update",
+        "issue-22-plugin-approval-checkpoints",
+        "issue-25-omp-judge-preserved-on-update",
+        "issue-26-judge-selection-controls",
+        "issue-24-omp-judge-selected-for-new-task"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

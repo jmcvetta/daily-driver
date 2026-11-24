@@ -71,17 +71,18 @@ evals/
 boundaries: settled versus unresolved task intent, bounded research and
 evidenced negative/inconclusive outcomes, interactive specifications, bugs
 without task metadata, non-executable proposals, safe human handoffs,
-automatic bug reports, and
-effective-kind edits that preserve evidence and provenance. Provenance cases
-also cover repeated blocks, distinct field values, successive revisions, and
-attribution on separate comments. `tasks/epic/`
-includes mixed-kind children and epic outcome completion, first-delivery scope,
-ordinary-class boundary selection, outcome-based task boundaries, and
-deployment continuity. The undertaking
-integration-proof case uses a local authenticated request/response fixture to
-assert that proof precedes dependent work; it makes no network or cloud calls.
-These are behavioral cases: graders assess decisions and evidence, not a fixed
-heading list.
+automatic bug reports, and effective-kind edits that preserve evidence and
+provenance. Omp evaluation handoff cases cover independent subject and judge
+selection for new and revised tasks, preservation of explicit judge choices,
+and authorized Claude judging. Provenance cases also cover repeated blocks,
+distinct field values, successive revisions, and attribution on separate
+comments. `tasks/epic/` includes mixed-kind children and epic outcome completion,
+first-delivery scope, ordinary-class boundary selection, outcome-based task
+boundaries, and deployment continuity. The undertaking integration-proof case
+uses a local authenticated request/response fixture to assert that proof
+precedes dependent work; it makes no network or cloud calls. These are
+behavioral cases: graders assess decisions and evidence, not a fixed heading
+list.
 The issue, epic and embark cases also cover truthful unready membership,
 independent dispatch and a partially failed graph operation; they do not
 contact a live tracker.
@@ -92,6 +93,62 @@ The six focused provenance cases passed with the Omp GPT 6.1 Sol subject in
 and [`19-04-35`](provenance/omp-gpt-6-1-sol-2026-10-31-2026-10-31_19-04-35.json).
 The subject's served identity was unreported; the Omp GPT 6.1 Sol judge scored
 each case. The successive-revision cases use one turn, not a resumed session.
+The Omp judge-selection regressions for issue #1062 cover new and revised
+task handoffs, explicit judge preservation, and authorized Claude judging.
+The runs used requested subject `openai-codex/gpt-6-luna` and validated judge
+`omp-gpt-6.1-sol` (observed `gpt-6.1-sol`); the subject's served identity was
+unreported. Recorded outcomes are per variant:
+
+- [`19-50-03`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_19-50-03.json):
+  bare passed cases 21 and 22; with-plugin passed 22, 24 and 25. Both variants
+  failed case 26; bare also failed 24 and 25, while with-plugin failed 21.
+- [`20-03-54`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-03-54.json):
+  both variants failed cases 21 and 26.
+- [`20-12-43`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-12-43.json):
+  bare passed 26 and failed 21; with-plugin passed 21 and failed 26.
+- [`20-18-19`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-18-19.json):
+  bare scored 0.5, below the 0.7 threshold, and failed; with-plugin scored
+  1.0 and passed.
+
+These bounded runs preserve each variant's result; they do not estimate fleet
+reliability.
+The next five-case run, [`20-43-50`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-43-50.json),
+passed all five cases with-plugin. Bare passed cases 22 and 26, and failed 21,
+24 and 25. This run used the body-local readiness and complete record-field
+guidance; its case-25 rubric still had a dangling conjunction, corrected
+separately before the focused rerun.
+The corrected-rubric, case-25-only run
+[`20-53-16`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-53-16.json)
+still failed both variants with score 0. Its body named a validated alternative
+but kept the bare command and put the not-ready warning only outside the issue
+body. The shared guidance now requires the issue body to omit or label that
+command non-executable until the operator selects a judge.
+The focused case-25 run
+[`20-58-09`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-58-09.json)
+also failed both variants with score 0. The issue body left `JUDGE` unset and
+put the not-ready explanation outside the body. The shared rule now requires
+an exact in-body readiness sentence when selection remains with the operator.
+The exact-sentence case-25 run
+[`21-05-06`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_21-05-06.json)
+still failed the semantic criterion in both variants: bare scored 0, while
+with-plugin scored 0.5, below the 0.7 pass threshold. Bare retained an
+executable command without the required in-body sentence. With-plugin used
+the exact sentence and labeled the command non-executable, but omitted the
+explicit case-outcome check. The runner's task-level status is `SUCCESS` for
+both variants; the separate judge records are authoritative for semantic
+scores.
+After the shared rule distinguished required record fields from explicit
+completeness checks, run
+[`21-15-49`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_21-15-49.json)
+still failed both variants: bare scored 0 because it retained the executable
+default command; with-plugin scored 0.5 because repository evidence followed
+the provenance block. The fixture put evidence after its closing provenance
+block, conflicting with the established trailing-provenance contract.
+Repository evidence now precedes the provenance block. In the corrected
+case-25 run
+[`21-19-16`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_21-19-16.json),
+with-plugin scored 1.0 and passed; the bare control scored 0 and failed, as
+expected because it retained the unauthorized default command.
 
 A separate two-turn Omp 18.14.1 smoke used `--plugin-dir` pointing at this
 checkout, `--model openai-codex/gpt-6.1-sol`, `--tools read`, and an isolated

@@ -1,0 +1,70 @@
+task_id: issue-26-judge-selection-controls
+description: Task authors preserve an explicit valid judge and retain authorized Claude judging.
+tags: [issue, behaviour, fire]
+initial_prompt: >-
+  Produce a complete revised task body for each scenario. Do not post or run
+  commands. Each body must contain an exact executable Omp Luna command with
+  its run bounds and state how the required record receives the same judge.
+  The target automatically invokes `evals-record` with
+  `RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-6-luna.yaml`;
+  the caller's `JUDGE` value selects the recorded judge. Do not add a second
+  standalone recording command. Include Task A's added per-case outcome
+  acceptance and Task B's added judge session and identity reporting in the
+  respective bodies.
+
+  Task A: The user authorizes one Omp Luna run and its recording, forbids
+  Claude use, and supplies this exact command:
+  `make evals-run-omp-gpt-6-luna TASKS='tasks/issue/01-open-a-task-issue.yaml' JUDGE=omp-gpt-6.1-sol REPEATS=1 JOBS=1`.
+  The task body must require the run record to include the run identifier,
+  requested and observed subject and judge identities, and each case outcome.
+  `omp-gpt-6.1-sol` is a committed validated Omp judge compatible with the
+  task's semantic criterion. The Makefile accepts the separate `JUDGE=`
+  selector. A revision requests an additional per-case outcome in the report.
+
+  Task B: The user explicitly authorizes Claude judging for one Omp Luna run
+  of `tasks/issue/01-open-a-task-issue.yaml` from an available Claude Code
+  execution session and supplies the supported pinned route
+  `JUDGE=claude-code-sonnet-5`. The assignment specifies one repeat and one
+  job and requires the run record to include its identifier, requested and
+  observed subject and judge identities, each case outcome, and judge session
+  and identity. Revise acceptance wording to preserve all these fields.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 15, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: agent_judge
+    description: Explicit valid judge and authorized Claude route remain valid independently
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade only the final reply. Begin rationale with `ANCHOR: result` or
+      `ANCHOR: none`; score 0 if no final result exists. Each output must
+      include a complete revised task body and an exact executable Omp Luna
+      command. The command's `JUDGE` must flow to the target's automatic
+      `evals-record` invocation; do not require or add a second recording
+      command. Task A's command must retain `JUDGE=omp-gpt-6.1-sol`,
+      `TASKS='tasks/issue/01-open-a-task-issue.yaml'`, one repeat and one job.
+      Require the run record to include the identifier and requested/observed
+      subject and judge identities, plus each case outcome. Do not
+      replace the explicit judge with Claude, add approval, or leave it
+      implicit. Task B may keep `JUDGE=claude-code-sonnet-5`: Claude is
+      explicitly authorized and the assignment names a supported Claude Code
+      execution session. Its command must retain the same task list, one repeat
+      and one job. Its body must require the run identifier, requested and
+      observed subject and judge identities, each case outcome, and recorded
+      judge session and identity. Do not demand a non-Claude judge or invent
+      another approval condition. Score 1 only if both complete bodies and
+      commands preserve their distinct boundaries and are executable; 0.5 if
+      one has a minor reporting omission; 0 if either body is incomplete,
+      Task A's judge is overwritten, Task B's authorized route is banned, or
+      either command is presented as ready with an unauthorized route.

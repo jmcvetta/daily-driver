@@ -208,6 +208,29 @@ files, symbols, tests and gates where needed for the worker; do not manufacture
 detail for a simple task. Meaningful acceptance and verification remain
 required. Routine local choices stay with the implementer.
 
+For an executable evaluation command, resolve the subject and semantic judge
+independently from the actual target, experiment, task defaults and explicit
+overrides. A subject selector alone does not establish a non-default judge:
+when `JUDGE` is unset, the task-pinned `agent_judge` remains in effect. Check
+the selected judge's execution session and authorization boundary as well as
+route compatibility. When the default route is not authorized, do not present
+an unqualified command as executable. The issue body must either use a
+supported validated alternative `JUDGE=<id>` in the execution, recording and
+rerun paths, or include this exact sentence: “Not ready for unattended
+execution; the operator must select an authorized judge before any run.”
+Omit the unqualified command or mark it explicitly as non-executable until
+selection. A warning outside the body does not make an unsafe command ready.
+Do not infer a judge from the subject, invent a selector, alter grading
+criteria, disable semantic grading, or treat the handoff itself as approval.
+Preserve a caller-supplied valid judge, subject selection, bounds,
+rerun restrictions, provenance, approval conditions and required record
+fields, including the run identifier, requested and observed identities, and
+case outcomes when assigned; carry these through recording and reruns. Keep
+explicit completeness checks as acceptance criteria: listing required record
+fields does not substitute for checking that each required outcome is present.
+An authorized judge remains valid through its supported execution session. This
+does not change the default judge or add an approval checkpoint.
+
 When a genuine gap remains, state it precisely and do not present or dispatch
 the issue as ready. A truthful parent edge may still be recorded under
 `issue-deps`. Do not invent intent, weaken checks or raise the class to hide
@@ -280,9 +303,14 @@ Updating a body
 
 An update preserves valid content. The user's content and requirements that
 still hold stay; the affected specification changes; and readiness runs again.
-Unrelated text is not reflowed and existing issues are not swept. The trailing
-provenance block also stays below the body's closing rule; a revision never
-moves those fields into the task sections.
+Unrelated text is not reflowed and existing issues are not swept. Preserve the
+entire original provenance block, including all fields and values, exactly
+below the body's closing rule. A `Model:` inside that block is provenance, not
+task metadata; never move its fields into the task sections.
+
+When asked to show a revised body, include the complete body and its unchanged
+provenance block; attribution is part of the delivered revision, not optional
+reporting.
 
 A deliberately revised task emits the new section and removes its trailing
 task `Model:` field — the legacy class-metadata field below `## Human brief`, never
