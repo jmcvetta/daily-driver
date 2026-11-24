@@ -68,6 +68,25 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.76.0](https://github.com/jmcvetta/daily-driver/compare/v0.75.0...v0.76.0) (2026-11-24)
+
+
+### Features
+
+* allow flexible delegation and ownership transfer ([#1048](https://github.com/jmcvetta/daily-driver/issues/1048)) ([6726ef9](https://github.com/jmcvetta/daily-driver/commit/6726ef95b7aeec524af46b8599b4612dfbc0f746))
+* allow review while CI runs ([#1049](https://github.com/jmcvetta/daily-driver/issues/1049)) ([7655dfc](https://github.com/jmcvetta/daily-driver/commit/7655dfc6beb797caa256db533abba577a69f1896))
+* prefer focused local verification ([#1046](https://github.com/jmcvetta/daily-driver/issues/1046)) ([5e45706](https://github.com/jmcvetta/daily-driver/commit/5e457062a2026a49028679d037561a34d5b84d86))
+
+
+### Bug Fixes
+
+* **constitution:** remove obsolete agent prohibitions ([#1044](https://github.com/jmcvetta/daily-driver/issues/1044)) ([49eda89](https://github.com/jmcvetta/daily-driver/commit/49eda89a085fb9255a8ebeab63e2c0d2b6559b4f))
+* **omp:** restore embark title recovery ([#1045](https://github.com/jmcvetta/daily-driver/issues/1045)) ([07d900e](https://github.com/jmcvetta/daily-driver/commit/07d900ef1cbf2bf0ce83e76debd698dd814f766a))
+* preserve commit provenance through squash landing ([#1040](https://github.com/jmcvetta/daily-driver/issues/1040)) ([f50ff58](https://github.com/jmcvetta/daily-driver/commit/f50ff582b7c1fde27cd2c78912f16f1d8e4433a6))
+* **pr:** simplify recurring CI cost guidance ([#1047](https://github.com/jmcvetta/daily-driver/issues/1047)) ([4eaa3a4](https://github.com/jmcvetta/daily-driver/commit/4eaa3a47bcd6c458f1bd8cb46abf69b069fd8898))
+* remove mandatory readiness telemetry ([#1050](https://github.com/jmcvetta/daily-driver/issues/1050)) ([ec336aa](https://github.com/jmcvetta/daily-driver/commit/ec336aa6a54de3d1c119ff2ed5762c6441d03163))
+* **review-cycle:** honor operator-selected review methods ([#1019](https://github.com/jmcvetta/daily-driver/issues/1019)) ([209cc38](https://github.com/jmcvetta/daily-driver/commit/209cc38ac31d86c898b3b0f261729d2ccb617dad))
+
 ## [0.75.0](https://github.com/jmcvetta/daily-driver/compare/v0.74.0...v0.75.0) (2026-11-24)
 
 
