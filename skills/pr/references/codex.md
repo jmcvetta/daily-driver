@@ -12,10 +12,9 @@ half of the Omp routes that carries over unchanged.
   `gh pr view` (or `gh pr list --head <branch>`) finds it.
 - **Opening a new pull request.** `gh pr create --draft`, for the initial
   state this skill requires.
-- **Updating an existing pull request as a whole** — title and body
-  together. `gh pr edit`, called once both are decided (`pr-title`,
-  `pr-body`).
- 
+- **Updating an existing pull request.** Inspect title and body first, then
+  run `gh pr edit` with only stale or incorrect fields (`--title` and/or
+  `--body`). Make no update when both are accurate.
 Keep it current
 ===============
 

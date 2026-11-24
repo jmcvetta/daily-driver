@@ -1,0 +1,35 @@
+task_id: conventional-commits-type-11-agent-authored-inherited-title-is-correctable
+description: >-
+  An inherited title is not user-protected when the handoff establishes that
+  an agent authored it and no user decision is recorded.
+tags: [conventional-commits-type, behaviour, fire]
+initial_prompt: >-
+  PR #387 only changes an existing GitHub repository setting. Its title is
+  `feat(infra): adjust the repository setting`. The prior agent's handoff says
+  that agent chose the title; there is no user-set title decision. Is this the
+  right type?
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 12, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: skill_triggered
+    description: "`conventional-commits-type` fires on an inherited title decision"
+    expected_skill: conventional-commits-type
+    skill_name: conventional-commits-type
+  - type: agent_judge
+    description: The agent classifies from effect and does not infer user intent from session age
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Find the final [RESULT - ...] reply. Score 0 if absent.
+      Score 1 only if it classifies this repository-administration-only change
+      as `chore(infra):`, uses the handoff to identify the existing title as
+      agent-authored rather than user-set, and says the title may be corrected
+      through `pr-title` without asking the user.
+      Score 0 if it treats the title as user-protected merely because it was
+      inherited, asks only because the session changed, or selects `feat:`.

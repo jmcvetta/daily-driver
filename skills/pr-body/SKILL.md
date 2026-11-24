@@ -19,12 +19,12 @@ The body of a pull request, whether it is being opened or rewritten. In order:
 - **Salutation**: A poetic summary. Immediately after the one-line summary,
   separated by a blank line. A brief poem, in classical style, conveying the
   gist of the PR. Formatted in italics.
-- **Blockers**: If the pull request has known merge blockers, list them under
-  heading "Blockers" immediately after the salutation. Use one unordered bullet
-  per blocker. Link blocking issues; name the concrete action or condition
-  required for other blockers. Include human actions, failed required checks,
-  unresolved review requirements, and other known conditions. Omit the section
-  when there are no blockers.
+- **Blockers**: Include only merge prerequisites that belong in durable
+  human-facing metadata: human actions, Tofu apply/state requirements, linked
+  issue dependencies, and non-obvious external prerequisites. Do not mirror
+  live CI/check or review state in the body; GitHub owns that state. Read it
+  from GitHub when assessing readiness. Omit the section when there are no
+  durable blockers.
 - **Issues**: If this pull request closes a Github Issue, the reference to it,
   under heading "Issues". Immediately after "Blockers" when that section
   appears, otherwise immediately after the salutation, and above the prose.
@@ -43,9 +43,9 @@ The body of a pull request, whether it is being opened or rewritten. In order:
   how the change was made, how it was verified, and the material risk or
   uncertainty — said once. What the opening line and `Summary` already say is
   not repeated here.
-  Keep unverified requirements, stale results, risks and outstanding approvals
-  visible. Distinguish observed checks, attributed judgments and agent reports.
-  Do not publish private source quotes or sensitive local details.
+  Keep the change, its verification evidence, material risk or uncertainty, and
+  outstanding human approvals visible. Do not duplicate live check or review
+  state; read it from GitHub instead.
   For a specification-backed task, identify the document path, exact delivered
   specification commit and requirement IDs, and distinguish evidence of
   delivery from unverified allocation.
@@ -96,20 +96,23 @@ it is also listed here.
 Blockers
 --------
 
-When a pull request is blocked from merging, add a `Blockers` section directly
-below the salutation and above `Issues` or `Summary`. Use an unordered bullet
-list with one item per known blocker:
+When the pull request has durable merge prerequisites that belong in its body,
+add a `Blockers` section directly below the salutation and above `Issues` or
+`Summary`. Use an unordered bullet list, one item per prerequisite:
 
 - Link an issue that blocks the pull request, without making it a closing
   reference unless it belongs in `Issues`.
-- Name the concrete action or condition required for a human action, failed
-  required check, unresolved review requirement, or other merge blocker.
+- Name the concrete human action, Tofu apply-and-state requirement, or
+  non-obvious external prerequisite.
 
-heading. Preserve valid blockers and closing references when revising a body,
-and update the list when the known blocking conditions change. `undertake`
-owns investigation, operational escalation, and revalidation on resume;
-publish its current evidence rather than infer inability from an old body,
-label, missing tool, or infrastructure diff.
+CI/check results and review status are live GitHub state, not body blockers.
+They can still prevent readiness, but the body must not echo routine failed
+checks or unresolved review requirements.
+Preserve valid blockers and closing references when revising a body. Update
+the section only when a durable prerequisite changes. `undertake` owns
+investigation, operational escalation and revalidation on resume; use current
+evidence rather than an old body, label, missing tool or infrastructure diff
+to decide whether a human contribution is still owed.
 
 A current agent's missing credential, network route, tool or permission is not
 by itself evidence that the work is human-only. Where verification remains

@@ -55,9 +55,12 @@ remains authoritative. Do not install their wakes alongside an active supervisor
   `gh pr view` (or `gh pr list --head <branch>`) finds it.
 - **Opening a new pull request.** `daily_driver_gh_write({ args: ["pr", "create", "--draft", "--title", <title>, "--body-file", <path>] })`, for the initial
   state this skill requires.
-- **Updating an existing pull request as a whole** — title and body
-  together. `daily_driver_gh_write`, called once both are decided (`pr-title`,
-  `pr-body`).
+- **Updating existing metadata.** Inspect the title and body; make no
+  metadata write when both are accurate. If only the title is stale, use
+  `gh pr edit <number> --title "…"`. If only the body is stale, use
+  `daily_driver_gh_write({ args: ["pr", "edit", <number>, "--body-file",
+  <path>] })`. If both are stale, one body-bearing wrapper call may carry
+  both `--title` and `--body-file`. Keep any necessary PR label update separate.
 
 
 Base currency checkpoint
