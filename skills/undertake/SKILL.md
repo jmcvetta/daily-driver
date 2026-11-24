@@ -667,7 +667,8 @@ while CI runs; record the reviewed SHA and every finding disposition. Batch
 all fixes, including observed CI and bot fixes, and push them. Run `Verify the
 fix delta` when pull-request content changed behavior, contracts, or workflow
 rules; it may overlap CI. It is one pass for the batch, never one per commit
-or finding. Current-head green CI remains mandatory for readiness.
+or finding. Readiness requires current-head green CI or the evidenced
+no-applicable-CI result defined by `review-cycle`.
 
 A pass that finds defects returns to `Fix, answer, resolve, push`, and the
 correction pushed from there earns the pass that confirms it — every time,
@@ -853,16 +854,15 @@ approval that must be renewed.
    can stall the transition that requests that review. `has_hooks` is a
    passing state with a hook configured.
    **`clean` is not a gate condition**: the gate's independent reads establish
-   currency and green CI while the PR is draft. Do not wait for a post-ready
+   currency and CI evidence while the PR is draft. Do not wait for a post-ready
    merge-state read.
-- **CI on the head commit**, for the condition that it is green. Read the
-   checks themselves rather than inferring them from the merge state, which
-   reports a draft's status before its checks': the union of check runs and
-   commit statuses that `review-cycle`'s wait reads is the same union here,
-   and the reference file names what answers it on this harness. **Pending
-   is not green** — wait for it the way `How to wait` says, rather than
-   treating an unreported check as either answer. The mechanism has one
-   home, and it is not this one.
+- **CI on the head commit** must be green, or `review-cycle` must establish
+   and record that no remote CI applies. Read checks rather than inferring
+   them from merge state; the union of check runs and commit statuses that
+   `review-cycle` reads is the same union here. Its harness route supplies the
+   observation and absence evidence. **Pending is not green**, and an
+   unreported expected check is not a no-CI result. Retain the continuation
+   when the evidence remains incomplete.
 - **Every review thread**, from any reviewer and not only from the round at
   `Review the head`: no thread is unanswered or unresolved, and every finding
   is fixed, rejected with a reason on its thread, or deferred with the user's
