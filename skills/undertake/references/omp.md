@@ -209,4 +209,6 @@ The stop
 
 The wrapper appends provenance to the handoff body. Do not format or include a
 block in the body file. A CI watcher this session holds is stopped by its
-`review-cycle` route. The pushed head is `git ls-remote origin <branch>`.
+`review-cycle` route. Read `git ls-remote origin <branch>` for the remote head
+and `git rev-parse HEAD` for the local tip. Mark failed reads unknown and
+record local-only commits with their worktree path.

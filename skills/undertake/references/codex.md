@@ -151,5 +151,7 @@ handoff leaves unfinished work.
 | Read the issue's comments, for the claim and any equivalent handoff | `gh issue view <number> --json comments` |
 | Post the handoff | `gh issue comment <number> --body-file <path>` |
 
-The pushed head is `git ls-remote origin <branch>`.
+Read `git ls-remote origin <branch>` for the observed remote head and
+`git rev-parse HEAD` for the local tip. Record failed reads as unknown and
+local-only commits with their worktree path.
 

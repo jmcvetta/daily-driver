@@ -1021,6 +1021,8 @@ In order:
      `<local branch>` (omit this line when it is the same branch). Pushed head:
      `<sha>`.
    - Pull request: <#N and state (draft / ready), or "none open">.
+   - Unsecured work: <local-only commit SHA and worktree path, uncommitted
+     work and failed push reason; or "none known"; unknown where not observed>.
    - Reached: <the last step of the sequence completed>.
    - Outstanding: <what is blocked, failing, or unverified — failed checks,
      open review threads, a human action owed — or "nothing known">.
@@ -1040,8 +1042,9 @@ In order:
    The active route appends `provenance`'s block; on Omp the wrapper handles
    it, so the handoff body must not format or include one. A user-action
    handoff carries no verse, because somebody acts on it. A push that fails is
-   stated here: `Pushed head:` names the last head that reached origin,
-   `Outstanding:` names the failure, and the handoff is still written.
+   stated here: `Pushed head:` names the last observed remote head, never the
+   local tip by assumption; `Unsecured work:` names the local commit, worktree
+   and failure when known. Record an unavailable remote head as unknown.
    **The handoff is filled from what this session already knows**, plus the
    git read the reference names for `Pushed head:`. No test or CI check is
    run, no CI wait is finished, and nothing else is investigated to fill a
@@ -1051,15 +1054,14 @@ In order:
 
 
 **Idempotent.** Read the issue's comments before posting. A `## Handoff —`
-comment that names the same pushed head, posted after the latest claim comment
-— or anywhere, when the issue has no claim comment — is an equivalent
-handoff: post nothing. One that names an older head is not
-equivalent, so post a new one. This is `stand-down`'s `Idempotent re-entry`.
+comment after the latest claim (or anywhere when there is no claim) is
+equivalent only when its observed pushed head, unsecured local work, worker
+state and stop limits still match. The same remote head alone cannot establish
+equivalence after a failed push or changed local work.
 
 **An embark-dispatched implementor the user stops directly** runs `The stop`
 and also sends the stop to its orchestrator under `Reporting to an
-orchestrator`. `stand-down` counts that handoff as present where it names the
-current pushed head.
+orchestrator`. `stand-down` applies the same equivalence test to that handoff.
 
 
 Reporting to an orchestrator
@@ -1085,7 +1087,9 @@ the stop it reports still stops. An answer arrives, if it comes, as a message
 from the orchestrator, and the sequence reads it as it reads any other.
 **A report never replaces the record**: the question still goes on the pull
 request or the issue where `Where it stops and waits` puts it, because the
-record outlives both sessions and the report does not.
+record outlives both sessions and the report does not. Send actionable events,
+not repeated unchanged gate reports or a second status ledger; delivery does
+not prove receipt or transfer ownership.
 
 **A failed report is reported, not retried in a loop.** Say once, in the
 session, that the report did not go, and carry on with the sequence. The

@@ -85,10 +85,10 @@ Route assessment limits
 The delegation namespace has not been driven. No model or effort argument is
 measured, so do not invent either. Every epic story must pass `Take the wave`'s
 assignability gate. Resolve its required class for the initial selection.
-The muster roll records each task's required class and selected implementor
-route, and the actual model as `unreported` when the surface does not report
-one. Do not invent a provider identifier or assume an API route. After the
-initial selection, worker and fallback choices are not restricted.
+Record the task-to-worker mapping and landing preference on the epic; the
+task and claim retain class and execution identity. Do not invent a provider
+identifier or assume an API route. After the initial selection, worker and
+fallback choices are not restricted.
 
 - **Agent-to-agent messaging.** Whether a delegated implementor can send a
   question back to the delegating session is not measured. The route this
