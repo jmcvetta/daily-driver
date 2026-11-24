@@ -47,6 +47,7 @@ import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import registerUndertakingRoutingChecks from "./undertaking-routing-cases.mjs";
 import registerNotificationPolicyChecks from "./notification-policy-cases.mjs";
+import registerWatchContinuationChecks from "./watch-continuation-cases.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(here, "..");
@@ -121,15 +122,14 @@ function fakeApi(overrides = {}) {
 			int() {
 				return schemaNode({ ...meta, int: true });
 			},
-			optional() {
-				return schemaNode({ ...meta, optional: true });
-			},
 			_meta: () => meta,
 		};
 	}
 	const zod = {
 		object(spec) {
-			return spec;
+			return Object.defineProperty(spec, "optional", {
+				value: () => schemaNode({ type: "object", spec, optional: true }),
+			});
 		},
 		string: () => schemaNode({ type: "string" }),
 		array: (item) => schemaNode({ type: "array", item }),
@@ -396,7 +396,8 @@ check("session_start uses Omp's model-tag handle and does not restore a cleared 
 		{ settingsManagerFactory: fakeModelClassSettings },
 		{ modelTagsSetting: fakeModelTagsSetting },
 	);
-	await s.fire("session_start", {}, { cwd: "/fixture" });
+	const ctx = { cwd: "/fixture", sessionManager: { getSessionId: () => "model-settings-session", getBranch: () => s.rec.entries, getEntries: () => s.rec.entries } };
+	await s.fire("session_start", {}, ctx);
 	const state = modelClassSettings.get("/fixture");
 	assert.equal(state.settings.get, undefined, "Omp Settings does not expose generic get");
 	assert.deepEqual(state.modelRoles, MODEL_CLASS_ROLE_DEFAULTS);
@@ -405,7 +406,7 @@ check("session_start uses Omp's model-tag handle and does not restore a cleared 
 	assert.equal(state.mutations.filter(([kind]) => kind === "tags").length, 1);
 
 	state.modelRoles.routine = "";
-	await s.fire("session_start", {}, { cwd: "/fixture" });
+	await s.fire("session_start", {}, ctx);
 	assert.equal(state.modelRoles.routine, "", "same settings instance is not initialized twice");
 });
 
@@ -448,6 +449,7 @@ function startupCtx(session, sessionId = "main-session", agentKind = "main") {
 			getSessionId: () => sessionId,
 			getSessionName: () => session.rec.sessionName,
 			getBranch: () => session.rec.entries,
+			getEntries: () => session.rec.entries,
 		},
 	};
 }
@@ -3998,7 +4000,7 @@ function guardWithPath(binDir, target, env = {}, call = null) {
 				`const mod = await import(${JSON.stringify(pathToFileURL(EXTENSION).href)});`,
 				"const handlers = new Map();",
 				"const node = (m) => ({ describe: () => node(m), min: () => node(m), max: () => node(m), int: () => node(m), optional: () => node(m) });",
-				"const pi = { zod: { object: (s) => s, string: () => node({}), array: () => node({}), number: () => node({}) },",
+				"const pi = { zod: { object: (s) => Object.defineProperty(s, 'optional', { value: () => node({}) }), string: () => node({}), array: () => node({}), number: () => node({}) },",
 				"  on: (e, h) => { const registered = handlers.get(e) ?? []; registered.push(h); handlers.set(e, registered); }, registerTool: () => {}, registerCommand: () => {}, setSessionName: async () => {},",
 				"  sendMessage: () => {}, setTimeout: () => 1, clearTimer: () => {} };",
 				"mod.default(pi);",
@@ -4472,6 +4474,8 @@ check("legacy worktree entries do not change cwd or create a task status", async
 		cwd: worktrees.primary,
 		ui: { setStatus: (...args) => statuses.push(args) },
 		sessionManager: {
+			getSessionId: () => "legacy-worktree-session",
+			getEntries: () => s.rec.entries,
 			getBranch: () => [{
 				type: "custom",
 				customType: "daily-driver.task-worktree",
@@ -4587,6 +4591,7 @@ check("package.json wires the extension and is a module", () => {
 
 registerUndertakingRoutingChecks(check);
 registerNotificationPolicyChecks(check, { makeSession });
+registerWatchContinuationChecks(check, { makeSession, fakeModelClassSettings, fakeModelTagsSetting });
 
 
 await Promise.all(checks);

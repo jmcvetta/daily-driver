@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Exercise the embark title barrier and idle owner reminders in real Omp.
+"""Exercise title barriers and structured watch continuations in real Omp.
 
-The scripted local model drives the title gate and an idle-owner wake.
-A fake `gh` supplies fixtures and records attributed reports; no live service
-is used. The idle scenario also checks cancellation. The scripted provider
-does not establish how a live model chooses a title or resolves a conflict.
+The localhost scripted provider uses disposable homes and saved sessions.
+The same legacy/structured trace measures requests and reference-context bytes;
+it does not estimate fleet savings or a live model's conflict decisions.
+Generic requested reminders retain separate visibility/cancellation coverage.
 
 Literal `report_issue` admission belongs to the offline extension fixture:
 no disposable override for the harness command is established here, so this
@@ -24,8 +24,10 @@ import sys
 import tempfile
 import threading
 import time
+import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import Callable
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "evals" / "coder-eval-omp" / "src"))
@@ -72,9 +74,19 @@ def text_of(content) -> str:
     return ""
 
 
+def title_prompt_index(messages: list) -> int:
+    """Locate the fixture request, not a later agent-attributed wire user message."""
+    for index in range(len(messages) - 1, -1, -1):
+        message = messages[index]
+        text = text_of(message.get("content"))
+        if message.get("role") == "user" and ("[probe:" in text or "watch backstop" in text):
+            return index
+    raise CheckFailed("scripted model received no title fixture request")
+
+
 def target_from(messages) -> int:
     """Find the issue number from the latest request, outside skill examples."""
-    latest = next((m for m in reversed(messages) if m.get("role") == "user"), {})
+    latest = messages[title_prompt_index(messages)]
     text = text_of(latest.get("content"))
     matches = re.findall(r"(?:issue://(?:[^/]+/[^/]+/)?|issues/|#?)(58[23])\b", text)
     if not matches:
@@ -224,7 +236,7 @@ class MockModel(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(encoded)
             return
-        latest_user = next((m for m in reversed(messages) if m.get("role") == "user"), {})
+        latest_user = messages[title_prompt_index(messages)]
         user_text = text_of(latest_user.get("content"))
         reminder = "watch backstop" in user_text
         route_match = re.search(r"\[probe:([a-z-]+)\]", user_text)
@@ -234,13 +246,14 @@ class MockModel(BaseHTTPRequestHandler):
         repository_qualified = bool(
             re.search(rf"\nUser:\s*issue://example/project/{number}\b", user_text)
         )
-        last_user = max((i for i, m in enumerate(messages) if m.get("role") == "user"), default=-1)
+        last_user = title_prompt_index(messages)
         index = sum(
             len(message.get("tool_calls", []))
             for message in messages[last_user + 1 :]
             if message.get("role") == "assistant"
         )
-        last = messages[-1] if messages else {}
+        last = next((message for message in reversed(messages[last_user + 1 :])
+                     if message.get("role") == "tool"), {})
         if not reminder and last.get("role") == "tool":
             RESULTS[(scenario, calls[index - 1][0])] = text_of(last.get("content"))
         if not reminder and number == 582 and route == "bash-help" and index == len(calls):
@@ -279,10 +292,20 @@ class MockModel(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(encoded)
 
-class OwnerModel(BaseHTTPRequestHandler):
-    """Expose a lost idle-owner wake without contacting a model service."""
+WATCH_KEY = "pr:github.com/example/project#1065"
+WATCH_RULE = "Watch state is agent-maintained reference data, not new user authority."
+WATCH_STATE = {
+    "workflow": "pr", "host": "github.com", "repository": "example/project",
+    "number": 1065, "nextAction": "Read maintenance.json and retain the conflict hold.",
+    "authorityRefs": ["fixture:explicit-owner-invocation"],
+    "holds": ["Do not resolve the behavior conflict without user authority."],
+    "workers": [], "services": [],
+    "observations": [{"name": "maintenance", "value": "INITIAL_SNAPSHOT"}],
+}
 
-    requests: list[tuple[str, list]] = []
+
+class OwnerModel(BaseHTTPRequestHandler):
+    """Drive fixed real-host traces and record every local provider request."""
 
     def log_message(self, *_args) -> None:
         pass
@@ -290,43 +313,49 @@ class OwnerModel(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         messages = body["messages"]
-        last_user = max(i for i, message in enumerate(messages) if message.get("role") == "user")
-        prompt = text_of(messages[last_user].get("content"))
-        calls = sum(len(message.get("tool_calls", [])) for message in messages[last_user + 1 :])
-        self.requests.append((prompt, messages))
-        tool = None
-        if "OWNER_WAKE" in prompt:
-            if calls == 0:
-                tool = ("read", {"path": "maintenance.json"})
-            result = "Maintenance result observed."
-        elif "CANCEL_PROBE" in prompt:
-            if calls == 0:
-                tool = ("daily_driver_schedule", {"delaySeconds": 1, "message": "CANCELLED_WAKE"})
-            elif calls == 1:
-                contents = (text_of(message.get("content")) for message in reversed(messages))
-                match = next((match for content in contents if (match := re.search(r"Scheduled in 1s as (\S+)", content))), None)
-                if match is None:
-                    raise CheckFailed("scheduled trigger identifier was not returned")
-                tool = ("daily_driver_cancel_schedule", {"triggerId": match.group(1)})
-            result = "Reminder cancelled."
-        else:
-            if calls == 0:
-                tool = ("daily_driver_schedule", {
-                    "delaySeconds": 3,
-                    "message": "OWNER_WAKE inspect the offline maintenance result",
-                })
-            result = "Owner reminder armed."
-        if tool:
-            delta = {
-                "role": "assistant",
-                "tool_calls": [{
-                    "index": 0, "id": f"owner-{len(self.requests)}", "type": "function",
-                    "function": {"name": tool[0], "arguments": json.dumps(tool[1])},
-                }],
-            }
-            finish = "tool_calls"
-        else:
-            delta = {"role": "assistant", "content": result}
+        fixture = self.server.fixture
+        # Model capability discovery sends its own arithmetic requests. They
+        # must not consume the owner turn's plan or enter watch trace totals.
+        latest_user = next((message for message in reversed(messages) if message.get("role") == "user"), {})
+        if text_of(latest_user.get("content")).strip() == "What is 17 times 23? Answer with only the number.":
+            fixture["auxiliaryRequests"] = fixture.get("auxiliaryRequests", 0) + 1
+            chunk = {"id": "auxiliary", "object": "chat.completion.chunk", "model": MODEL,
+                     "choices": [{"index": 0, "delta": {"content": "391"}, "finish_reason": "stop"}]}
+            data = (f"data: {json.dumps(chunk)}\n\ndata: [DONE]\n\n").encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
+        stage = fixture["stage"]
+        fixture["requests"].append({"stage": stage, "messages": messages})
+        try:
+            plan = fixture["plan"]
+            if plan is None:
+                raise CheckFailed(f"unexpected provider request after {stage}")
+            index = fixture["index"]
+            fixture["index"] += 1
+            if index < len(plan):
+                name, arguments = plan[index]
+                if callable(arguments):
+                    arguments = arguments(messages)
+                delta = {
+                    "role": "assistant",
+                    "tool_calls": [{
+                        "index": 0, "id": f"owner-{len(fixture['requests'])}",
+                        "type": "function",
+                        "function": {"name": name, "arguments": json.dumps(arguments)},
+                    }],
+                }
+                finish = "tool_calls"
+            else:
+                fixture["plan"] = None
+                delta = {"role": "assistant", "content": f"Fixture stage {stage} settled."}
+                finish = "stop"
+        except Exception as error:
+            fixture["errors"].append(str(error))
+            delta = {"role": "assistant", "content": "Fixture provider rejected an unexpected request."}
             finish = "stop"
         chunks = [
             {"id": "owner", "object": "chat.completion.chunk", "model": MODEL,
@@ -343,85 +372,399 @@ class OwnerModel(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
 
+class OwnerSession:
+    """Record RPC evidence from one disposable saved Omp session."""
+
+    def __init__(self, omp: str, root: Path, env: dict, observer: Path,
+                 resume: Path | None = None) -> None:
+        self.stderr_path = root / ("resume-stderr.log" if resume else "owner-stderr.log")
+        self.stderr = self.stderr_path.open("w", encoding="utf-8")
+        storage = root / "sessions"
+        storage.mkdir(exist_ok=True)
+        argv = [omp, "--mode", "rpc", "--extension", str(ROOT / "extensions/daily-driver.js"),
+                "--extension", str(observer), "--session-dir", str(storage),
+                "--tools", "read,write,bash"]
+        if resume is not None:
+            argv.extend(["--resume", str(resume)])
+        self.process = subprocess.Popen(
+            argv, cwd=root / "sandbox", env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            stderr=self.stderr, text=True, encoding="utf-8", bufsize=1,
+        )
+        self.frames: queue.Queue = queue.Queue()
+        self.captured: list[dict] = []
+        threading.Thread(target=read_frames, args=(self.process.stdout, self.frames), daemon=True).start()
+        self.receive(lambda frame: frame.get("type") == "ready")
+        self.command({"id": "model", "type": "set_model", "provider": PROVIDER, "modelId": MODEL})
+
+    def send(self, command: dict) -> None:
+        self.process.stdin.write(json.dumps(command) + "\n")
+        self.process.stdin.flush()
+
+    def receive(self, predicate: Callable, seconds: float = 60) -> dict:
+        deadline = time.monotonic() + seconds
+        while time.monotonic() < deadline:
+            try:
+                frame = self.frames.get(timeout=max(0.01, deadline - time.monotonic()))
+            except queue.Empty:
+                break
+            if frame is None or frame.get("type") == "extension_error":
+                raise CheckFailed(f"owner session ended unexpectedly: {frame}", self.stderr_path.read_text())
+            self.captured.append(frame)
+            if frame.get("type") == "tool_execution_end" and frame.get("isError"):
+                raise CheckFailed(f"owner fixture tool failed: {frame}", self.stderr_path.read_text())
+            if predicate(frame):
+                return frame
+        raise CheckFailed("timed out waiting for idle-owner event",
+                          self.stderr_path.read_text() + "\nRecent RPC frames: " + json.dumps(self.captured[-12:]))
+
+    def command(self, command: dict) -> dict:
+        self.send(command)
+        response = self.receive(lambda frame: frame.get("type") == "response"
+                                and frame.get("id") == command["id"])
+        if not response.get("success"):
+            raise CheckFailed(f"owner RPC command failed: {response}", self.stderr_path.read_text())
+        return response.get("data", {})
+
+    def settle(self) -> None:
+        self.receive(lambda frame: frame.get("type") == "agent_end" and frame.get("isTerminal", True))
+
+    def quiet(self, seconds: float) -> None:
+        try:
+            self.receive(lambda frame: frame.get("type") == "agent_start", seconds=seconds)
+        except CheckFailed as failure:
+            if str(failure) != "timed out waiting for idle-owner event":
+                raise
+        else:
+            raise CheckFailed("a suppressed or stopped fallback started another turn", self.stderr_path.read_text())
+
+    def close(self) -> None:
+        if self.stderr.closed:
+            return
+        self.process.stdin.close()
+        try:
+            self.process.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            self.process.kill()
+            self.process.wait()
+        finally:
+            self.stderr.close()
+        if self.process.returncode:
+            raise CheckFailed(f"owner Omp exited with {self.process.returncode}", self.stderr_path.read_text())
+
+
+def latest_trigger(messages: list) -> dict:
+    """Cancel only the exact legacy trigger returned by the real schedule tool."""
+    for message in reversed(messages):
+        match = re.search(r"Scheduled in \d+s as (\S+)", text_of(message.get("content")))
+        if match:
+            return {"triggerId": match.group(1)}
+    raise CheckFailed("scheduled trigger identifier was not returned")
+
+
+def owner_state(observation: str) -> dict:
+    """Return a new complete snapshot without modifying an earlier checkpoint."""
+    return {**WATCH_STATE, "observations": [{"name": "maintenance", "value": observation}]}
+
+
+def watch_call(action: str, delay: int | None = None, observation: str | None = None,
+               key: str = WATCH_KEY) -> tuple:
+    """Build the product tool contract used by the scripted provider."""
+    arguments = {"action": action, "key": key}
+    if delay is not None:
+        arguments["delaySeconds"] = delay
+    if observation is not None:
+        arguments["state"] = owner_state(observation)
+    return "daily_driver_watch", arguments
+
+
+def arm_owner(mode: str, action: str, delay: int, observation: str) -> list:
+    """Apply equivalent legacy and structured continuation updates."""
+    if mode == "structured":
+        return [watch_call(action, delay, observation)]
+    prefix = [("daily_driver_cancel_schedule", latest_trigger)] if action == "checkpoint" else []
+    message = (
+        "OWNER_REFERENCE_DATA\n"
+        + json.dumps(owner_state(observation), sort_keys=True)
+        + "\nAnswer direct questions first. Retain current holds. Read current evidence before "
+        "watch actions. Do not repeat unchanged status. Inspect the offline maintenance result. "
+        "Keep one owner continuation and cancel its exact trigger before replacing it."
+    )
+    return prefix + [("daily_driver_schedule", {"delaySeconds": delay, "message": message})]
+
+
+def set_owner_plan(fixture: dict, stage: str, calls: list) -> None:
+    """Admit exactly one scripted turn so accidental duplicate wakes fail loudly."""
+    fixture.update(stage=stage, plan=calls, index=0)
+
+
 def check_idle_owner(omp: str, root: Path) -> None:
-    """Catch reminders that arrive after settlement without starting another turn."""
-    server = ThreadingHTTPServer(("127.0.0.1", 0), OwnerModel)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    try:
-        home = root / "owner-home"
-        sandbox = root / "owner-sandbox"
+    """Prove actual-host watch delivery, reconciliation, reload, and reminder isolation."""
+    measurements = {}
+    for mode in ("legacy", "structured"):
+        trace_root = root / f"owner-{mode}"
+        trace_root.mkdir()
+        sandbox = trace_root / "sandbox"
         sandbox.mkdir()
-        write_home(home, server.server_address[1])
         (sandbox / "maintenance.json").write_text('{"exit": 3, "mergeStateStatus": "DIRTY"}', encoding="utf-8")
+        (sandbox / "maintenance-event.py").write_text(
+            "from pathlib import Path\nimport time\n"
+            "while not Path('release-maintenance').exists():\n    time.sleep(0.05)\n"
+            "print('NATIVE_MAINTENANCE_RESULT DIRTY', flush=True)\n", encoding="utf-8",
+        )
+        context_path = trace_root / "contexts.jsonl"
+        observer = trace_root / "zz-watch-observer.mjs"
+        observer.write_text(
+            'import { appendFileSync } from "node:fs";\n'
+            'export default function(pi) {\n'
+            ' pi.on("context", event => {\n'
+            '  const messages = event.messages.filter(message => message.role === "custom" &&\n'
+            '   ["daily-driver.watch-context", "daily-driver.watch-wake"].includes(message.customType));\n'
+            f'  appendFileSync({json.dumps(str(context_path))}, JSON.stringify(messages) + "\\n");\n'
+            ' });\n}\n', encoding="utf-8",
+        )
+        server = ThreadingHTTPServer(("127.0.0.1", 0), OwnerModel)
+        fixture = {"stage": "startup", "plan": None, "index": 0, "requests": [], "errors": []}
+        server.fixture = fixture
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        home = trace_root / "home"
+        write_home(home, server.server_address[1])
         env = {name: os.environ[name] for name in ("PATH", "TMPDIR", "LANG", "LC_ALL", "TERM") if name in os.environ}
         env["HOME"] = str(home)
         for name in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"):
             env[name] = str(home / name.lower())
-        stderr_path = root / "owner-stderr.log"
-        with stderr_path.open("w", encoding="utf-8") as stderr:
-            process = subprocess.Popen(
-                [omp, "--mode", "rpc", "--no-session", "--extension",
-                 str(ROOT / "extensions" / "daily-driver.js"), "--tools", "read,write"],
-                cwd=sandbox, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=stderr, text=True, encoding="utf-8", bufsize=1,
+        session = None
+        try:
+            session = OwnerSession(omp, trace_root, env, observer)
+            set_owner_plan(fixture, "register", arm_owner(mode, "register", 4, "INITIAL_SNAPSHOT"))
+            session.send({"id": "initial", "type": "prompt", "message": "Observe the offline owner fixture."})
+            session.settle()
+            set_owner_plan(fixture, "idle-wake", [("read", {"path": "maintenance.json"})]
+                           + arm_owner(mode, "checkpoint", 10, "IDLE_CONFLICT_SNAPSHOT"))
+            session.settle()
+            old_deadline = time.monotonic() + 10
+            idle_requests = [request for request in fixture["requests"] if request["stage"] == "idle-wake"]
+            if not any('"DIRTY"' in json.dumps(request["messages"]) or "DIRTY" in json.dumps(request["messages"])
+                       for request in idle_requests):
+                raise CheckFailed("idle wake did not read the maintenance conflict fixture")
+            set_owner_plan(fixture, "native-start", [("bash", {
+                "command": "python3 maintenance-event.py", "async": True, "timeout": 30,
+            })])
+            session.send({"id": "native-start", "type": "prompt", "message": "Start the named offline maintenance task."})
+            # A live native job makes agent_end nonterminal. Wait for that
+            # yield, not session settlement, before releasing its result.
+            session.receive(lambda frame: frame.get("type") == "agent_end")
+            set_owner_plan(fixture, "native-event", [("read", {"path": "maintenance.json"})]
+                           + arm_owner(mode, "checkpoint", 10, "NATIVE_CONFLICT_SNAPSHOT"))
+            # The native job is released before the prior fallback, not copied
+            # into a synthetic prompt by this fixture.
+            session.quiet(max(0.01, old_deadline - time.monotonic() - 3))
+            (sandbox / "release-maintenance").write_text("complete\n", encoding="utf-8")
+            session.settle()
+            next_deadline = time.monotonic() + 10
+            native_requests = [request for request in fixture["requests"] if request["stage"] == "native-event"]
+            if not native_requests or not any("NATIVE_MAINTENANCE_RESULT" in json.dumps(request["messages"])
+                                              for request in native_requests):
+                raise CheckFailed("the real native Bash result did not start the reconciliation turn")
+            requests_before_old_deadline = len(fixture["requests"])
+            session.quiet(max(0.01, old_deadline - time.monotonic() + 0.5))
+            if len(fixture["requests"]) != requests_before_old_deadline:
+                raise CheckFailed("native reconciliation did not consume the old fallback request")
+            stop_calls = [watch_call("stop")] if mode == "structured" else [
+                ("daily_driver_cancel_schedule", latest_trigger)]
+            set_owner_plan(fixture, "stop", stop_calls)
+            session.send({"id": "stop", "type": "prompt", "message": "Stop this fixture owner continuation."})
+            session.settle()
+            stopped_count = len(fixture["requests"])
+            session.quiet(max(0.01, next_deadline - time.monotonic() + 0.5))
+            if len(fixture["requests"]) != stopped_count:
+                raise CheckFailed("stopping before expiry still produced a provider request")
+            trace_requests = list(fixture["requests"])
+            marker = WATCH_RULE if mode == "structured" else "OWNER_REFERENCE_DATA"
+            context_bytes = sum(
+                len(text_of(message.get("content")).encode("utf-8"))
+                for request in trace_requests for message in request["messages"]
+                if marker in text_of(message.get("content"))
             )
-            frames: queue.Queue = queue.Queue()
-            threading.Thread(target=read_frames, args=(process.stdout, frames), daemon=True).start()
+            if context_bytes == 0:
+                raise CheckFailed(f"{mode} trace transmitted no measurable watch reference context")
+            measurements[mode] = {"requests": len(trace_requests), "watch_context_bytes": context_bytes}
+            if mode == "structured":
+                check_watch_evidence(session, context_path, fixture)
+                check_owner_reload(omp, trace_root, env, observer, session, fixture)
+                session = None
+            else:
+                session.close()
+                session = None
+            if fixture["errors"]:
+                raise CheckFailed(f"owner provider failures: {fixture['errors']}")
+        finally:
+            if session is not None:
+                session.close()
+            server.shutdown()
+            server.server_close()
+    # Counts include tool-result continuations, not just top-level turns.
+    # Bytes count UTF-8 wire message text containing the legacy reference marker
+    # or the fixed structured reference rule, including repeated history.
+    print("Local fixed owner trace: " + json.dumps(measurements, sort_keys=True))
 
-            def send(command: dict) -> None:
-                process.stdin.write(json.dumps(command) + "\n")
-                process.stdin.flush()
 
-            def receive(predicate, seconds: float = 60) -> dict:
-                deadline = time.monotonic() + seconds
-                while time.monotonic() < deadline:
-                    try:
-                        frame = frames.get(timeout=max(0.01, deadline - time.monotonic()))
-                    except queue.Empty:
-                        break
-                    if frame is None or frame.get("type") == "extension_error":
-                        raise CheckFailed(f"owner session ended unexpectedly: {frame}", stderr_path.read_text())
-                    if predicate(frame):
-                        return frame
-                raise CheckFailed("timed out waiting for idle-owner event", stderr_path.read_text())
+def saved_owner_entries(root: Path) -> tuple[Path, list]:
+    """Read the actual host journal, not a fake session or reconstructed claim."""
+    paths = list((root / "sessions").glob("*.jsonl"))
+    if len(paths) != 1:
+        raise CheckFailed(f"expected one disposable owner session, found {paths}")
+    return paths[0], [json.loads(line) for line in paths[0].read_text(encoding="utf-8").splitlines()]
 
-            terminal = lambda frame: frame.get("type") == "agent_end" and frame.get("isTerminal", True)
-            try:
-                receive(lambda frame: frame.get("type") == "ready")
-                send({"id": "model", "type": "set_model", "provider": PROVIDER, "modelId": MODEL})
-                if not receive(lambda frame: frame.get("id") == "model").get("success"):
-                    raise CheckFailed("owner model selection failed", stderr_path.read_text())
-                send({"id": "initial", "type": "prompt", "message": "Observe the offline owner fixture."})
-                receive(terminal)
-                if any("OWNER_WAKE" in prompt for prompt, _ in OwnerModel.requests):
-                    raise CheckFailed("owner wake arrived before the initial turn settled")
-                receive(terminal)
-                if not any("maintenance.json" in json.dumps(messages) and "DIRTY" in json.dumps(messages)
-                           for prompt, messages in OwnerModel.requests if "OWNER_WAKE" in prompt):
-                    raise CheckFailed("idle wake did not read the maintenance conflict fixture")
-                send({"id": "cancel", "type": "prompt", "message": "CANCEL_PROBE stop observation."})
-                receive(terminal)
-                if not any("Cancelled trigger " in json.dumps(messages)
-                           for prompt, messages in OwnerModel.requests if "CANCEL_PROBE" in prompt):
-                    raise CheckFailed("reminder cancellation was not confirmed")
-                try:
-                    receive(lambda frame: frame.get("type") == "agent_start", seconds=2)
-                except CheckFailed as failure:
-                    if str(failure) != "timed out waiting for idle-owner event":
-                        raise
-                else:
-                    raise CheckFailed("a cancelled reminder started another owner turn")
-                if any("CANCELLED_WAKE" in prompt for prompt, _ in OwnerModel.requests):
-                    raise CheckFailed("a cancelled reminder reached the owner")
-            finally:
-                process.stdin.close()
-                try:
-                    process.wait(timeout=10)
-                except subprocess.TimeoutExpired:
-                    process.kill()
-                    process.wait()
+
+def check_watch_evidence(session: OwnerSession, context_path: Path, fixture: dict) -> None:
+    """Reject visible/user wakes, stale snapshots, and editable follow-up delivery."""
+    batches = [json.loads(line) for line in context_path.read_text(encoding="utf-8").splitlines()]
+    contexts = []
+    for batch in batches:
+        if any(message.get("customType") == "daily-driver.watch-wake" for message in batch):
+            raise CheckFailed("old watch wake text remained in the provider context")
+        current = [message for message in batch if message.get("customType") == "daily-driver.watch-context"]
+        if len(current) > 1:
+            raise CheckFailed("the host injected duplicate current watch contexts")
+        for message in current:
+            if message.get("display") is not False or message.get("attribution") != "agent":
+                raise CheckFailed(f"watch hydration lost hidden agent attribution: {message}")
+            content = text_of(message.get("content"))
+            if WATCH_RULE not in content:
+                raise CheckFailed("watch hydration omitted the reference-data authority rule")
+            for snapshot in ("INITIAL_SNAPSHOT", "IDLE_CONFLICT_SNAPSHOT", "NATIVE_CONFLICT_SNAPSHOT"):
+                if content.count(snapshot) > 1:
+                    raise CheckFailed("the latest watch snapshot appeared more than once")
+            contexts.append(content)
+    for snapshot in ("INITIAL_SNAPSHOT", "IDLE_CONFLICT_SNAPSHOT", "NATIVE_CONFLICT_SNAPSHOT"):
+        if not any(snapshot in content for content in contexts):
+            raise CheckFailed(f"real Omp did not hydrate the updated {snapshot} state")
+    for stage, snapshot in (("native-start", "IDLE_CONFLICT_SNAPSHOT"),
+                            ("stop", "NATIVE_CONFLICT_SNAPSHOT")):
+        messages = next(request["messages"] for request in fixture["requests"] if request["stage"] == stage)
+        hydrated = [text_of(message.get("content")) for message in messages
+                    if WATCH_RULE in text_of(message.get("content"))]
+        if len(hydrated) != 1 or snapshot not in hydrated[0]:
+            raise CheckFailed(f"wire provider context did not contain the latest {stage} state once")
+    if any(
+        "Watch check due." in json.dumps(frame.get("followUp", []))
+        for frame in session.captured if frame.get("type") == "queue_update"
+    ):
+        raise CheckFailed("an internal watch wake entered the editable follow-up queue")
+    state = session.command({"id": "watch-messages", "type": "get_messages"})
+    messages = state.get("messages", []) if isinstance(state, dict) else state
+    wakes = [message for message in messages if message.get("customType") == "daily-driver.watch-wake"]
+    if len(wakes) != 1:
+        raise CheckFailed(f"expected one actual idle custom wake, found {len(wakes)}")
+    if any(message.get("display") is not False or message.get("attribution") != "agent"
+           or message.get("excludeFromContext") is True for message in wakes):
+        raise CheckFailed(f"actual watch wake fields violate the host delivery contract: {wakes}")
+
+
+def check_generic_reminders(session: OwnerSession, fixture: dict) -> None:
+    """Keep explicitly requested reminders visible and exactly cancellable."""
+    set_owner_plan(fixture, "generic-register", [("daily_driver_schedule", {
+        "delaySeconds": 3, "message": "REQUESTED_VISIBLE_REMINDER",
+    })])
+    session.send({"id": "generic-register", "type": "prompt", "message": "Remind me using the generic reminder fixture."})
+    session.settle()
+    set_owner_plan(fixture, "generic-delivery", [])
+    session.settle()
+    data = session.command({"id": "generic-messages", "type": "get_messages"})
+    messages = data.get("messages", []) if isinstance(data, dict) else data
+    reminders = [message for message in messages if message.get("customType") == "daily-driver.reminder"
+                 and text_of(message.get("content")) == "REQUESTED_VISIBLE_REMINDER"]
+    if len(reminders) != 1 or reminders[0].get("display") is not True or reminders[0].get("attribution") != "user":
+        raise CheckFailed(f"ordinary requested reminder was hidden or reattributed: {reminders}")
+    start = len(fixture["requests"])
+    set_owner_plan(fixture, "generic-cancel", [
+        ("daily_driver_schedule", {"delaySeconds": 2, "message": "CANCELLED_REQUESTED_REMINDER"}),
+        ("daily_driver_cancel_schedule", latest_trigger),
+    ])
+    session.send({"id": "generic-cancel", "type": "prompt", "message": "Cancel the separate requested reminder fixture."})
+    session.settle()
+    if not any("Cancelled trigger " in json.dumps(request["messages"]) for request in fixture["requests"][start:]):
+        raise CheckFailed("generic reminder cancellation was not confirmed")
+    count = len(fixture["requests"])
+    session.quiet(2.5)
+    if len(fixture["requests"]) != count:
+        raise CheckFailed("a cancelled generic reminder reached the provider")
+
+
+def check_owner_reload(omp: str, root: Path, env: dict, observer: Path, session: OwnerSession,
+                       fixture: dict) -> None:
+    """Resume a saved registration and reject duplicate timer or stale-state ownership."""
+    key = WATCH_KEY + ":run:" + str(uuid.uuid4())
+    set_owner_plan(fixture, "reload-register", [watch_call("register", 12, "RELOAD_SNAPSHOT", key)])
+    session.send({"id": "reload-register", "type": "prompt",
+                  "message": "Explicitly start a fresh fixture owner invocation for the reload check."})
+    session.settle()
+    session.close()
+    path, entries = saved_owner_entries(root)
+    records = [entry["data"] for entry in entries if entry.get("type") == "custom"
+               and entry.get("customType") == "daily-driver-watch" and entry.get("data", {}).get("key") == key]
+    if not records or records[-1].get("state", {}).get("observations") != owner_state("RELOAD_SNAPSHOT")["observations"]:
+        raise CheckFailed("the saved host session did not persist the latest structured watch state")
+    saved_record = records[-1]
+    if any(entry.get("customType") == "daily-driver.watch-context" for entry in entries):
+        raise CheckFailed("transient watch context was persisted into conversation history")
+    persisted_wakes = [entry for entry in entries if entry.get("type") == "custom_message"
+                       and entry.get("customType") == "daily-driver.watch-wake"]
+    if len(persisted_wakes) != 1 or persisted_wakes[0].get("display") is not False or persisted_wakes[0].get("attribution") != "agent":
+        raise CheckFailed(f"the actual saved wake lost hidden agent attribution: {persisted_wakes}")
+    before = len(fixture["requests"])
+    set_owner_plan(fixture, "reload-inspect", [
+        watch_call("get", key=key),
+        watch_call("register", 60, "DUPLICATE_MUST_NOT_REPLACE", key),
+    ])
+    resumed = OwnerSession(omp, root, env, observer, resume=path)
+    try:
+        if len(fixture["requests"]) != before:
+            raise CheckFailed("saved-session loading unexpectedly started inference before its deadline")
+        resumed.send({"id": "reload-inspect", "type": "prompt", "message": "Inspect the resumed fixture without changing its deadline."})
+        resumed.settle()
+        wire = fixture["requests"][-1]["messages"]
+        hydrated = [text_of(message.get("content")) for message in wire if WATCH_RULE in text_of(message.get("content"))]
+        if len(hydrated) != 1 or "RELOAD_SNAPSHOT" not in hydrated[0] or "DUPLICATE_MUST_NOT_REPLACE" in hydrated[0]:
+            raise CheckFailed("saved-session reload or duplicate registration replaced the persisted snapshot")
+        _, inspected_entries = saved_owner_entries(root)
+        inspected = [entry["data"] for entry in inspected_entries if entry.get("type") == "custom"
+                     and entry.get("customType") == "daily-driver-watch" and entry.get("data", {}).get("key") == key]
+        if not inspected or any(inspected[-1].get(field) != saved_record.get(field)
+                                for field in ("registrationId", "revision", "deadline", "delaySeconds", "state")):
+            raise CheckFailed("resumption or duplicate registration changed persisted deadline ownership")
+        set_owner_plan(fixture, "reload-wake", [
+            ("read", {"path": "maintenance.json"}), watch_call("stop", key=key),
+        ])
+        resumed.receive(
+            lambda frame: frame.get("type") == "agent_end" and frame.get("isTerminal", True),
+            seconds=max(1, saved_record["deadline"] / 1000 - time.time() + 3),
+        )
+        count = len(fixture["requests"])
+        resumed.quiet(2)
+        if len(fixture["requests"]) != count:
+            raise CheckFailed("resumed watch acquired duplicate wake ownership")
+        check_generic_reminders(resumed, fixture)
     finally:
-        server.shutdown()
+        resumed.close()
+    _, final_entries = saved_owner_entries(root)
+    records = [entry["data"] for entry in final_entries if entry.get("type") == "custom"
+               and entry.get("customType") == "daily-driver-watch" and entry.get("data", {}).get("key") == key]
+    if records[-1].get("lifecycle") != "stopped":
+        raise CheckFailed("the resumed watch did not persist its terminal stop")
+    if records[-1].get("registrationId") != saved_record.get("registrationId"):
+        raise CheckFailed("resumed watch acquired a second registration identity")
+    wakes = [entry for entry in final_entries if entry.get("type") == "custom_message"
+             and entry.get("customType") == "daily-driver.watch-wake"]
+    if len(wakes) != len(persisted_wakes) + 1:
+        raise CheckFailed("saved-session reload did not deliver exactly one additional hidden wake")
+    if any(entry.get("display") is not False or entry.get("attribution") != "agent" for entry in wakes):
+        raise CheckFailed("a resumed persisted wake lost hidden agent attribution")
+    if any(
+        "Watch check due." in json.dumps(frame.get("followUp", []))
+        for frame in resumed.captured if frame.get("type") == "queue_update"
+    ):
+        raise CheckFailed("the resumed internal wake entered the editable follow-up queue")
 
 
 def write_home(home: Path, port: int) -> None:
@@ -691,7 +1034,7 @@ def main() -> None:
             check_idle_owner(omp, root)
     finally:
         server.shutdown()
-    print("check-omp-embark-title-live: title gates, idle owner wake, and cancellation passed")
+    print("check-omp-embark-title-live: title gates, structured watches, reload, and generic reminders passed")
 
 
 if __name__ == "__main__":

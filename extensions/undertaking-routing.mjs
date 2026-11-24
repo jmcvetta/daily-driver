@@ -103,8 +103,8 @@ function ownedBy(state, owner) {
 	return false;
 }
 
-/** Install one-time undertaking model selection without changing host helper roles. */
-export function installUndertakingRouting(pi, getSettings, onCompleted = () => {}) {
+/** Install undertaking routing and invoke lifecycle callbacks on completion and cancellation. */
+export function installUndertakingRouting(pi, getSettings, onCompleted = () => {}, onStopping = () => {}) {
 	const states = new Map();
 	const owners = new Map();
 	function history(sessionId) {
@@ -212,6 +212,7 @@ export function installUndertakingRouting(pi, getSettings, onCompleted = () => {
 			}
 			state.cancelling = true;
 			try {
+				await onStopping(ctx, state.issue);
 				if (current(ctx) === state) {
 					ctx.abort();
 					await ctx.waitForIdle();
@@ -486,7 +487,8 @@ export function installUndertakingRouting(pi, getSettings, onCompleted = () => {
 			try {
 				await onCompleted(ctx, state.issue);
 			} catch (error) {
-				console.error(`daily-driver: undertaking completion notification failed: ${error.message}`);
+				console.error(`daily-driver: undertaking completion callback failed: ${error.message}`);
+				return { isError: true, content: [{ type: "text", text: `Undertaking finished, but completion callback failed: ${error.message}` }], details: describe(ctx) };
 			}
 			return { content: [{ type: "text", text: "Undertaking route finished." }], details: describe(ctx) };
 		},
