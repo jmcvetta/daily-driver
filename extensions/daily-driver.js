@@ -2982,7 +2982,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 						stdout: result.stdout,
 						stderr: result.stderr,
 					},
-					...(result.code === 0 && !supervisionError ? {} : { isError: true }),
+					...(result.code === 0 ? {} : { isError: true }),
 				};
 			} catch (error) {
 				return {

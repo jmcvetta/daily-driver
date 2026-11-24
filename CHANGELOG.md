@@ -5,6 +5,7 @@
 ### Changed
 
 * Fetch Projected Releases commit history in batches of 25 using the shared release-please configuration ([#1071](https://github.com/jmcvetta/daily-driver/issues/1071)).
+* Discover bulk dependency upgrades from repository manifests, lockfiles and supported package-manager commands even when Dependabot is absent or incomplete; use bot pull requests as supplemental context ([#1092](https://github.com/jmcvetta/daily-driver/issues/1092)).
 * Add opt-in fenced PR supervision with fresh-read work acknowledgment, parent-mediated Omp child recovery, bounded activation retries, and rollback-compatible timer/watch/service transfer; retain existing maintenance until per-PR transfer and prove restart/stop behavior only in an isolated harness ([#1038](https://github.com/jmcvetta/daily-driver/issues/1038)).
 
 * Store Omp watch context in session entries and coalesce hidden agent-attributed continuation wakes, while retaining fallback cadence and explicit user reminders ([#1065](https://github.com/jmcvetta/daily-driver/issues/1065)).
@@ -45,6 +46,8 @@
 * Require assignable task issues for all new and reused epic stories, with task readiness checked before linking and dispatch ([#723](https://github.com/jmcvetta/daily-driver/issues/723)).
 
 ### Fixed
+
+* Retry failed Omp notification delivery without persisting a duplicate-suppression entry; retain one durable entry after successful delivery ([#1091](https://github.com/jmcvetta/daily-driver/issues/1091)).
 
 * Preserve Omp commit provenance through selective commits, local conflict-resolution merges, and explicitly prepared squash landing messages; keep GitHub-authored update-branch messages distinct ([#1029](https://github.com/jmcvetta/daily-driver/issues/1029)).
 
