@@ -674,8 +674,8 @@ those two actions; it never asks whether to open sessions or launch a wave.
 The prompt asks for the decision in the user's own words because the
 classifier weighs user text over skill instructions. Once the mode is stated
 or confirmed, the first wave and every wave after it launch unasked. `Post the
-muster roll` records the confirmed landing mode and each task's implementor,
-required class, selected route, and actual model (or `unreported`).
+muster roll` records the landing preference and task-to-worker mapping;
+class and execution identity remain on the task and claim.
 
 This does not relax anything else. The stops below still stop, and nothing here
 touches the constitution's own gates.

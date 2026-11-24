@@ -23,7 +23,7 @@ The fleet
 | `Cancel the watches` | Cancel the backstop | `mcp__Claude_Code_Remote__delete_trigger`, by the `trigger_id` the wake slot holds |
 | `Cancel the watches` | Drop a pull-request subscription | `mcp__github__unsubscribe_pr_activity`, one call per subscription |
 | `Secure the work` | Stop a session's current turn | `mcp__Claude_Code_Remote__interrupt_session` |
-| `Secure the work` | Send the wrap-up | `mcp__Claude_Code_Remote__send_message`, `session_id` the session id in the muster roll's `Implementor` cell |
+| `Secure the work` | Send the wrap-up | `mcp__Claude_Code_Remote__send_message`, `session_id` the session id in the fleet mapping's `Worker` cell |
 | `Secure the work` | Read whether a failed send's session is still live | `mcp__Claude_Code_Remote__get_session` |
 | `Secure the work` | Read whether the turn has ended | `mcp__Claude_Code_Remote__get_session`, `status_bucket` |
 | `Write the handoff` | Comment on a task issue or the epic | `mcp__github__add_issue_comment` |
@@ -101,11 +101,10 @@ The watches
 
 The backstop is a `send_later` trigger held by the identifier its arming
 call returned — the one wake slot [`0034`](../../../docs/notes/0034-the-wake-slot-is-never-empty.md)
-records. `delete_trigger` takes that identifier; a trigger id the session
-no longer holds is read from the epic's stand-down comment, where
-`Write the handoff` records the watch inventory — and a first stand-down
-has no earlier comment of that shape, so the id is then the one the wake
-slot holds. Each pull-request subscription is dropped
+records. `delete_trigger` takes that identifier. If the slot is unavailable,
+consult any recorded failed-cancellation or live-watch residual; do not expect
+an inventory of successful transient timers. Record an unavailable identifier
+as unknown rather than claiming cancellation. Each pull-request subscription is dropped
 by the same call that opened it, and where a PR Steward watches the pull
 request instead, the call still succeeds — dropping this session's
 subscription is the point, and the steward is unaffected.
