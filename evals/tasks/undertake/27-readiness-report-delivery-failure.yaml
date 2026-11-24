@@ -11,6 +11,16 @@ initial_prompt: >-
   readiness and the delivery failure once in the available user conversation,
   without claiming the orchestrator received it or reverting the PR.
 
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-readiness/shared
+      mount_point: .fixture
+  mock_path_dirs: [.fixture/bin]
+
+pre_run:
+  - command: bash .fixture/setup.sh report-delivery-fails
+    timeout: 60
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
@@ -27,6 +37,12 @@ success_criteria:
     description: "`undertake` handles failed report delivery"
     expected_skill: undertake
     skill_name: undertake
+
+  - type: run_command
+    description: The fixture PR remains ready without another transition
+    command: python3 .fixture/verify.py delivery
+    timeout: 30
+    weight: 3
 
   - type: agent_judge
     description: The delivery failure is stated once without undoing readiness

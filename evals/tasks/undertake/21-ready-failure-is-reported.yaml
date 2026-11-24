@@ -4,9 +4,10 @@ description: >-
 tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
-  PR #25 is a draft for issue #24 and the gate conditions hold on its current
-  head, but marking the PR ready will fail. `gh` is an offline client; see
-  `.fixture/README.md`. What happens now?
+  PR #25 is a draft for issue #24. The gate conditions are said to hold on
+  its current head, but you must read and verify current gate evidence before
+  attempting readiness. Marking the PR ready will fail. `gh` is an offline
+  client; see `.fixture/README.md`. What happens now?
 
 sandbox:
   template_sources:
@@ -16,7 +17,7 @@ sandbox:
   mock_path_dirs: [.fixture/bin]
 
 pre_run:
-  - command: bash .fixture/setup.sh ready-write-fails
+  - command: bash .fixture/setup.sh ready-write-fails-covered-ancestor
     timeout: 60
 
 agent:

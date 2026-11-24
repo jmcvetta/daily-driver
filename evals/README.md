@@ -1629,16 +1629,17 @@ post-ready user report in the transcript while its fixture verifier proves
 that gate reads preceded the ready write; neither a GitHub telemetry write nor
 a report-shaped string in source substitutes for that evidence. The addressed
 case requires the same report in the child result for orchestrator relay; the
-delivery-failure case supplies an observed send error and grades one honest
-failure statement without retry. `fixtures/undertake-readiness/shared` supplies
-a stateful offline `gh` for pull request #25, a temporary Git repository with a
-local bare remote, and a harmless `pr-keep-current.sh` stub. Each call is
-logged to `.fixture/ops.log`; `verify.py gate` and `verify.py service` read that
-record after the run. The gate verifier requires current-head gate reads before
-a ready write. Separate scenarios cover a refused ready write, post-ready
-`BLOCKED` or `UNKNOWN` merge states, CI on another head, and failed reads. The
-verifier rejects missing or stale review evidence and a new review round for a
-clean merge.
+delivery-failure case starts with the fixture PR ready and verifies it stays
+ready without a second transition or GitHub report comment; its judge requires
+one honest failure statement without retry. `fixtures/undertake-readiness/shared`
+supplies a stateful offline `gh` for pull request #25, a temporary Git
+repository with a local bare remote, and a harmless `pr-keep-current.sh` stub.
+Each call is logged to `.fixture/ops.log`; `verify.py gate`, `verify.py delivery`,
+and `verify.py service` read that record after the run. The gate verifier
+requires current-head gate reads before a ready write. Separate
+scenarios cover a refused ready write, post-ready `BLOCKED` or `UNKNOWN` states,
+CI on another head, and failed reads. The verifier rejects missing or stale
+review evidence and a new review round for a clean merge.
 
 The positive readiness row uses `covered-ancestor`: the PR head already
 contains the base, while the submitted review covers the head through
