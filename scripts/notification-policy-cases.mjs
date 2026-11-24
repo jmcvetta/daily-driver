@@ -96,6 +96,7 @@ export default function registerNotificationPolicyChecks(check, { makeSession })
 		release();
 		await Promise.all([first, concurrent]);
 		assert.equal(f.sent.length, 1);
+		assert.equal(f.entries.length, 1);
 		assert.equal(f.sent[0].title, "#755 Repair notifications");
 		assert.equal(f.sent[0].body, "Approval is required.");
 		assert.equal(f.sent[0].type, "permission");
@@ -103,6 +104,7 @@ export default function registerNotificationPolicyChecks(check, { makeSession })
 		const resumed = fixture({ entries: structuredClone(f.entries) });
 		assert.equal((await resumed.call(attention())).details.duplicate, true);
 		assert.equal(resumed.sent.length, 0);
+		assert.equal(resumed.entries.length, 1);
 		assert.equal(JSON.stringify(f.entries).includes("Approval is required."), false);
 		assert.equal((await f.call(attention("different"))).details.accepted, true);
 		assert.equal(f.sent.length, 2);
@@ -150,28 +152,42 @@ export default function registerNotificationPolicyChecks(check, { makeSession })
 		assert.equal(f.sent.length, 2);
 	});
 
-	// A transport observer must see the durable entry before the toast is sent.
-	check("notification records its transition before transport", async () => {
+	// A transport observer must not see a durable entry until delivery succeeds.
+	check("notification records its transition after successful transport", async () => {
 		let f;
 		let recordedAtSend = false;
 		f = fixture({ getTransport: () => ({ sendNotification() {
 			recordedAtSend = f.entries.some(entry => entry.customType === "daily-driver-notification");
 		} }) });
 		assert.equal((await f.call(attention())).details.accepted, true);
-		assert.equal(recordedAtSend, true);
+		assert.equal(recordedAtSend, false);
+		assert.equal(f.entries.length, 1);
 	});
 
-	// Sending before durable recording can duplicate a notification after a crash.
-	check("persistence failure sends nothing; transport failure is not replayed", async () => {
-		const failed = fixture({ appendEntry: () => { throw new Error("disk unavailable"); } });
-		await assert.rejects(() => failed.call(attention()), /disk unavailable/u);
-		assert.equal(failed.sent.length, 0);
+	// The wrong result is to suppress a retry after delivery failed, or append twice after success.
+	check("failed notification delivery permits one successful retry", async () => {
 		let attempts = 0;
-		const transport = fixture({ getTransport: () => ({ sendNotification() { attempts++; throw new Error("terminal unavailable"); } }) });
-		const result = await transport.call(attention());
-		assert.equal(result.details.suppressed, "delivery-failed");
+		const transport = fixture({ getTransport: () => ({ sendNotification() {
+			attempts++;
+			if (attempts === 1) throw new Error("terminal unavailable");
+		} }) });
+		const failed = await transport.call(attention());
+		assert.equal(failed.details.suppressed, "delivery-failed");
+		assert.equal(failed.details.error, "terminal unavailable");
+		assert.equal(transport.entries.length, 0);
+		assert.equal((await transport.call(attention())).details.accepted, true);
+		assert.equal(transport.entries.length, 1);
 		assert.equal((await transport.call(attention())).details.duplicate, true);
-		assert.equal(attempts, 1);
+		assert.equal(attempts, 2);
+		assert.equal(transport.entries.length, 1);
+	});
+
+	// A successful delivery must not be reported as failed if its durable commit fails.
+	check("notification delivery remains accepted when deduplication persistence fails", async () => {
+		const f = fixture({ appendEntry: () => { throw new Error("disk unavailable"); } });
+		assert.equal((await f.call(attention())).details.accepted, true);
+		assert.equal(f.sent.length, 1);
+		assert.equal(f.entries.length, 0);
 	});
 
 	// Children and headless execution cannot interrupt the user, even through internal completion calls.
