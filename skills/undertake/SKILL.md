@@ -718,9 +718,9 @@ continues without a second owner.
 --------------------
 
 Invoke `pr`'s `Keep it current` and its active harness route. That skill owns
-the base merge, cadence, CI floor, conflict handling, and watch lifecycle for
-every agent-opened PR. `Open the draft` starts maintenance; this step reuses
-it rather than waiting until ready or starting a second actor.
+the base merge, cadence, post-update CI assessment, conflict handling, and
+watch lifecycle for every agent-opened PR. `Open the draft` starts maintenance;
+this step reuses it rather than waiting until ready or starting a second actor.
 
 When it looks
 -------------
