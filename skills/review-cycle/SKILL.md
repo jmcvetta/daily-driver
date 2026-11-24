@@ -214,8 +214,10 @@ a bounded brief, complete review history, independent analysis, and the same
 publication and readiness evidence. The author cannot substitute self-review.
 If the selected method is unavailable or cannot meet those requirements, report
 the precise gap; do not treat selection alone as a completed review. The harness
-reference supplies the invocation and publication route, including the bounded
-brief for `Verify the fix delta`.
+reference supplies its default invocation and publication route and the bounded
+brief for `Verify the fix delta`. For a selected alternative, use its supported
+invocation and the publication contract below; a missing alternative-specific
+example in the reference is not itself an unavailable-method verdict.
 
 **Read the complete GitHub review history before each review.** Read submitted
 reviews and every inline thread, including resolved and outdated threads, their
