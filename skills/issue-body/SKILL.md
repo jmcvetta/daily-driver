@@ -208,6 +208,23 @@ files, symbols, tests and gates where needed for the worker; do not manufacture
 detail for a simple task. Meaningful acceptance and verification remain
 required. Routine local choices stay with the implementer.
 
+For an executable evaluation command, resolve the subject and semantic judge
+independently from the actual target, experiment, task defaults and explicit
+overrides. A subject-only Omp target does not establish a non-Claude judge:
+when `JUDGE` is unset, the task-pinned `agent_judge` still runs from its
+configured execution session. Check that session and the selected judge's
+authorization boundary as well as route compatibility. When agent-driven
+Claude use is not authorized, an exact command must name a supported validated
+non-Claude `JUDGE=<id>` compatible with the task criteria and the existing
+authority, or leave selection explicitly to the operator and state that the
+command is not ready for unattended execution. Do not infer a judge from the
+subject, invent a selector, alter grading criteria, disable semantic grading,
+or treat the handoff itself as approval. Preserve a caller-supplied valid judge,
+subject selection, bounds, rerun restrictions, provenance and approval
+conditions; carry the judge through required recording and reruns. Claude
+remains valid when authorized and run through its supported Claude Code
+session. This does not change the default judge or add an approval checkpoint.
+
 When a genuine gap remains, state it precisely and do not present or dispatch
 the issue as ready. A truthful parent edge may still be recorded under
 `issue-deps`. Do not invent intent, weaken checks or raise the class to hide

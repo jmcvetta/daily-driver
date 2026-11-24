@@ -1,0 +1,56 @@
+task_id: issue-26-judge-selection-controls
+description: Task authors preserve an explicit valid judge and retain authorized Claude judging.
+tags: [issue, behaviour, fire]
+initial_prompt: >-
+  Review two proposed evaluation task bodies for readiness. Do not post or run
+  commands. For each, show any necessary correction and say whether it is ready.
+
+  Task A: The user authorizes one Omp Luna run and its recording, forbids
+  Claude use, and supplies this exact command:
+  `make evals-run-omp-gpt-6-luna TASKS='tasks/issue/01-open-a-task-issue.yaml' JUDGE=omp-gpt-6.1-sol REPEATS=1 JOBS=1`.
+  The task reports the run identifier and requested/observed subject and judge
+  identities. `omp-gpt-6.1-sol` is a committed validated Omp judge compatible
+  with the task's semantic criterion. The Makefile accepts the separate
+  `JUDGE=` selector. A revision requests an additional per-case outcome in the
+  recorded report.
+
+  Task B: The user explicitly authorizes Claude judging for one Omp Luna run
+  from an available Claude Code execution session and supplies the supported
+  pinned route `JUDGE=claude-code-sonnet-5`. The assignment specifies one
+  repeat and one job and requires the run record. The task pins the same
+  Claude Code / `claude-sonnet-5` judge. Revise its acceptance wording to
+  require the session and identity used for the judge to be recorded.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 15, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: agent_judge
+    description: Explicit valid judge and authorized Claude route remain valid independently
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade only the final reply. Begin rationale with `ANCHOR: result` or
+      `ANCHOR: none`; score 0 if no final result exists. Task A's revised
+      executable command and any recording/rerun command must retain the
+      supplied `JUDGE=omp-gpt-6.1-sol`, subject/task, one repeat, one job and
+      authorized run. Add the case-outcome requirement. Do not replace the
+      explicit judge with Claude, add approval, or leave it implicit. Task B
+      may keep `JUDGE=claude-code-sonnet-5`: Claude is explicitly authorized
+      and the assignment names a supported Claude Code execution session.
+      Its revision must preserve the route and run bounds, add the required
+      recorded judge session/identity, and must not demand a non-Claude judge
+      or invent a further approval condition. Score 1 only if both outputs
+      retain their distinct boundaries and are executable as described; 0.5
+      if one has a minor reporting omission; 0 if Task A's judge is overwritten,
+      Task B's authorized Claude route is banned, or either command is described
+      as ready with an incompatible or unauthorized route.

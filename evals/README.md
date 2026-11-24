@@ -71,17 +71,18 @@ evals/
 boundaries: settled versus unresolved task intent, bounded research and
 evidenced negative/inconclusive outcomes, interactive specifications, bugs
 without task metadata, non-executable proposals, safe human handoffs,
-automatic bug reports, and
-effective-kind edits that preserve evidence and provenance. Provenance cases
-also cover repeated blocks, distinct field values, successive revisions, and
-attribution on separate comments. `tasks/epic/`
-includes mixed-kind children and epic outcome completion, first-delivery scope,
-ordinary-class boundary selection, outcome-based task boundaries, and
-deployment continuity. The undertaking
-integration-proof case uses a local authenticated request/response fixture to
-assert that proof precedes dependent work; it makes no network or cloud calls.
-These are behavioral cases: graders assess decisions and evidence, not a fixed
-heading list.
+automatic bug reports, and effective-kind edits that preserve evidence and
+provenance. Omp evaluation handoff cases cover independent subject and judge
+selection for new and revised tasks, preservation of explicit judge choices,
+and authorized Claude judging. Provenance cases also cover repeated blocks,
+distinct field values, successive revisions, and attribution on separate
+comments. `tasks/epic/` includes mixed-kind children and epic outcome completion,
+first-delivery scope, ordinary-class boundary selection, outcome-based task
+boundaries, and deployment continuity. The undertaking integration-proof case
+uses a local authenticated request/response fixture to assert that proof
+precedes dependent work; it makes no network or cloud calls. These are
+behavioral cases: graders assess decisions and evidence, not a fixed heading
+list.
 The issue, epic and embark cases also cover truthful unready membership,
 independent dispatch and a partially failed graph operation; they do not
 contact a live tracker.
