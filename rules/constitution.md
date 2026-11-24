@@ -49,15 +49,7 @@ read manuals before source or web. Reuse the catalog.
 
 ## Engineering
 
-**Code without tests is broken.** Say so. Application tests assert, fail loudly,
-ship with their code and run offline against fixtures, not live third parties.
-Manual checks are not tests. Cover silent errors. Test doc comments name the
-wrong behavior that would otherwise pass; delete tests that cannot.
-OpenTofu-like declarations use offline `validate`. Test production infrastructure
-with infrastructure tools, not ad hoc scripts. Do not test tests or testing
-machinery unless it is the shipped product. Remove tests of checks, lint/static
-analysis, CI, selectors/filters, fixtures/fakes/helpers, eval harnesses,
-graders/judges and rendered eval results.
+**Code without tests is assumed to be broken.**
 
 **Name every script you run.** List each executable explicitly; never expand a
 glob into a directory of executables. Never skip, disable, silence or delete a
@@ -71,6 +63,7 @@ New exported symbols in any language need concise GoDoc-style behavioral
 comments, not obvious restatements. Do not sweep old symbols. Use package
 managers to add, upgrade or pin dependencies; never hand-edit manifests or
 lockfiles.
+
 
 ## When blocked
 
@@ -102,11 +95,13 @@ lasting purpose. Follow `provenance` for commit attribution.
 Work is not done until applicable project validation passes; obtain actual
 results and report failures and unrun checks honestly. CI is the gate: push and
 read established project gates, rather than inventing a new gate for each task.
-Do not run a project check locally unless reproducing a specific failure being
-fixed or conducting a bounded, targeted experiment to answer a named
-engineering question with disposable inputs in an isolated environment. A
-routine pre-push check is not such an experiment. Safety, authorization, test
-and CI requirements remain in force.
+Prefer the narrowest relevant local check that answers the current engineering
+question. Run focused tests or other applicable checks during iteration; avoid
+repeated full-project runs after small changes when focused evidence covers the
+change. Use broader local validation at meaningful checkpoints when its cost
+is justified; no failure reproduction or experiment is required. Report local
+checks that failed or remain unrun honestly. Safety, authorization, test and
+CI requirements remain in force.
 
 New CI checks recur in execution, review, triage and maintenance. Read `pr`
 before validation or any CI-enforcement change: it owns recurring-cost
