@@ -672,12 +672,13 @@ send them to CI. A red check returns to `Fix, answer, resolve, push`.
 7–9 — `Review the head`, `Fix, answer, resolve, push`, `Verify the fix delta`
 ----------------------------------------------------------------------------
 
-Invoke `review-cycle`. It owns the CI wait, full review, finding protocol, and
-independent bounded verification. First record the reviewed SHA and every
-finding disposition. Batch all fixes, including CI and bot fixes, push them,
-and wait for CI on that head. Then run `Verify the fix delta` when the
-pull-request content changed behavior, contracts, or workflow rules. It is one
-pass for the batch, never one per commit or finding.
+Invoke `review-cycle`. It owns CI observation, full review, the finding
+protocol, and independent bounded verification. Review the stable pushed head
+while CI runs; record the reviewed SHA and every finding disposition. Batch
+all fixes, including observed CI and bot fixes, and push them. Run `Verify the
+fix delta` when pull-request content changed behavior, contracts, or workflow
+rules; it may overlap CI. It is one pass for the batch, never one per commit
+or finding. Current-head green CI remains mandatory for readiness.
 
 A pass that finds defects returns to `Fix, answer, resolve, push`, and the
 correction pushed from there earns the pass that confirms it — every time,
@@ -1250,7 +1251,7 @@ qualify. Notification does not replace the required record or chat handoff.
   plan and continue. Escalate only an evidenced dependency under the rules
   below; do not ask the user to approve ordinary repair work.
 - **CI still running**, at `Ready for review`. A wait, not a question —
-  nothing is asked, and nothing proceeds on a check that has not reported.
+  readiness does not proceed, but review can run on the stable pushed head.
 - **A base merge that conflicts**, at `Keep it current`.
   The update-branch call cannot resolve a conflict: it fails
   and changes nothing, so a resolution is a local merge, resolved and pushed.
@@ -1265,11 +1266,10 @@ qualify. Notification does not replace the required record or chat handoff.
 - **Pending CI and other external waits** are not human actions; retain
   ownership and use the existing continuation rules.
 
-The round at `Review the head` and `Fix, answer, resolve, push` has three stops
-of its own — its own wait on CI, a review finding whose fix is a real
-trade-off, and fixes that will not converge, which is the wall at `Verify the
-fix delta`. All three are `review-cycle`'s; the second is `judgement-call`'s
-gate applied inside it, and the third reports rather than asks.
+The round at `Review the head` and `Fix, answer, resolve, push` has stops of
+its own: a review finding whose fix is a real trade-off, and fixes that will
+not converge at `Verify the fix delta`. The first is `judgement-call`'s gate;
+the second reports rather than asks.
 
 Everything else runs through. No permission is asked to open the issue, to
 claim it, to commit, to push, to open the draft, or to mark it ready. The last

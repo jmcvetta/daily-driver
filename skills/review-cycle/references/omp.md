@@ -205,8 +205,9 @@ in that window, including after a resume. At expiration:
 3. If the head moved, stop old-head services and discard their verdict.
    Reobserve the new head before starting its window.
 4. If inventory is terminal and no known registration gap remains, continue
-   the review or failure diagnosis. Stop obsolete CI services. A standalone
-   wait cancels its reminder; an ongoing PR owner retains its common slot.
+   failure diagnosis or the readiness gate. Review need not wait for this.
+   Stop obsolete CI services. A standalone wait cancels its reminder; an
+   ongoing PR owner retains its common slot.
 
 A missing window record is not permission to reset a live watcher. Inspect
 the process, preserve its bound, and recover its log where possible. After
