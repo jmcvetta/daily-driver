@@ -78,6 +78,23 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.78.0](https://github.com/jmcvetta/daily-driver/compare/v0.77.0...v0.78.0) (2026-11-24)
+
+
+### Features
+
+* add durable PR supervision and owner inbox primitives ([#1059](https://github.com/jmcvetta/daily-driver/issues/1059)) ([27e47e9](https://github.com/jmcvetta/daily-driver/commit/27e47e9c30f2033db90981cd9f8794f4ccc94bf5))
+
+
+### Bug Fixes
+
+* **issue-body:** resolve evaluation judges independently ([#1068](https://github.com/jmcvetta/daily-driver/issues/1068)) ([d34d17e](https://github.com/jmcvetta/daily-driver/commit/d34d17e20f93d6e71aea6c1a842a85aeb78b8945))
+
+
+### Performance Improvements
+
+* **release:** lower history page size to 25 ([#1072](https://github.com/jmcvetta/daily-driver/issues/1072)) ([3471edc](https://github.com/jmcvetta/daily-driver/commit/3471edcd8db681c12569c43c874d1e0a514609a9))
+
 ## [0.77.0](https://github.com/jmcvetta/daily-driver/compare/v0.76.0...v0.77.0) (2026-11-24)
 
 
