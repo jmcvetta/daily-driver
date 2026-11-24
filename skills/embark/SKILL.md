@@ -47,14 +47,13 @@ blocked research separately. Existing independent implementation already in
 progress during amendment may continue under its unchanged contract; affected
 work pauses. Discovery itself never starts implementation.
 
-For a promoted specification-backed epic, resolve each task's specific parent
-publication record before dispatch. Read its approved exact merged `master`
-revision, verify the allocated IDs exist, exclusions are clear and allocation
-was separately agreed. Missing, changed, ambiguous or inaccessible records
-cannot authorize dispatch; report and route them to `epic`, while continuing
-unrelated eligible work. Legacy tasks with their own pinned path and SHA retain
-that original binding, not a newer record. At closure require evidenced
-delivery of every allocation against its governing revision.
+For a promoted specification-backed epic, verify each task's direct canonical
+revision, operator approval evidence, allocated IDs and exclusions under
+`issue-body` before dispatch. A parent publication record is optional for new
+tasks; existing record-bound and path-and-SHA-bound tasks retain their original
+contracts. Report precise evidence gaps to `epic` while continuing unrelated
+eligible work. Never silently select a newer revision. At closure require
+evidenced delivery of every allocation against its governing revision.
 
 
 The sequence
