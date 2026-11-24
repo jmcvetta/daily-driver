@@ -93,10 +93,10 @@ Every epic story must pass `Take the wave`'s assignability gate. Resolve its
 before calling `create_session`.
 `session_context.model` is a candidate concrete identifier only after that
 assessment; `configured_model` can be an alias or unsupported suffix. Never
-pass a class name to `model`, and never silently inherit an unchecked model.
-Do not invent a Fable identifier or assume an API route; if the concrete route
-cannot be established for the initial selection, stop that task with a
-configuration gap.
+pass a class name to `model`. Do not invent a Fable identifier or assume an API
+route. If automatic class-appropriate selection cannot be established through
+a supported mechanism, explain the failed attempt and actual invoking route,
+then continue rather than blocking that task or requiring replacement dispatch.
 
 Reading a session, and what cannot be read
 ------------------------------------------

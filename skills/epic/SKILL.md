@@ -163,23 +163,15 @@ remains `Agree the plan`; true dependency edges remain `issue-deps`.
 ------------------
 
 
-**Every story is an assignable issue.** This applies to new children and
-existing issues selected for linking. An assignable story has exactly one
-agent-eligible kind — `task`, `research` or `bug` — and passes `issue-body`'s
-readiness test for that kind. It also carries exactly one valid `## Model class`
-section with a rationale, as `issue-body` defines. A missing or invalid class
-or rationale never defaults to `routine`. A `frontier` rationale explains why
-cheaper classes are insufficient; the class is a capability label, not a
-separate approval event, and needs no approval record or work envelope.
-`issue-body` owns the taxonomy, format and routing guidance; `embark` resolves
-the concrete worker. Research and bug stories keep their own contracts and
-completion tests, not the task template, haiku or implementation map. A `story`
-marker, parent edge or kind label alone proves no readiness.
-
-Assignable means a complete handoff for the required agent class. Legitimate
-open blockers may delay dispatch without preventing inclusion in the epic.
-It does not require a GitHub assignee or an available concrete model in the
-authoring session. Do not assign anyone as part of planning.
+**Membership is not assignability.** Link truthful children under the agreed
+plan even when their handoff is not ready. Before dispatch, an assignable
+story has exactly one agent-eligible kind (`task`, `research` or `bug`),
+passes its own `issue-body` readiness test and carries one valid `## Model
+class` section with rationale. Missing or invalid metadata never defaults to
+`routine`. `issue-body` owns the test and `embark` applies it; research and
+bug stories retain their own contracts. A parent edge, marker or kind alone
+proves no readiness. Open blockers delay dispatch, not membership. Neither a
+GitHub assignee nor an available concrete model is required during planning.
 
 For an implementation epic, dispatchable stories exclude `proposal`,
 `specification`, `human` and nested parent issues. The closed interactive
@@ -233,7 +225,7 @@ they **are** the plan: an edge says which task waits on which, so the order of
 the work is as much a statement of scope as the split is.
 
 **One agreement covers the whole plan**, edges included. `Write the graph`
-writes them and reports each one, and asks nothing a second time.
+writes them and reports the operation without asking a second time.
 
 3 — Open the issues
 -------------------
@@ -242,16 +234,15 @@ writes them and reports each one, and asks nothing a second time.
 a change described in a prompt has often been described in an issue already,
 and a second issue for it splits the trail in two.
 
-Every child body follows `issue-body`'s contract for its kind, with its
-`Model class` section settled at `Draft the plan`. Read reused issues before
-changing them. Resolve repository-answerable gaps through `issue`; preserve
-valid requirements, evidence, and provenance under `issue-body`'s update rule
-and follow `issue-labels`' kind-conflict rules. Leave an already-ready story
-unchanged. Do not blindly relabel a kind or invent scope to fit the epic. If a
-required decision or prerequisite is unavailable, report the exact gap and
-continue independent preparation. Do not attach the issue or present the epic
-as ready until every story passes. Replacement issues need the applicable
-scope agreement.
+Each child body follows its kind's `issue-body` contract. Read reused issues
+before changing them. Resolve repository-answerable gaps through `issue`;
+preserve valid requirements, evidence and provenance, and follow
+`issue-labels`' kind-conflict rules. Leave an already-ready story unchanged.
+Do not relabel a kind or invent scope to fit the epic. If a required decision
+or prerequisite is unavailable, report the exact gap, retain truthful
+membership, and continue independent preparation. Do not present the child as
+ready or dispatch it until its own test passes. Replacement issues need the
+applicable scope agreement.
 
 Where an issue already describes the whole change, **that issue becomes the
 epic**. Do not open a second one beside it: rewrite its body the way a new
@@ -270,12 +261,10 @@ The epic first, then the children, because each child names the epic as its
 parent and the parent must exist to be named. Its body states the outcome,
 justification and applicable scheduling constraints.
 
-**Every issue this step writes carries one issue kind.** The epic gets `epic`;
-every child gets its own agent-eligible kind (`task`, `research` or `bug`),
-under `issue-labels`. Apply the assignability test before any create call that
-also sets a parent. After that call, verify the edge and invoke `issue-labels`
-to add `story`. The marker supplements the kind; it is never sent in place of
-one.
+**Every issue this step writes carries one issue kind.** Select each child's
+kind under `issue-labels`. If a create call also sets a parent, apply
+`issue-deps`' membership evidence and plan agreement, then verify the edge and
+reconcile `story`. The marker supplements the kind; it never replaces one.
 
 When this step creates a new epic, report its link and the `epic` label under
 [`issue`'s reporting rule](../issue/SKILL.md#reporting-a-newly-opened-issue).
@@ -302,11 +291,10 @@ again per issue is the same question eight times.
 Two relationships, and `issue-deps` picks a client for each. They are not
 always the same client, and on a web worker they are not.
 
-- **Parent.** Every child issue is a sub-issue of the epic. Apply `issue-deps`'
-  pre-link assignability gate to every new or reused child before writing the
-  edge. Where the create call already set the parent, that gate ran at `Open
-  the issues`; otherwise write it here. After every parent write, verify the
-  direct edge, then invoke `issue-labels` to reconcile `story`.
+- **Parent.** Write each supported child relationship under `issue-deps`.
+  Where creation already set the parent, verify it; otherwise write it here.
+  Verify from the opposite end and reconcile `story`, even for an unready
+  child.
 - **Blocked-by.** Only the edges `Draft the plan` named.
 
 **An epic's children are not its blockers.** `issue-deps` says why:
@@ -320,8 +308,9 @@ response is the issue you modified, so it confirms nothing.
 --------------------
 
 Ensure the epic body states the outcome, justification and any scheduling
-constraints. Confirm every story passes assignability before presenting it as
-ready; do not maintain a copy of graph membership or status in the body.
+constraints. Report each child's readiness defects precisely; do not present
+an unready child as dispatchable. Do not maintain a copy of graph membership
+or status in the body.
 
 6 — Hand off
 ------------
@@ -359,7 +348,10 @@ Human brief
 What is to be changed: how the software behaves differently once the epic is
 finished. Be concise and describe the end state, not a duplicate task list.
 
-It is also the test `embark`'s `Close the epic` step closes against.
+State the observable coordinated outcome and the evidence needed to establish
+it. `embark`'s `Close the epic` checks that outcome; closed children alone and
+inconclusive research do not establish delivery. A canceled child counts only
+when the accepted condition explicitly permits it.
 
 Where the epic has nontrivial components, flow, state, or data movement,
 this brief should include one Mermaid diagram

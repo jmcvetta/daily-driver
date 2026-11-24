@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { explicitModelClassRole, installModelClassDefaults, MODEL_CLASS_ROLE_DEFAULTS, MODEL_CLASS_ROLE_TAGS } from "../extensions/role-default-helper.mjs";
+import { installModelClassDefaults, MODEL_CLASS_ROLE_DEFAULTS, MODEL_CLASS_ROLE_TAGS } from "../extensions/role-default-helper.mjs";
 
 function settingsFixture(initialRoles = {}, initialTags = {}) {
   const roles = { ...initialRoles };
@@ -75,19 +75,17 @@ assert.equal(operator.mutations.length, mutationCount, "repeated installation mu
 const cleared = settingsFixture({ routine: "" });
 installModelClassDefaults(cleared.settings, cleared.modelTagsSetting);
 assert.equal(cleared.roles.routine, "");
-assert.deepEqual(explicitModelClassRole(cleared.settings, "routine"), { assigned: true, value: "" });
 
-// Plugin defaults must not be mistaken for explicit operator assignments in another family.
+// Effective defaults and later operator assignments remain available through the same role API.
 const tracked = settingsFixture();
 installModelClassDefaults(tracked.settings, tracked.modelTagsSetting);
-assert.deepEqual(explicitModelClassRole(tracked.settings, "routine"), { assigned: false });
+assert.equal(tracked.settings.getModelRole("routine"), MODEL_CLASS_ROLE_DEFAULTS.routine);
 tracked.roles.routine = "operator/selected:high";
-assert.deepEqual(explicitModelClassRole(tracked.settings, "routine"), { assigned: true, value: "operator/selected:high" });
+assert.equal(tracked.settings.getModelRole("routine"), "operator/selected:high");
 tracked.roles.routine = undefined;
 tracked.settings.getModelRoleProvenance = () => "user";
 installModelClassDefaults(tracked.settings, tracked.modelTagsSetting);
 assert.equal(tracked.roles.routine, undefined);
-assert.deepEqual(explicitModelClassRole(tracked.settings, "routine"), { assigned: true, value: undefined });
 
 console.log(JSON.stringify({
   installedSelectors: clean.roles,

@@ -82,6 +82,9 @@ integration-proof case uses a local authenticated request/response fixture to
 assert that proof precedes dependent work; it makes no network or cloud calls.
 These are behavioral cases: graders assess decisions and evidence, not a fixed
 heading list.
+The issue, epic and embark cases also cover truthful unready membership,
+independent dispatch and a partially failed graph operation; they do not
+contact a live tracker.
 
 The six focused provenance cases passed with the Omp GPT 6.1 Sol subject in
 [`18-59-30`](provenance/omp-gpt-6-1-sol-2026-10-31-2026-10-31_18-59-30.json),

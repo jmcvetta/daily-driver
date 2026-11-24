@@ -49,19 +49,17 @@ claim, repairing an old or invalid body where its handoff is grounded. A
 frontier `research` issue keeps that label and its narrow metadata exception;
 do not impose the task template.
 
-Before worktree creation or claim, make the initial class selection within the
-invoking family and provider. Never deliberately substitute a provider.
-If the known family is absent from the class table, prominently warn with the
-family, class, and retained provider/model, then continue immediately on the
-invoking model and effort without confirmation. Identity does not establish
-class suitability.
+Before worktree or claim, attempt automatic class-appropriate selection once
+through Claude Code's supported mechanism, preserving the invoking family and
+provider where its mapping applies. Prefer a supported in-session route; a full
+undertaking handoff is available under `The implementor` below.
 
-For a mapped family, a class omitted from the family map follows the same
-warning-and-continue with suitability unverified. An explicitly cleared class
-or unavailable target is a gap. Unknown family or identity is not an absent
-family. The Claude Agent SDK's host-side `Query.setModel` is not an
-agent-callable switch tool. Do not invent one. Report any unsupported control
-and do not claim it is verified.
+The Claude Agent SDK's host-only `Query.setModel` is not an agent-callable
+switch. Do not invent one or apply Omp role semantics here. If the class target,
+credentials, controls or supported selection route are unavailable, briefly
+name the class, attempted target, failure and retained actual route, then
+continue ordinary work immediately. No confirmation, repair or replacement
+dispatch is required. Explicit cancellation remains stopped.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
@@ -79,11 +77,11 @@ sources in issue or PR comments.
 The implementor
 ===============
 
-For a mapped family, prefer a verified in-session route. A full undertaking
-handoff through `mcp__Claude_Code_Remote__create_session` or `Agent` is
-allowed. The receiving session owns the undertaking and the sender stops. Do
-not recursively hand off. If no in-session switch is available, report the
-exact gap.
+Prefer a supported in-session route. A full undertaking handoff through
+`mcp__Claude_Code_Remote__create_session` or `Agent` is allowed when it supports
+the required selection. The receiver owns the undertaking and the sender
+stops; do not recursively hand off. If no supported selection route is
+available, explain and continue with the invoking model rather than blocking.
 
 
 The pull request

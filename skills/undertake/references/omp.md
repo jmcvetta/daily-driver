@@ -42,28 +42,28 @@ Before worktree creation or claim, call `daily_driver_route_undertaking` with
 "intermediate" | "complex" | "frontier" }`.
 Validate readiness first. Call the routing tool alone in its assistant tool
 batch. Do not batch discovery, worktree creation, claim, or other tool calls with
-it. The tool selects within the invoking family and provider without rewriting
-shared roles.
+it. The tool reads the live effective Omp class role and applies its model,
+provider and effort together, without rewriting roles or consulting a family map.
 
 Read `details.undertaking` from the result or `daily_driver_get_session`:
-`issue`, `modelClass`, `selectedModel`, `observedModel`, `status`, and
-`capability`, with optional `reason` and `warning`. The session result also
-reports provider and non-secret authentication route. `status` is `selected`
-after initial route selection; malformed or cancelled state can report
-`blocked`. A selected route is not proof of the observed execution identity or
-class suitability. Keep the requested class, selected model, and observed model
-separate. Do not claim verification from a selector or status alone.
+`issue`, `modelClass`, `attemptedModel`, `selectedModel`, `selectedEffort`,
+`observedModel`, `observedEffort`, `status`, and optional `reason`. The session
+also reports provider and non-secret authentication route. `selected` records
+initial selection; missing assignments, switch/control/credential failures,
+malformed metadata and persistence failures are informational. Report the
+class, attempted target, failure and actual route, then continue immediately.
+No repair, handoff, confirmation or successful route record is required.
+Explicit cancellation remains stopped. Keep attempted, selected and observed
+facts separate; a selected route is not class-suitability evidence.
 
 
 
 After the pull request is ready, or answer-only research is completed and
 recorded, call `daily_driver_finish_undertaking({ issue: <positive issue number> })`
-for the completed undertaking before reusing the session for another issue.
-Do not finish a stopped or incomplete undertaking. Selecting a different issue
-returns an error and preserves the existing owner and route. Finish the
-completed undertaking or resume the existing one before selecting another.
-A finish call with the wrong issue also returns an error and preserves the
-existing state.
+only for truthful completion. It is not permission to start another issue.
+A new issue may select once without finishing old work, falsely completing it,
+or losing its cancellation ownership. Same-issue re-entry and resume never
+restore a saved model or effort. Wrong-owner finish remains an error.
 
 The successful finish persists and releases the undertaking before its
 automatic completion notification. Do not call `daily_driver_notify` again for
@@ -84,15 +84,14 @@ progress and ordinary final replies do not notify.
 locally to inspect the owner, selected model and effort, host selection, last
 observed execution identity, authentication route category, and last rejection.
 The command remains available after provider rejection or malformed saved state.
-Run `/undertaking cancel <issue>` with the exact owner reported by status to
-cancel unfinished routing. When status reports `cancelOwner: invalid`, use
-`/undertaking cancel invalid` for that malformed current-session record.
-Cancellation aborts and waits for local work, releases only the owned lease,
-retires pending handoffs, and revokes owned children. It persists cancellation
-without completing the issue. It preserves transcript, worktree, and branch.
-A later undertaking requires a fresh initial selection. Repeated cancellation
-with no owner is a no-op. Use the workflow's stop handoff separately when work
-must be stood down.
+Run `/undertaking cancel <issue>` with an exact owner from status's `owners`
+list to cancel unfinished work, including a previous issue. When status reports
+`cancelOwner: invalid`, use `/undertaking cancel invalid` for that malformed
+current-session record. Cancellation aborts and waits for owned work, retires
+pending handoffs, and revokes owned children. It persists cancellation without
+completion, preserving transcript, worktree and branch. Completed/cancelled
+records remain distinct. Repeated cancellation with no owner is a no-op.
+Use the workflow's stop handoff separately when work must be stood down.
 
 
 **Issue-only research writes use the issue client.** With no resume branch,

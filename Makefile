@@ -97,6 +97,20 @@ __git_sync_run:
 omp-update-daily-driver:
 	omp plugin marketplace update daily-driver
 	omp plugin upgrade daily-driver@daily-driver
+# Switch OCR between the Vercel AI Gateway and the saved ChatGPT subscription.
+# Usage:
+#   make ocr-set-vercel-model MODEL=deepseek/deepseek-v4.1-flash-1017
+#   make ocr-set-openai-codex
+# First-time ChatGPT subscription setup: ocr auth login --provider chatgpt
+# The Vercel API key stays in the environment and is read by OCR at request time.
+.PHONY: ocr-set-vercel-model ocr-set-openai-codex
+ocr-set-vercel-model: export OCR_MODEL = $(MODEL)
+ocr-set-vercel-model:
+	@scripts/ocr-model.sh vercel "$$OCR_MODEL"
+
+ocr-set-openai-codex:
+	@scripts/ocr-model.sh openai-codex
+
 
 
 # `check` remains the local all-groups convenience target. CI selects leaf
@@ -206,7 +220,7 @@ check-title-gate:
 
 # The acceptance test for the Omp runtime adapter: import extensions/
 # daily-driver.js with a fake ExtensionAPI and assert the `ask` deny, the
-# primary/detached-worktree mutation guard, the four tools, and package wiring.
+# primary-worktree mutation guard, the four tools, and package wiring.
 # Credential-free like the other script legs, so it runs on a laptop and CI.
 # Node ships with the harness; no package install is involved.
 check-omp-extension:
@@ -238,8 +252,10 @@ check-omp-guard-differential:
 # target nobody runs by accident should fail loudly when its toolchain is
 # absent; a target inside `check` would have needed the guard, and the guard is
 # what would have let it silently check nothing.
+# The actual-tool worktree fixture uses the locked pytest dev dependency.
 check-omp-plugin:
 	python3 scripts/check-omp-plugin.py
+	uv run --frozen python scripts/check-omp-worktree-live.py
 
 # The cache refresh target changes user state in a real run. This check puts a
 # fake `omp` first on PATH and asserts the command order and fail-fast behavior.

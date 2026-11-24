@@ -172,12 +172,12 @@ that parent's labels. Add `story` only when the confirmed parent carries
 `epic` or `discovery`; remove it when the parent is absent or neither kind.
 Closing a child does not change its qualifying edge.
 
-For `epic`, implementation candidates must pass the assignable-story gate;
-closed specification and research lineage retained after promotion is valid.
+Check implementation candidates at dispatch, not when maintaining the marker.
+Unready children and closed specification or research lineage remain visible.
 A discovery may contain its one active interactive `specification` child and,
 after specification merge, staged implementation tasks; neither is
-dispatchable research. Preserve markers on all confirmed children. Report
-genuine readiness defects without hiding edges or changing the child's kind.
+dispatchable research. Preserve markers on all confirmed children and report
+readiness defects without hiding edges or changing the child's kind.
 
 A swap between `epic` and `discovery` preserves the marker because both
 qualify. Any swap to another kind requires reading direct children and

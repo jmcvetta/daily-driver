@@ -112,38 +112,35 @@ entries are automatic transitions. Omp 18.15.0 cannot identify every caller of
 the top-level model setter. This adapter is not a security boundary against
 arbitrary trusted extensions.
 
-`dailyDriver.modelClassRoutes` is an array of entries with `referenceModel`
-and `classes`, for example `{ referenceModel: "provider/model", classes: {
-routine: "provider/variant:high" } }`. Omp resolves the reference
-through its model catalog to identify the family; that family mapping applies
-regardless of the reference model's provider. Omp resolves the configured
-class target to the same model identity in the invoking provider and family,
-then retains the invoking provider. Ambiguous or unavailable targets are route
-gaps. Explicit class roles remain valid only in the invoking provider and
-family. The built-in OpenAI Codex entry preserves existing defaults, and the
-DeepSeek V4.1 Flash entry maps only its measured mechanical and routine
-classes. Plugin-installed global defaults do not establish a mapping for
-unrelated families. A mapping is not measurement evidence.
+Omp's effective class role is the only undertaking selector. It applies the
+configured model/provider and effort together, including cross-provider
+assignments, from live global/project settings, CLI overlays and Roles UI
+edits. Installed defaults govern only absent assignments; explicitly cleared
+roles stay cleared. `dailyDriver.modelClassRoutes` no longer controls selection.
+Express desired routes through Omp class roles instead; the plugin does not
+rewrite existing configuration files. Helper roles and role tags remain separate.
 
-An unset route configuration uses the registered default, including when Omp
-clones settings for a task. An explicit empty array stays empty; malformed
-explicit values are rejected rather than replaced with defaults.
+Classed work attempts selection once before task worktree and claim. Matching
+model and effort need no setters. A suffix selects effort; absent or `inherit`
+preserves invoking effort, and other supported values use host semantics.
+Later operator model/provider/effort choices always win. Same-issue re-entry,
+resume, later role edits, retries, fallback and worker dispatch never reapply
+selection. There is no atomic model-plus-effort API: pending setters cannot
+promise atomicity. On failure, restore only mutations still attributable to the
+selector and report the actual state if restoration fails or is unsafe.
 
-Classed work selects an initial route once, before the task worktree and
-claim. For a mapped family, that selection fixes the class and effort; after
-it, worker, provider, effort and fallback choices are not restricted by the
-router, and independent specialist routes remain separate. When the known
-family is absent from the class table, Omp warns with the family, required
-class and retained model, then continues on the invoking route without
-confirmation. A class omitted from a mapped family continues the same way. In
-both cases class suitability stays unverified, and host-owned OAuth
-restrictions remain in force. An explicitly cleared (`null`) class or an
-unavailable initial target is a configuration gap that needs repair; unknown
-identity and later operator selections are not. A `selected` status records
-the initial selection, not the observed execution identity or class
-suitability. The finish call releases ownership and sends its completion
-notice; exact calls, status fields and handoff rules are in the
-[undertake reference](../skills/undertake/references/omp.md).
+Missing, cleared, invalid or unavailable roles, credentials, controls, rejected
+switches and persistence failures are informational. The result names the
+class, attempted target, failure and actual route; ordinary work continues
+immediately without confirmation or repair. This does not conceal real
+provider failures. Explicit abort/cancellation remains stopped. Attempted,
+selected and observed model facts remain distinct and do not establish
+benchmark suitability.
+
+A new issue may start without a finish ceremony. Previous active work remains
+cancellable and is not silently completed or abandoned. Finish records only
+truthful completion and sends its notification once. Exact calls and status
+fields are in the [undertake reference](../skills/undertake/references/omp.md).
 
 ### Local undertaking recovery
 
@@ -157,31 +154,85 @@ If a malformed record has no recoverable issue, status reports
 `cancelOwner: invalid`; `/undertaking cancel invalid` explicitly cancels that
 record in the current session.
 
-Cancellation requires the exact current owner. It aborts and waits for local
-work before releasing only the undertaking's OAuth lease. It retires pending
-handoffs and revokes owned children. Running children retain their restrictions
-until shutdown and cannot resume after reload. Other sessions and operator-owned
-leases remain unchanged.
+Cancellation requires an exact owner from the status `owners` list, including
+older active issues. It aborts and waits for owned work, retires pending handoffs
+and revokes owned children without changing unrelated sessions or host-owned
+authentication restrictions. Retired children cannot restart after reload.
 
-Cancellation writes a schema-2 `cancelled` lifecycle record, not a completion
-record. Existing schema-1 active and completed records remain readable.
+Schema 4 separates selection history from cancellation ownership. Schemas 1–3
+and legacy implementation/integration/reasoning class tokens remain readable;
+resume never restores a historical route. Malformed metadata has local recovery
+and cannot deny ordinary work or override cancellation tombstones.
 Transcript, worktree, branch, and unfinished task state stay intact. A new
 undertaking requires a fresh initial selection. Repeated cancellation with no
 owner is a no-op. This command does not replace the workflow's stop handoff.
 
-Omp creates a task worktree without relocating the live session. The
-extension's guard rejects primary-checkout and detached-worktree `write` and
-`edit` calls, and denies Git commands that rewrite the primary checkout's
-files; attached feature-worktree mutations remain available. The command
-parser is conservative: it rejects unresolved commands and unterminated
-quotes, scans nested substitutions and unknown wrappers, and does not audit
-programs launched through `make`, Python or scripts, so those programs must
-also stay inside the task worktree. File tools resolve against the session's
-working directory rather than a shell directory change, so use absolute
-task-worktree paths. The user-initiated `/move <path>` can move an idle
-session; the extension API has no automated relocation. The
-[task-worktree reference](../skills/task-worktree/references/omp.md) owns the
-worktree and path route.
+Omp creates a task worktree without relocating the live session. Git or the
+user's chosen tool can create any dedicated registered non-primary worktree;
+Worktrunk installation and sibling placement are not isolation requirements.
+Detached non-primary file edits are allowed; recover a task branch at the
+detached HEAD before committing. Coordinate same-worktree and shared-ref
+writers, retain collision detection and non-force pushes, and preserve all
+existing user work. Ordinary commits to `master` remain prohibited.
+
+The extension keeps canonical primary-checkout `write`/`edit` diagnostics and
+targeted primary Git rewrite protection, including detached primaries and
+recognizable later Git commands after an opaque invocation. Verified
+non-primary task worktrees allow expanded executables, nonliteral `eval` and
+shell input. Primary/unknown directories and unplaceable Git targets remain
+conservative. Arbitrary programs, eval kernels and extension code are not
+filesystem-contained; this is not a sandbox.
+File tools resolve against the session directory, not an earlier shell cwd;
+use absolute task paths. The user-initiated `/move <path>` may move an idle
+session. The [task-worktree reference](../skills/task-worktree/references/omp.md)
+owns the execution route.
+
+### Worktree protection scope and limitations
+
+The user clarified [#1036](https://github.com/jmcvetta/daily-driver/issues/1036):
+dedicated-worktree discipline and targeted ordinary-accident protection are
+the intended scope. Universal OS containment is not an acceptance prerequisite.
+The following earlier capability probes document existing limitations, not
+regressions introduced by admitting ordinary feature commands or a merge gate.
+
+Bounded actual-route evidence, 2026-11-24: Omp 19.1.1 on Linux
+7.0.0-43-generic, x64. A disposable repository had a primary on `master`,
+a dirty tracked file, an untracked user file, and an external feature worktree
+whose path contained spaces. No real project primary was a mutation target.
+
+| Actual Omp route | Observed result |
+| --- | --- |
+| `write` to a new disposable-primary file | Blocked with canonical primary diagnostics; no file created. |
+| `bash` in the feature worktree → `python3 -c` → primary file | Created the probe file; no filesystem containment. |
+| Same interpreter → child `python3` → feature symlink → primary file | Created the probe file through the symlink. |
+| Python `eval` kernel → `Path.write_text` → primary file | Created the probe file; outer tool checks did not contain it. |
+
+After the probes, the primary symbolic branch, index bytes, dirty tracked
+bytes and pre-existing untracked bytes matched their initial snapshots.
+Only new, named probe files were created. These are negative capability
+results, not a successful prevention test. Existing differential Git cases
+remain bounded parser regressions, not proof of arbitrary-program isolation.
+
+The inspected CLI help exposes cwd/workspace/tool selection, not a filesystem
+boundary switch. The installed extension API exposes `tool_call` admission,
+`exec` and native file-write/delete permission-error fallback handlers.
+Those fallback handlers assume an embedding host already enforces a sandbox;
+they do not establish one for the Omp process, eval kernels or subprocesses.
+Installing or wrapping only a shell command would leave the observed eval
+route outside the boundary.
+
+No universal boundary is claimed for native file tools, bash children, eval
+kernels/subprocesses, extension operations, delegated workers, existing open
+descriptors, hooks or shared refs. Dedicated worktrees do not isolate shared
+Git metadata or coordinate concurrent writers by themselves. Follow task
+ownership, branch recovery and user-work preservation rules.
+
+The differential Git fixtures retain recognizable primary-rewrite prevention
+assertions and explicitly exercise opaque dynamic programs as limitations.
+The offline `check-omp-worktree-live.py` fixture drives actual Omp file tools
+and bash through a local scripted provider, including expanded Python/pytest,
+nonliteral eval, scripts, external/detached worktrees, branch recovery and
+dirty-primary preservation. No live model or third-party service is used.
 
 ## Compatibility limits
 

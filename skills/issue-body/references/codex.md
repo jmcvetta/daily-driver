@@ -25,6 +25,8 @@ The required class
 Task bodies, assignable epic stories of any eligible kind, and frontier
 research assignments use the provider-neutral
 `Model class` section defined in [`model-classes.md`](model-classes.md).
-Codex dispatch makes the initial selection within the invoking family and
-provider. Do not invent model or effort arguments for an unmeasured delegation
-surface. Class labels describe capability, not a permission check.
+Codex attempts initial selection through supported controls using its own
+family/provider conventions, not Omp class-role semantics. Do not invent model
+or effort arguments for an unmeasured delegation surface. An unavailable route
+is informational: explain and continue with the invoking model. Later operator
+choices and resume never reselect. Class labels are not permission checks.
