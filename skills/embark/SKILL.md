@@ -39,8 +39,9 @@ Discovery dispatch and specification coverage
 
 Accept a `discovery` parent as well as an `epic`. Read its kind and graph
 again at each wave and before each dispatch. For discovery, dispatch only
-ready, unblocked `research` children with valid class metadata. Never dispatch
-its interactive `specification` child or any staged implementation task.
+ready, unblocked `research` children, assessing and recording class as
+`issue-body` directs. Never dispatch its interactive `specification` child or
+any staged implementation task.
 When no eligible research remains, do not close the parent: return to `epic`
 for research review, interactive specification or publication, reporting
 blocked research separately. Existing independent implementation already in
@@ -176,13 +177,13 @@ not user approval. Do not copy private source quotes.
 The harness denies the first dispatch until this session is titled, as
 `session-title`'s `When to set it` says; `Title the session` precedes this step.
 
-**Resolve a capable route before dispatch.** Validate every story's required
-`Model class` section and rationale through `issue-body`, whatever its kind;
-migrate a legacy or invalid task only on that issue and only when its grounded
-handoff is otherwise ready. A missing or invalid class on a research or bug
-story is a planning defect, never defaulted. A bare `story` marker does not
-pass this gate. `proposal`, `specification`, `human` and `epic` issues are not dispatch
-candidates. A story with an open blocker is not dispatched early.
+**Assess capability before dispatch.** Apply `issue-body` to each story,
+whatever its kind. Preserve a valid explicit class; assess and record a
+grounded class and rationale for missing or legacy metadata before or during
+dispatch. Formatting alone is not a readiness defect and never defaults to
+`routine`. A bare `story` marker does not establish readiness. `proposal`,
+`specification`, `human` and `epic` issues are not dispatch candidates. A
+story with an open blocker is not dispatched early.
 
 Use the active harness's configuration authority for one initial attempt.
 Omp's effective class role governs the model/provider and effort together;
@@ -716,11 +717,11 @@ Non-goals
   pull request remains the orchestrator's or shared advisor's to run, because
   the implementor must not review its own work. Landing is narrower: a
   mechanical read followed by one squash-merge call.
-- **Preserves a story's exact required class.** It resolves that class through
-  eligible harness routes on the same family, provider, backend, and
-  authentication route. A missing route is reported for that story; it is never
-  replaced by unchecked inheritance, an identifier copied from the body, or a
-  shared-role change.
+- **Preserves a story's capability requirement.** Attempt the preferred class
+  route through the active harness; an unavailable family, provider, backend
+  or authentication match is informational, not a dispatch barrier. Report
+  the attempted and actual routes separately, without changing shared roles or
+  credentials. Explicit operator route changes remain valid.
 - **Does not manage sibling branches.** It does not serialise their merges and
   it does not resolve a conflict between them. Landing one pull request moves
   base; `pr`'s `Keep it current` maintains each sibling PR's head.

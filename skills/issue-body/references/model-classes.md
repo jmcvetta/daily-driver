@@ -31,6 +31,12 @@ not make an underspecified task ready.
 A frontier assignment's `## Model class` section and rationale carry its
 capability decision; no separate approval record is required.
 
+For missing or legacy metadata, assess the grounded handoff and record the
+lowest reasonable class and rationale before or during dispatch. Preserve an
+explicit valid class and its capability requirement. Formatting is not product
+readiness; do not invent a class or default to `routine` when the need is
+unclear. Report uncertainty and continue settled work on an available route.
+
 ## Selection
 
 Attempt initial selection once before worktree or claim through the active
