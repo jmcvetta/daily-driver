@@ -308,9 +308,9 @@ response is the issue you modified, so it confirms nothing.
 5 — Fill in the epic
 --------------------
 
-Replace the epic's body with the whole of `The epic body`, now that every child
-issue has a number to put in it. Report readiness defects precisely; do not
-present an unready story as dispatchable.
+Ensure the epic body states the outcome, justification and any scheduling
+constraints. Confirm every story passes assignability before presenting it as
+ready; do not maintain a copy of graph membership or status in the body.
 
 6 — Hand off
 ------------
