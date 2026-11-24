@@ -28,9 +28,11 @@ success_criteria:
     prompt: |
       Score 1 only if the draft retains conflict resolution as an open operator
       decision on a specification issue, has no implementation model class,
-      allows interactive agent work but not unattended dispatch, and completes
-      on operator-agreed scenarios plus a recorded handoff naming the
-      implementation task issue, task branch, scenario paths and applicable
-      allocations or exclusions. It does not wait for implementation or merge.
+      allows interactive agent work but not unattended dispatch, and explains
+      that completion requires operator-agreed scenarios plus a recorded handoff
+      naming the implementation task issue, task branch, scenario paths and
+      applicable allocations or exclusions. This is a draft: do not require
+      agreement, handoff or posting to have already occurred. It does not wait
+      for implementation or merge.
       Score 0 for invented decisions, claims of posting, or a separately merged
       document prerequisite; otherwise 0.5 for a material omission.
