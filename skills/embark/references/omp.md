@@ -229,6 +229,9 @@ implementor over the messaging above and are answered under the round's
 protocol; the ready gate is `undertake`'s, and it is not satisfied until the
 round on the head is.
 
+A repair authored by the orchestrator is reviewed by the shared advisor or
+another independent reviewer, never by its author.
+
 
 Recovering an implementor
 =========================
