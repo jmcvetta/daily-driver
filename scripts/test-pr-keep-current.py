@@ -33,32 +33,41 @@ def log(value):
         target.write(value + "\\n")
 
 if args[:2] == ["pr", "view"]:
+    log("view:url")
+    print("https://github.com/example/project/pull/25")
+elif args[:3] == ["api", "--hostname", "github.com"]:
     state = load()
-    field = args[args.index("--json") + 1]
-    log("view:" + field)
-    if field == "state":
-        print(state["state"])
-    elif field == "mergeStateStatus":
-        print(state["merge_state"])
-    elif field == "statusCheckRollup":
-        print("1" if state["run_in_flight"] else "0")
+    endpoint = args[-1]
+    if "--method" in args and args[args.index("--method") + 1] == "PUT":
+        state["updates"] += 1
+        log("update")
+        if state["conflict_update"]:
+            save(state)
+            print("Cannot update PR branch due to conflicts", file=sys.stderr)
+            raise SystemExit(1)
+        if state["fail_update"]:
+            save(state)
+            print("fixture update failed", file=sys.stderr)
+            raise SystemExit(1)
+        state["stale"] = False
+        state["head"] = "c" * 40
+        save(state)
+        print("fixture update accepted")
+    elif "/compare/" in endpoint:
+        log("compare")
+        if state.get("deny_compare"):
+            raise SystemExit(1)
+        print(json.dumps({"merge_base_commit": {"sha": "d" * 40 if state["stale"] else state["base"]},
+                          "behind_by": 1 if state["stale"] else 0}))
+    elif endpoint.endswith("/pulls/25"):
+        log("pull")
+        print(json.dumps({"state": "closed" if state["state"] != "OPEN" else "open",
+                          "merged": state["state"] == "MERGED", "head": {"sha": state["head"]},
+                          "base": {"ref": "release", "sha": state["base"]},
+                          "mergeable": state["merge_state"] != "DIRTY",
+                          "mergeable_state": state["merge_state"].lower()}))
     else:
-        raise SystemExit("unexpected PR read: " + field)
-elif args[:2] == ["pr", "update-branch"]:
-    state = load()
-    state["updates"] += 1
-    log("update")
-    if state["conflict_update"]:
-        save(state)
-        print("Cannot update PR branch due to conflicts", file=sys.stderr)
-        raise SystemExit(1)
-    if state["fail_update"]:
-        save(state)
-        print("fixture update failed", file=sys.stderr)
-        raise SystemExit(1)
-    state["merge_state"] = "CLEAN"
-    save(state)
-    print("fixture update succeeded")
+        raise SystemExit("unexpected endpoint: " + endpoint)
 else:
     raise SystemExit("unsupported gh command: " + " ".join(args))
 '''
@@ -88,6 +97,9 @@ class KeepCurrentTests(unittest.TestCase):
             "state": "OPEN",
             "merge_state": "BEHIND",
             "run_in_flight": False,
+            "stale": True,
+            "head": "a" * 40,
+            "base": "b" * 40,
             "fail_update": False,
             "conflict_update": False,
             "updates": 0,
@@ -148,12 +160,12 @@ class KeepCurrentTests(unittest.TestCase):
         self.wait_for(lambda: self.read_state()["updates"] == 1, "the base update")
         state = self.read_state()
         self.assertTrue(state["run_in_flight"])
-        self.assertEqual("CLEAN", state["merge_state"])
+        self.assertFalse(state["stale"])
         self.assertEqual(1, self.read_log(self.log_path).splitlines().count("update"))
         self.assertNotIn("view:statusCheckRollup", self.read_log(self.log_path))
 
-    def test_masked_currency_updates_during_in_flight_ci(self):
-        """Draft and indeterminate states update without waiting for CI."""
+    def test_stale_masked_currency_updates_during_in_flight_ci(self):
+        """A masked stale branch advances without waiting for CI."""
         for merge_state in ("DRAFT", "BLOCKED", "UNKNOWN"):
             with self.subTest(merge_state=merge_state):
                 self.start_watch(merge_state=merge_state, run_in_flight=True)
@@ -161,7 +173,7 @@ class KeepCurrentTests(unittest.TestCase):
                     self.wait_for(lambda: self.read_state()["updates"] == 1, "the masked base update")
                     state = self.read_state()
                     self.assertTrue(state["run_in_flight"])
-                    self.assertEqual("CLEAN", state["merge_state"])
+                    self.assertFalse(state["stale"])
                     self.assertNotIn("view:statusCheckRollup", self.read_log(self.log_path))
                 finally:
                     self.stop_watch()
@@ -169,18 +181,19 @@ class KeepCurrentTests(unittest.TestCase):
 
     def test_current_branch_does_not_get_an_update(self):
         """Catch a watcher that performs unnecessary merges on a current branch."""
-        self.start_watch(merge_state="CLEAN")
-        self.wait_for(lambda: "view:mergeStateStatus" in self.read_log(self.log_path), "the first state read")
+        self.start_watch(merge_state="UNKNOWN", stale=False, run_in_flight=True)
+        self.wait_for(lambda: "compare" in self.read_log(self.log_path), "the first comparison")
         time.sleep(0.08)
         self.assertEqual(0, self.read_state()["updates"])
 
     def test_base_advance_after_handoff_triggers_update(self):
         """Catch a detached watch that checks currency only when it starts."""
-        self.start_watch(merge_state="CLEAN")
-        self.wait_for(lambda: "view:mergeStateStatus" in self.read_log(self.log_path), "the initial clean check")
+        self.start_watch(merge_state="CLEAN", stale=False, run_in_flight=True)
+        self.wait_for(lambda: "compare" in self.read_log(self.log_path), "the initial comparison")
         time.sleep(0.08)
         state = self.read_state()
-        state["merge_state"] = "BEHIND"
+        state["stale"] = True
+        state["base"] = "e" * 40
         self.write_state(state)
         self.wait_for(lambda: self.read_state()["updates"] == 1, "the update after the base advances")
 
@@ -199,11 +212,18 @@ class KeepCurrentTests(unittest.TestCase):
         self.assertEqual(1, self.read_state()["updates"])
         self.assertIn("conflicts with its base", self.read_log(self.output_path))
 
-    def test_update_failure_is_reported_and_retried(self):
-        """Catch a failed update that the watcher hides or does not retry."""
-        self.start_watch(fail_update=True)
-        self.wait_for(lambda: "update-branch failed" in self.read_log(self.output_path), "the failed update report")
-        self.wait_for(lambda: self.read_state()["updates"] >= 2, "the retry after failure")
+    def test_update_failure_is_reported_without_blind_retry(self):
+        """An uncertain update result is not replayed against the same head."""
+        self.start_watch(fail_update=True, run_in_flight=True)
+        self.wait_for(lambda: "outcome uncertain" in self.read_log(self.output_path), "the failed update report")
+        time.sleep(0.4)
+        self.assertEqual(self.read_state()["updates"], 1)
+
+    def test_denied_comparison_never_updates(self):
+        """Denied ancestry cannot authorize a speculative update."""
+        self.start_watch(deny_compare=True, run_in_flight=True)
+        self.wait_for(lambda: "read failed" in self.read_log(self.output_path), "the comparison failure")
+        self.assertEqual(self.read_state()["updates"], 0)
 
     def test_merged_and_closed_prs_stop(self):
         """Catch a watcher that keeps polling a PR after it has ended."""

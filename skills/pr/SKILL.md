@@ -80,9 +80,10 @@ replace the active harness route. Its observations and proposed actions are
 not agent delivery or uninterrupted supervision.
 
 Use the active harness reference's currency checkpoint and continuation route.
-Read the PR's actual base rather than assuming `master`. Merge that base into
-the head with the harness's server-side update-branch call, never a rebase or
-force-push. The call also settles draft-masked or indeterminate currency.
+Read the PR's actual base rather than assuming `master`. Only a pinned
+base/head comparison proves staleness; draft, blocked and unknown labels do
+not authorize an update. Merge a proven stale base with the server-side
+expected-head update-branch call, never a rebase or force-push.
 
 Check every two minutes where the harness supports durable continuation.
 Reuse one pending wake or running watch per PR. Attempt currency updates even

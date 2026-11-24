@@ -265,9 +265,10 @@ owner retains its continuation. If registration or checkpoint fails, diagnose
 and keep supervising through service completion while possible; report the
 exact continuation gap.
 
-On an owner turn, inspect the maintenance service and take `pr`'s currency
-checkpoint before assessing readiness. Attempt base updates even when
-current-head CI is in flight; assess CI on the resulting head after an update.
+On an owner turn, inspect the maintenance service and take `pr`'s pinned
+base/head currency checkpoint before assessing readiness. Only proven stale
+ancestry admits an update; unknown evidence and merge-state labels do not.
+Do not wait for current-head CI; assess the resulting head after an update.
 Resolve mechanical conflicts and service failures under the existing
 undertaking rules; ask only for a genuine semantic decision or missing external
 prerequisite. Merge, close, completion, a genuine human-only stopping point and

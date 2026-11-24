@@ -45,6 +45,8 @@ else:
  elif endpoint == "/repos/fixture/project/pulls/7":
   print(json.dumps({"head":{"ref":"task","sha":"a"*40},"base":{"ref":"release","sha":"b"*40},
    "state":"open","merged":False,"mergeable":True,"mergeable_state":"clean"}))
+ elif "/compare/" in endpoint:
+  print(json.dumps({"merge_base_commit":{"sha":"b"*40},"behind_by":0}))
  elif "/check-runs?" in endpoint:
   print(json.dumps([{"total_count":1,"check_runs":[{"id":1,"status":"completed","conclusion":"success"}]}]))
  elif "/actions/runs?" in endpoint:
