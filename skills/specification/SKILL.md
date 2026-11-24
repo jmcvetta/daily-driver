@@ -40,10 +40,11 @@ when the approved canonical document is merged and its handoff is recorded.
    neither approval implies the other. Record the decisions and their scope on
    the issue. Do not treat silence or a review as approval.
 5. The operator merges the specification PR; the agent never merges it.
-   Once approval and merge are observed, record the merged document path,
-   immutable commit, approval and any separately approved handoff on the issue.
-   Complete the issue only then. Rejection or abandonment follows the existing
-   issue disposition rules; neither is a completed specification.
+   Once approval and merge are observed, record their evidence on the issue and
+   publish one uniquely identifiable parent record containing the canonical
+   path, exact merged commit and approval evidence. Complete the issue only
+   then. Decomposition is separately agreed, never implied by approval.
+   Rejection or abandonment is not a completed specification.
 
 ## Canonical document
 
@@ -71,10 +72,10 @@ wording without changing agreed behavior, scope or acceptance and needs no
 renewed scope agreement. A substantive amendment changes any of those and
 requires renewed operator scope agreement; do not infer it from prior approval.
 Use the same reviewed PR and operator approval and merge boundaries for the
-changed canonical document. Record the decision and resulting commit in the
-issue handoff.
-When the document governs an epic, `epic` first demotes that same parent to
-`discovery` and pauses affected implementation. After the operator approves
-and merges the substantive amendment, hand its exact merge SHA back to `epic`
-for allocation, contract and graph reconciliation before re-promotion. An
-implementation PR must not amend its governing specification silently.
+changed canonical document. Record the decision on the issue. For a substantive
+amendment create a distinct parent publication record; never overwrite the
+record referenced by existing tasks. When the document governs an epic, `epic`
+first demotes that parent to `discovery` and pauses affected implementation.
+After approval and merge, hand the new record to `epic` for reconciliation.
+Active tasks retain their original binding until an authorized transition.
+An implementation PR must not silently amend its governing specification.
