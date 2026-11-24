@@ -7,8 +7,8 @@ initial_prompt: >-
   A PR has a full review with findings at `aaa111`, but the fixes were pushed at
   `bbb222` and the independent fix-delta reviewer is unavailable. CI is green
   and the threads are resolved. Is the review round complete? Would the answer
-  change if CI were pending, the three-defect non-convergence wall had been
-  reached, the fixes materially changed scope, or this were a clean standalone
+  change if CI were pending, repeated corrections had failed to fix the same
+  defect, the fixes materially changed scope, or this were a clean standalone
   review?
 
 agent:
@@ -40,8 +40,9 @@ success_criteria:
     prompt: |
       Find the reply after the last `[RESULT - …]` tag. Score 1.0 only when it
       says the review remains incomplete for unavailable verification, pending
-      CI, the non-convergence wall, or a material scope change awaiting its new
-      full review. A clean standalone review needs no invented delta pass.
-      Preserve ordinary review records and do not publish a completion marker.
+      CI, evidenced non-convergence, or a material scope change awaiting its new
+      full review. An unavailable reviewer alone is not non-convergence.
+      A clean standalone review needs no invented delta pass. Preserve ordinary
+      review records and do not publish a completion marker.
       Score 0.0 if it treats an unavailable pass as clear or claims green CI
       alone establishes completion. Otherwise score 0.5.
