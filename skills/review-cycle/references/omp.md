@@ -92,8 +92,18 @@ The wait
 **A bounded service observes CI; a live owner handles its result.** Use named
 Bash services for `gh pr checks --watch` and, where needed, `gh run watch`.
 Keep the owner continuation from [`pr`'s route](../../pr/references/omp.md#the-owner-continuation)
-armed throughout the wait. A standalone review without a PR-maintenance watch
-owns the same single reminder slot until its CI wait ends.
+throughout the wait. A review inside a PR owner's watch uses its `pr:` key and
+`pr` state, never a second record. A standalone review registers one
+`review-cycle:<host>/<owner>/<repo>#<pr>` key with workflow `review-cycle`
+and initial delaySeconds 120. Normalize host and repository case; supply the
+same structured fields and authority/hold safeguards as the PR route.
+Store exact compared observations including head, CI window and deadline, the
+service names and next unmet action. Use `get` to recover state and checkpoint
+only after current reads or permitted work. Retain 120 seconds while current-head
+CI is pending or unregistered; otherwise apply the PR route's backoff.
+If replacing a legacy owner, first cancel its exact known trigger ID; on
+failure retain it and report the failure without registering a second owner.
+Unknown IDs are not silently migrated; unrelated reminders are untouched.
 
 Capture the head SHA, a unique window identifier, and a UTC deadline fifteen
 minutes ahead. Start a service without `async` or the Bash `timeout` parameter,
@@ -124,9 +134,9 @@ the running service and diagnose the failure. Do not call it durable or use
 `detached` for a bounded CI watch.
 
 Use `wait` with no arguments only when no other work remains. Caller-owned
-service results also auto-deliver. A reminder, a service result, and `wait`'s
+service results also auto-deliver. A continuation, a service result, and `wait`'s
 own safety-cap return are wakes, not verdicts. Inspect the existing service
-and reread CI; do not launch a duplicate because a reminder fired.
+and reread CI; do not launch a duplicate because a continuation fired.
 
 The verdict
 -----------
@@ -165,7 +175,7 @@ within the same window:
 
 Apply the same inspection, persistence, and cleanup rules. No `--fail-fast`,
 unmanaged shell job, or shell `sleep`. Fine-grained tokens cannot use
-`gh run watch`; diagnose that route limit and use the managed owner reminder
+`gh run watch`; diagnose that route limit and use the managed owner continuation
 for fresh inventory reads where authorized reads still work. A watch without
 `--exit-status` can return zero for a failed run; read the verdict.
 
@@ -180,13 +190,13 @@ in that window, including after a resume. At expiration:
 2. If current-head work remains nonterminal, end any old window services,
    record a new window identifier and fifteen-minute deadline, and continue
    with a new bounded watch. Do this without another user prompt. Keep the
-   existing owner reminder; do not duplicate it or report a human blocker.
+   existing owner continuation; do not duplicate it or report a human blocker.
 3. If the head moved, stop old-head services and discard their verdict.
    Reobserve the new head before starting its window.
 4. If inventory is terminal and no known registration gap remains, continue
    failure diagnosis or the readiness gate. Review need not wait for this.
-   Stop obsolete CI services. A standalone wait cancels its reminder; an
-   ongoing PR owner retains its common slot.
+   Stop obsolete CI services. A standalone wait stops its matching watch; an
+   ongoing PR owner retains its common record.
 
 A missing window record is not permission to reset a live watcher. Inspect
 the process, preserve its bound, and recover its log where possible. After
@@ -195,7 +205,7 @@ window. Never infer green or abandon ownership because the record is missing.
 
 Zero check runs, no statuses, and no matching workflow mean unregistered,
 not green. A successful subset with a known missing check is incomplete too.
-Do not repeatedly relaunch an empty rollup watcher. Keep the managed reminder
+Do not repeatedly relaunch an empty rollup watcher. Keep the managed continuation
 and reobserve registration on its next wake. Diagnose persistent registration
 gaps from repository configuration and workflow evidence; elapsed time alone
 is not proof of a blocker. A denied, malformed, truncated, or failed read
@@ -206,27 +216,34 @@ its evidence and resume path; do not label a timeout as one.
 Process durability is not session resumption
 --------------------------------------------
 
-The common owner reminder is separate from the persistent CI service and
-detached currency service. It sends an Omp follow-up turn to a live idle
-session. Retain it during CI waits; on a wake, inspect before renewing any
-service. Its prompt names the PR, branch, window/service identities, next
-unfinished action, and user-stop guard. Once CI is terminal, a stale CI wake
-reads current state and continues the current phase, not a new old-head wait.
+The common structured owner continuation is separate from the persistent CI
+service and detached currency service. Retain it during CI waits; on a wake,
+inspect before renewing any service. Its state records the PR, branch,
+window/service identities, next unfinished action, authority references and
+holds. A service result that actually reconciles the watch is checkpointed;
+an unrelated user question alone does not postpone the fallback. An unchanged
+look has no chat reply, toast, repeated status comment or "still watching"
+message. Answer direct user questions first; report meaningful progress,
+changed required human contributions and whole-operation completion concisely.
+Once CI is terminal, a stale CI wake reads current state and continues the
+current phase, not a new old-head wait.
 
-`daily_driver_schedule` timers are cleared on `session_shutdown`. A service
-can outlive that shutdown but cannot launch or resume an agent. Do not claim
-cross-shutdown recovery. A live idle or parked owner is not shutdown: retain
-its reminder instead of returning only an owner-resume requirement. If the
-reminder call fails, diagnose and keep supervising through service completion
-while possible; report the exact continuation gap, not a fictitious watch.
+Runtime timers stop on session shutdown; the same session can restore saved
+deadlines on resume, but no agent monitors across shutdown. A service can
+outlive shutdown but cannot launch or resume an agent. A live idle or parked
+owner retains its continuation. If registration or checkpoint fails, diagnose
+and keep supervising through service completion while possible; report the
+exact continuation gap.
 
 On an owner turn, inspect the maintenance service and take `pr`'s currency
 checkpoint before assessing readiness. Attempt base updates even when
 current-head CI is in flight; assess CI on the resulting head after an update.
 Resolve mechanical conflicts and service failures under the existing
 undertaking rules; ask only for a genuine semantic decision or missing external
-prerequisite. Merge, close, and user stop cancel both reminder and owned
-services. A stale wake after a user stop performs no work.
+prerequisite. Merge, close, completion, a genuine human-only stopping point and
+user stop stop the matching watch and owned services. A stale wake cannot clear
+a hold or restart a stopped watch; only a later explicitly authorized workflow
+may register a fresh run using the canonical key plus `:run:<uuid>`.
 
 
 

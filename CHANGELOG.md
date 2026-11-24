@@ -4,6 +4,7 @@
 
 ### Changed
 
+* Store Omp watch context in session entries and coalesce hidden agent-attributed continuation wakes, while retaining fallback cadence and explicit user reminders ([#1065](https://github.com/jmcvetta/daily-driver/issues/1065)).
 * Accept Git-created and externally placed dedicated task worktrees, allow detached non-primary file edits with branch recovery, and admit opaque executables, eval and scripts from verified feature worktrees while retaining targeted primary protections and stating best-effort limits ([#1036](https://github.com/jmcvetta/daily-driver/issues/1036)).
 * Honor effective Omp class roles across providers for one best-effort initial selection, continue on selection failures, and keep cancellation ownership without a finish-before-next-issue requirement ([#1037](https://github.com/jmcvetta/daily-driver/issues/1037)).
 

@@ -400,13 +400,12 @@ that transfer, the orchestrator may resolve an ordinary repair without
 redispatching it. One writer owns the branch at a time, and behavioral changes
 still require independent review.
 
-**One wake slot, and a turn never ends with it empty** while a wave is at sea.
-[`0034`](../../docs/notes/0034-the-wake-slot-is-never-empty.md) is the rule.
-This orchestrator owns its own slot for the wave watch; each implementor's
-`pr` watch has its own slot, which `review-cycle` may borrow during a CI wait.
-Keep each slot by the identifier its call returned, and fill it before that
-session's turn ends whenever it is empty. A wake that finds the timer still in
-flight arms nothing.
+**One backstop per orchestrator** covers the wave while it is at sea.
+Preserve watch context and fallback coverage through the active harness route;
+each implementor's `pr` watch remains separate and `review-cycle` may borrow
+that owner's continuation. Native worker and service results are wakes, not
+verdicts. Reconcile current evidence after a relevant wake without creating a
+duplicate backstop.
 **An implementor's report is not this slot.** It arrives on a timer the
 implementor armed, so it neither fills the slot nor empties it, and this
 session has no report timer to cancel at `Close the epic` or at `stand-down`.
@@ -414,20 +413,21 @@ A report can still be in flight when the watch ends, because it fires a minute
 or more after it is sent. One that arrives after the epic closed or the watch
 stood down is read and dropped: the state it reports is already on GitHub.
 
-**The backstop prompt carries the posture, because the wake will not.** The
-prompt written for the next check-in is read on arrival, while this file is
-not, and the wake it lands in — like every pull-request event beside it —
-arrives with harness guidance addressed to whoever opened the pull request.
-Under this skill that is normally not this session. So the prompt states what
-`Non-goals` states: each pull request is its task session's to drive by default;
-a failing check, review finding or conflict is that session's work unless it
-explicitly transfers ownership. The prompt also requires reading unfinished
-work and steering the implementor through already-authorized preparation under
+**Preserve the watch posture across continuations.** Each pull request is its
+task session's to drive by default; a failing check, review finding or conflict
+is that session's work unless it explicitly transfers ownership. Read unfinished
+work and steer the implementor through already-authorized preparation under
 `undertake`'s escalation contract. A real prerequisite pauses only the affected
 operation after independent permitted work is complete, unless safety requires
 an immediate stop. Landing a merge-ready pull request and closing the epic are
-this session's work. The backstop preserves both work
-supervision and ownership; issue numbers and `draft=true` alone do neither.
+this session's work. On Claude Code, put this posture in the long backstop
+prompt because the next wake does not carry it. Other harness references own
+their context route and any continuation limits.
+
+An unchanged look has no chat reply, notification, repeated GitHub status
+comment or "still watching" message. Answer direct user questions first;
+meaningful progress, a changed required human contribution and whole-operation
+completion may be reported concisely.
 
 **Ten minutes, not two.** `undertake` checks in every two because its branch
 goes stale while it waits and the merge that fixes that is cheap. Nothing here
@@ -640,9 +640,9 @@ the epic with `state_reason: completed`. The comment carries `provenance`'s
 block and a homecoming verse, last — a short stanza in the manner of a sea
 shanty, each line italicised as [`HAIKU.md`](../../HAIKU.md) shows.
 When the roll says `Landing: by hand`, report that the evidenced epic is ready
-and leave it open. On completion or the by-hand stopping point, cancel the
-backstop and drop every pull-request subscription. Preserve the existing
-conditional merge and archive permissions.
+and leave it open. On completion or the by-hand stopping point, stop the
+backstop and drop every pull-request subscription through the harness route.
+Preserve the existing conditional merge and archive permissions.
 
 Use the active harness's notification route, where supported, only after
 that cleanup for the whole completed operation or by-hand stopping point.

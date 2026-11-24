@@ -107,7 +107,7 @@ function fakeSession(options = {}) {
 		ui: { notify: (message, type) => calls.notifications.push({ message, type }), setStatus() {} },
 	};
 	Object.defineProperty(ctx, "model", { get: () => current });
-	const api = installUndertakingRouting(pi, async () => settings, options.onCompleted);
+	const api = installUndertakingRouting(pi, async () => settings, options.onCompleted, options.onStopping);
 	async function fire(name, payload = {}) {
 		for (const handler of handlers.get(name) ?? []) {
 			const result = await handler({ type: name, ...payload }, ctx);
@@ -529,6 +529,25 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.equal(s.calls.aborts, 1);
 		assert.equal(s.describe().undertaking, null);
 		assert.equal(s.entries.at(-1).data.lifecycle, "cancelled");
+	});
+
+	// A failed watch stop must leave cancellation retryable and must not abort work.
+	routingCheck("watch stop precedes cancellation and reports failure", async create => {
+		let reject = true;
+		const s = await create({ onStopping: async (_ctx, issue) => {
+			assert.equal(issue, 755);
+			assert.equal(s.calls.aborts, 0);
+			if (reject) throw new Error("watch stop failed");
+		} });
+		await s.route();
+		await s.command("cancel 756");
+		await s.command("cancel 755");
+		assert.equal(s.calls.aborts, 0);
+		assert.equal(s.describe().undertaking.issue, 755);
+		assert.match(s.calls.notifications.at(-1).message, /watch stop failed/u);
+		reject = false;
+		await s.command("cancel 755");
+		assert.equal(s.calls.aborts, 1);
 	});
 
 	// Cancellation must wait for in-flight work before releasing ownership.

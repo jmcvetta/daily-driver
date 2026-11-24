@@ -16,7 +16,7 @@ The fleet
 | `Read the fleet` | Read the epic's muster rolls | `gh issue view <epic> --json comments` |
 | `Read the fleet` | Read a task issue's claim and handoff | `issue://<number>`, comments included |
 | `Read the fleet` | Read a background task's job state | `read proc://<job-id>` using the job ID returned by `task` |
-| `Cancel the watches` | Cancel the backstop timer | `daily_driver_cancel_schedule`, by the trigger id the call returned |
+| `Cancel the watches` | Stop the embark backstop | `daily_driver_watch({action: "stop", key: <embark key>})` |
 | `Cancel the watches` | Stop a persistent CI service | `write proc://<name>/kill`, by the service name review-cycle started |
 | `Secure the work` | Inspect changes | `git -C <worktree> status --short` |
 | `Secure the work` | Cancel a subagent | `write proc://<job-id>/kill`, using that same job ID |
@@ -43,12 +43,17 @@ handoff. A failed or unconfirmed cancellation remains a fleet residual.
 The watches
 ===========
 
-`daily_driver_schedule` is a managed timer cleared on session shutdown, so a
-backstop armed for the wave dies with this session regardless — cancel it so
-the reminder cannot fire into the last turn. A CI service started through
-named `bash` with `persist` continues after the last Omp client exits. Stop
-that service by its name with `write proc://<name>/kill`; it can otherwise
-keep watching a pull request nobody is working. Omp has no pull-request
-subscription primitive. Record an exceptional live watcher, not successful
-timer identifiers, in the epic handoff. A durable process does not resume the
+Explicit stand-down input immediately stops active embark records; call `stop`
+for the known backstop key as well and report any failure as a residual.
+Cancel an exact known legacy backstop `triggerId` separately if it was not
+migrated; do not cancel unrelated requested reminders or claim an unknown ID
+was cancelled. Stop before securing work. A stale wake does not restart work,
+clear a hold, or authorize a fresh registration.
+
+A CI service started through named `bash` with `persist` continues after the
+last Omp client exits. Stop that service by its name with
+`write proc://<name>/kill`; it can otherwise keep watching a pull request
+nobody is working. Omp has no pull-request subscription primitive. Record an
+exceptional live watcher and failed cancellations in the epic handoff, not
+successful timer identifiers. A durable process does not resume the
 orchestrator or perform agent work.
