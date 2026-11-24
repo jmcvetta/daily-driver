@@ -221,12 +221,12 @@ reminder call fails, diagnose and keep supervising through service completion
 while possible; report the exact continuation gap, not a fictitious watch.
 
 On an owner turn, inspect the maintenance service and take `pr`'s currency
-checkpoint before assessing readiness. Current-head CI in flight defers base
-updates; a completed old-head run is not current evidence. Resolve mechanical
-conflicts and service failures under the existing undertaking rules; ask only
-for a genuine semantic decision or missing external prerequisite. Merge,
-close, and user stop cancel both reminder and owned services. A stale wake
-after a user stop performs no work.
+checkpoint before assessing readiness. Attempt base updates even when
+current-head CI is in flight; assess CI on the resulting head after an update.
+Resolve mechanical conflicts and service failures under the existing
+undertaking rules; ask only for a genuine semantic decision or missing external
+prerequisite. Merge, close, and user stop cancel both reminder and owned
+services. A stale wake after a user stop performs no work.
 
 
 

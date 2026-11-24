@@ -4,10 +4,9 @@
 # Usage: pr-keep-current.sh <pull-request-number>
 #
 # Runs until one of its exits, one tick every two minutes. Each tick reads
-# the pull request's state, merge status, and check rollup through `gh`;
-# skips the tick while a run on the head is in flight; and otherwise merges
-# the base branch in server-side with `gh pr update-branch`. The only write
-# this script ever performs is that one call: it never checks out a
+# the pull request's state and merge status through `gh`, then merges the
+# base branch in server-side with `gh pr update-branch` when needed. The only
+# write this script ever performs is that one call: it never checks out a
 # worktree, never rebases, and never judges a review.
 #
 # Exits 0 when the pull request is merged or closed, 3 on a merge conflict
@@ -30,9 +29,7 @@ failures=0
 
 while :; do
     if pr_state=$(gh pr view "$PR" --json state --jq '.state') &&
-        merge_state=$(gh pr view "$PR" --json mergeStateStatus --jq '.mergeStateStatus') &&
-        in_flight=$(gh pr view "$PR" --json statusCheckRollup --jq \
-            '[.statusCheckRollup[]? | select(.status == "PENDING" or .status == "IN_PROGRESS" or .status == "QUEUED" or .state == "PENDING")] | length'); then
+        merge_state=$(gh pr view "$PR" --json mergeStateStatus --jq '.mergeStateStatus'); then
         failures=0
     else
         failures=$((failures + 1))
@@ -58,12 +55,6 @@ while :; do
             exit 3
             ;;
     esac
-
-    if [ "$in_flight" -gt 0 ]; then
-        echo "pr-keep-current: run in flight on the head; floor holds this tick"
-        sleep "$INTERVAL"
-        continue
-    fi
 
     case "$merge_state" in
         BEHIND | DRAFT | BLOCKED | UNKNOWN)
