@@ -192,6 +192,9 @@ the rest, both while this work was in review, so the set is complete:
 | `undertake` | `08-wake-slot-is-refilled` | `08-no-wake-to-keep-codex` | no durable wake, so the cadence is handed on |
 | `undertake` | `09-session-fields-for-claim` | `09-claim-records-session-na-codex` | branch from git, `session: n/a` recorded, model from the harness |
 
+The `07-there-is-no-wait-codex` row now permits review during pending CI;
+the table records the original design, before issue #1033 changed that timing.
+
 None is its sibling's stem plus `-codex`, and that is the same reason `0013`
 gives for seven of the Omp counterparts: the sibling's stem states Claude's
 route, and on Codex the row grades the opposite.

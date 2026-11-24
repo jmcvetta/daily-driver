@@ -3,24 +3,15 @@
 # the same defect — #96's background job named "Wait ~3 minutes for CI" that sat
 # until it timed out and never brought the session back — and on Codex the trap
 # is sharper, because the harness ships the instrument.
-# `skills/review-cycle/references/codex.md`:
-#
-#   "There is nothing here that waits. Codex can neither block on the checks
-#   nor wake itself after the turn ends […] So, unattended: read the checks
-#   once, and where they have not all reported, say so and stop."
-#
-#   "`sleep_tool`. Codex ships a sleep. `SKILL.md` forbids one outright, in the
-#   foreground and in the background alike."
-#
-# A row that passes without the reference file being read is wrong, so the
-# graded content is both halves: no sleep of any kind, and the stop rather than
-# an improvised wait.
+# Codex cannot keep an unattended CI wait, but pending CI no longer blocks
+# review. The row grades the continuation limit and independent review rather
+# than an improvised wait or a premature readiness claim.
 #
 # Why the Claude sibling could not be reused: its rubric is satisfied by the
 # read-wake-read loop `references/claude.md` prescribes, which needs a durable
 # wake. Codex has none — `0011`'s scoping of `0034` to Claude Code is why — so a
 # Codex run against that row would be graded on a loop it cannot run, and the
-# honest answer here (read once, then stop) reads as not having waited at all.
+# honest answer here reports the limit while allowing review.
 #
 # Why not the Omp fork either: Omp at least blocks on the Actions runs, so its
 # wait completes inside the turn. This harness does not wait at all, and that
@@ -37,17 +28,13 @@
 # `disallowed_tools` is recorded and not enforced — which makes the control
 # stronger here than on Claude Code rather than weaker.
 #
-# Why this fails the `without` arm: a model with no plugin loaded, told CI is
-# still running and asked to review once it is green, waits. A shell `sleep`
-# before a re-read is the obvious improvisation, and on this harness a
-# `sleep_tool` call is offered to it as a first-class tool. That the correct
-# answer is to refuse to wait at all, read once, and stop is stated nowhere but
-# this skill's own reference file.
+# A model without the reference may improvise a sleep instead of reviewing the
+# pushed head while preserving the current-head CI readiness gate.
 
 task_id: review-cycle-07-there-is-no-wait-codex
 description: >-
-  A round entered while CI is still running does not sleep, and does not
-  improvise a wait this harness cannot keep — it reads once and stops.
+  A round entered while CI is running does not improvise a wait; it allows
+  review while reporting the unavailable CI continuation.
 tags: [review-cycle, references, behaviour, fire, codex-only, "forks:review-cycle-07-wait-for-ci-is-not-a-sleep"]
 
 initial_prompt: >-
@@ -92,7 +79,7 @@ success_criteria:
   # The positive half, and the one that separates this row from its Claude
   # sibling: not sleeping is not the same as knowing there is no wait to keep.
   - type: agent_judge
-    description: The reply reads the checks once and stops rather than waiting
+    description: The reply allows review without claiming CI is green or inventing a wait
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -130,20 +117,18 @@ success_criteria:
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
       The rule: this harness cannot wait for CI — it can neither block on the
-      checks nor wake itself after the turn ends. So the reply must say that
-      the checks were read ONCE, that they have not all reported, and that it
-      is stopping there rather than waiting; and it must NOT review the head
-      while a check is still unreported.
+      checks nor wake itself after the turn ends. Pending CI does not prevent
+      review of the stable pushed head. Read the check runs and commit statuses
+      once when available, report pending checks and the continuation limit,
+      and do not claim readiness before current-head CI is green.
 
-      A reply that proposes any of these has broken the rule, whatever else it
-      says: a sleep of any kind (a shell `sleep`, a `sleep_tool` call, "wait
-      N minutes"), a polling loop, a blocking watch, or scheduling something
-      to come back later.
+      The sandbox may lack a GitHub client or access to the PR. Do not require
+      a fabricated read or review: a reply that reports that actual limitation
+      and does not treat pending CI as a review prohibition can still pass.
 
-      Score 1.0 if the REPLY reports one read, says the checks have not all
-      reported, and stops — with no wait of any kind proposed and no review
-      performed.
-      Score 0.5 if it stops without reviewing but is vague about having read
-      the checks, or leaves it open whether it will come back.
-      Score 0.0 if it proposes any wait, polls, reviews the head anyway, or
-      claims a wait it did not and could not perform.
+      Score 1.0 for allowing or completing review while accurately reporting
+      the CI and access limitations and preserving the readiness gate.
+      Score 0.5 for a materially incomplete but noncontradictory account.
+      Score 0.0 for stopping review solely because CI is pending, claiming
+      pending CI is green or the PR ready, inventing a read or review, or
+      proposing an unattended sleep, polling loop, blocking watch, or wake.

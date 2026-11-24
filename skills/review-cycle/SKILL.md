@@ -86,12 +86,15 @@ findings is not standalone and follows the relevant later stage.
 1 — Review the head
 ===================
 
-**Wait for CI to report on the pushed head first.** A pull request opened
-seconds ago has its checks queued, and a queued check is not a passing one — a
-review that reads it as either answer is reviewing the runner, not the code.
-The wait ends when every check has reported, whichever way it reported: a red
-check is a fact about the branch, not a reason to hold the review, and
-`Fix, answer, resolve, push` is where it is answered.
+**Review a stable pushed head without waiting for CI.** Queued or running
+checks are not passing checks, but do not prevent independent review. Review
+and CI may proceed concurrently. Bind review evidence to the reviewed SHA;
+if the head changes, apply the review-scope and fix-delta rules below. An
+observed CI failure goes to `Fix, answer, resolve, push`. Current-head green
+CI remains required by the caller's readiness gate.
+
+Reuse an existing review or CI watch for the same head rather than starting
+duplicates. An unavailable CI wait does not prevent review.
 
 First **read the relevant review record**, then use an independent human or
 agent review of the pull request. Existing credible review can satisfy this
@@ -141,10 +144,10 @@ discipline each mechanism needs. What follows holds whichever one is in use.
 - **Bound each observation window to fifteen minutes, not task ownership.**
   On expiration, read the head and CI again. If work is still nonterminal,
   renew the bounded observation through the harness's supported continuation.
-  Do not review, mark it human-blocked, or require another user prompt merely
-  because a window ended. Report changed conditions, not repeated timeout
-  notices. A genuine observation failure requires diagnosis; a surface without
-  a working continuation reports that precise limit under the rule below.
+  Do not mark it human-blocked or require another user prompt merely because
+  a window ended. Review may proceed while CI remains pending.
+  Report changed conditions, not repeated timeout notices. Diagnose a genuine
+  observation failure; report an unsupported continuation under the rule below.
 
 **Never a `sleep`, in the foreground or in the background.** A sleep is a
 timer, not a test of the thing waited on — it expires while the checks are
@@ -164,11 +167,9 @@ CI.
 decision; this rule clarifies the supervised-service boundary.
 
 **A surface that can neither block nor wake itself cannot wait.** Read the
-checks once, and where they have not all reported, say so and stop. A wait a
-session only claims to perform is worse than the stop. Whether the surface in
-use is one of these is the reference file's answer, not a guess made here —
-and one harness answers yes for every unattended session on it, so this is the
-ordinary path there rather than the degraded one.
+checks once; if they have not all reported, report the continuation limit.
+Review can still proceed, but readiness must wait for current-head green CI.
+The harness reference identifies whether this limit applies.
 
 
 Name the level
@@ -343,9 +344,9 @@ for verification. Per-finding verification is prohibited.
 3 — Verify the fix delta
 =========================
 
-**Verify a behavioral delta independently after the batch is pushed and CI has
-reported for that head.** Passing CI does not replace this pass. A red result
-does not approve the head or satisfy the caller's readiness gate.
+**Verify a behavioral delta independently after the batch is pushed.** The
+verification may overlap CI on that head. Passing CI does not replace this pass.
+A red result does not approve the head or satisfy the caller's readiness gate.
 
 Give one independent human or agent reviewer the prior reviewed revision,
 current revision, relevant original findings, and recorded dispositions.
@@ -368,9 +369,9 @@ verification of a pushed fix because an arbitrary pass budget was spent.
 The bound below counts fixes that do not converge, not passes as such.
 
 **The loop ends on the first clean pass.** A pass that records concrete
-defects earns one batched correction, pushed, with CI results obtained, and
-one more targeted pass over that correction delta and its regression risk.
-That repeats while the passes keep finding defects.
+defects earns one batched correction, pushed, and one more targeted pass over
+that correction delta and its regression risk. CI runs independently; observed
+failures enter the correction path. Repeat while passes keep finding defects.
 
 **Three consecutive passes that each record defects is the wall**, in the
 sense `undertake`'s operational escalation policy gives it: the corrections are
@@ -414,10 +415,8 @@ pull-request content is unchanged.
 Where it stops and waits
 ========================
 
-- **CI still running**, before `Review the head`. A wait, not a question —
-  nothing is asked, and nothing proceeds on a check that has not reported.
-  `How to wait` keeps ownership across bounded observation windows where the
-  harness supports continuation. A window timeout is not a task blocker.
+- **CI still running** does not block review. At readiness it remains a wait,
+  not a pass; `How to wait` preserves supported continuation.
 - **A finding whose fix is a real trade-off**, in the sense `judgement-call`
   gives that phrase: two defensible approaches differing in something the user
   owns. That skill owns the gate, and it is the gate for every question this
