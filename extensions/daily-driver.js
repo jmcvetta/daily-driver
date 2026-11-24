@@ -909,7 +909,11 @@ function shellSegments(command) {
 		}
 		if (
 			(char === "<" || char === ">" || (char === "&" && command[index + 1] === ">")) &&
-			command[index + 1] !== "("
+			command[index + 1] !== "(" &&
+			// Within `((…))`, `<`, `>` and `<<` are comparisons and shifts. Read
+			// as redirections, a shift operand becomes a here-document delimiter
+			// and can swallow the commands that follow it.
+			groupKinds.at(-1) !== "arithmetic"
 		) {
 			// Operators are separate shell tokens even without spaces. Preserve
 			// quoted lookalikes and distinguish a descriptor from a quoted number.

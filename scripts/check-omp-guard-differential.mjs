@@ -183,6 +183,7 @@ function shapes({ root, primary, task, detached }) {
 
 	// The six fail-open holes four review rounds found, one at a time.
 	add("arithmetic left shift", primary, "echo $((1 << 2))\ngit switch feature/y");
+	add("arithmetic shift operand is not a here-document delimiter", primary, "echo $((1 << 4))\ngit switch feature/y\n4\n");
 	add("substitution inside arithmetic", task, `echo $(( $(cd ${primary} && git switch feature/y) + 1 ))`);
 	add("cd in a subshell", primary, `(cd ${task}) ; git switch feature/y`);
 	add("function body cd", primary, `f() { cd ${task}; }\ngit switch feature/y`);

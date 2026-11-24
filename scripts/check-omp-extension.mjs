@@ -3953,6 +3953,22 @@ checkGuard(
 );
 
 checkGuard(
+	"an arithmetic shift operand is not a here-document delimiter",
+	true,
+	"bash",
+	{ command: "echo $((1 << 2))\ngit switch master\n2\n" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a sparse arithmetic shift operand cannot swallow later commands",
+	true,
+	"bash",
+	{ command: "(( x = 1 << 2 ))\ngit switch master\n2\n" },
+	worktrees.primary,
+);
+
+checkGuard(
 	"a here-document whose delimiter never arrives does not swallow the rest",
 	true,
 	"bash",
