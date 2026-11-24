@@ -505,8 +505,8 @@ check("explicit embark is gated at the requested epic read and title", async () 
 	assert.equal(docsBeforeIdentity, undefined);
 	deliverEpicRead(s, ctx);
 	assert.equal(startupState(s).status, "required");
-	const blocked = titleCall(s, "read", { path: "skills/undertake/SKILL.md" }, ctx);
-	assert.equal(blocked.block, true);
+	assert.equal(titleCall(s, "read", { path: "skills/undertake/SKILL.md" }, ctx), undefined);
+	const blocked = titleCall(s, "task", {}, ctx);
 	assert.match(blocked.reason, /#582: "Enforce epic titling"/);
 	assert.equal(titleCall(s, "write", {
 		path: "xd://daily_driver_set_session_title",
@@ -882,16 +882,6 @@ check("report recovery rejects shell execution and unrelated tools while startup
 		]) {
 			assert.equal(titleCall(s, tool, input, ctx)?.block, true, `${status}: ${tool}`);
 		}
-		if (status === "required") {
-			for (const path of [
-				"skill://issue/extra",
-				"skill://issue/references/claude.md",
-				"skill://issue-body/references/other.md",
-				"skill://provenance/references/omp.md/extra",
-				"skills/issue/SKILL.md",
-				"README.md",
-			]) assert.equal(titleCall(s, "read", { path }, ctx)?.block, true, path);
-		}
 		const primaryCtx = { ...ctx, cwd: worktrees.primary };
 		const guarded = titleCall(s, "bash", { command: `${report} && git reset --hard` }, primaryCtx);
 		assert.equal(guarded.block, true);
@@ -975,12 +965,48 @@ check("awaiting startup allows read-only preparation but blocks mutations and di
 	]) {
 		const result = titleCall(s, tool, input, ctx);
 		assert.equal(result.block, true, `${tool}: ${JSON.stringify(input)}`);
-		assert.match(result.reason, /canonical.*issue:\/\/|issue:\/\/.*canonical/isu);
+		assert.match(result.reason, /issue:\/\//u);
 	}
 	deliverEpicRead(s, ctx, epicMetadata, "noncanonical-read", "https://github.com/example/project/issues/582");
 	assert.equal(startupState(s).status, "awaiting");
 	deliverEpicRead(s, ctx);
 	assert.equal(startupState(s).status, "required");
+});
+
+/** Structured successful gh evidence must certify the requested issue, not arbitrary output. */
+check("gh issue JSON advances identity without releasing dispatch or ordinary questions", async () => {
+	const command = "gh issue view 582 --repo example/project --json number,title,url,labels";
+	const metadata = { number: 582, title: "Enforce epic titling",
+		url: "https://github.com/example/project/issues/582", labels: [{ name: "epic" }] };
+	for (const [result, exitCode, expected] of [
+		[metadata, 0, "required"],
+		[{ ...metadata, url: "https://github.com/other/project/issues/582" }, 0, "awaiting"],
+		[{ ...metadata, number: 583 }, 0, "awaiting"],
+		[metadata, 1, "awaiting"],
+		["arbitrary prose", 0, "awaiting"],
+	]) {
+		const s = makeSession();
+		const ctx = startupCtx(s);
+		s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
+		s.fire("tool_call", { toolName: "bash", toolCallId: "gh-read", input: { command } }, ctx);
+		s.fire("tool_result", { toolName: "bash", toolCallId: "gh-read", input: { command },
+			content: [{ type: "text", text: typeof result === "string" ? result : JSON.stringify(result) }],
+			details: { exitCode }, isError: false }, ctx);
+		assert.equal(startupState(s).status, expected);
+		s.fire("input", { text: "What does embark 999 mean?", source: "interactive" }, ctx);
+		assert.equal(startupState(s).status, expected);
+		for (const [tool, input] of [
+			["read", { path: "README.md" }], ["grep", { pattern: "title" }],
+			["glob", { pattern: "*.md" }], ["bash", { command: "gh issue view 583 --repo example/project" }],
+		]) assert.equal(titleCall(s, tool, input, ctx), undefined);
+		assert.equal(titleCall(s, "task", {}, ctx).block, true);
+		assert.equal(titleCall(s, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, ctx).block, true);
+		if (expected === "required") {
+			await s.tools.get("daily_driver_set_session_title").execute(
+				"title", { title: "⛵ EPIC #582 Enforce epic titling" }, undefined, undefined, ctx);
+			assert.equal(titleCall(s, "task", {}, ctx), undefined);
+		}
+	}
 });
 
 /** This prevents a supplied GitHub URL from bypassing the canonical issue protocol. */

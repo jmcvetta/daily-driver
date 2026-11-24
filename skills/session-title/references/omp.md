@@ -51,12 +51,10 @@ interpolation, additional statements, and other calls are not. These outer
 forms only reach the ordinary setter: the title must match the requested epic,
 and startup becomes satisfied only after the session name actually matches.
 
-For an explicit Omp embark request, this setter is the only normal recovery
-write after the requested epic's matching canonical `issue://` read.
-Read-only discovery may precede that identity read. After matching epic
-metadata, the startup barrier blocks unrelated calls until the active session
-name matches the epic form. The extension checks the submitted title against
-the active epic before applying it.
+For an explicit Omp embark request, the setter enforces the active epic's
+title after a matching authoritative issue read. Read-only research remains
+available while startup is pending; dispatch and claims remain blocked until
+the active session name matches the epic form.
 
 The runtime's own session-name limit is not measured here. The
 thirty-character budget in `SKILL.md` applies whatever it is, because the cap

@@ -46,6 +46,8 @@
 
 ### Fixed
 
+* Allow read-only research during epic title recovery and accept matching structured `gh issue view` identity evidence without releasing dispatch protection ([#1083](https://github.com/jmcvetta/daily-driver/issues/1083)).
+
 * Preserve Omp commit provenance through selective commits, local conflict-resolution merges, and explicitly prepared squash landing messages; keep GitHub-authored update-branch messages distinct ([#1029](https://github.com/jmcvetta/daily-driver/issues/1029)).
 
 * Distinguish delegated reviewer identity from publisher provenance in Omp reviews and verification records ([#973](https://github.com/jmcvetta/daily-driver/issues/973)).

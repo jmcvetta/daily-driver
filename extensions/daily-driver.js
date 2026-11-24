@@ -2195,8 +2195,8 @@ function isReadOnlyGitHubRead(command) {
 const EMBARK_TITLE_STATE = "daily-driver-embark-title";
 const EMBARK_TITLE_PREFIX = "⛵ EPIC #";
 const EMBARK_READ_REASON =
-	"Before dispatch, read the requested issue with `read` on its canonical " +
-	"single-issue `issue://` URL. Other reads do not certify that step.";
+	"Before dispatch, read the requested issue with `read` on its single-issue " +
+	"`issue://` URL or `gh issue view` with JSON number, title, URL and labels.";
 
 /** Parse an explicit embark command without treating quoted prose as one. */
 function explicitEmbarkTarget(prompt) {
@@ -2280,6 +2280,45 @@ function issueMetadata(content) {
 		repository: `${parsedUrl.host}/${issue[1]}/${issue[2]}`.toLowerCase(),
 		labels: labels[1].split(",").map((label) => label.trim()).filter(Boolean),
 	};
+}
+
+/** Recognize a single literal gh JSON issue read with an explicit repository. */
+function embarkGhIssueRead(command, target) {
+	if (typeof command !== "string") return null;
+	const { segments, functions, unreadable } = shellSegments(command);
+	if (unreadable !== null || functions.length || segments.length !== 1 || segments[0].group) return null;
+	const words = segments[0].words ?? [];
+	if (words.some((word) => !word.literal || /[;&|<>]/u.test(word.text))) return null;
+	const args = words.map((word) => word.text);
+	if (args.length !== 8 || args[0] !== "gh" || args[1] !== "issue" || args[2] !== "view" ||
+		Number(args[3]) !== target.number || !/^\d+$/u.test(args[3])) return null;
+	const options = new Map([[args[4], args[5]], [args[6], args[7]]]);
+	const repository = options.get("--repo") ?? options.get("-R");
+	const fields = options.get("--json")?.split(",");
+	if (options.size !== 2 || !repository || !/^[^/]+\/[^/]+$/u.test(repository) ||
+		!fields || fields.length !== 4 || new Set(fields).size !== 4 ||
+		!["number", "title", "url", "labels"].every((field) => fields.includes(field))) return null;
+	const qualified = `github.com/${repository}`.toLowerCase();
+	if (target.repository && target.repository.toLowerCase() !== qualified) return null;
+	return qualified;
+}
+
+/** Parse only the structured gh issue-view response. */
+function ghIssueMetadata(content) {
+	try {
+		const text = content.filter((part) => part?.type === "text").map((part) => part.text).join("\n");
+		const issue = JSON.parse(text);
+		const url = new URL(issue.url);
+		const match = /^\/([^/]+)\/([^/]+)\/issues\/(\d+)\/?$/u.exec(url.pathname);
+		if (url.protocol !== "https:" || !match || !Number.isSafeInteger(issue.number) ||
+			issue.number !== Number(match[3]) || typeof issue.title !== "string" || !issue.title.trim() ||
+			!Array.isArray(issue.labels) || issue.labels.some((label) => typeof label?.name !== "string")) return null;
+		return { number: issue.number, title: issue.title.trim(), url: issue.url,
+			repository: `${url.host}/${match[1]}/${match[2]}`.toLowerCase(),
+			labels: issue.labels.map((label) => label.name) };
+	} catch {
+		return null;
+	}
 }
 
 /** Whether a title names the active epic and has a nonblank suffix. */
@@ -2794,10 +2833,10 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 
 	pi.on("tool_result", (event, ctx) => {
 		const expected = pendingIssueReads.get(event.toolCallId);
-		if (!expected || event.toolName !== "read") return;
+		if (!expected || event.toolName !== expected.toolName) return;
 		pendingIssueReads.delete(event.toolCallId);
-		if (event.input?.path !== expected.path) return;
-		if (event.isError) return;
+		if (expected.toolName === "read" ? event.input?.path !== expected.path : event.input?.command !== expected.command) return;
+		if (event.isError || (expected.toolName === "bash" && event.details?.exitCode !== 0)) return;
 		const state = startupState(ctx);
 		if (!state || state.status !== "awaiting") return;
 		const text = Array.isArray(event.content)
@@ -2814,15 +2853,16 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 				],
 			};
 		}
-		const metadata = issueMetadata(event.content);
+		const metadata = expected.toolName === "read" ? issueMetadata(event.content) : ghIssueMetadata(event.content);
 		if (!metadata || metadata.number !== state.target.number ||
+			(expected.repository && metadata.repository !== expected.repository) ||
 			(state.target.repository && metadata.repository !== state.target.repository.toLowerCase())) {
 			return {
 				content: [
 					...event.content,
 					{
 						type: "text",
-						text: "\nThis result does not contain matching, complete metadata for the requested issue. Read the requested issue with the canonical issue:// URL before dispatch.",
+						text: "\nThis result does not contain matching, complete metadata for the requested issue. Read the requested issue before dispatch.",
 					},
 				],
 			};
@@ -2850,7 +2890,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 					...event.content,
 					{
 						type: "text",
-						text: `\nSet this session's title now to \`${EMBARK_TITLE_PREFIX}${metadata.number} <shortened epic title>\` before any unrelated tool call. Use \`session-title\`; the issue title is ${JSON.stringify(metadata.title)}.`,
+						text: `\nSet this session's title to \`${EMBARK_TITLE_PREFIX}${metadata.number} <shortened epic title>\` before dispatch or claims. Use \`session-title\`; the issue title is ${JSON.stringify(metadata.title)}.`,
 					},
 				],
 			};
@@ -2903,11 +2943,17 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 			if (target?.number === startup.target.number &&
 				readRepository === requestedRepository &&
 				typeof event.toolCallId === "string") {
-				pendingIssueReads.set(event.toolCallId, { path });
+				pendingIssueReads.set(event.toolCallId, { toolName: "read", path });
+				return undefined;
+			}
+			const repository = event.toolName === "bash"
+				? embarkGhIssueRead(event.input?.command, startup.target) : null;
+			if (repository && typeof event.toolCallId === "string") {
+				pendingIssueReads.set(event.toolCallId, { toolName: "bash", command: event.input.command, repository });
 				return undefined;
 			}
 			if (embarkReportRecoveryRoute(event)) return undefined;
-			if (["read", "grep", "glob", "daily_driver_get_session"].includes(event.toolName) ||
+			if (["read", "grep", "glob", "web_search", "daily_driver_get_session"].includes(event.toolName) ||
 				(event.toolName === "bash" &&
 					typeof event.input?.command === "string" &&
 					isReadOnlyGitHubRead(event.input.command))) {
@@ -2928,7 +2974,10 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 				return { block: true, reason: embarkTitleReason(startup) };
 			}
 		}
-		if (startup?.status === "required" && !embarkTitleRecoveryRoute(event, startup)) {
+		if (startup?.status === "required" && !embarkTitleRecoveryRoute(event, startup) &&
+			!(["read", "grep", "glob", "web_search", "daily_driver_get_session"].includes(event.toolName) ||
+				(event.toolName === "bash" && typeof event.input?.command === "string" &&
+					isReadOnlyGitHubRead(event.input.command)))) {
 			return { block: true, reason: embarkTitleReason(startup) };
 		}
 		// After the worktree check: the session's first issue comment and first
