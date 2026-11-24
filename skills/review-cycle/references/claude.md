@@ -49,10 +49,10 @@ work. The author records the independent result, never substitutes a verdict.
 Publish new findings through the routes below. Link the result or use
 `mcp__github__add_issue_comment` for a concise account of the checked content
 and fixes, outcome, and any remaining defects or coverage limits. Preserve
-enough prior results to enforce `SKILL.md`'s three-defect-pass limit. No
-fixed verification fields, empty values, wall-state token, usage data, or
-reviewer-transcript inspection are required. A failed or incomplete dispatch
-is not a clean result. Published records use ordinary `provenance`.
+enough prior results to recognize repeated unresolved defects and failed
+approaches. No fixed verification fields, empty values, pass counter, usage
+data, or reviewer-transcript inspection are required. A failed or incomplete
+dispatch is not a clean result. Published records use ordinary `provenance`.
 
 The wait
 ========
