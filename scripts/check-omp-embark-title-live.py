@@ -131,7 +131,7 @@ def scenario_calls(number: int, route: str, repository_qualified: bool) -> list[
         add("awaiting-title", "daily_driver_set_session_title", {"title": title}, "blocked")
     path = f"issue://example/project/{number}" if repository_qualified else f"issue://{number}"
     add("identity", "read", {"path": path})
-    add("required-read", "read", {"path": "prep.md"}, "blocked")
+    add("required-read", "read", {"path": "prep.md"})
     add("help", "bash", {"command": "daily_driver_set_session_title --help"})
     pending("help-pending")
     add("help-session", "daily_driver_get_session", {})
