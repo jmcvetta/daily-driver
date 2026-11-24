@@ -63,9 +63,10 @@ another actor: raise a disagreement and wait rather than retitling it.
 unresolved.** Report the dependency and constraint. Do not call it fixed or
 cross the unattended boundary to take the major upgrade.
 
-A red suite is still answered by finding which upgrade broke what, and never
-by pinning around the failure, skipping the test, or silencing it —
-the constitution's test discipline.
+A red suite is answered by finding which upgrade broke what, never by pinning
+around the failure, skipping the test, or silencing it. Follow
+[`docs/testing-standards.md`](../../docs/testing-standards.md) for the test
+contract.
 
 **A compatible tool's own migration is inside the pass.** Where the bulk
 command moves a tool within its existing major constraint and the fallout is
