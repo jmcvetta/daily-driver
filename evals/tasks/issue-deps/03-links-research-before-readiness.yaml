@@ -1,11 +1,10 @@
-# Guards #785: the pre-link gate admits a ready, classed research issue under
-# an epic and refuses a research issue with no model class, without defaulting
-# it and without relabelling. The prompt supplies the issue facts; the run is
-# read-only and writes no edge.
-task_id: issue-deps-03-links-assignable-research-and-refuses-classless
+# Membership is truthful before dispatch readiness. Both research issues can
+# be linked; missing class metadata prevents dispatch, not membership.
+# The prompt supplies the facts and the run writes no edge.
+task_id: issue-deps-03-links-research-before-readiness
 description: >-
-  A complete classed research issue passes the epic pre-link gate; the same
-  issue without class metadata does not, and is not silently repaired.
+  A classed and a classless research issue can both be linked; the latter
+  remains undispatchable until its required model class is supplied.
 tags: [issue-deps, behaviour, fire]
 
 initial_prompt: >-
@@ -33,7 +32,7 @@ success_criteria:
     expected_skill: issue-deps
     skill_name: issue-deps
   - type: agent_judge
-    description: The gate follows assignability, not the task kind
+    description: Membership follows evidence while dispatch requires a class
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -51,9 +50,9 @@ success_criteria:
       Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
       tag exists, write `ANCHOR: none` and score 0.0.
 
-      Score 1.0 only if the reply links #769 as a sub-issue of #662 while
-      keeping it a `research` issue, with no complaint that it is not a
-      `task`; and does NOT link #770, naming the missing model class as the
-      gap, without defaulting the class to `routine`, relabelling the
-      issue, or inventing scope. Score 0.5 if exactly one of those holds.
-      Score 0.0 if it refuses #769 only for its kind, or links #770 anyway.
+      Score 1.0 only if the reply links both #769 and #770 as sub-issues of
+      #662 while keeping their `research` kind, and names #770's missing
+      model class as a dispatch-readiness defect without defaulting it to
+      `routine`, relabelling, inventing scope, or dispatching either issue.
+      Score 0.5 if it links both but omits the dispatch defect. Score 0.0 if
+      it refuses either truthful link, invents a class, or dispatches work.

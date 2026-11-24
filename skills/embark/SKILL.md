@@ -120,12 +120,13 @@ limits also remain binding. Never turn either into a false blocker edge.
 Historical wave lists or statuses do not override the graph or require edits.
 Re-read the graph when a child completes or dependencies change.
 
-**Every dispatch candidate must be assignable.** Apply `epic`'s
-assignable-story rule and `issue-body` readiness and class tests. An epic's
-invalid child is a planning defect. A discovery's interactive specification
-and staged implementation tasks are valid children but never dispatch
-candidates. Do not silently relabel or change edges or markers to conceal a
-defect; repair grounded gaps through `issue` and continue eligible work.
+**Every dispatch candidate must be assignable.** Apply `issue-body`'s
+kind-specific readiness and required class tests, and check open blockers.
+Membership may be truthful before readiness. Name each precise defect without
+dispatching that child, and continue eligible independent work. A discovery's
+interactive specification and staged implementation tasks are valid children
+but never dispatch candidates. Do not change edges or markers to conceal a
+defect; repair grounded gaps through `issue`.
 
 **Determine ownership before dispatch.** Read the latest epic mapping and the
 task's current claim and handoff, then consult the harness lifecycle for the
