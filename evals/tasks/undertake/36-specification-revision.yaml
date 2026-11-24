@@ -3,9 +3,12 @@ task_id: undertake-36-specification-revision
 description: Specification-backed execution binds both sources and detects change.
 tags: [undertake, discovery, behaviour, fire]
 initial_prompt: >-
-  Use undertake: a task allocates REQ-1 in docs/specs/example.md at an exact
-  merged master SHA. The parent is promoted. A later base update changes REQ-1.
-  Explain the claim and update checks and what happens to active work; do not
+  Use undertake: a promoted task directly allocates REQ-1 and excludes REQ-2,
+  names docs/specs/example.md at an exact merged master SHA and links an explicit
+  operator approval comment on the specification issue. No parent publication
+  record exists. A later base update changes REQ-1. Explain claim and update
+  checks, including what changes if approval is missing, the SHA is unmerged
+  or mismatched, the document inaccessible, or allocation unclear. Do not
   perform external actions.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -22,10 +25,13 @@ success_criteria:
     turn_timeout: 120
     agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
     prompt: |
-      Score 1 if the answer checks the parent, path, exact merged revision and
-      requirement ID before claim, binds issue version and spec revision in the
-      execution contract using sourced criteria, and pauses affected work and
-      routes the substantive base mismatch to epic without silently adopting
-      new behavior. Original-user authority remains necessary for material
-      amendments, and unrelated eligible work may continue. Score 0 for silent
-      substitution; otherwise 0.5 for a material omission.
+      Score 1 only if the answer allows the direct binding without a parent
+      record, verifies the document at its exact merged SHA, the merge and
+      approval URL's relationship to the specification issue or merged PR,
+      IDs, exclusions and separately agreed allocation before claim, and blocks
+      each missing or ambiguous evidence case precisely. It pauses affected
+      work for the substantive mismatch and requires an authorized transition
+      rather than silently adopting the latest revision; unrelated work may
+      continue. Agent review or silent merge is not product approval. Score 0
+      for requiring the parent record or silent substitution; otherwise 0.5
+      for a material omission.
