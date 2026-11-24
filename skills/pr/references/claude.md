@@ -15,10 +15,10 @@ Codex's in [`codex.md`](codex.md).
   `draft: true` for the initial state this skill requires. For the mapped
   path, set its `head` to the designated push branch in its resolved remote
   repository. Never let GitHub infer the head from the local execution name.
-- **Updating an existing pull request as a whole** — title and body
-  together. `mcp__github__update_pull_request`, called once both are decided
-  (`pr-title`, `pr-body`). Keep the identified remote push head; do not create
-  a second PR for the execution branch.
+- **Updating an existing pull request.** Inspect title and body first, then
+  call `mcp__github__update_pull_request` only with stale or incorrect fields
+  set. Make no update when both are accurate; keep the identified remote push
+  head and do not create a second PR for the execution branch.
  
 Keep it current
 ===============
