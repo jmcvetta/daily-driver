@@ -199,6 +199,14 @@ report is a one-shot Routine bound to that session:
 The tool is deferred: load it with `ToolSearch`, `select:` its name, before the
 first report. The Routine disables itself once it fires, so there is nothing
 to delete.
+For `Ready for review`, the implementor also sends the same report in its
+user-facing conversation after the ready write succeeds. This is required
+whether or not the orchestrator id exists. When it exists, use the Routine
+above for the orchestrator copy; the Routine does not replace user delivery.
+If the user-facing send or Routine delivery fails, report that failure once in
+the available conversation and continue without undoing readiness or retrying.
+Where a child conversation reaches only the parent, the orchestrator visibly
+relays the report to the user.
 
 **Not `fire_trigger`, and not `send_later`.** A manual `fire_trigger` on a
 Routine bound to the orchestrator returns success and delivers nothing.

@@ -236,9 +236,11 @@ message: "<specific action needed>" })` before the chat handoff. Choose a
 stable key for the specific required action, not an attempt. Keys must be
 nonblank and at most 160 characters; messages must be nonblank and at most
 400 characters; neither may contain control characters or secrets. Child
-agents report to the orchestrator, not the user. Recoverable errors, CI waits,
-reminders, progress and ordinary final replies do not notify. Notifications
-do not replace the record or chat handoff.
+agents route genuine attention-required handoffs to the orchestrator, not the
+user. The `undertake` `Ready for review` report is different: the child returns
+it to the orchestrator, which visibly relays it to the user's conversation.
+Recoverable errors, CI waits, reminders, progress and ordinary final replies
+do not notify. Notifications do not replace the record or chat handoff.
 
 
 CI waiting uses `review-cycle`'s persistent named Bash service. Start the

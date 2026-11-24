@@ -97,6 +97,9 @@ The pull request
 | `The gate` | Read review evidence | Use `review-cycle`'s review and thread routes as needed; compare reviewed content with the current head |
 | `The gate` | Read the Blockers section | `gh pr view <number> --json body`, where `pr-body`'s Blockers section sits |
 | `Ready for review` | Take it out of draft | `gh pr ready <number>` |
+| `Ready for review` | Deliver the user-facing report | A dedicated final conversation message after observing `gh pr ready <number>` succeed; include the fixed report opening and task/PR/moment fields |
+| `Ready for review` | Copy to an addressed orchestrator | Use the supplied session return route when available; do not invent a remote address. If child output reaches only the parent, require the orchestrator to visibly relay the report to the user |
+| `Ready for review` | Report delivery failure | State the failed delivery once in the available conversation; leave the PR ready and continue |
 | `Keep it current` | Invoke `pr`'s ongoing base maintenance | [`pr` route](../../pr/references/codex.md#keep-it-current) |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
 

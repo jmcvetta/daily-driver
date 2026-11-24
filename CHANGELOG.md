@@ -6,7 +6,8 @@
 
 * Simplify independent review evidence and finding records while retaining current-content coverage and substantive dispositions ([#1025](https://github.com/jmcvetta/daily-driver/issues/1025)).
 * Allow independent review and fix-delta verification while CI runs, while keeping current-head green CI mandatory for readiness ([#1033](https://github.com/jmcvetta/daily-driver/issues/1033)).
-* Remove mandatory first-readiness reports and their draft transition dependency while preserving readiness gates and historical telemetry ([#1026](https://github.com/jmcvetta/daily-driver/issues/1026)).
+* Remove first-readiness telemetry writes and their draft transition dependency while retaining all readiness gates ([#1026](https://github.com/jmcvetta/daily-driver/issues/1026)).
+* Deliver a dedicated first-readiness report to the user after the ready transition, with an orchestrator copy when addressed ([#1061](https://github.com/jmcvetta/daily-driver/issues/1061)).
 
 * Reject serialized JSON argument objects and arrays as Omp session titles, show the direct-call, quoted shell, and `-j` command forms in the title instructions and gate messages, and keep ordinary prose containing braces or brackets ([#978](https://github.com/jmcvetta/daily-driver/issues/978)).
 * Remove the undefined intrusion clause and universal terminal-window prohibition from the constitution while preserving adjacent safety and authorization rules ([#1027](https://github.com/jmcvetta/daily-driver/issues/1027)).

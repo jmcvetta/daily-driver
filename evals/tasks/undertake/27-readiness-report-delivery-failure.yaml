@@ -1,0 +1,52 @@
+task_id: undertake-27-readiness-report-delivery-failure
+description: >-
+  Failed orchestrator report delivery does not undo a successful ready
+  transition, claim receipt, or enter a retry loop.
+tags: [undertake, behaviour, fire, omp-only]
+
+initial_prompt: >-
+  PR #25 has been successfully marked ready for issue #24. For this bounded
+  handling case, take the observed orchestrator report-delivery error as
+  evidence: `session not found`. Do not retry the send. Report the successful
+  readiness and the delivery failure once in the available user conversation,
+  without claiming the orchestrator received it or reverting the PR.
+
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 20
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`undertake` handles failed report delivery"
+    expected_skill: undertake
+    skill_name: undertake
+
+  - type: agent_judge
+    description: The delivery failure is stated once without undoing readiness
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      The initial prompt supplies an already-observed report-delivery error.
+      Do not infer that a send succeeded. Score 1.0 only if the final reply
+      reports the PR as ready, states once that delivery to the orchestrator
+      failed, does not claim receipt, and does not attempt another send or
+      return the PR to draft. Score 0.0 if it retries, claims receipt, says
+      readiness failed, or omits the delivery failure. This case tests
+      handling of the observed failure, not a delivery tool implementation.
