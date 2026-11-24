@@ -5,6 +5,7 @@ import copy
 import fcntl
 import importlib.util
 import json
+import sqlite3
 from pathlib import Path
 import subprocess
 import sys
@@ -166,6 +167,41 @@ class ActiveTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "stopped PR"):
             self.actor.rebind(self.key, request, "route changed after stop")
         self.assertEqual(self.actor.status(self.key), before)
+
+    def test_rebind_collects_evidence_before_the_short_write_transaction(self):
+        request = self.owner_request()
+        original = self.actor.worktree_evidence
+        def evidence(path, branch):
+            other = sqlite3.connect(self.path, timeout=0, isolation_level=None)
+            try:
+                other.execute("BEGIN IMMEDIATE")
+                other.execute("UPDATE records SET next_due=next_due WHERE identity=?", (self.key,))
+                other.execute("COMMIT")
+            finally:
+                other.close()
+            return original(path, branch)
+        with patch.object(self.actor, "worktree_evidence", side_effect=evidence):
+            self.actor.rebind(self.key, request, "short write transaction")
+        self.assertEqual(self.actor.db.execute("SELECT provider FROM owners").fetchone()[0], "new-provider")
+
+    def test_rebind_fails_when_a_stop_changes_before_the_final_write(self):
+        request = self.owner_request()
+        original = self.actor.worktree_evidence
+        def evidence(path, branch):
+            other = sqlite3.connect(self.path, timeout=0, isolation_level=None)
+            try:
+                other.execute("BEGIN IMMEDIATE")
+                other.execute("UPDATE records SET stopped='concurrent stop' WHERE identity=?", (self.key,))
+                other.execute("COMMIT")
+            finally:
+                other.close()
+            return original(path, branch)
+        before = self.actor.status(self.key)
+        with patch.object(self.actor, "worktree_evidence", side_effect=evidence):
+            with self.assertRaisesRegex(ValueError, "changed before commit"):
+                self.actor.rebind(self.key, request, "fenced commit")
+        self.assertEqual(self.actor.status(self.key)["context"], before["context"])
+        self.assertEqual(self.actor.db.execute("SELECT provider FROM owners").fetchone()[0], "old-provider")
 
     def test_transfer_without_a_running_lifecycle_host_keeps_old_authority(self):
         fcntl.flock(self.host_lock, fcntl.LOCK_UN)

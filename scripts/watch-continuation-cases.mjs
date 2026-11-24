@@ -524,6 +524,25 @@ export default function registerWatchContinuationChecks(check, { makeSession, fa
 		}
 	});
 
+	// A damaged entry without a valid registration identity is diagnosable but cannot be stopped.
+	watchCheck("suspended stop refuses without a recoverable registration identity", async create => {
+		const original = await create();
+		ok(await original.register());
+		const valid = structuredClone(original.entries.at(-1));
+		const damaged = { ...structuredClone(valid),
+			data: { ...valid.data, schema: 99, revision: 2, registrationId: "not-a-uuid" } };
+		const s = await create({ entries: [...original.entries, damaged] });
+		const viewed = ok(await s.call({ action: "get", key: EPIC }));
+		assert.equal(viewed.details.suspended, true);
+		assert.equal(viewed.details.registrationId, undefined);
+		assert.ok(viewed.details.diagnostic);
+		const stopped = await s.call({ action: "stop", key: EPIC });
+		rejected(stopped);
+		assert.match(stopped.content.map(part => part.text).join("\n"), /known registration identity/);
+		assert.deepEqual(s.entries[1], damaged, "refusal must not write a tombstone");
+		assert.equal(s.entries.length, 2);
+	});
+
 	// Only explicit stand-down invocation stops embark; prose mentions and PR ownership are unaffected.
 	watchCheck("explicit stand-down stops embark only and ignores prose mentions", async create => {
 		for (const text of ["stand-down", "/stand-down", "/skill:stand-down", '[IMPORTANT: User invoked the "stand-down" skill; use its instructions.]']) {

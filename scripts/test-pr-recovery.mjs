@@ -165,21 +165,38 @@ try {
 		} finally { await f.close(); }
 	}
 	// Identity and stop failures must reject startup before process ownership changes.
-	for (const invalid of ["owner", "agent", "header", "stop"]) {
+	for (const invalid of ["owner", "agent", "header", "file", "stop"]) {
 		const f = fixture();
 		try {
 			const first = f.start(); await first.startup(); await first.close();
 			const before = f.owner();
 			const options = invalid === "owner" ? { environment: { DAILY_DRIVER_PR_INBOX_EXPECTED_OWNER: "another-owner" } } :
-				invalid === "agent" ? { agent: { ...parentAgent, id: "Other" } } : {};
+				invalid === "agent" ? { agent: { ...parentAgent, id: "Other" } } :
+				invalid === "file" ? { file: f.file("other") } : {};
 			if (invalid === "header") writeFileSync(f.file("owner"), '{"type":"session","id":"other"}\n');
+			if (invalid === "file") writeFileSync(f.file("other"), JSON.stringify({ type: "session", id: "owner" }) + "\n");
 			if (invalid === "stop") f.backend("stop", [identity, "--reason", "explicit stop"]);
 			const resumed = f.start(options);
-			await assert.rejects(resumed.startup(), /owner differs|binding changed|identity changed|Stopped PR/);
+			await assert.rejects(resumed.startup(), /owner differs|binding changed|session file changed|identity changed|Stopped PR/);
 			assert.equal(f.owner().process, before.process);
 			await assert.rejects(resumed.call("hold"), /explicit rebind/);
 			await assert.rejects(resumed.call("rebind"), /live owner differs/);
 			assert.deepEqual(resumed.messages, []);
+		} finally { await f.close(); }
+	}
+	// A rebind request cannot substitute another process for the recorded live owner.
+	{
+		const f = fixture();
+		try {
+			const first = f.start(); await first.startup(); await first.close();
+			const resumed = f.start({ model: "new-model" }); await resumed.startup();
+			const request = resumed.controls.recovery.request(resumed.ctx);
+			assert.throws(() => f.backend("rebind", [identity, "--reason", "invalid process"],
+				{ ...request, process: "substituted-process" }),
+				error => /recorded live owner process differs/u.test(String(error.stderr)));
+			assert.equal(f.owner().model, "old-model");
+			assert.equal((await resumed.call("rebind")).details.recovery, "ready");
+			assert.equal(f.owner().model, "new-model");
 		} finally { await f.close(); }
 	}
 	// A parent carrier must explicitly rebind its route and retain its exact child.

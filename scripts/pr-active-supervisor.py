@@ -96,7 +96,9 @@ class ActiveSupervisor:
         """Rebind a live recorded owner route without changing ownership or control fences."""
         if not isinstance(reason, str) or not reason.strip():
             raise ValueError("a nonempty rebind reason is required")
-        with self.mutation_guard(key), self.ledger.transaction():
+        with self.mutation_guard(key):
+            # Filesystem and Git evidence is collected before the writer transaction,
+            # inside the per-PR guard that stop and hold also take.
             record = self.ledger.get(key)
             context = json.loads(record["context"])
             if record["stopped"]:
@@ -154,15 +156,27 @@ class ActiveSupervisor:
             if all(recorded.values()) and recorded != evidence:
                 raise ValueError("repository or task worktree was substituted")
             context.update(evidence, worktree=str(Path(worktree).resolve()))
-            self.db.execute("UPDATE records SET context=? WHERE identity=?", (json.dumps(context), key))
-            self.db.execute("""UPDATE owners SET cwd=?,provider=?,model=?,effort=?,authentication=?
-                WHERE session=? AND process=?""",
-                tuple(request[field] for field in ("cwd", "provider", "model", "effort", "authentication"))
-                + (request["session"], request["process"]))
-            self.db.execute("""CREATE TABLE IF NOT EXISTS owner_rebindings (
-                identity TEXT NOT NULL, session TEXT NOT NULL, reason TEXT NOT NULL, recorded REAL NOT NULL)""")
-            self.db.execute("INSERT INTO owner_rebindings VALUES (?,?,?,?)",
-                            (key, request["session"], reason.strip(), self.clock()))
+            with self.ledger.transaction():
+                # Re-read the fence fields after evidence collection and keep the
+                # writer transaction free of filesystem and Git work.
+                current = self.ledger.get(key)
+                live_now = self.db.execute("SELECT * FROM owners WHERE session=?", (request["session"],)).fetchone()
+                child_now = self.db.execute("SELECT * FROM owners WHERE session=?", (target,)).fetchone()
+                if (current["stopped"] != record["stopped"] or current["held"] != record["held"]
+                        or live_now is None or live_now["process"] != live["process"]
+                        or live_now["session"] != request["session"]
+                        or json.loads(current["context"]).get("session") != target
+                        or child_now is None or child_now["session"] != target):
+                    raise ValueError("rebind evidence changed before commit")
+                self.db.execute("UPDATE records SET context=? WHERE identity=?", (json.dumps(context), key))
+                self.db.execute("""UPDATE owners SET cwd=?,provider=?,model=?,effort=?,authentication=?
+                    WHERE session=? AND process=?""",
+                    tuple(request[field] for field in ("cwd", "provider", "model", "effort", "authentication"))
+                    + (request["session"], request["process"]))
+                self.db.execute("""CREATE TABLE IF NOT EXISTS owner_rebindings (
+                    identity TEXT NOT NULL, session TEXT NOT NULL, reason TEXT NOT NULL, recorded REAL NOT NULL)""")
+                self.db.execute("INSERT INTO owner_rebindings VALUES (?,?,?,?)",
+                                (key, request["session"], reason.strip(), self.clock()))
         return self.status(key)
 
     def register(self, host, repository, number, login, context):
