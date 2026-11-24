@@ -169,19 +169,72 @@ Transcript, worktree, branch, and unfinished task state stay intact. A new
 undertaking requires a fresh initial selection. Repeated cancellation with no
 owner is a no-op. This command does not replace the workflow's stop handoff.
 
-Omp creates a task worktree without relocating the live session. The
-extension's guard rejects primary-checkout and detached-worktree `write` and
-`edit` calls, and denies Git commands that rewrite the primary checkout's
-files; attached feature-worktree mutations remain available. The command
-parser is conservative: it rejects unresolved commands and unterminated
-quotes, scans nested substitutions and unknown wrappers, and does not audit
-programs launched through `make`, Python or scripts, so those programs must
-also stay inside the task worktree. File tools resolve against the session's
-working directory rather than a shell directory change, so use absolute
-task-worktree paths. The user-initiated `/move <path>` can move an idle
-session; the extension API has no automated relocation. The
-[task-worktree reference](../skills/task-worktree/references/omp.md) owns the
-worktree and path route.
+Omp creates a task worktree without relocating the live session. Git or the
+user's chosen tool can create any dedicated registered non-primary worktree;
+Worktrunk installation and sibling placement are not isolation requirements.
+Detached non-primary file edits are allowed; recover a task branch at the
+detached HEAD before committing. Coordinate same-worktree and shared-ref
+writers, retain collision detection and non-force pushes, and preserve all
+existing user work. Ordinary commits to `master` remain prohibited.
+
+The extension keeps canonical primary-checkout `write`/`edit` diagnostics and
+targeted primary Git rewrite protection, including detached primaries and
+recognizable later Git commands after an opaque invocation. Verified
+non-primary task worktrees allow expanded executables, nonliteral `eval` and
+shell input. Primary/unknown directories and unplaceable Git targets remain
+conservative. Arbitrary programs, eval kernels and extension code are not
+filesystem-contained; this is not a sandbox.
+File tools resolve against the session directory, not an earlier shell cwd;
+use absolute task paths. The user-initiated `/move <path>` may move an idle
+session. The [task-worktree reference](../skills/task-worktree/references/omp.md)
+owns the execution route.
+
+### Worktree protection scope and limitations
+
+The user clarified [#1036](https://github.com/jmcvetta/daily-driver/issues/1036):
+dedicated-worktree discipline and targeted ordinary-accident protection are
+the intended scope. Universal OS containment is not an acceptance prerequisite.
+The following earlier capability probes document existing limitations, not
+regressions introduced by admitting ordinary feature commands or a merge gate.
+
+Bounded actual-route evidence, 2026-11-24: Omp 19.1.1 on Linux
+7.0.0-43-generic, x64. A disposable repository had a primary on `master`,
+a dirty tracked file, an untracked user file, and an external feature worktree
+whose path contained spaces. No real project primary was a mutation target.
+
+| Actual Omp route | Observed result |
+| --- | --- |
+| `write` to a new disposable-primary file | Blocked with canonical primary diagnostics; no file created. |
+| `bash` in the feature worktree → `python3 -c` → primary file | Created the probe file; no filesystem containment. |
+| Same interpreter → child `python3` → feature symlink → primary file | Created the probe file through the symlink. |
+| Python `eval` kernel → `Path.write_text` → primary file | Created the probe file; outer tool checks did not contain it. |
+
+After the probes, the primary symbolic branch, index bytes, dirty tracked
+bytes and pre-existing untracked bytes matched their initial snapshots.
+Only new, named probe files were created. These are negative capability
+results, not a successful prevention test. Existing differential Git cases
+remain bounded parser regressions, not proof of arbitrary-program isolation.
+
+The inspected CLI help exposes cwd/workspace/tool selection, not a filesystem
+boundary switch. The installed extension API exposes `tool_call` admission,
+`exec` and native file-write/delete permission-error fallback handlers.
+Those fallback handlers assume an embedding host already enforces a sandbox;
+they do not establish one for the Omp process, eval kernels or subprocesses.
+Installing or wrapping only a shell command would leave the observed eval
+route outside the boundary.
+
+No universal boundary is claimed for native file tools, bash children, eval
+kernels/subprocesses, extension operations, delegated workers, existing open
+descriptors, hooks or shared refs. Dedicated worktrees do not isolate shared
+Git metadata or coordinate concurrent writers by themselves. Follow task
+ownership, branch recovery and user-work preservation rules.
+
+The differential Git fixtures retain recognizable primary-rewrite prevention
+assertions and explicitly exercise opaque dynamic programs as limitations.
+The offline `check-omp-worktree-live.py` fixture drives actual Omp file tools
+and bash through a local scripted provider, including expanded Python/pytest,
+nonliteral eval, scripts, external/detached worktrees, branch recovery and
+dirty-primary preservation. No live model or third-party service is used.
 
 ## Compatibility limits
 

@@ -3,25 +3,23 @@ name: task-worktree
 description: >-
   Use before repository-changing work begins in a running session, before task
   research or the first mutating call, including when an investigation turns
-  into edits. Supplies the feature branch from the base branch and the sibling
-  worktree that roots every later task operation while the primary worktree
-  stays unchanged. Not for read-only questions, investigations, or reviews. Not
-  when the current worktree is already dedicated to this task and attached to
-  its feature branch; a detached one still triggers it. A delegated slice uses
-  its parent's task worktree.
+  into edits. Supplies a dedicated registered non-primary worktree and a
+  recoverable feature branch while the primary checkout stays unchanged.
+  Not for read-only questions, investigations, or reviews. Reuse a worktree
+  already dedicated to this task; attach a detached one before committing.
+  A delegated slice uses its parent's task worktree.
 ---
 
 # Task worktree
 
-One repository-changing task gets one feature branch and one sibling worktree.
-The worktree is the task's execution root, not only the place where edits land.
+One repository-changing task gets one dedicated registered non-primary
+worktree and one recoverable feature branch. The worktree is the task's
+execution root, not only the place where edits land.
 
-Worktrunk (`wt`) owns worktree creation and selection. Before inspecting
-Worktrunk worktrees, check for `wt`; if it is missing, install it through the
-user-scoped release-binary route in the harness reference, then verify it with
-`wt --version`. Never upgrade an existing installation, compile Worktrunk, fall
-back to `git worktree add`, or install software from a task-start hook. If the
-install fails, stop with the cause and an actionable installation requirement.
+Use Git or the user's chosen worktree tool. Worktrunk is optional; do not
+install it as an isolation prerequisite. Registration and ownership matter,
+not the tool or sibling placement. A worktree is not a filesystem sandbox:
+programs can still reach other checkouts and shared Git metadata.
 
 **The execution routes differ by harness.** Read the reference for the harness
 in use before the first repository read or change:
@@ -35,11 +33,11 @@ The gate
 
 Apply this skill before task research, not after the first edit.
 
-- **A new repository-changing task needs isolation.** This includes another
-  skill whose workflow will change repository files.
-- **A worktree already dedicated and attached to this task branch is enough.**
-  Reuse it. A detached task worktree still needs this skill so it gets a
-  feature branch before work continues.
+- **A new repository-changing task needs a dedicated worktree.** This includes
+  another skill whose workflow will change repository files.
+- **A worktree already dedicated to this task is enough.** Reuse it. Detached
+  non-primary file edits are allowed; attach a recoverable task branch before
+  committing, without discarding existing changes.
 - **A delegated slice of the same task does not create another task worktree.**
   Give it the parent's task-worktree path and keep its operations there.
 - **Read-only work needs no isolation.** If an investigation or review turns
@@ -48,8 +46,8 @@ Apply this skill before task research, not after the first edit.
 
 This skill owns the task's branch identity and execution root. A workflow skill
 that invokes it consumes both; it must not choose or cut another branch. The
-skill establishes isolation but does not replace the workflow that owns the
-task, issue, pull request, review, or dependency upgrade.
+skill establishes the task root but does not replace the workflow that owns
+the task, issue, pull request, review, or dependency upgrade.
 
 
 Establish the task root
@@ -70,84 +68,72 @@ Establish the task root
    A failed fetch stops creation; never silently use the stale local ref.
    Never branch from whichever feature branch happens to be checked out.
 3. **Choose the task identities.** A recorded resume branch has precedence.
-   Otherwise use exactly one branch designated by the harness. The exception
-   is narrow: when the active harness-specific route's schema-2 Worktrunk
-   evidence confirms that the designated branch is checked out in the primary
-   worktree, use a distinct short issue-based local execution branch and
-   retain the designation as the remote push branch. The harness-specific
-   route owns this check and the push repository. If that evidence does not
-   hold, use one branch identity as usual. Multiple designations remain a
-   collision.
-4. **Inspect Worktrunk's worktrees.** Require `wt`, then run
-   `wt --config-set 'list.json-schema=2' list --format=json`. Parse the JSON
-   envelope's `.items[]`; identify the primary row by
-   `.worktree.main == true`, and use `.worktree.path` for every path. Do not
-   rely on output order, a guessed directory name, or rendered text.
-   The schema override applies to this command only and does not rewrite user
-   configuration.
-5. **Reuse only the same task.** A registered worktree on the execution branch may
-   be reused only when the task record or this session identifies it as
-   dedicated to this task. A branch belonging to another task is a collision,
-   not permission to reuse it. For the primary-held designation exception,
-   confirm that the designated branch is the primary row's checked-out branch;
-   never move it or attach it to a second worktree. Preserve branch and path
-   collision inspection.
-6. **Check effective placement before creation.** Run `wt config show` to read
-   the config file locations and the project identifier. Inspect
-   `WORKTRUNK_WORKTREE_PATH`, system/user `worktree-path` values, and the
-   most-specific matching `[projects."<host>/<owner>/<repo>"]` setting in
-   system/user config. If none sets it, use Worktrunk's documented default:
-   `{{ repo_path }}/../{{ repo }}.{{ branch | sanitize }}`. Resolve the
-   effective template for the execution branch before creation. Its path must
-   be beside the primary worktree and outside every existing worktree. Stop
-   with a clear explanation if placement conflicts with the policy; never
-   overwrite the user's template, add a second one, or force a collision.
-7. **Create or select with Worktrunk.** For a task-record branch, fetch the
-   selected remote branch into its matching remote-tracking ref:
+   Otherwise use exactly one branch designated by the harness, then its
+   documented naming convention. Multiple designations are a collision.
+   The harness reference owns any primary-held designation exception:
+   retain the designated remote push identity but use a separate local
+   execution branch. Never move or attach the primary branch elsewhere.
+4. **Inspect registered worktrees.** Run `git worktree list --porcelain -z`.
+   Parse NUL-delimited fields and records, including paths with spaces;
+   the first record identifies the primary. Record each path, branch,
+   detached state, and locked or prunable marker. Do not use a guessed path
+   or rendered columns. A stale or locked record is not a free destination.
+5. **Reuse only the same task.** Reuse a registered worktree only when the
+   task record or this session identifies it as dedicated to this task.
+   Another task's branch or worktree is a collision. Coordinate one writer
+   per task worktree and branch; include shared-ref operations in that
+   coordination. A clean worktree alone does not establish ownership.
+6. **Choose a safe path.** Use the user's configured placement or an explicit
+   unused path. External worktrees are allowed. Reject paths inside the
+   primary or another worktree, including symlink-resolved overlap, and
+   occupied destinations. Do not overwrite a path or change user configuration
+   to make it fit. An existing nested repository keeps its own primary;
+   never treat its files as ordinary feature-worktree files.
+7. **Create or select the task worktree.** Use Git or the user's chosen tool
+   with an explicit base. For a task-record branch, first fetch its exact ref:
    `git fetch <remote> +refs/heads/<task-branch>:refs/remotes/<remote>/<task-branch>`.
    If the local branch does not exist, use
-   `wt switch --create <task-branch> --base <remote>/<task-branch> --no-cd
-   --format=json`; matching branch and base names make the local branch track
-   that remote. If the local branch exists, use `wt switch <task-branch>
-   --no-cd --format=json`, then advance its returned worktree with
-   `git merge --ff-only <remote>/<task-branch>`. A failed fast-forward is a
-   collision to inspect; never recreate a supplied task branch from the base.
-   For a new task branch, use `wt switch --create <task-branch> --base
-   <resolved-base> --no-cd --format=json`. For an existing local task branch
-   with no remote task branch, use `wt switch <task-branch> --no-cd
-   --format=json`.
+   `git worktree add --track -b <task-branch> <task-path> <remote>/<task-branch>`.
+   If it exists and is free, use `git worktree add <task-path> <task-branch>`;
+   if already registered for this task, use that registered path directly.
+   Advance a resumed branch only with `git merge --ff-only
+   <remote>/<task-branch>` inside its worktree. A failed fast-forward is a
+   collision to inspect; never recreate the branch from the base.
+   For a fresh branch use `git worktree add -b <task-branch> <task-path>
+   <resolved-base>`. For an existing local task branch with no remote task
+   branch, use `git worktree add <task-path> <task-branch>`.
+
+   Preserve the chosen tool's hooks and approval rules. Do not force branch
+   reuse, discard changes, skip hooks, or bypass a trust decision.
 
    In the primary-held designation exception, use a distinct short issue-based
    local execution branch and create it from the resolved remote default base,
    never from the primary checkout's `HEAD`. Before using the designated
    remote push branch, inspect its remote tip and the task record. An existing
-   unrelated head is a collision; never overwrite it. Push from the sibling
-   with the explicit, non-force refspec
+   unrelated head is a collision; never overwrite it. Push from the task
+   worktree with the explicit, non-force refspec
    `git push -u <remote> <execution-branch>:<designated-branch>`. Keep the
    local execution branch and remote push branch as separate identities for
    every later push, PR lookup, CI read, and claim. Normal non-fast-forward
    protection remains in force.
-   Read `.path` from successful stdout JSON; stderr is diagnostics. Quote
-   every path, including paths with spaces. Do not use `--clobber`, `--yes`,
-   or `--no-hooks`; preserve Worktrunk's normal hooks and approval behavior.
-8. **Keep the detached-task exception.** When the current detached worktree is
-   already dedicated to this task, attach it in place with `git switch
-   <task-branch>` if that local branch exists and is free. For a recorded
-   remote task branch not present locally, fetch its exact remote-tracking ref
-   and use `git switch --track -c <task-branch> <remote>/<task-branch>`.
-   Fast-forward a recorded task branch to its fetched remote tip with
-   `git merge --ff-only <remote>/<task-branch>`; stop if it cannot fast-forward.
-   Otherwise create the fresh task branch in place with `git switch -c
-   <task-branch> <resolved-base>`. Worktrunk documents `git switch` for
-   changing the branch of an existing worktree; this is not a fallback for
-   worktree creation.
-9. **Verify the boundary.** Verify the selected path is a registered worktree
-   beside the primary path and checks out the execution branch. In the
-   primary-held designation exception, verify its `HEAD` starts at the remote
-   default base, the remote designated branch carries the task commit, and no
-   remote branch for the local execution name was created. Preserve the
-   primary checkout's branch, tip, index, tracked files, untracked files and
-   status baseline. Do not copy any of its uncommitted changes.
+   Quote every path, including paths with spaces.
+8. **Recover a detached task branch before committing.** A detached
+   non-primary worktree dedicated to this task may be edited. Before a
+   commit, inspect branch/path ownership and preserve its current HEAD and
+   changes. For a fresh recovery branch, use
+   `git switch -c <task-branch>` at that HEAD, not at the default base.
+   For a recorded existing branch, attach only after confirming it names the
+   detached HEAD and is not held elsewhere; otherwise inspect the divergence
+   without switching, resetting, stashing, copying, or overwriting work.
+   Fetch remote-only recovery branches by their exact ref first. Do not move
+   detached task commits to the base or silently abandon them.
+9. **Verify registration and preservation.** Re-read Git's registered paths
+   and the selected worktree's branch. Confirm it is non-primary and owned by
+   this task; attach its task branch before committing. In the primary-held
+   designation exception, verify the fresh execution branch starts at the
+   remote default base and keep local/remote identities separate. Preserve
+   the primary branch, tip, index, tracked files, untracked files and status
+   baseline. Do not copy its uncommitted changes.
 
 
 Stay inside it
@@ -164,7 +150,7 @@ not copy the primary worktree's uncommitted files into the task worktree. They
 are the user's work and are outside this task.
 
 The task worktree persists through the pull request and review cycle. Cleanup
-is not part of this skill. For later manual cleanup use `wt remove`, not bare
-`git worktree remove`. Before delivery, compare the primary worktree with the
-status recorded at setup. Report an external change; never erase it to make
-the comparison pass.
+is not part of this skill. Later manual cleanup may use Git or the user's
+chosen tool; never force removal of existing work. Before delivery, compare
+the primary worktree with its setup baseline. Report an external change;
+never erase it to make the comparison pass.

@@ -104,6 +104,9 @@ check-zizmor:
   - 'Makefile'
 check-omp-plugin:
   - 'scripts/check-omp-plugin.py'
+  - 'scripts/check-omp-worktree-live.py'
+  - 'pyproject.toml'
+  - 'uv.lock'
   - 'package.json'
   - '.omp-plugin/plugin.json'
   - 'extensions/**'
