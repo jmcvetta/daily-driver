@@ -206,7 +206,7 @@ check-title-gate:
 
 # The acceptance test for the Omp runtime adapter: import extensions/
 # daily-driver.js with a fake ExtensionAPI and assert the `ask` deny, the
-# primary/detached-worktree mutation guard, the four tools, and package wiring.
+# primary-worktree mutation guard, the four tools, and package wiring.
 # Credential-free like the other script legs, so it runs on a laptop and CI.
 # Node ships with the harness; no package install is involved.
 check-omp-extension:

@@ -16,10 +16,10 @@
  *    every time.
  *
  * 2. Block direct file mutations and the Git commands that rewrite a
- *    repository's primary working tree, plus file mutations in a detached
- *    worktree. The model-directed `task-worktree` workflow still chooses the
- *    task identity and establishes or reuses its dedicated worktree; this
- *    guard makes forgetting it fail before the user's checkout is changed.
+ *    repository's primary working tree. Detached non-primary worktrees may
+ *    be edited; the task-worktree workflow attaches a recoverable branch
+ *    before committing. This guard is not a filesystem sandbox and does not
+ *    contain arbitrary programs or other execution routes.
  *
  * 3. Provide runtime defaults for mechanical, routine, intermediate,
  *    complex, and frontier model roles without overwriting operator
@@ -1967,10 +1967,7 @@ function taskWorktreeViolation(event, cwd) {
 	if (rewritesPrimaryWorkingTree(event, cwd)) return { kind: "bash" };
 	for (const { path, cwdFallback } of mutationTargets(event, cwd)) {
 		const state = worktreeState(path, cwd, event.toolName === "edit");
-		if (
-			state &&
-			(state.root === state.primaryRoot || state.branch.length === 0)
-		) {
+		if (state && state.root === state.primaryRoot) {
 			return { kind: "file", path, cwd, cwdFallback, state };
 		}
 	}
@@ -1980,8 +1977,6 @@ function taskWorktreeViolation(event, cwd) {
 /** Explain the classified file target without changing the guard decision. */
 function fileMutationBlockReason(event, violation) {
 	const { path, cwd, cwdFallback, state } = violation;
-	const primary = state.root === state.primaryRoot;
-	const worktreeKind = primary ? "primary checkout" : "detached worktree";
 	const branch = state.branch
 		? `attached (${state.branch})`
 		: "detached (no branch attached)";
@@ -1992,22 +1987,17 @@ function fileMutationBlockReason(event, violation) {
 		typeof cwd === "string" && cwd.length > 0
 			? `Tool cwd: ${cwd}`
 			: "Tool cwd: not provided";
-	const recovery = primary
-		? "Use the verified task-worktree path in every write target or edit patch header and move destination. A previous bash cwd change does not change the file tool's cwd."
-		: "Attach the task branch to this worktree before editing. If this is not the intended task worktree, use the verified task-worktree path in every write target or edit patch header and move destination.";
-	const detached =
-		state.branch.length === 0
-			? "This worktree has no branch attached; attach the task branch here before editing."
-			: "";
+	const recovery =
+		"Use the verified task-worktree path in every write target or edit patch header and move destination. A previous bash cwd change does not change the file tool's cwd.";
 	return [
-		`Blocked ${event.toolName}: the target is in the ${worktreeKind}.`,
+		`Blocked ${event.toolName}: the target is in the primary checkout.`,
 		source,
 		`${cwdLine}.`,
 		`Resolved target: ${state.target}`,
 		`Containing worktree: ${state.root}`,
 		`Primary worktree: ${state.primaryRoot}`,
 		`Branch state: ${branch}.`,
-		detached,
+		state.branch.length === 0 ? "The primary checkout remains protected when detached." : "",
 		recovery,
 	]
 		.filter(Boolean)

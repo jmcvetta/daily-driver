@@ -8,10 +8,9 @@
  *   - Omp's `ask` tool is blocked with actionable text;
  *   - direct writes, edits, and every Git command that rewrites the working
  *     tree — checkout, switch, reset, restore, stash, merge, rebase, pull,
- *     apply, am, cherry-pick, revert, clean — in a primary worktree are
- *     blocked, as are file mutations in a detached worktree;
- *   - attached feature-worktree mutations, worktree creation, detached branch
- *     attachment, non-Git paths, and synthetic devices pass;
+ *     apply, am, cherry-pick, revert, clean — in a primary worktree are blocked;
+ *   - attached and detached non-primary file mutations, worktree creation,
+ *     detached branch attachment, non-Git paths, and synthetic devices pass;
  *   - a mutation the guard cannot place in a repository is refused, the way
  *     one it cannot ask Git about is;
  *   - a subcommand that is a configured alias is read as the command it
@@ -1797,7 +1796,7 @@ function homeEdit(target) {
 for (const [name, blocked, target] of [
 	["an existing feature branch reattached in a worktree accepts a home-shortened edit", false, "task/tracked.txt"],
 	["a home-shortened edit into the primary remains blocked", true, "primary/tracked.txt"],
-	["a home-shortened edit into a detached worktree remains blocked", true, "detached/tracked.txt"],
+	["a home-shortened edit into a detached non-primary worktree passes", false, "detached/tracked.txt"],
 	["a home-shortened symlink into the primary remains blocked", true, "task/primary-file-link.txt"],
 	["a native edit with a doubled home slash still guards the primary", true, resolve(worktrees.primary, "tracked.txt")],
 ]) {
@@ -1852,17 +1851,13 @@ checkGuard(
 	worktrees.task,
 );
 
-check("detached worktree rejection names its root and missing branch", () => {
-	const decision = guardDecision(
-		"write",
-		{ path: "tracked.txt", content: "unsafe\n" },
-		worktrees.detached,
-	);
-	assert.equal(decision.block, true);
-	assert.match(decision.reason, /detached worktree/u);
-	assert.match(decision.reason, new RegExp(`Containing worktree: ${worktrees.detached}`));
-	assert.match(decision.reason, /Branch state: detached \(no branch attached\)/u);
-});
+checkGuard(
+	"a detached non-primary worktree does not require a branch for file edits",
+	false,
+	"write",
+	{ path: "tracked.txt", content: "safe\n" },
+	worktrees.detached,
+);
 
 check("symlinked primary target reports its canonical target", () => {
 	const decision = guardDecision(
@@ -1917,16 +1912,16 @@ check("absolute primary target from task cwd is explicitly identified", () => {
 	assert.match(decision.reason, new RegExp(`Tool cwd: ${worktrees.task}`));
 });
 checkGuard(
-	"a write in a detached worktree is blocked",
-	true,
+	"a write in a detached non-primary worktree passes",
+	false,
 	"write",
 	{ path: "new.txt", content: "unsafe\n" },
 	worktrees.detached,
 );
 
 checkGuard(
-	"an edit in a detached worktree is blocked",
-	true,
+	"an edit in a detached non-primary worktree passes",
+	false,
 	"edit",
 	{
 		input:
@@ -1935,6 +1930,50 @@ checkGuard(
 	},
 	worktrees.task,
 );
+
+check("external detached recovery preserves task history and a dirty primary", () => {
+	const fixture = makeWorktreeFixture();
+	try {
+		writeFileSync(resolve(fixture.primary, "tracked.txt"), "dirty primary\n");
+		writeFileSync(resolve(fixture.primary, "untracked.txt"), "existing user work\n");
+		const primaryState = () => ({
+			branch: runGit(fixture.primary, "symbolic-ref", "HEAD"),
+			head: runGit(fixture.primary, "rev-parse", "HEAD"),
+			index: readFileSync(resolve(fixture.primary, ".git", "index")).toString("hex"),
+			tracked: readFileSync(resolve(fixture.primary, "tracked.txt"), "utf8"),
+			untracked: readFileSync(resolve(fixture.primary, "untracked.txt"), "utf8"),
+		});
+		const before = primaryState();
+		// Task-only history must not be lost by recovering at the default base.
+		writeFileSync(resolve(fixture.task, "task-history.txt"), "task history\n");
+		runGit(fixture.task, "add", "task-history.txt");
+		runGit(fixture.task, "commit", "-m", "Task-only fixture history");
+		const tip = runGit(fixture.task, "rev-parse", "HEAD");
+		const external = resolve(fixture.root, "external placement", "task with spaces");
+		mkdirSync(resolve(fixture.root, "external placement"));
+		runGit(fixture.task, "worktree", "add", "--detach", external, "HEAD");
+		assert.equal(guardDecision("write", { path: resolve(external, "edit.txt") }, fixture.primary), undefined);
+		writeFileSync(resolve(external, "edit.txt"), "detached task edit\n");
+		const primaryLink = resolve(external, "primary-link");
+		symlinkSync(fixture.primary, primaryLink, "dir");
+		assert.equal(guardDecision("write", { path: resolve(primaryLink, "tracked.txt") }, external)?.block, true);
+		// A nested repository has its own primary, even inside a feature tree.
+		const nested = resolve(external, "nested");
+		mkdirSync(nested);
+		runGit(nested, "init", "-b", "master");
+		assert.equal(guardDecision("write", { path: resolve(nested, "file.txt") }, external)?.block, true);
+		assert.equal(guardDecision("bash", { command: "git switch -c feature/recovered" }, external), undefined);
+		runGit(external, "switch", "-c", "feature/recovered");
+		assert.equal(runGit(external, "rev-parse", "HEAD"), tip);
+		assert.equal(readFileSync(resolve(external, "edit.txt"), "utf8"), "detached task edit\n");
+		runGit(external, "add", "edit.txt");
+		runGit(external, "commit", "-m", "Recovered task edit");
+		assert.equal(runGit(external, "rev-parse", "HEAD^"), tip);
+		assert.deepEqual(primaryState(), before);
+	} finally {
+		rmSync(fixture.root, { recursive: true, force: true });
+	}
+});
 
 checkGuard(
 	"an edit cannot move a feature-worktree file into the primary worktree",
@@ -2986,10 +3025,18 @@ check("the stale worktree records precede the detached worktree", () => {
 });
 
 checkGuard(
-	"a stale worktree record cannot let a detached-worktree write through",
-	true,
+	"stale records do not prevent a detached non-primary file edit",
+	false,
 	"write",
 	{ path: resolve(staleWorktrees.detached, "a.txt"), content: "unsafe\n" },
+	staleWorktrees.detached,
+);
+
+checkGuard(
+	"stale records do not allow a detached-worktree caller to edit the primary",
+	true,
+	"write",
+	{ path: resolve(staleWorktrees.primary, "a.txt"), content: "unsafe\n" },
 	staleWorktrees.detached,
 );
 
