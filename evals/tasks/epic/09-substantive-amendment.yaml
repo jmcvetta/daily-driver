@@ -1,19 +1,19 @@
 # An amendment must not silently change active implementation contracts.
 task_id: epic-09-substantive-amendment
-description: Demote and reconcile a specification-backed epic for substantive amendment.
+description: Pause and transition only tasks affected by a substantive amendment.
 tags: [epic, discovery, behaviour, fire]
 initial_prompt: >-
   Use epic: a promoted specification-backed epic has running tasks A and B
   bound to publication P1 at commit S1. The operator proposes changing only
-  A's requirement and later approves and merges it at S2. Explain how P2 and
-  both tasks are handled; do not perform external actions.
+  A's requirement and later approves and merges it at S2. Explain how the
+  amendment and both tasks are handled; do not perform external actions.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
 run_limits: {max_turns: 8, turn_timeout: 180, task_timeout: 400}
 success_criteria:
   - type: agent_judge
-    description: Same-parent demotion and scoped reconciliation
+    description: Scoped amendment and authorized transition
     include_agent_output: true
     include_tool_calls: true
     include_reference: false
@@ -22,9 +22,10 @@ success_criteria:
     turn_timeout: 120
     agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
     prompt: |
-      Score 1 only if the answer demotes the same parent, preserves lineage,
-      pauses affected A while allowing independent B to retain P1 and S1,
-      requires renewed approval and merge, creates distinct P2 at S2 and
-      reconciles affected allocations with original-user authority. A retains
-      P1 until an authorized transition. Verify graph and readiness before
-      re-promotion. Score 0 for silent rebinding; otherwise 0.5.
+      Score 1 only if the answer preserves lineage, pauses affected A while
+      independent B continues under P1 and S1 without demotion or reconciliation,
+      requires renewed operator approval and merge, and gives A an authorized
+      transition to S2, approval evidence and allocation before using the
+      amendment. A retains P1 until then. A new parent record is optional.
+      Score 0 for silent rebinding, requiring a new record or demoting unrelated
+      lineage; otherwise 0.5 for a material omission.
