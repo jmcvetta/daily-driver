@@ -81,10 +81,11 @@ of the checked content and fixes, outcome, and any defects or coverage limits:
 daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>] })
 ```
 
-No fixed verification heading, field set, empty values, usage data, or wall
-token is needed. Preserve enough result history to enforce the three-defect-pass
-limit in `SKILL.md`. The author must not invent the reviewer's verdict.
-The wrapper adds ordinary provenance; do not add a new block to the body.
+No fixed verification heading, field set, empty values, usage data, or pass
+counter is needed. Preserve enough result history to recognize repeated
+unresolved defects and failed approaches. The author must not invent the
+reviewer's verdict. The wrapper adds ordinary provenance; do not add a new
+block to the body.
 
 The wait
 ========
@@ -210,15 +211,35 @@ the process, preserve its bound, and recover its log where possible. After
 the old service ends, fresh head and inventory reads can establish a new
 window. Never infer green or abandon ownership because the record is missing.
 
-Zero check runs, no statuses, and no matching workflow mean unregistered,
-not green. A successful subset with a known missing check is incomplete too.
-Do not repeatedly relaunch an empty rollup watcher. Keep the managed continuation
-and reobserve registration on its next wake. Diagnose persistent registration
-gaps from repository configuration and workflow evidence; elapsed time alone
-is not proof of a blocker. A denied, malformed, truncated, or failed read
-requires diagnosis and leaves the verdict unknown, never a passing empty
-inventory. Report a genuine missing capability or external prerequisite with
-its evidence and resume path; do not label a timeout as one.
+Zero check runs, no statuses, and no matching workflow runs are initially
+unknown, not green. A successful subset with a known missing check is
+incomplete too. Do not repeatedly relaunch an empty rollup watcher. Keep the
+managed continuation and reobserve registration on its next wake while an
+applicable check may still register.
+
+For an empty inventory, establish absence using complete current evidence:
+
+- Read the PR's base and head SHA, event and changed paths, including all
+  pages. Read the repository's workflow inventory and the workflow definitions
+  applicable to that event and revision; evaluate branch, path and other
+  trigger filters. Include external check providers and any other configured
+  sources, not only GitHub Actions.
+- Read the base branch's applicable protection and rulesets, including inherited
+  rules, and their required check contexts and sources. Confirm that the reads
+  establish the absence of applicable requirements; an ambiguous not-found,
+  permission error or incomplete ruleset inventory does not do so.
+- Reconcile these sources with all three current-head inventories above. If no
+  workflow, external provider or required check applies and no matching run is
+  pending or failed, record **no applicable CI**, the head, and the evidence
+  used. This satisfies the CI evidence path without calling unrun checks
+  passed. Re-read after a head or relevant configuration change.
+
+If an expected check can still register, keep the verdict pending; a missing
+required check is not a pass. Diagnose a persistent gap from configuration and
+workflow evidence; elapsed time alone proves neither absence nor failure. A
+denied, malformed, truncated or failed read leaves the verdict unknown.
+Report a genuine missing capability or external prerequisite with its evidence
+and resume path; do not label a timeout as one.
 
 Process durability is not session resumption
 --------------------------------------------

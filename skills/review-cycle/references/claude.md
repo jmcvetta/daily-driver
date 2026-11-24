@@ -49,10 +49,10 @@ work. The author records the independent result, never substitutes a verdict.
 Publish new findings through the routes below. Link the result or use
 `mcp__github__add_issue_comment` for a concise account of the checked content
 and fixes, outcome, and any remaining defects or coverage limits. Preserve
-enough prior results to enforce `SKILL.md`'s three-defect-pass limit. No
-fixed verification fields, empty values, wall-state token, usage data, or
-reviewer-transcript inspection are required. A failed or incomplete dispatch
-is not a clean result. Published records use ordinary `provenance`.
+enough prior results to recognize repeated unresolved defects and failed
+approaches. No fixed verification fields, empty values, pass counter, usage
+data, or reviewer-transcript inspection are required. A failed or incomplete
+dispatch is not a clean result. Published records use ordinary `provenance`.
 
 The wait
 ========
@@ -133,7 +133,8 @@ Diagnose failed observation routes and retain supported continuation while
 permitted work remains.
 
 Both halves stay active across window renewals. End this wait only when CI
-has reported or a genuine blocker or user stop requires it:
+has reported, no applicable CI is established under `SKILL.md`, or a genuine
+blocker or user stop requires it:
 
 - **Cancel the timer in the slot** with
   `mcp__Claude_Code_Remote__delete_trigger` — the backstop this wait armed, or
@@ -166,9 +167,9 @@ Where a Claude session has neither the subscription nor the scheduler, the wait
 is what that surface can block on, with a human watching the terminal:
 `gh pr checks --watch <number>` where the CLI is installed, inside the Bash
 timeout. Failing that, this is the surface `SKILL.md` says cannot wait: read
-the checks once and report any pending checks and the continuation limit.
-Proceed with review of the stable pushed head; readiness still requires
-current-head green CI.
+the checks once, apply its absence-evidence rule, and report any pending or
+unknown result and the continuation limit. Proceed with review of the stable
+pushed head; readiness requires green CI or established no-applicable-CI evidence.
 
 
 Review history, publication, and threads

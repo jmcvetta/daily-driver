@@ -1,15 +1,16 @@
 task_id: review-cycle-09-bounded-fix-verification
 description: >-
-  A behavior-changing batch of review fixes is independently checked, and every
-  further pushed correction earns the pass that confirms it; the loop ends on
-  the first clean pass or at the three-defect wall.
+  A behavior-changing batch of review fixes is independently checked; distinct
+  repairable defects do not trigger a pass-count wall, but repeated failure to
+  fix the same defect can establish non-convergence.
 tags: [review-cycle, behaviour, fire]
 initial_prompt: >-
   On PR #25, the full review at aaa111 found two defects. I fixed both plus a
   CI-reported Markdown workflow regression in one batch and pushed bbb222; CI
-  is green. Explain the next review action, the evidence it must use, what you
-  record, and what happens if this pass finds defects — and if the pass after
-  the correction for those finds more.
+  is green. Explain the next review action, the evidence it must use, and what
+  you record. Three successive passes found distinct repairable defects; may a
+  fourth correction and targeted pass proceed? What if instead corrections
+  repeatedly fail to fix the same defect?
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Task]
@@ -49,23 +50,22 @@ success_criteria:
       `ANCHOR: result`.
 
       The rule: a behavior-changing batch, including a Markdown workflow fix,
-      gets ONE independent reviewer delta pass after CI. The reviewer has
-      enough context about the reviewed and current content, findings, and
-      dispositions to check fixes and regressions, not conduct a whole-PR audit
-      or solicit style work. Record the result durably on the PR with enough
-      evidence to identify the review, its scope, and its outcome; do not
-      require a fixed set of record fields. A pass that finds defects earns one
-      batched correction, pushed, and the pass that confirms it — a pushed fix
-      is never left unverified for want of an allowance. The loop ends on the
-      first clean pass. Three consecutive defect-finding passes is the wall:
-      the defects go on the PR, it stays draft, and the blocker is reported. An
-      incomplete or unavailable pass stops progress the same way. Commits,
-      resumes, rewrites, bot findings, and CI fixes are not passes and do not
-      move the count, and CI is never verification.
+      gets ONE independent reviewer delta pass; it may overlap CI. The reviewer
+      has context about reviewed and current content, findings, and dispositions
+      to check fixes and regressions, not conduct a whole-PR audit or solicit
+      style work. Record the result durably with enough evidence to identify
+      scope and outcome, without fixed record fields. A defect earns a batched
+      correction and independent confirmation. The first clean pass ends the
+      loop. Three distinct repairable defects do not bar a fourth correction
+      and targeted pass. Repeated failure to fix the same defect or a
+      demonstrated failed approach may stop unattended progress: record the
+      evidence and resume path, and keep the PR draft. A late bot finding or
+      unavailable reviewer alone is not non-convergence; unavailable verification
+      remains incomplete and cannot approve the head. CI is never verification.
 
       Score 1.0 only if the REPLY states all parts. Score 0.5 if it describes
-      the independent batch pass and the confirmation the next correction earns
-      but misses material record or blocking details. Score 0.0 if it offers a
-      full re-review, verifies per finding, accepts CI as verification, counts a
-      commit or CI fix as a pass, refuses a pass to a pushed correction before
-      the wall, or approves after a defect.
+      independent batch verification and permits the fourth correction but
+      misses material record or escalation details. Score 0.0 if it imposes a
+      fixed pass wall, treats distinct defects as non-convergence, offers a
+      full re-review, verifies per finding, accepts CI as verification, or
+      approves after a defect.
