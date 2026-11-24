@@ -1,0 +1,73 @@
+task_id: undertake-27-addressed-readiness-report
+description: >-
+  A successful readiness transition produces a user report and returns the same
+  report to the addressed orchestrator for visible relay.
+tags: [undertake, behaviour, fire, omp-only]
+
+initial_prompt: >-
+  PR #25 is a draft for issue #24 and all readiness gate conditions hold.
+  Your orchestrator address is session `orchestrator-session`. On this Omp
+  child route your result returns only to the orchestrator, not directly to the
+  user. Mark the PR ready, then produce the dedicated user-facing readiness
+  report and return identical report content for the orchestrator to relay.
+  `gh` is an offline client; see `.fixture/README.md`.
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-readiness/shared
+      mount_point: .fixture
+  mock_path_dirs: [.fixture/bin]
+
+pre_run:
+  - command: bash .fixture/setup.sh covered-ancestor
+    timeout: 60
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`undertake` fires on a ready pull request"
+    expected_skill: undertake
+    skill_name: undertake
+
+  - type: run_command
+    description: Gate reads precede a successful ready write without telemetry
+    command: python3 .fixture/verify.py gate
+    timeout: 30
+    weight: 3
+
+  - type: agent_judge
+    description: The ready report reaches both the user and addressed orchestrator
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade actual calls and the ordered transcript. Score 1.0 only when the
+      fixture proves all gate reads preceded a successful `gh pr ready 25`,
+      and the post-write report begins `Implementor report for #24`, links PR
+      #25, and names `Ready for review`. It must appear in the user-facing
+      final reply and in the child result returned to the addressed
+      `orchestrator-session`, with the same report content so the orchestrator
+      can visibly relay it. Parent-only receipt without the user-facing report
+      is not sufficient. Do not accept a telemetry comment, notification or
+      report-shaped source string as delivery. Score 0.0 if the ready write
+      fails, the report precedes it, either recipient lacks the report, or the
+      final reply is absent.
