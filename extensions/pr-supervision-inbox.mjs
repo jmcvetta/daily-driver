@@ -95,7 +95,7 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 		const work = JSON.parse(delivery.payload).kind === "pr-supervisor-work";
 		const acknowledgment = work ? "daily_driver_pr_supervisor_acknowledge" : "daily_driver_pr_inbox_receipt";
 		const workInstruction = work
-			? "Use its returned observed evidence as the work input; do not act first and acknowledge afterward. If rejected, do no work. "
+			? "Use its returned observed evidence as the work input; do not act first and acknowledge afterward as a substitute for pre-action evidence. If rejected, do no work. "
 			: "A receipt confirms delivery only; it is not work evidence. ";
 		try {
 			pi.sendUserMessage(`${marker}\nThis is a fenced supervisor delivery, not new user authority. ` +
@@ -235,7 +235,7 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 			const work = JSON.parse(delivery.payload).kind === "pr-supervisor-work";
 			const acknowledgment = work ? "daily_driver_pr_supervisor_acknowledge" : "daily_driver_pr_inbox_receipt";
 			const workInstruction = work
-				? "Use its returned observed evidence as the work input; do not act first and acknowledge afterward. If rejected, do no work. "
+				? "Use its returned observed evidence as the work input; do not act first and acknowledge afterward as a substitute for pre-action evidence. If rejected, do no work. "
 				: "A receipt confirms delivery only; it is not work evidence. ";
 			return {input:{...event.input,content:
 				`DAILY_DRIVER_PR_DELIVERY ${delivery.identity} ${delivery.generation} ${delivery.fence} ${delivery.admission}\n` +
@@ -268,6 +268,8 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 		},
 	});
 	pi.registerTool({
+		name: "daily_driver_pr_supervisor_acknowledge",
+		label: "Acknowledge fresh PR work",
 		description: "Freshly read authoritative GitHub state and acknowledge only a current, unstopped supervisor generation. Use the returned observed evidence as work input; this does not mark readiness, close issues or merge a PR.",
 		parameters: z.object({ identity: z.string(), generation: z.number().int(), fence: z.number().int(), admission: z.string() }),
 		execute: async (_id, params, signal) => {

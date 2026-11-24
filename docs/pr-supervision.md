@@ -220,8 +220,10 @@ proof that an arbitrary already-running provider request can be undone.
 The probe uses isolated `gh` response fixtures, not a real PR.
 The bounded `scripts/probe-omp-child-resumption.py` proof also exercises
 legacy authorization on the inbox's real SQLite connection. A current queued
-or running token allows its next tool; a separate connection that stops the
-record or changes its token or epoch denies the next tool boundary.
+or running token allows its next tool; a separate connection that stops or
+holds the record, transfers the authority, removes its row, or changes its
+token or epoch denies the next tool boundary. A tool call in a session without
+a supervised legacy token receives no guard.
 
 ### Transfer, rollback and stop
 

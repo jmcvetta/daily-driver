@@ -27,6 +27,7 @@ LEGACY_ACTIVE = None
 LEGACY_DATABASE = None
 LEGACY_FILE = None
 LEGACY_RESULTS = []
+ORDINARY_RESULTS = []
 
 
 def text(content):
@@ -44,12 +45,14 @@ class Provider(BaseHTTPRequestHandler):
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         markers = ("SPAWN_CHILD_PROOF","ROOT_RELAY_CHILD","Recovery carrier only:",
                    "DAILY_DRIVER_PR_DELIVERY","CHILD_RELAY","CHILD_PROOF_TARGET","CHILD_COLD_DIRECT",
-                   "LEGACY_SQLITE_PROOF")
+                   "LEGACY_SQLITE_PROOF","ORDINARY_TOOL_PROOF")
         latest_index = max((i for i,m in enumerate(body.get("messages",[]))
                             if m.get("role") == "user" and any(marker in text(m.get("content","")) for marker in markers)),
                            default=-1)
         prompt = text(body["messages"][latest_index].get("content","")) if latest_index>=0 else ""
-        phase = ("legacy" if "LEGACY_SQLITE_PROOF" in prompt else "spawn" if "SPAWN_CHILD_PROOF" in prompt else "relay"
+        phase = ("legacy" if "LEGACY_SQLITE_PROOF" in prompt
+                 else "ordinary" if "ORDINARY_TOOL_PROOF" in prompt
+                 else "spawn" if "SPAWN_CHILD_PROOF" in prompt else "relay"
                  if "ROOT_RELAY_CHILD" in prompt or "Recovery carrier only:" in prompt
                  else "receipt" if "DAILY_DRIVER_PR_DELIVERY" in prompt
                  else "ack" if "CHILD_RELAY" in prompt else "child")
@@ -74,8 +77,16 @@ class Provider(BaseHTTPRequestHandler):
                         if mode == "queued":
                             with actor.ledger.transaction():
                                 actor.db.execute("UPDATE authorities SET legacy_running=0 WHERE identity=?",(identity,))
+                        elif mode == "hold":
+                            actor.control(identity,"hold","fixture hold before supervised tool boundary")
                         elif mode == "stop":
                             actor.control(identity,"stop","fixture stop before supervised tool boundary")
+                        elif mode == "transfer":
+                            with actor.ledger.transaction():
+                                actor.db.execute("UPDATE authorities SET state='active' WHERE identity=?",(identity,))
+                        elif mode == "missing":
+                            with actor.ledger.transaction():
+                                actor.db.execute("DELETE FROM authorities WHERE identity=?",(identity,))
                         elif mode == "token":
                             with actor.ledger.transaction():
                                 actor.db.execute("UPDATE authorities SET legacy_delivery=? WHERE identity=?",
@@ -87,6 +98,12 @@ class Provider(BaseHTTPRequestHandler):
                             raise AssertionError(mode)
                     finally:
                         actor.close()
+                call = ("read", {"path":str(LEGACY_FILE)})
+        elif phase == "ordinary":
+            tool_results = [message for message in body["messages"][latest_index+1:] if message.get("role") == "tool"]
+            if tool_results:
+                ORDINARY_RESULTS.append(text(tool_results[-1].get("content","")))
+            else:
                 call = ("read", {"path":str(LEGACY_FILE)})
         if phase == "spawn" and index == 0:
             call = ("daily_driver_set_session_title", {"title": "Child ownership proof"})
@@ -159,7 +176,7 @@ def agents(snapshot):
 
 def main():
     """Compare actual agent bindings, not just a saved session's continued text."""
-    global ACK_PATH, LEGACY_ACTIVE, LEGACY_DATABASE, LEGACY_FILE, LEGACY_RESULTS
+    global ACK_PATH, LEGACY_ACTIVE, LEGACY_DATABASE, LEGACY_FILE, LEGACY_RESULTS, ORDINARY_RESULTS
     server = ThreadingHTTPServer(("127.0.0.1", 0), Provider)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     try:
@@ -200,7 +217,9 @@ export default function(pi) {
             inbox = FIXTURE.INBOX.Inbox(base / "inbox.sqlite")
             env["DAILY_DRIVER_PR_INBOX"] = str(inbox.path)
             env["DAILY_DRIVER_PR_SUPERVISOR"] = str(inbox.path)
-            extensions.append(ROOT / "extensions/pr-supervision-inbox.mjs")
+            # The runtime extension installs the inbox itself once a supervisor
+            # database is configured; listing it again would bind a second
+            # owner to the same session and trip the live-owner fence.
             rpc = FIXTURE.Rpc(base, env, extensions=extensions, tools="read,write,task,wait")
             try:
                 rpc.send({"id":"spawn","type":"prompt","message":"SPAWN_CHILD_PROOF: run the single isolated child."})
@@ -267,7 +286,7 @@ export default function(pi) {
             LEGACY_FILE.write_text("legacy-fixture-content\n")
             legacy_actor = LEGACY_ACTIVE.ActiveSupervisor(LEGACY_DATABASE)
             try:
-                for number, mode in enumerate(("valid","queued","stop","token","epoch"), start=10):
+                for number, mode in enumerate(("valid","queued","hold","stop","transfer","token","epoch","missing"), start=10):
                     context = {"session":"legacy-fixture-owner","worktree":str(base / "sandbox"),
                         "branch":"legacy-proof","task":"bounded legacy admission query proof"}
                     registered = legacy_actor.register("isolated.example","fixture/legacy",number,"fixture-author",context)
@@ -290,8 +309,18 @@ export default function(pi) {
                         assert "legacy-fixture-content" in observed, {"mode":mode,"tool_result":observed}
                     else:
                         assert "legacy-fixture-content" not in observed, {"mode":mode,"tool_result":observed}
+                        assert "Legacy admission" in observed, {"mode":mode,"tool_result":observed}
             finally:
                 legacy_actor.close()
+            ORDINARY_RESULTS.clear()
+            ordinary = FIXTURE.Rpc(base,env,extensions=extensions,tools="read")
+            try:
+                ordinary.send({"id":"ordinary-tool","type":"prompt","message":"ORDINARY_TOOL_PROOF"})
+                ordinary.terminal()
+            finally:
+                ordinary.close()
+            assert len(ORDINARY_RESULTS) == 1, ORDINARY_RESULTS
+            assert "legacy-fixture-content" in ORDINARY_RESULTS[0], ORDINARY_RESULTS
             inbox.close()
             direct = FIXTURE.Rpc(base, env, extensions=extensions, extra_args=["--resume",child["file"]],tools="read,write")
             try:
@@ -307,7 +336,9 @@ export default function(pi) {
                 "original_children":len(agents(before)),"root_recovery":attempts,
                 "parent_adapter_receipt":host_result,
                 "active_lifecycle":active_summary,
-                "legacy_sqlite_boundaries":["valid running","valid queued","stopped","token mismatch","epoch mismatch"],
+                "legacy_sqlite_boundaries":["valid running","valid queued","held","stopped","transferred",
+                    "token mismatch","epoch mismatch","missing authority"],
+                "ordinary_tool_without_legacy_token":True,
                 "external_requests":0},indent=2))
     finally:
         server.shutdown()
