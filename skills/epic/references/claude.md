@@ -36,9 +36,8 @@ field is available, a task opened at `Open the issues` arrives parented and
 write response is the issue you modified and `issue-deps` requires the read
 from the other end regardless of which call made the edge.
 
-Apply `issue-deps`' pre-link assignability gate before the create call when it
-sets `parent_issue_number`. Apply the same gate before linking an existing
-issue through either parent or sub-issue writes.
+Apply `issue-deps`' membership evidence and plan-agreement rules before a
+parent write. Assignability is checked before dispatch, not before linking.
 
 **It is not available everywhere.** `issue-deps` records two generations of
 the GitHub MCP server, and the older one has no sub-issue write at all: there,

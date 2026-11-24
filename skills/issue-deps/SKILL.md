@@ -38,7 +38,7 @@ Report an unavailable operation plainly rather than discovering the limitation
 through a failed write.
 
 
-Write from evidence; report every write
+Write from evidence; report the operation
 =======================================
 
 The failure mode of this skill is **inventing relationships**. An agent handed
@@ -51,13 +51,13 @@ not by asking before it. An edge is outward-facing — it lands in a tracker
 other people read — and that is what the report answers; what it is not is
 expensive to take back, because one `remove` undoes it.
 
-So: state the evidence, name the edge it implies, **write it**, and report the
-write.
+State the evidence, write supported edges, verify them from the opposite end,
+and report the operation.
 
-- **Report every write, prominently.** The edge, both ends by repository and
-  number, and the evidence it came from. The write is verified from the
-  blocking side anyway — `The traps` says why — so the fact is in hand before
-  the report is written.
+- **Report once per operation.** Name every changed edge, both ends by
+  repository and number, and the material evidence. Include each failure and
+  its affected edge; never describe partial failure as complete success.
+  Separate announcements for each write are not required.
 - **Reading is free**, and needs neither a confirmation nor a report.
 - **Two things stop a write, and only two.** A **contradiction** — the edge
   disagrees with something the user has said — and a **plan not yet agreed**:
@@ -160,39 +160,23 @@ different claim from *this must close first*. An epic's children are not
 automatically its blockers, and saying so in edges would be inventing
 relationships.
 
-**Before linking a story to an epic**, read the proposed parent's labels and
-the child's current kind, body, and relevant comments. This gate applies to
-new issues, existing issues, reparenting, and either direction of a parent or
-sub-issue write, even outside `epic` planning. Invoke `epic`'s assignable-story
-rule: the child must have exactly one agent-eligible kind (`task`, `research`
-or `bug`), pass `issue-body`'s readiness test for that kind, and carry exactly
-one valid `## Model class` section with a rationale before the edge is written.
-A kind label alone is insufficient, and missing or invalid class metadata is
-never defaulted. `proposal`, `specification`, `human` and `epic` issues fail the gate. An open
-legitimate blocker delays dispatch, not linking.
+Membership and dispatch readiness are separate. A truthful parent edge may be
+written before the child is assignable: do not hide a child, invent a blocker,
+infer user approval, or change its kind to make it dispatchable. Apply the
+evidence and plan-agreement rules above to every edge.
 
-For a `discovery` parent, apply `epic`'s discovery contract instead: eligible
-research children pass their own readiness and class gate, and at most one
-active interactive `specification` child is linked without an implementation
-class. Implementation tasks may be staged only after the approved document
-merges, and must pass the spec-backed task readiness gate before linking.
-They remain undispatchable until promotion.
+Discovery retains its specification boundary: at most one active interactive
+specification child, and implementation tasks may be staged only after the
+approved document merges. Staged tasks remain undispatchable until promotion.
+Before dispatch, `embark` or `undertake` checks eligible kind, the child's
+own readiness and required class, and genuine open blockers. Report precise
+defects and continue independent work.
 
-Leave an already-ready story unchanged. Resolve repository-answerable gaps
-through `issue`, preserving valid requirements, evidence, and provenance under
-`issue-body`'s update rule and following `issue-labels`' kind-conflict rules.
-Do not blindly relabel another kind to pass the gate. If intent or a required
-prerequisite remains unavailable, name the exact gap, do not write the edge or
-claim the epic is ready, and continue independent safe preparation. Do not
-invent scope or open replacements without the applicable scope agreement.
-This readiness gate does not replace the relationship evidence test or
-`epic`'s plan agreement.
-
-A relationship read is not permission to migrate an existing child's body or
-kind. Apply the confirmed parent's gate: an interactive specification under
-discovery and the closed specification lineage retained after promotion are
-valid. Report genuine readiness defects for normal issue repair; keep edges
-and derived markers truthful. Never hide a defect by changing the graph.
+Resolve repository-answerable readiness gaps through `issue` without changing
+valid requirements, evidence, or provenance. A relationship read alone is not
+permission to migrate a child's body or kind. Preserve truthful edges and
+markers when a gap remains. Closed specification lineage after promotion is
+valid.
 
 **The parent kind and the edge are distinct statements.** Both `epic` and
 `discovery` coordinate children and stop ordinary `undertake`; the edge says
