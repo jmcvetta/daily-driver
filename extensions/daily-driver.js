@@ -2153,13 +2153,33 @@ function isReadOnlyLocalInspection(command) {
 	const words = segments[0].words ?? [];
 	if (!words.length || words.some((word) => !word.literal || /[;&|<>]/u.test(word.text))) return false;
 	const [executable, ...args] = words.map((word) => word.text);
-	if (["pwd", "ls", "cat", "head", "tail", "file", "stat", "wc", "rg"].includes(executable)) {
-		return !args.some((arg) => arg === "--" || arg.startsWith("--pre") || arg.startsWith("--files-without-match"));
+	if (["pwd", "ls", "cat", "head", "tail", "file", "stat", "wc", "rg", "du", "diff", "ps", "jq"].includes(executable)) {
+		return !args.some((arg) => arg.startsWith("--pre") || arg === "--files0-from" ||
+			arg === "--output" || arg.startsWith("--output="));
 	}
+	if (executable === "find") {
+		return !args.some((arg) => /^-(?:exec|execdir|ok|okdir|delete|fprint|fprint0|fprintf|fls)/u.test(arg));
+	}
+	if (executable === "sed") {
+		return args.length >= 2 && args[0] === "-n" && /^\d+(?:,\d+)?p$/u.test(args[1]) &&
+			args.slice(2).every((arg) => !arg.startsWith("-"));
+	}
+	if (executable === "awk") {
+		return args.length >= 1 && /^\{\s*print(?:\s+\$\d+)?\s*\}$/u.test(args[0]) &&
+			args.slice(1).every((arg) => !arg.startsWith("-"));
+	}
+	if (executable === "node") return args[0] === "--check" && args.length === 2;
 	return executable === "git" && ["status", "log", "show", "diff", "branch", "rev-parse"].includes(args[0]) &&
 		!args.some((arg) => arg.startsWith("--output") || arg === "--ext-diff" || arg === "--textconv" ||
 			arg === "--exec" || arg.startsWith("--exec=")) &&
 		(args[0] !== "branch" || args.slice(1).every((arg) => ["--list", "-a", "-r", "-v", "-vv", "--show-current"].includes(arg)));
+}
+
+/** Only language-server requests whose operations cannot apply edits are reads. */
+function isReadOnlyLanguageServer(event) {
+	return event.toolName === "lsp" &&
+		["diagnostics", "definition", "references", "hover", "symbols", "type_definition",
+			"implementation", "status", "capabilities"].includes(event.input?.action);
 }
 
 /** Whether one plain `gh` invocation can only read GitHub data. */
@@ -2971,6 +2991,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 			}
 			if (embarkReportRecoveryRoute(event)) return undefined;
 			if (["read", "grep", "glob", "web_search", "daily_driver_get_session"].includes(event.toolName) ||
+				isReadOnlyLanguageServer(event) ||
 				(event.toolName === "bash" &&
 					typeof event.input?.command === "string" &&
 					(isReadOnlyGitHubRead(event.input.command) || isReadOnlyLocalInspection(event.input.command)))) {
@@ -2993,6 +3014,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 		}
 		if (startup?.status === "required" && !embarkTitleRecoveryRoute(event, startup) &&
 			!(["read", "grep", "glob", "web_search", "daily_driver_get_session"].includes(event.toolName) ||
+				isReadOnlyLanguageServer(event) ||
 				(event.toolName === "bash" && typeof event.input?.command === "string" &&
 					(isReadOnlyGitHubRead(event.input.command) || isReadOnlyLocalInspection(event.input.command))))) {
 			return { block: true, reason: embarkTitleReason(startup) };

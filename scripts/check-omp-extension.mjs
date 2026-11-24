@@ -1010,6 +1010,35 @@ check("gh issue JSON advances identity without releasing dispatch or ordinary qu
 	}
 });
 
+/** Read-only diagnostics must not require a title or release dispatch and claims. */
+check("title recovery admits diagnostics but rejects mutation-capable routes", () => {
+	for (const status of ["awaiting", "required"]) {
+		const s = makeSession();
+		const ctx = startupCtx(s);
+		s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
+		if (status === "required") deliverEpicRead(s, ctx);
+		for (const command of [
+			"find . -name '*.js'", "du -sh .", "jq '.name' package.json",
+			"sed -n '1,20p' README.md", "awk '{print $1}' README.md",
+			"diff README.md CHANGELOG.md", "ps -ef", "node --check extensions/daily-driver.js",
+		]) assert.equal(titleCall(s, "bash", { command }, ctx), undefined, command);
+		for (const action of ["diagnostics", "definition", "references", "hover", "symbols",
+			"type_definition", "implementation", "status", "capabilities"]) {
+			assert.equal(titleCall(s, "lsp", { action, file: "extensions/daily-driver.js" }, ctx), undefined, action);
+		}
+		for (const action of ["rename", "rename_file", "code_actions", "request", "reload"]) {
+			assert.equal(titleCall(s, "lsp", { action, file: "extensions/daily-driver.js" }, ctx)?.block, true, action);
+		}
+		for (const command of [
+			"find . -delete", "find . -exec task '{}' ';'", "sed -n '1p' -i README.md",
+			"awk '{system(\"task\")}' README.md", "node --check file.js; task",
+			"bash -c \"$SCRIPT\"", "rg --pre=task pattern .",
+		]) assert.equal(titleCall(s, "bash", { command }, ctx)?.block, true, command);
+		assert.equal(titleCall(s, "task", {}, ctx)?.block, true);
+		assert.equal(titleCall(s, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, ctx)?.block, true);
+	}
+});
+
 /** This prevents a supplied GitHub URL from bypassing the canonical issue protocol. */
 check("GitHub URL requests require an issue URI result for identity", () => {
 	const s = makeSession();
