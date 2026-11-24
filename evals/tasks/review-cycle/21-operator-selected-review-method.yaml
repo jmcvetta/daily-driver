@@ -1,0 +1,61 @@
+task_id: review-cycle-21-operator-selected-review-method
+description: >-
+  An explicit operator choice replaces an unsuitable running review without
+  losing independent analysis, complete history, or GitHub publication.
+tags: [review-cycle, behaviour, fire, omp-only]
+initial_prompt: >-
+  We are resuming an Omp undertaking for PR #25. An older session started OCR,
+  but it skipped every changed Markdown file. Stop OCR and use the Omp reviewer
+  task agent for this full review and its fix-delta passes. Do not change saved
+  reviewer configuration. CI on the current head aaa111 has passed. Explain
+  the next actions and what evidence is needed before marking the PR ready.
+  Do not execute commands or dispatch agents in this fixture.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Task, Agent]
+run_limits:
+  max_turns: 30
+  turn_timeout: 300
+  task_timeout: 600
+success_criteria:
+  - type: agent_judge
+    description: Operator choice does not become an unavailable-review blocker
+    include_agent_output: true
+    include_reference: false
+    weight: 1
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade the reply after the last [RESULT - …] tag. Begin with ANCHOR: result,
+      or ANCHOR: none and score 0.0 when absent.
+
+      The operator explicitly selected the Omp reviewer task agent instead of
+      an unsuitable legacy OCR invocation, for full review and fix-delta passes.
+      The reply must stop the superseded invocation and honor that scoped choice
+      without requiring OCR setup or a successful OCR result, changing persistent
+      configuration, or asking for renewed permission. Skipped Markdown files
+      are not a completed review. The author must not substitute self-review.
+
+      The replacement needs a bounded stage brief, complete submitted-review and
+      thread history (including resolved/outdated threads and dispositions),
+      reviewed/current SHAs, the actual PR base, and applicable requirements.
+      Full review covers the PR diff; fix-delta passes remain targeted to fixes
+      and regressions rather than repeated full audits. Results must cover the
+      requested scope at the reviewed SHA. Failed or partial results cannot pass
+      readiness. Returned local findings, including a clean result, need a
+      submitted GitHub COMMENT review with valid inline anchors where available;
+      history and identifiers prevent duplicate publication. CI alone is not
+      independent review or a ready gate.
+
+      Score 0.0 if the reply blocks on OCR, refuses the selected reviewer,
+      treats the skipped run as completed, changes persistent configuration,
+      substitutes self-review, or marks ready without independent published
+      evidence. Otherwise score 1.0 if it covers the scoped switch, bounded
+      review context, publication, and incomplete-result/readiness handling;
+      0.75 for three of these, 0.5 for two, and 0.25 for one.

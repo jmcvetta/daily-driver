@@ -1,0 +1,150 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Operator choice does not become an unavailable-review blocker",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Operator choice does not become an unavailable-review blocker",
+            "duration_seconds": 38.82,
+            "findings": [
+              "Stops the superseded OCR invocation and retains Omp for full and targeted fix-delta reviews.",
+              "Requires complete review/thread history, actual base, reviewed/current-head coverage, and applicable requirements.",
+              "Requires submitted COMMENT reviews, including clean results, valid inline anchors, and recorded review identifiers.",
+              "Rejects skipped or incomplete coverage and CI alone as readiness evidence."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2e07237ea4d7d0cc8d7dc0957c1a25d69afa3a41baffa87317dd4a089bb218ed",
+            "rationale": "ANCHOR: result. The reply covers the scoped Omp switch, bounded review context, GitHub publication, and incomplete-result/readiness handling without imposing OCR prerequisites or changing persistent configuration.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2181,
+              "output": 152
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "f0eb891fad5432ce1892e54356cc126a89e7ea6480b0f292c9f07c6aa1179f17"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "review-cycle-21-operator-selected-review-method",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 31.533350706100464,
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol-workflow",
+      "task_id": "review-cycle-21-operator-selected-review-method",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 68480,
+        "output_tokens": 606,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 28940
+      },
+      "tokens": 98026,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-24T16:11:53.072059",
+  "experiment_id": "omp-gpt-6-1-sol-workflow",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "f0eb891fad5432ce1892e54356cc126a89e7ea6480b0f292c9f07c6aa1179f17",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v3",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 2181,
+      "output": 152
+    }
+  },
+  "plugin_revision": {
+    "commit": "48fb03507600ad2a5a148e815d1e91c96838eda2",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-24T09:12:33.628124+00:00",
+  "run_id": "2026-11-24_16-11-21",
+  "schema_version": 5,
+  "started_at": "2026-11-24T16:11:21.517833",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "review-cycle-21-operator-selected-review-method": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "review-cycle-21-operator-selected-review-method"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

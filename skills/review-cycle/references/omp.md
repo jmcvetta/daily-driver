@@ -8,9 +8,10 @@ session running in Oh My Pi. Claude Code's routes are in
 The review surface
 ==================
 
-The **`reviewer`** task agent, dispatched through the `task` tool: a
-code-review specialist, taking the review brief for the pull request and
-reading the diff through `pr://`.
+The **`reviewer`** task agent, dispatched through the `task` tool, is the
+default review surface: a code-review specialist taking the pull request brief
+and reading the diff through `pr://`. An explicit operator selection overrides
+this default for its stated scope under `Operator-selected review method`.
 
 **It takes no effort level.** The round names the agent and nothing more, and
 the depth judgement is the agent's. `SKILL.md`'s `Name the level` has nothing
@@ -38,11 +39,44 @@ provider or session values. Keep each review and verification pass paired with
 its own result. The normal `Model:` block identifies the publisher, not the
 reviewer.
 
+Operator-selected review method
+-------------------------------
+
+Honor the operator's selected independent method for its stated scope, including
+a switch from a running review. Stop the superseded invocation before starting
+its replacement. Do not silently fall back, install a replacement framework, or
+change persistent reviewer configuration. The default method's prerequisites
+are not prerequisites for a different selected method.
+
+Give the selected reviewer the pull request, actual base branch, immutable
+reviewed and current SHAs, complete review history and dispositions, and
+applicable issue or specification requirements. For a full review, require the
+complete three-dot pull-request diff, affected callers, and relevant tests to
+be inspected for concrete correctness defects and unmet requirements, not style.
+For a fix-delta pass, use the bounded brief in `Fix-delta verification` below.
+The reviewer must not edit files or run project checks; the author owns CI.
+Apply `SKILL.md`'s effort rule only when the selected surface takes a level.
+
+Require a result bound to the reviewed SHA, coverage and limitations, and valid
+diff anchors for line-specific findings. A failed invocation is `unavailable`;
+partial coverage or a mismatched SHA is `incomplete`. Neither satisfies
+readiness. Do not silently switch methods again on failure.
+
+Record the selected method and scope with the reviewed SHA. Publish returned
+full-review findings, including a clean summary, through `Review history,
+publication, and threads` below; use native publication when available. Retain
+the method's review/session identifier and returned GitHub review ID to avoid
+duplicate publication. Record fix-delta results in the existing verification
+format below. Use observed execution identity, never configured or self-reported
+identity; for non-task methods whose served identity is not exposed, use
+`reviewerModel: "unreported"` and omit unknown provider/session fields.
+
 
 Fix-delta verification
 ======================
 
-Dispatch exactly one `reviewer` task agent with a bounded brief. Give it the
+Dispatch exactly one `reviewer` task agent with a bounded brief unless the
+operator selected another independent method for this pass. Give it the
 pull request, base branch, full-review SHA, current SHA, original findings,
 dispositions, and pass number. Require it to compare the pull request's
 three-dot content at the reviewed SHA with its three-dot content at the current
@@ -67,9 +101,10 @@ wall: <open|reached>
 usage: unavailable
 ```
 
-The task agent's result is independent evidence. The author writes this record
-only after receiving it; it must not invent a verdict. Omp exposes no reviewer
-token-usage value, so `usage: unavailable` is required. The wrapper adds
+The selected reviewer's result is independent evidence. The author writes this
+record only after receiving it; it must not invent a verdict. Omp task results
+expose no reviewer token-usage value, so use `usage: unavailable` for them;
+for another method use exposed counts or `unavailable`. The wrapper adds
 provenance; do not add a block to the record.
 
 The wait
@@ -218,7 +253,7 @@ after a user stop performs no work.
 Review history, publication, and threads
 ========================================
 
-Before dispatch, read every submitted review with `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews`. Read the complete thread graph with a
+Before invoking the selected reviewer, read every submitted review with `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews`. Read the complete thread graph with a
 paginated GraphQL `PullRequest.reviewThreads` query, including `id`,
 `isResolved`, `isOutdated`, review/comment IDs, replies, SHAs, paths, lines,
 and bodies. A REST comments page alone is not complete history and does not
@@ -227,8 +262,8 @@ contain the `PRRT_…` ID needed to resolve a thread.
 After the reviewer returns, re-read the head and its diff anchors. Compare the
 returned findings with the review history and recorded review identifier before
 posting; a resumed run must not duplicate a review already submitted for that
-SHA. Put line-specific findings in `review.json` and create one submitted
-review:
+identifier and SHA. Put line-specific findings in `review.json` and create one
+submitted review:
 
 ```json
 {

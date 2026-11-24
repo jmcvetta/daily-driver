@@ -18,11 +18,12 @@ do not. Every finding is answered, and a behavioral fix is verified without
 repeatedly auditing unchanged pull-request content. A standalone review records its
 findings and stops; it does not turn into an implementation run.
 
-The analysis is the harness's own review surface, and this skill does not
-supply it. What it supplies is the six things around it — the wait for CI, the
-level, the durable review record, the thread protocol, bounded fix verification,
-and the full-review test — none of which any review surface has an opinion
-about.
+The analysis uses the active harness route's default review surface unless the
+operator explicitly selects another independent review method. This skill does
+not supply the analysis. What it supplies is the six things around it — the
+wait for CI, the level, the durable review record, the thread protocol, bounded
+fix verification, and the full-review test — none of which any review surface
+has an opinion about.
 
 **The routes are per harness, and they live beside this file.** Every operation
 below is named in words here and resolved to a call there:
@@ -203,13 +204,20 @@ every subagent here, through `SubagentStart` — it is a dispatch with no rubric
 bounding what it reviews and no route landing its findings as resolvable
 threads under a submitted `COMMENT` review. What stays forbidden is a dispatch missing either half.
 
-**At `Review the head` the reviewer is still the harness's named review
-surface, and only that surface.** It supplies both by being named, along with
-the effort level `Name the level` binds and the measured resolvable-thread
-contract; whether a panel of briefed subagents should replace it is a
-question this rule does not answer. `Verify the fix delta` is where a briefed
-subagent is a reviewer: the reference file states its brief and its
-publication route rather than leaving either assumed.
+**Use the active harness route's default review surface unless the operator
+explicitly selects another independent review method.** Honor that selection
+for its stated scope, including a requested switch away from a running review;
+stop the superseded invocation before starting its replacement. Do not silently
+fall back or change persistent reviewer configuration. Record the selected
+method and scope with the reviewed SHA. An operator-selected method still needs
+a bounded brief, complete review history, independent analysis, and the same
+publication and readiness evidence. The author cannot substitute self-review.
+If the selected method is unavailable or cannot meet those requirements, report
+the precise gap; do not treat selection alone as a completed review. The harness
+reference supplies its default invocation and publication route and the bounded
+brief for `Verify the fix delta`. For a selected alternative, use its supported
+invocation and the publication contract below; a missing alternative-specific
+example in the reference is not itself an unavailable-method verdict.
 
 **Read the complete GitHub review history before each review.** Read submitted
 reviews and every inline thread, including resolved and outdated threads, their
