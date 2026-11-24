@@ -217,10 +217,10 @@ export default function(pi) {
                     else:
                         command("seed", "/seed-controls " + ("malformed" if malformed else "active"))
                         seeded = status("seeded-status")
-                        assert seeded["state"] == ("blocked" if malformed else "selected"), seeded
+                        assert seeded["state"] == ("informational" if malformed else "selected"), seeded
                         info = status("owner-status")
                         assert info["issue"] == 828, info
-                        assert info["state"] == ("blocked" if malformed else "selected"), info
+                        assert info["state"] == ("informational" if malformed else "selected"), info
                         assert info["observedModel"] == "unreported", info
                         if malformed:
                             assert info["lastRejection"], info
@@ -240,7 +240,7 @@ export default function(pi) {
             session_file = next(storage.glob("*.jsonl"))
             entries = [json.loads(line) for line in session_file.read_text().splitlines()]
             routes = [entry["data"] for entry in entries if entry.get("customType") == "daily-driver-undertaking-route"]
-            assert routes[-1] == {"schema": 3, "issue": 828, "lifecycle": "cancelled"}, routes
+            assert routes[-1]["schema"] == 4 and routes[-1]["issue"] == 828 and routes[-1]["lifecycle"] == "cancelled", routes
             assert not any(route.get("completed") or route.get("lifecycle") == "completed" for route in routes)
             if not malformed:
                 assert "CONTROL_CONVERSATION_RETAINED" in session_file.read_text()
@@ -260,25 +260,25 @@ export default function(pi) {
   models:[modelConfig("embark-title-probe-model"),modelConfig("independent-reviewer")]
  });
  let route;
- const routes = [{
-  referenceModel:"kimi-code/embark-title-probe-model",
-  classes:{complex:"kimi-code/independent-reviewer"}
- }];
+ const settings = () => pi.pi.settings;
+ settings().overrideModelRoles({complex:"embark-title-probe/independent-reviewer:low"});
  const register = pi.registerTool.bind(pi);
  pi.registerTool = definition => {
   if (definition.name === "daily_driver_route_undertaking") route = definition;
   register(definition);
  };
- installUndertakingRouting(pi, () => pi.pi.settings, () => routes);
- pi.registerCommand("route-boundary", {handler:async(_args,ctx)=>{
-  const result=await route.execute("boundary",{issue:829,modelClass:"complex"},null,null,ctx);
+ installUndertakingRouting(pi, settings);
+ pi.registerCommand("route-boundary", {handler:async(args,ctx)=>{
+  if (args === "failure") settings().overrideModelRoles({mechanical:"missing-provider/missing-model:low"});
+  const params = args ? {issue:830,modelClass:"mechanical"} : {issue:829,modelClass:"complex"};
+  const result=await route.execute("boundary",params,null,null,ctx);
   ctx.ui.notify(JSON.stringify({admission:result}),"info");
  }});
 }''', encoding="utf-8")
     storage = base / "boundaries-session"
     storage.mkdir()
     start_requests = len(REQUEST_IDENTITIES)
-    selected = f"kimi-code/{REVIEWER_MODEL}"
+    selected = f"{FIXTURE.PROVIDER}/{REVIEWER_MODEL}"
     for resume in (False, True):
         session_file = next(storage.glob("*.jsonl")) if resume else None
         argv = [omp, "--mode", "rpc", "--extension", str(observer),
@@ -319,8 +319,8 @@ export default function(pi) {
                 return next(json.loads(frame["message"]) for frame in output
                             if frame.get("message", "").startswith("{") and '"cancelOwner"' in frame["message"])
 
-            def prompt(identifier):
-                send({"id": identifier, "type": "prompt", "message": PROBES["boundaries"]})
+            def prompt(identifier, phase="boundaries"):
+                send({"id": identifier, "type": "prompt", "message": PROBES[phase]})
                 return wait(lambda frame: frame.get("type") == "prompt_result" and frame.get("id") == identifier)
 
             def model(identifier, model_id):
@@ -336,10 +336,22 @@ export default function(pi) {
                                      if frame.get("message", "").startswith('{"admission":'))
                     assert not admission.get("isError"), admission
                     assert admission["details"]["undertaking"]["selectedModel"] == selected, admission
+                    selected_status = status("selected-status")
+                    assert selected_status["hostModel"] == selected, selected_status
+                    assert selected_status["hostEffort"] == "low", selected_status
+                    assert prompt("configured-role-prompt", "model_check").get("status") == "completed"
+                    assert REQUEST_IDENTITIES[-1] == REVIEWER_MODEL, REQUEST_IDENTITIES
                     model("operator-model", FIXTURE.MODEL)
                     send({"id": "operator-effort", "type": "set_thinking_level", "level": "low"})
                     effort = wait(lambda frame: frame.get("id") == "operator-effort")
                     assert effort.get("success"), effort
+                    output = command("failed-selection", "/route-boundary failure")
+                    failed = next(json.loads(frame["message"])["admission"] for frame in output
+                                  if frame.get("message", "").startswith('{"admission":'))
+                    assert not failed.get("isError"), failed
+                    assert "Ordinary work can continue" in json.dumps(failed), failed
+                else:
+                    command("resume-selection", "/route-boundary resume")
                 before = len(REQUEST_IDENTITIES)
                 result = prompt("operator-prompt")
                 assert result.get("status") == "completed", result
@@ -348,7 +360,7 @@ export default function(pi) {
                 info = status("operator-status")
                 assert info["hostModel"] == f"kimi-code/{FIXTURE.MODEL}", info
                 assert info["hostEffort"] == "low", info
-                assert info["issue"] == 829, info
+                assert info["issue"] == 830, info
             finally:
                 process.stdin.close()
                 try:
@@ -356,8 +368,8 @@ export default function(pi) {
                 except subprocess.TimeoutExpired:
                     process.kill()
                     process.wait()
-    assert REQUEST_IDENTITIES[start_requests:] == [FIXTURE.MODEL, FIXTURE.MODEL], REQUEST_IDENTITIES[start_requests:]
-    print("Undertaking admission: operator model and effort reached local provider before and after resume")
+    assert REQUEST_IDENTITIES[start_requests:] == [REVIEWER_MODEL, FIXTURE.MODEL, FIXTURE.MODEL], REQUEST_IDENTITIES[start_requests:]
+    print("Effective cross-provider role, informational failure, ordinary prompts, operator override and resume passed")
 
 
 def run(omp: str, base: Path, env: dict[str, str], observer: Path) -> list[dict]:
@@ -432,32 +444,47 @@ def main() -> None:
                 "        maxTokens: 1024\n"
                 "        cost: {input: 0, output: 0, cacheRead: 0, cacheWrite: 0}\n"
             ), encoding="utf-8")
-            # Unset route configuration used to poison later settings clones and reviewer dispatch.
+            # Effective class roles must survive settings overlays, cloning and cleared tombstones.
             routing_observer = base / "routing-observer.mjs"
             routing_observer.write_text('''import assert from "node:assert/strict";
-import { readModelClassRoutes, MODEL_CLASS_ROUTES } from "''' + os.path.relpath(ROOT / "extensions/role-default-helper.mjs", base) + '''";
-import { lookup } from "@oh-my-pi/pi-coding-agent/config/registry";
+import { Settings } from "@oh-my-pi/pi-coding-agent/config/settings";
 export default function(pi) {
  pi.on("session_start", async (_event, ctx) => {
   const settings = pi.pi.settings;
-  assert.deepEqual(await readModelClassRoutes(settings), MODEL_CLASS_ROUTES, "parent defaults");
-  const clone = await settings.cloneForCwd(ctx.cwd);
-  assert.deepEqual(await readModelClassRoutes(clone), MODEL_CLASS_ROUTES, "cloned defaults");
-  const routes = lookup("dailyDriver.modelClassRoutes");
-  for (const value of [[], [{referenceModel:"fixture/model",classes:{routine:"fixture/worker"}}]]) {
-   const explicit = settings.overlay();
-   routes.override(explicit, value);
-   assert.deepEqual(await readModelClassRoutes(await explicit.cloneForCwd(ctx.cwd)), value, "explicit clone");
+  assert.equal(settings.getModelRole("routine"), "openai-codex/gpt-6-luna:high", "installed default");
+  const agentDir = process.env.OFFLINE_SETTINGS_DIR;
+  const project = process.env.OFFLINE_SETTINGS_PROJECT;
+  const global = await Settings.loadReadOnly({agentDir,cwd:ctx.cwd});
+  assert.equal(global.getModelRole("mechanical"), "embark-title-probe/global:low", "global class");
+  const scoped = await Settings.loadReadOnly({agentDir,cwd:project});
+  assert.equal(scoped.getModelRole("mechanical"), "embark-title-probe/project:medium", "project class");
+  const cli = await Settings.loadReadOnly({agentDir,cwd:project,configFiles:[process.env.OFFLINE_SETTINGS_OVERLAY]});
+  assert.equal(cli.getModelRole("mechanical"), "embark-title-probe/overlay:high", "CLI class overlay");
+  for (const value of ["embark-title-probe/independent-reviewer:low", null]) {
+   const overlay = settings.overlay({modelRoles:{mechanical:value}});
+   assert.equal(overlay.getModelRole("mechanical"), value ?? undefined, "effective overlay");
+   const clone = await overlay.cloneForCwd(ctx.cwd);
+   assert.equal(clone.getModelRole("mechanical"), value ?? undefined, "effective cloned role");
   }
-  for (const value of [null, {}, "invalid", [{referenceModel:"fixture/model",classes:{unknown:"fixture/worker"}}],
-    [MODEL_CLASS_ROUTES[0], MODEL_CLASS_ROUTES[0]]]) {
-   assert.throws(() => routes.override(settings.overlay(), value));
-  }
+  settings.overrideModelRoles({routine:"embark-title-probe/embark-title-probe-model"});
  });
 }''', encoding="utf-8")
             env = {key: os.environ[key] for key in ("PATH", "TMPDIR", "LANG", "TERM") if key in os.environ}
             env.update(HOME=str(home))
             env["OFFLINE_PROVIDER_URL"] = f"http://127.0.0.1:{server.server_address[1]}/v1"
+            settings_dir = base / "settings-global"
+            settings_dir.mkdir()
+            (settings_dir / "config.yml").write_text(
+                "modelRoles:\n  mechanical: embark-title-probe/global:low\n", encoding="utf-8")
+            settings_project = base / "settings-project"
+            (settings_project / ".omp").mkdir(parents=True)
+            (settings_project / ".omp" / "config.yml").write_text(
+                "modelRoles:\n  mechanical: embark-title-probe/project:medium\n", encoding="utf-8")
+            settings_overlay = base / "settings-overlay.yml"
+            settings_overlay.write_text(
+                "modelRoles:\n  mechanical: embark-title-probe/overlay:high\n", encoding="utf-8")
+            env.update(OFFLINE_SETTINGS_DIR=str(settings_dir), OFFLINE_SETTINGS_PROJECT=str(settings_project),
+                       OFFLINE_SETTINGS_OVERLAY=str(settings_overlay))
             for key in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"):
                 env[key] = str(home / key.lower())
             agents = home / ".omp" / "agent" / "agents"
@@ -473,11 +500,11 @@ export default function(pi) {
             routing = run(omp, base, env, routing_observer)
             route_calls = [frame for frame in routing if frame.get("type") == "tool_execution_end"]
             assert len(route_calls) == 5 and all(not frame.get("isError") for frame in route_calls), route_calls
-            assert "verified" in json.dumps(route_calls[1]), route_calls[1]
+            assert "selectedModel" in json.dumps(route_calls[1]), route_calls[1]
             assert "ROUTE_REVIEW_OK" in json.dumps(route_calls[3]), route_calls[3]
             assert REQUESTS["reviewer"] == 1, REQUESTS
             assert REVIEWER_REQUESTS == [REVIEWER_MODEL], REVIEWER_REQUESTS
-            print("Default class routes: real settings clones and verified-undertaking reviewer dispatch passed")
+            print("Effective class roles: real settings overlays, clones and independent reviewer dispatch passed")
             run_routing_controls(omp, base, env)
             run_routing_boundaries(omp, base, env)
     finally:

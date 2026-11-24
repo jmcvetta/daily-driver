@@ -97,6 +97,20 @@ __git_sync_run:
 omp-update-daily-driver:
 	omp plugin marketplace update daily-driver
 	omp plugin upgrade daily-driver@daily-driver
+# Switch OCR between the Vercel AI Gateway and the saved ChatGPT subscription.
+# Usage:
+#   make ocr-set-vercel-model MODEL=deepseek/deepseek-v4.1-flash-1017
+#   make ocr-set-openai-codex
+# First-time ChatGPT subscription setup: ocr auth login --provider chatgpt
+# The Vercel API key stays in the environment and is read by OCR at request time.
+.PHONY: ocr-set-vercel-model ocr-set-openai-codex
+ocr-set-vercel-model: export OCR_MODEL = $(MODEL)
+ocr-set-vercel-model:
+	@scripts/ocr-model.sh vercel "$$OCR_MODEL"
+
+ocr-set-openai-codex:
+	@scripts/ocr-model.sh openai-codex
+
 
 
 # `check` remains the local all-groups convenience target. CI selects leaf

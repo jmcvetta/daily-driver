@@ -76,9 +76,10 @@ inapplicable detail is omitted rather than manufactured into boilerplate.
 2. **Scope.** What changes, what remains unchanged, and explicit non-goals.
    One task is one reviewable pull request; use `epic` only where its gates
    hold.
-3. **Grounded implementation map.** Inspect repository guidance, affected
-   files, symbols, callers, tests, and gates. Reference that context; never
-   invent a path, API, or command.
+3. **Grounded implementation map.** Scale repository investigation and
+   pointers to the task's complexity and what the assigned worker needs.
+   Cite relevant files, symbols, tests or gates when useful; never invent a
+   path, API, command or detail.
 4. **Settled design.** Resolve substantive contracts, invariants, edge cases,
    and compatibility or migration requirements. Routine local choices remain
    with the implementer.
@@ -200,44 +201,17 @@ an unstated product or architecture decision?
 - For `epic`, use both decomposition gates and the current graph, respecting
   explicit scheduling constraints not represented by edges.
 
-**A complete task draft includes that pass before it is delivered.** Every
-complete task body — a new draft and a deliberate revision alike — gets a
-review-and-repair pass before publication or delivery to the user. This holds
-for standalone tasks and for epic task children, and it holds when the user
-asked only to open or update an issue and never said “ready”. Withholding a
-live write does not exempt a complete draft delivered in conversation. A
-partial draft the user explicitly asked for may stay partial, but it is not
-presented as a complete handoff.
+Before presenting a task as ready or dispatching it, assess the handoff from
+the assigned worker's class using the question above. Resolve repository-
+answerable gaps and preserve actual decisions and constraints. Name relevant
+files, symbols, tests and gates where needed for the worker; do not manufacture
+detail for a simple task. Meaningful acceptance and verification remain
+required. Routine local choices stay with the implementer.
 
-Run the pass from the assigned worker's class, with the task question above as
-its test, and read the draft as that worker: a decision left unstated, a
-repository fact or inference only the author holds, an edge contract the
-worker would have to invent, or acceptance and verification too thin to
-execute is a gap. Name the files, symbols, tests and gates the worker will
-use; an existing test, command or gate described only by category leaves the
-worker to rediscover it. A routine local choice remains the implementer's, and
-refusing readiness over one is the same failure in the other direction.
-
-Answer every repository-answerable gap now, in the body or in the
-authoritative document it references; on the specification-backed variant keep
-that document's ownership and cite it rather than copying it whole. Where a
-repair changes a requirement, reassess the affected parts and repeat until the
-handoff passes, or until only a genuine unavailable prerequisite or a
-user-owned decision is left.
-
-Authoring does not complete with a repair list for the user to request or the
-worker to discover. It does not complete by raising the model class, narrowing
-scope, weakening a check, or inventing intent to make an unready task read as
-ready. When a genuine gap survives the pass, name it precisely, keep the valid
-content, and say the draft is not ready; ask only for the missing user-owned
-input under the existing rules. Do not publish it as a ready assignment. This
-adds no permission to publish an explicitly unready task and no new approval
-checkpoint.
-
-A declaration that the draft was reviewed, a checklist, a narrated
-self-review or an added body section is not evidence of readiness and is not
-required; the handoff itself is what is judged. Existing issue shape,
-provenance, dependency edges and the other kinds' contracts are unchanged.
+When a genuine gap remains, state it precisely and do not present or dispatch
+the issue as ready. A truthful parent edge may still be recorded under
+`issue-deps`. Do not invent intent, weaken checks or raise the class to hide
+the gap. A readiness certificate, checklist or narrated review is not required.
 
 The detailed contracts for research, bug, proposal, specification, and human are in
 [`references/kind-contracts.md`](references/kind-contracts.md). The epic
@@ -262,8 +236,8 @@ An agent-written handoff is not user approval and cannot waive a restriction.
 Assignable stories
 ==================
 
-An epic's story must be assignable, so that an orchestrator can hand it to a
-worker. **Assignable is not the `task` kind.** A story is assignable when it is:
+Before dispatch, a story must be assignable. Membership does not itself make a
+story assignable. **Assignable is not the `task` kind.** It means:
 
 1. An agent-eligible kind — `task`, `research` or `bug`. `proposal`,
    `specification`, `human` and `epic` are never assignable stories.
@@ -275,8 +249,8 @@ worker. **Assignable is not the `task` kind.** A story is assignable when it is:
 3. Carrying exactly one valid `## Model class` section: one backtick-wrapped
    lowercase class token from
    [`references/model-classes.md`](references/model-classes.md), then a short
-   rationale paragraph. This holds for every proposed story, including
-   ordinary research and bug work. For `research` and `bug`, place it after the
+   rationale paragraph. This holds for every dispatchable story, including
+   research and bug work. For `research` and `bug`, place it after the
    kind's opening content and before `provenance`'s trailing block. The task
    shape above is unchanged.
 
@@ -337,10 +311,10 @@ adapter pattern.
 
 `undertake` validates and, where grounded, migrates the section before routing
 a classed `task`, `research` or `bug` assignment.
-For a mapped family it selects the exact class within the invoking family and
-provider before worktree creation or claim. If the known family is absent from
-the class table, it warns prominently and continues on the invoking model,
-provider, and effort without confirmation; class suitability remains
-unverified. Classes omitted from a mapped family follow that warning with
-unverified suitability; an explicitly cleared class and unknown identity
-remain gaps. Claim comments and execution records retain the observed model.
+It attempts the initial class selection once through the active harness's
+configuration authority before worktree creation or claim. Omp uses its
+effective class role, including model/provider and effort; Claude Code retains
+its supported class-appropriate route. Failure is informational: name the
+attempted target, failure and actual route, then continue ordinary work without
+confirmation or repair. Later operator choices and resume never reselect.
+Claim comments and execution records retain the observed model.

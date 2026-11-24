@@ -1,5 +1,3 @@
-import { MODEL_CLASS_ROUTES, explicitModelClassRole } from "./role-default-helper.mjs";
-
 const ENTRY = "daily-driver-undertaking-route";
 const CLASSES = ["mechanical", "routine", "intermediate", "complex", "frontier"];
 const EFFORT = /:(off|minimal|low|medium|high|xhigh|max|auto|inherit)$/u;
@@ -37,55 +35,25 @@ function scope(ctx) {
 	return sessions;
 }
 
-function routeError(state, message) {
-	state.status = "blocked";
-	state.reason = message;
-	return new Error(`Undertaking route gap: ${message}`);
-}
 
-// Catalog model IDs may include the family prefix for only one provider.
-function modelIdentity(model, family) {
-	const id = model?.id?.replace(EFFORT, "");
-	if (!id) return null;
-	return id.startsWith(`${family}/`) ? id : `${family}/${id}`;
-}
-
-function classSelection(ctx, settings, routes, model, modelClass) {
-	const family = ctx.models.family(model);
-	if (!family) throw new Error("Invoking model family is unavailable");
-	const familyRows = routes.filter(row => {
-		const resolved = ctx.models.resolve(row.referenceModel);
-		return resolved && ctx.models.family(resolved) === family;
-	});
-	if (familyRows.length > 1) throw new Error("Model class routes are ambiguous for the invoking family");
-	const role = explicitModelClassRole(settings, modelClass);
-	const explicit = role.assigned && typeof role.value === "string" ? ctx.models.resolve(role.value) : null;
-	const explicitCompatible = explicit && explicit.provider === model.provider && ctx.models.family(explicit) === family;
-	const configured = explicitCompatible ? role.value : familyRows[0]?.classes[modelClass];
-	// An omitted class keeps the absent-family continuation; an explicit null is a configuration gap.
-	if (configured !== undefined && (typeof configured !== "string" || !configured.trim())) {
-		throw new Error(`Mapped model class route is cleared for ${modelClass}`);
+function classSelection(ctx, settings, modelClass) {
+	const configured = settings?.getModelRole(modelClass);
+	if (typeof configured !== "string" || !configured.trim()) {
+		throw new Error(`Effective ${modelClass} assignment is missing, cleared, or invalid`);
 	}
-	if (configured === undefined) return { target: model, capability: "unverified" };
-	const configuredTarget = ctx.models.resolve(configured);
-	if (!configuredTarget) throw new Error("Configured class model is unavailable");
-	if (ctx.models.family(configuredTarget) !== family) throw new Error("Configured class model family must remain unchanged");
-	const identity = modelIdentity(configuredTarget, family);
-	const candidates = identity ? ctx.models.list().filter(candidate => candidate.provider === model.provider &&
-		ctx.models.family(candidate) === family && modelIdentity(candidate, family) === identity) : [];
-	if (!candidates.length) throw new Error("Configured class model is unavailable in the invoking provider");
-	if (candidates.length > 1) throw new Error("Configured class model is ambiguous in the invoking provider");
-	return { target: candidates[0], configured, capability: "mapped" };
+	const target = ctx.models.resolve(configured);
+	if (!target) throw new Error(`Configured class model ${configured} is unavailable`);
+	return { target, configured };
 }
-
-
-
 
 function publicState(state) {
 	if (!state || state.consultation) return null;
 	return {
 		issue: state.issue, modelClass: state.modelClass, selectedModel: state.selectedModel,
 		observedModel: state.observedModel ?? null, status: state.status,
+		attemptedModel: state.attemptedModel ?? null,
+		selectedEffort: state.selectedEffort ?? null,
+		observedEffort: state.observedEffort ?? null,
 		...(state.reason ? { reason: state.reason } : {}),
 		capability: state.capability ?? "mapped",
 		...(state.warning ? { warning: state.warning } : {}),
@@ -102,16 +70,14 @@ function storedState(ctx) {
 	if (!entry) return null;
 	const saved = entry.data;
 	if (saved?.schema === 1 && saved.completed === true) return null;
-	if ([2, 3].includes(saved?.schema) && ["completed", "cancelled"].includes(saved.lifecycle)) {
+	if ([2, 3, 4].includes(saved?.schema) && ["completed", "cancelled"].includes(saved.lifecycle)) {
 		return saved.retired === true ? saved : null;
 	}
 	// Older session records retain their original class tokens across the cutover.
 	const legacyClasses = { implementation: "routine", integration: "intermediate", reasoning: "complex" };
-	const modelClass = [1, 2].includes(saved?.schema)
-		? legacyClasses[saved.modelClass] ?? saved.modelClass : saved?.modelClass;
-	if (![1, 2, 3].includes(saved?.schema) || saved.schema >= 2 && saved.lifecycle !== "active" ||
-		!CLASSES.includes(modelClass) || !Number.isSafeInteger(saved.issue) || saved.issue < 1 ||
-		!saved.selectedModel) {
+	const modelClass = legacyClasses[saved?.modelClass] ?? saved?.modelClass;
+	if (![1, 2, 3, 4].includes(saved?.schema) || saved.schema >= 2 && saved.lifecycle !== "active" ||
+		!CLASSES.includes(modelClass) || !Number.isSafeInteger(saved.issue) || saved.issue < 1) {
 		throw new Error("Saved undertaking route is invalid; use /undertaking status for local recovery");
 	}
 	return { ...saved, modelClass };
@@ -138,8 +104,13 @@ function ownedBy(state, owner) {
 }
 
 /** Install one-time undertaking model selection without changing host helper roles. */
-export function installUndertakingRouting(pi, getSettings, getRoutes = () => MODEL_CLASS_ROUTES, onCompleted = () => {}) {
+export function installUndertakingRouting(pi, getSettings, onCompleted = () => {}) {
 	const states = new Map();
+	const owners = new Map();
+	function history(sessionId) {
+		if (!owners.has(sessionId)) owners.set(sessionId, new Map());
+		return owners.get(sessionId);
+	}
 	const selecting = new Set();
 	const inFlightSelections = new Set();
 	const rejections = new Map();
@@ -151,16 +122,10 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 
 	function publish(ctx, state) {
 		state.workerModels ??= ctx.models;
-		const previous = states.get(state.sessionId);
-		for (const handoff of pendingChildren.values()) {
-			if (handoff.state === previous) handoff.state = state;
-		}
+		history(state.sessionId).set(state.issue, state);
 		states.set(state.sessionId, state);
 		const sessions = scope(ctx);
 		if (sessions) {
-			for (const record of sessions.values()) {
-				if (previous && record.state.ownerState === previous) record.state.ownerState = state;
-			}
 			sessions.set(state.sessionId, {
 				agentId: ctx.agent?.id, state, ctx,
 				persistCancellation: () => pi.appendEntry(ENTRY, {
@@ -197,12 +162,15 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			selectedModel: state?.selectedModel ?? null,
 			selectedEffort: state?.selectedEffort ?? null,
 			hostModel: selector(ctx.models?.current?.() ?? ctx.model),
-			hostEffort: pi.getThinkingLevel() ?? "unreported",
+			hostEffort: pi.getThinkingLevel?.() ?? "unreported",
 			observedModel: state?.observedModel ?? "unreported",
 			authenticationRoute,
 			state: state?.status ?? (selecting.has(ctx.sessionManager.getSessionId()) ? "selecting" : saved?.lifecycle === "cancelled" ? "cancelled" : "none"),
 			lastRejection: rejections.get(ctx.sessionManager.getSessionId()) ?? state?.reason ?? null,
 			cancelOwner: state ? String(state.issue ?? "invalid") : null,
+			owners: [...history(ctx.sessionManager.getSessionId()).values()]
+				.filter(owner => !owner.completed && !owner.cancelled)
+				.map(owner => owner.issue),
 		};
 	}
 
@@ -218,7 +186,10 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				ctx.ui.notify("Use /undertaking status or /undertaking cancel <issue>. Use invalid only when status reports cancelOwner: invalid.", "warning");
 				return;
 			}
-			const state = current(ctx);
+			const sessionId = ctx.sessionManager.getSessionId();
+			const state = [...history(sessionId).values()].find(owner =>
+				String(owner.issue ?? "invalid") === parts[1] && !owner.completed &&
+				(!owner.cancelled || !owner.cancellationSaved));
 			if (!state) {
 				if (selecting.has(ctx.sessionManager.getSessionId())) {
 					ctx.ui.notify("Cancellation refused: route selection is in progress and ownership is not yet established. Use /undertaking status after selection stops.", "warning");
@@ -227,10 +198,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				ctx.ui.notify("No active undertaking owns this session. Nothing was cancelled.", "info");
 				return;
 			}
-			const sessionId = ctx.sessionManager.getSessionId();
-			const shared = scope(ctx)?.get(sessionId);
-			if (state.sessionId !== sessionId || shared && shared.state !== state ||
-				parts[1] !== String(state.issue ?? "invalid") || state.cancelling) {
+			if (state.sessionId !== sessionId || state.cancelling) {
 				ctx.ui.notify("Cancellation refused: ownership does not match this session. Use /undertaking status.", "warning");
 				return;
 			}
@@ -244,23 +212,28 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			}
 			state.cancelling = true;
 			try {
-				ctx.abort();
-				await ctx.waitForIdle();
-				if (current(ctx) !== state || ctx.sessionManager.getSessionId() !== sessionId || !ctx.isIdle()) {
-					throw new Error("Ownership changed or in-flight work is not quiescent; cancellation was not completed");
+				if (current(ctx) === state) {
+					ctx.abort();
+					await ctx.waitForIdle();
+					if (ctx.sessionManager.getSessionId() !== sessionId || !ctx.isIdle()) {
+						throw new Error("Ownership changed or in-flight work is not quiescent; cancellation was not completed");
+					}
 				}
-				for (const record of scope(ctx)?.values() ?? []) {
-					if (!ownedBy(record.state, state)) continue;
-					record.ctx.abort();
-					await record.persistCancellation();
+				const children = [...(scope(ctx)?.values() ?? [])].filter(record => ownedBy(record.state, state));
+				for (const record of children) {
 					record.state.cancelled = true;
 					record.state.retired = true;
 					record.state.status = "blocked";
 					record.state.reason = "The owning undertaking was cancelled; this child cannot resume execution";
+					record.ctx.abort();
 				}
+				await Promise.all(children.map(record => record.ctx.waitForIdle()));
+				for (const record of children) await record.persistCancellation();
 				const retired = Boolean(state.ownerState) || ctx.agent?.kind === "sub";
-				await pi.appendEntry(ENTRY, { schema: 3, issue: state.issue, lifecycle: "cancelled", ...(retired ? { retired: true } : {}) });
 				state.cancelled = true;
+				state.retired = retired;
+				await save(state);
+				state.cancellationSaved = true;
 				release(ctx, state);
 				if (retired) {
 					state.retired = true;
@@ -277,20 +250,27 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		},
 	});
 
+	function serialized(state) {
+		return {
+			lifecycle: state.cancelled ? "cancelled" : state.completed ? "completed" : "active",
+			issue: state.issue, modelClass: state.modelClass, selectedModel: state.selectedModel,
+			selectedEffort: state.selectedEffort, attemptedModel: state.attemptedModel,
+			invokingModel: state.invokingModel, invokingEffort: state.invokingEffort,
+			observedModel: state.observedModel, observedEffort: state.observedEffort,
+			status: state.status, reason: state.reason, retired: state.retired,
+		};
+	}
+
 	async function save(state) {
 		await pi.appendEntry(ENTRY, {
-			schema: 3, lifecycle: "active", issue: state.issue, modelClass: state.modelClass, selectedModel: state.selectedModel,
-			selectedEffort: state.selectedEffort,
-			capability: state.capability ?? "mapped",
-			...(state.warning ? { warning: state.warning } : {}),
+			schema: 4, ...serialized(states.get(state.sessionId) ?? state),
+			owners: [...history(state.sessionId).values()].map(serialized),
 		});
 	}
 
 	async function start(event, ctx) {
 		const sessionId = ctx.sessionManager?.getSessionId?.();
 		if (!sessionId) return;
-		const previous = current(ctx);
-		if (event.type !== "session_start" && previous) release(ctx, previous);
 		if (states.has(sessionId)) return;
 		let state;
 		try {
@@ -303,7 +283,21 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			const parents = ctx.agent?.kind === "sub" && ctx.agent.parentId
 				? [...(sessions?.values() ?? [])].filter(record => record.agentId === ctx.agent.parentId) : [];
 			if (parents.length > 1) throw new Error("Parent undertaking identity is ambiguous");
-			const saved = storedState(ctx);
+			const raw = savedEntry(ctx)?.data;
+			const retired = ctx.agent?.kind === "sub" &&
+				retiredChildren.get(ctx.modelRegistry.authStorage)?.has(JSON.stringify([ctx.agent.parentId, ctx.agent.id]));
+			const saved = raw?.retired || retired
+				? { ...raw, retired: true } : storedState(ctx);
+			const records = savedEntry(ctx)?.data;
+			if (records?.schema === 4 && Array.isArray(records.owners)) {
+				for (const record of records.owners) {
+					if (!Number.isSafeInteger(record?.issue) || record.issue < 1) continue;
+					history(sessionId).set(record.issue, {
+						...record, sessionId, completed: record.lifecycle === "completed",
+						cancelled: record.lifecycle === "cancelled",
+					});
+				}
+			}
 			if (saved?.retired) {
 				state = { ...saved, sessionId, cancelled: true, status: "blocked", reason: "The owning undertaking was cancelled; this child cannot resume execution" };
 				publish(ctx, state);
@@ -319,7 +313,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			if (expected) pendingChildren.delete(expected);
 			state = {
 				...(parent ?? saved), sessionId, ownerState: parent,
-				status: "selected", observedModel: null, workerModels: ctx.models,
+				status: parent?.status ?? saved?.status ?? "selected", observedModel: null, workerModels: ctx.models,
 				recovery: undefined, consultation: undefined,
 			};
 			publish(ctx, state);
@@ -327,13 +321,14 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		} catch (error) {
 			const saved = savedEntry(ctx)?.data;
 			state ??= {
-				sessionId, status: "blocked",
+				sessionId, status: "informational",
 				issue: Number.isSafeInteger(saved?.issue) && saved.issue > 0 ? saved.issue : null,
 				modelClass: null, selectedModel: null,
 			};
 			publish(ctx, state);
-			routeError(state, error.message);
-			reportRejection(ctx, state, error);
+			state.reason = error.message;
+			rejections.set(sessionId, error.message);
+			ctx.ui?.notify?.(`Undertaking metadata: ${error.message}. Ordinary work can continue.`, "info");
 		}
 	}
 
@@ -345,128 +340,148 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 	pi.registerTool({
 		name: "daily_driver_route_undertaking",
 		label: "Select undertaking model class",
-		description: "Select the issue's initial model class on its invoking family and provider. Call alone, not batched with other tools. Later model, provider, effort, worker, and fallback choices are not restricted. An unmapped family or an omitted class warns and retains the invoking model.",
+		description: "Apply the effective Omp class role once for a new undertaking. Selection failures are informational; later operator choices remain authoritative.",
 		parameters: pi.zod.object({
 			issue: pi.zod.number().int().min(1),
 			modelClass: pi.zod.string(),
 		}),
-		execute: async (_id, params, _signal, _update, ctx) => {
-			const previous = current(ctx);
+		execute: async (_id, params, signal, _update, ctx) => {
 			const sessionId = ctx.sessionManager.getSessionId();
-			if (inFlightSelections.has(sessionId)) return {
-				isError: true, content: [{ type: "text", text: "Another route admission is in flight; inspect or cancel the current operation before retrying." }], details: describe(ctx),
-			};
-			if (previous && isCancelled(previous)) return {
-				isError: true, content: [{ type: "text", text: "A cancelled undertaking cannot authorize this child." }], details: describe(ctx),
-			};
-			if (previous && previous.issue === params.issue) {
-				selecting.delete(sessionId);
-				return {
-					content: [{ type: "text", text: "This undertaking already owns the session; its initial model selection is unchanged." }], details: describe(ctx),
-				};
+			const previous = current(ctx);
+			const result = (text, stopped = false) => ({
+				...(stopped ? { isError: true } : {}),
+				content: [{ type: "text", text }], details: describe(ctx),
+			});
+			const selectionInFlight = inFlightSelections.has(sessionId);
+			if (!selectionInFlight) selecting.delete(sessionId);
+			if (signal?.aborted || isCancelled(previous)) return result("Undertaking selection is cancelled.", true);
+			if (selectionInFlight) return result("Initial selection is already in progress. Ordinary work can continue.");
+			if (!Number.isSafeInteger(params.issue) || params.issue < 1 || !CLASSES.includes(params.modelClass)) {
+				return result("A valid issue and required model class are mandatory.", true);
 			}
-			if (previous && previous.issue !== params.issue) {
-				selecting.delete(sessionId);
-				return {
-					isError: true,
-					content: [{ type: "text", text: "Another undertaking owns this session; finish or resume it before selecting a different issue." }],
-					details: describe(ctx),
-				};
-			}
-			const invoking = ctx.models.current();
-			const invokingEffort = pi.getThinkingLevel();
-			let state;
-			const admissionRevoked = () => ctx.sessionManager.getSessionId() !== sessionId ||
-				isCancelled(previous) || isCancelled(state) ||
-				(current(ctx) !== previous && current(ctx) !== state);
-			const checkAdmission = () => {
-				if (_signal?.aborted || admissionRevoked()) throw new Error("Undertaking admission was cancelled or its owner changed");
+			const existing = history(sessionId).get(params.issue);
+			if (existing?.cancelled) return result("This undertaking was cancelled and cannot restart.", true);
+			if (existing) return result("This undertaking has already attempted initial selection; the current operator route is unchanged.");
+			const modelNow = () => ctx.models?.current?.() ?? ctx.model;
+			const effortNow = () => pi.getThinkingLevel?.();
+			const invoking = modelNow();
+			const invokingEffort = effortNow();
+			const state = {
+				issue: params.issue, modelClass: params.modelClass, sessionId,
+				workerModels: ctx.models, ownerState: previous?.ownerState,
+				status: "selecting", capability: "configured",
+				invokingModel: selector(invoking), invokingEffort,
+				selectedModel: null, selectedEffort: null,
 			};
+			const cancelled = () => signal?.aborted || isCancelled(state) ||
+				ctx.sessionManager.getSessionId() !== sessionId || current(ctx) !== state;
+			const check = () => { if (cancelled()) throw new Error("Initial selection was cancelled or its owner changed"); };
+			let target;
+			let nextEffort = invokingEffort;
+			let modelAttempted = false;
+			let effortAttempted = false;
+			let effortCompleted = false;
+			let appliedEffort = invokingEffort;
+			let message;
 			inFlightSelections.add(sessionId);
 			selecting.add(sessionId);
+			publish(ctx, state);
 			try {
-				if (!Number.isSafeInteger(params.issue) || params.issue < 1 || !CLASSES.includes(params.modelClass)) {
-					throw new Error("A valid issue and required model class are mandatory");
-				}
-				const selection = classSelection(ctx, await getSettings(ctx), await getRoutes(ctx), invoking, params.modelClass);
-				const { target, configured, capability } = selection;
-				if (!target) throw new Error("Invoking model is unavailable");
-				state = {
-					...previous,
-					issue: params.issue, modelClass: params.modelClass, sessionId,
-					workerModels: ctx.models, capability, recovery: undefined,
-				};
-				if (!(await ctx.modelRegistry.getApiKey(invoking, sessionId))) throw new Error("Current route has no available credentials");
-				const effort = configured?.match(EFFORT)?.[1];
-				const nextEffort = effort && effort !== "inherit" ? effort : invokingEffort;
-				const changed = selector(invoking) !== selector(target) || nextEffort !== invokingEffort;
-				state.selectedModel = selector(target);
-				state.selectedEffort = nextEffort;
-				if (!(await ctx.modelRegistry.getApiKey(target, sessionId))) throw new Error("Selected model has no available credentials");
-				checkAdmission();
+				const settings = await getSettings(ctx);
+				check();
+				state.attemptedModel = settings?.getModelRole(params.modelClass) ?? null;
+				const selection = classSelection(ctx, settings, params.modelClass);
+				target = selection.target;
+				const effort = selection.configured.match(EFFORT)?.[1];
+				nextEffort = effort && effort !== "inherit" ? effort : invokingEffort;
+				if (!selector(invoking) || invokingEffort === undefined) throw new Error("Invoking model or effort metadata is unavailable");
 				if (selector(invoking) !== selector(target) && typeof pi.setModel !== "function") throw new Error("Model selection control is unavailable");
 				if (nextEffort !== invokingEffort && typeof pi.setThinkingLevel !== "function") throw new Error("Effort selection control is unavailable");
-				state.observedModel = changed ? null : selector(invoking);
-				state.status = "selected";
-				state.reason = undefined;
-				state.warning = capability === "unverified"
-					? previous?.warning ?? `WARNING: Family ${ctx.models.family(invoking)} has no ${params.modelClass} route for provider ${invoking.provider}. Suitability is unverified. Continuing with the invoking model: ${selector(invoking)}.`
-					: undefined;
-				publish(ctx, state);
-				let operatorChanged = selector(ctx.models.current()) !== selector(invoking) || pi.getThinkingLevel() !== invokingEffort;
+				if (!(await ctx.modelRegistry.getApiKey(target, sessionId))) throw new Error("Requested model has no available credentials");
+				check();
+				let operatorChanged = selector(modelNow()) !== selector(invoking) || effortNow() !== invokingEffort;
 				if (!operatorChanged && selector(invoking) !== selector(target)) {
+					modelAttempted = true;
 					if (!(await pi.setModel(target))) throw new Error("Harness rejected the session model switch");
-					checkAdmission();
-					operatorChanged = selector(ctx.models.current()) !== selector(target) || pi.getThinkingLevel() !== invokingEffort;
+					check();
+					operatorChanged = selector(modelNow()) !== selector(target) || effortNow() !== invokingEffort;
 				}
-				if (!operatorChanged && nextEffort !== invokingEffort) await pi.setThinkingLevel(nextEffort);
-				checkAdmission();
+				if (!operatorChanged && nextEffort !== invokingEffort) {
+					// The host does not provide an atomic model-plus-effort setter.
+					check();
+					effortAttempted = true;
+					await pi.setThinkingLevel(nextEffort);
+					appliedEffort = effortNow();
+					effortCompleted = true;
+				}
+				check();
+				operatorChanged ||= selector(modelNow()) !== selector(target);
+				state.selectedModel = operatorChanged ? null : selector(target);
+				state.selectedEffort = operatorChanged ? null : appliedEffort;
+				state.status = operatorChanged ? "informational" : "selected";
+				message = operatorChanged ? "Operator changes were retained." : "Initial undertaking model and effort selected.";
+				state.observedModel = selector(modelNow());
+				state.observedEffort = effortNow();
 				await save(state);
-				checkAdmission();
-				selecting.delete(sessionId);
-				if (state.warning && !previous?.warning) ctx.ui?.notify?.(state.warning, "warning");
-				status(ctx, undefined);
-				return {
-					content: [{ type: "text", text: state.warning ?? (operatorChanged
-						? "Operator selection changed during admission and was retained."
-						: changed ? "Initial undertaking model and effort selected."
-							: "The initial undertaking model and effort already match.") }],
-					details: describe(ctx),
-				};
+				check();
 			} catch (error) {
-				const revoked = admissionRevoked();
-				if (state && current(ctx) === state) release(ctx, state);
-				else status(ctx, undefined);
-				selecting.delete(sessionId);
-				let message = error instanceof Error ? error.message : String(error);
-				if (state?.selectedModel) {
-					try { await pi.appendEntry(ENTRY, { schema: 3, issue: params.issue, lifecycle: "cancelled" }); }
-					catch (cleanupError) {
-						message += `; route cleanup failed: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`;
-					}
+				const stopped = cancelled();
+				if (stopped) {
+					state.cancelled = true;
+					state.retired = Boolean(state.ownerState) || ctx.agent?.kind === "sub";
 				}
-				rejections.set(sessionId, message);
-				return revoked
-					? { isError: true, content: [{ type: "text", text: `Undertaking admission cancelled: ${message}. Ownership was not restored.` }], details: describe(ctx) }
-					: { isError: true, content: [{ type: "text", text: `Undertaking route gap: ${message}. Use /undertaking status for local recovery.` }], details: describe(ctx) };
+				let failure = error instanceof Error ? error.message : String(error);
+				// Restore only a route that still matches this selector's own mutations.
+				const expectedModel = modelAttempted ? selector(target) : selector(invoking);
+				const actualEffort = effortNow();
+				const effortOwned = !effortAttempted ? actualEffort === invokingEffort
+					: effortCompleted ? actualEffort === appliedEffort
+						: actualEffort === invokingEffort || actualEffort === nextEffort;
+				if (!stopped && selector(modelNow()) === expectedModel && effortOwned) {
+					try {
+						if (effortAttempted && effortNow() !== invokingEffort) await pi.setThinkingLevel(invokingEffort);
+						if (modelAttempted && selector(modelNow()) === selector(target) &&
+							effortNow() === invokingEffort) {
+							if (!(await pi.setModel(invoking))) throw new Error("Harness rejected model restoration");
+						}
+					} catch (restoreError) { failure += `; restoration failed: ${restoreError.message}`; }
+				}
+				state.observedModel = selector(modelNow());
+				state.observedEffort = effortNow();
+				state.reason = failure;
+				state.status = stopped ? "blocked" : "informational";
+				state.selectedModel = null;
+				state.selectedEffort = null;
+				rejections.set(sessionId, failure);
+				if (ctx.sessionManager.getSessionId() === sessionId && current(ctx) === state) {
+					try { await save(state); }
+					catch (saveError) { failure += `; persistence failed: ${saveError.message}`; state.reason = failure; }
+				}
+				message = `${params.modelClass} initial selection${state.attemptedModel ? ` (${state.attemptedModel})` : ""}: ${failure}. Actual route: ${state.observedModel ?? "unreported"}/${state.observedEffort ?? "unreported"}. ${stopped ? "Selection remains stopped." : "Ordinary work can continue."}`;
+				ctx.ui?.notify?.(message, "info");
+				if (stopped) return result(message, true);
 			} finally {
 				inFlightSelections.delete(sessionId);
 				selecting.delete(sessionId);
+				status(ctx, undefined);
 			}
+			return result(message);
 		},
 	});
 
 	pi.registerTool({
 		name: "daily_driver_finish_undertaking",
 		label: "Finish undertaking model route",
-		description: "Release ownership of this completed undertaking before selecting a different issue. Does not change the selected model or shared roles.",
+		description: "Record truthful completion and notify once. Completion is not required to start another issue.",
 		parameters: pi.zod.object({ issue: pi.zod.number().int().min(1) }),
 		execute: async (_id, params, _signal, _update, ctx) => {
-			const state = current(ctx);
-			if (!state || state.issue !== params.issue || isCancelled(state)) return {
-				isError: true, content: [{ type: "text", text: "No matching undertaking owns this session." }], details: describe(ctx),
+			const state = history(ctx.sessionManager.getSessionId()).get(params.issue);
+			if (!state || state.completed || isCancelled(state)) return {
+				isError: true, content: [{ type: "text", text: "No matching unfinished undertaking owns this session." }], details: describe(ctx),
 			};
-			await pi.appendEntry(ENTRY, { schema: 3, issue: state.issue, lifecycle: "completed" });
+			state.completed = true;
+			try { await save(state); }
+			catch (error) { state.completed = false; throw error; }
 			release(ctx, state);
 			try {
 				await onCompleted(ctx, state.issue);
@@ -508,8 +523,10 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 	function release(ctx, state) {
 		for (const record of pendingChildren) if (record.state === state) retireChild(record);
 		state.status = "closed";
-		scope(ctx)?.delete(state.sessionId);
-		states.delete(state.sessionId);
+		if (current(ctx) === state) {
+			scope(ctx)?.delete(state.sessionId);
+			states.delete(state.sessionId);
+		}
 		selecting.delete(state.sessionId);
 		rejections.delete(state.sessionId);
 		status(ctx, undefined);
@@ -525,8 +542,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 	});
 
 	pi.on("session_shutdown", (_event, ctx) => {
-		const state = current(ctx);
-		if (state) release(ctx, state);
+		for (const state of history(ctx.sessionManager?.getSessionId?.()).values()) release(ctx, state);
 	});
 
 	return { describe };
