@@ -1,0 +1,634 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "A report-only create request produces a brief bug report",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A report-only create request produces a brief bug report",
+            "duration_seconds": 5.78,
+            "findings": [
+              "AGENT OUTPUT containing a [RESULT - ...] tag and a final reply was not supplied in the message."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "7e654cc0e378233ddc038c3647d9e0039a7d7caf001517bc704dfdc9625ea41a",
+            "rationale": "No [RESULT - ...] tag or agent final reply is present in the transcript, so there is nothing to grade. ANCHOR: none.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1238,
+              "output": 237
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "657086a2451805f685eee95967ed53c627f881f0f65e3347979e4bac9ab5dee2"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-16-create-issue-reports-bug",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "A report-only create request produces a brief bug report",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A report-only create request produces a brief bug report",
+            "duration_seconds": 10.65,
+            "findings": [
+              "Agent output transcript is absent from the grading input",
+              "No [RESULT - ...] tag or final reply found, so the report requirements (bug selection, release script, expected/observed behavior, evidence, impact, unknown cause) could not be assessed"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "7e654cc0e378233ddc038c3647d9e0039a7d7caf001517bc704dfdc9625ea41a",
+            "rationale": "No AGENT OUTPUT transcript or final reply after any [RESULT - ...] tag was provided, so there is no reply to grade (ANCHOR: none). Without a final reply, the `bug` selection and required bug-report content cannot be evaluated.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1237,
+              "output": 990
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "657086a2451805f685eee95967ed53c627f881f0f65e3347979e4bac9ab5dee2"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-16-create-issue-reports-bug",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "A report-only file request produces a brief bug report",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A report-only file request produces a brief bug report",
+            "duration_seconds": 4.63,
+            "findings": [
+              "AGENT OUTPUT block missing from the transcript",
+              "No final reply after any [RESULT - ...] tag to evaluate against the bug-report rubric"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "7e654cc0e378233ddc038c3647d9e0039a7d7caf001517bc704dfdc9625ea41a",
+            "rationale": "No AGENT OUTPUT or [RESULT - ...] tag was provided in the message, so there is no final reply to grade; per the rubric an absent reply scores 0.0.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 896,
+              "cacheWrite": 0,
+              "input": 343,
+              "output": 412
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "657086a2451805f685eee95967ed53c627f881f0f65e3347979e4bac9ab5dee2"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-17-file-issue-reports-bug",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "A report-only file request produces a brief bug report",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A report-only file request produces a brief bug report",
+            "duration_seconds": 5.09,
+            "findings": [
+              "Agent output transcript is absent; no final reply after any [RESULT] tag exists to evaluate.",
+              "Because no reply exists, the `bug` selection and grounded report requirements cannot be met."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "7e654cc0e378233ddc038c3647d9e0039a7d7caf001517bc704dfdc9625ea41a",
+            "rationale": "ANCHOR: none \u2014 no AGENT OUTPUT or [RESULT - ...] block was provided in the transcript, so there is no final reply to grade. With no reply, `bug` was not selected and no bug report was provided, so the score is 0.0.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 896,
+              "cacheWrite": 0,
+              "input": 342,
+              "output": 335
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "657086a2451805f685eee95967ed53c627f881f0f65e3347979e4bac9ab5dee2"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-17-file-issue-reports-bug",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue` fires on an issue being opened",
+          "details": "observed='no', expected='yes' (skill_name='issue')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on the body being written",
+          "details": "observed='no', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The delivered body is a settled worker handoff with model class metadata",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The delivered body is a settled worker handoff with model class metadata",
+            "duration_seconds": 3.7,
+            "findings": [
+              "Selects 'Issue kind: Bug' instead of task, an automatic 0.0 condition.",
+              "No '## Human brief', '## Model class', or '## Detail' sections; no class token.",
+              "Does not name sign_changed, test_release.py::test_signs_artifacts, or pytest/CI.",
+              "Does not settle comparison by name+checksum together, nor concrete verification for unchanged/changed/new/removed cases.",
+              "No provenance block below '---'."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "47b7204c7dec7eae9f0503bce2f5b3d71277cfd11081a26215c98c170ffac7fa",
+            "rationale": "ANCHOR: result. The reply explicitly selects the Bug kind rather than task, which the rule directs to score 0.0; it also lacks the required Human brief/Model class/Detail sections, names no symbols or gates, and leaves the comparison contract to the implementer.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 896,
+              "cacheWrite": 0,
+              "input": 1353,
+              "output": 208
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "657086a2451805f685eee95967ed53c627f881f0f65e3347979e4bac9ab5dee2"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.5,
+      "replicate_index": 0,
+      "task_id": "issue-01-open-a-task-issue",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue` fires on an issue being opened",
+          "details": "observed='yes', expected='yes' (skill_name='issue')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on the body being written",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The delivered body is a settled worker handoff with model class metadata",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The delivered body is a settled worker handoff with model class metadata",
+            "duration_seconds": 21.79,
+            "findings": [
+              "Correctly selects `task` and includes `## Human brief` \u2192 `## Model class` \u2192 `## Detail` in order, with the `routine` class token and no model/effort metadata",
+              "Refers only to 'the release script' generically; never names `sign_changed`, `release.py`, `test_signs_artifacts`, pytest, or CI",
+              "Comparison is settled by counterpart (name) plus checksum, which matches the semantics, but the existing callback interface is never mentioned",
+              "Acceptance criteria cover unchanged, changed, and new artifacts but completely omit the removed-artifact case (e.g. `gone` absent from current manifest)",
+              "No final provenance block below `---` is present in the delivered body",
+              "Body otherwise avoids decorative diagrams/checklists and keeps empty-previous behavior implicitly valid ('sign when there is no previous checksum')"
+            ],
+            "index": 2,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "47b7204c7dec7eae9f0503bce2f5b3d71277cfd11081a26215c98c170ffac7fa",
+            "rationale": "ANCHOR: result \u2014 The reply selects `task` and has the required Human brief / Model class / Detail structure, but the body leaves settled contracts unfulfilled: it never names the real symbol `sign_changed` in `release.py` or the gate `test_release.py::test_signs_artifacts` (no pytest/CI verification), never states the `sign_changed(current, previous, sign)` callback interface, omits any verification for removed artifacts (present in previous, absent in current), and retains no provenance block below `---`.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 896,
+              "cacheWrite": 0,
+              "input": 1967,
+              "output": 2914
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "657086a2451805f685eee95967ed53c627f881f0f65e3347979e4bac9ab5dee2"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-01-open-a-task-issue",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 23.705543041229248,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-16-create-issue-reports-bug",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 6528,
+        "output_tokens": 339,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 4064
+      },
+      "tokens": 10931,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 33.66854476928711,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-16-create-issue-reports-bug",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 4992,
+        "output_tokens": 728,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 31532
+      },
+      "tokens": 37252,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 20.331613063812256,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-17-file-issue-reports-bug",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 6784,
+        "output_tokens": 438,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 4236
+      },
+      "tokens": 11458,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 31.35732340812683,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-17-file-issue-reports-bug",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 10624,
+        "output_tokens": 790,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 28384
+      },
+      "tokens": 39798,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 20.33488631248474,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-01-open-a-task-issue",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 6656,
+        "output_tokens": 497,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 4105
+      },
+      "tokens": 11258,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 71.6358323097229,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-01-open-a-task-issue",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 108928,
+        "output_tokens": 2549,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 37428
+      },
+      "tokens": 148905,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-25T02:12:11.783881",
+  "experiment_id": "omp-gpt-6-luna",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "criterion_errors": 0,
+    "freeze_sha": "657086a2451805f685eee95967ed53c627f881f0f65e3347979e4bac9ab5dee2",
+    "judge_id": "omp-glm-5.3",
+    "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+    "models_observed": [
+      "zai/glm-5.3"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v3",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 3584,
+      "cacheWrite": 0,
+      "input": 6480,
+      "output": 5096
+    }
+  },
+  "plugin_revision": {
+    "commit": "b6f6fbe67801c4b8c043f039f640e5554088ae82",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-24T19:13:06.912912+00:00",
+  "run_id": "2026-11-25_02-08-50",
+  "schema_version": 5,
+  "started_at": "2026-11-25T02:08:50.700255",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-01-open-a-task-issue": [
+          0.0
+        ],
+        "issue-16-create-issue-reports-bug": [
+          0.0
+        ],
+        "issue-17-file-issue-reports-bug": [
+          0.0
+        ]
+      },
+      "task_ids": [
+        "issue-16-create-issue-reports-bug",
+        "issue-17-file-issue-reports-bug",
+        "issue-01-open-a-task-issue"
+      ],
+      "variant_id": "bare"
+    },
+    {
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-01-open-a-task-issue": [
+          0.5
+        ],
+        "issue-16-create-issue-reports-bug": [
+          0.0
+        ],
+        "issue-17-file-issue-reports-bug": [
+          0.0
+        ]
+      },
+      "task_ids": [
+        "issue-16-create-issue-reports-bug",
+        "issue-17-file-issue-reports-bug",
+        "issue-01-open-a-task-issue"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
