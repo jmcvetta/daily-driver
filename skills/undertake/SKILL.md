@@ -827,13 +827,9 @@ approval that must be renewed.
      in the task worktree prints nothing.
    - The branch has nothing unpushed: `git log @{upstream}..HEAD --oneline`
      in the task worktree prints nothing.
-   - Every item in the issue's acceptance section — `issue-body`'s
-     requirement 5, the `Acceptance and verification` heading in the bodies
-     this toolkit writes — maps to a file in the pull request's diff, or is
-     answered on the pull request with a reason. Take the issue body as read
-     at `Read the issue and its edges` and the diff through the route the
-     reference file names. Name each item and the diff file that satisfies
-     it. An item with no file and no reason is unmet.
+   - Every acceptance item is satisfied by concrete evidence, such as the
+     diff, tests, runtime results, or another observation; an unmet item is
+     identified. An acceptance-to-file matrix is not required.
    - The session has no further change planned for this branch. A planned
      change is work at `Implement` now, before the gate; never after ready.
 
@@ -896,39 +892,27 @@ Review evidence
 This predicate is shared by this gate and `embark`'s `Land the pull request`.
 CI, finding dispositions and resolved threads are separate conditions.
 
-1. Read the complete submitted-review, conversation-comment and review-thread
-   histories through the active harness's paginated routes. A transcript, CI,
-   review decision or historical completion notice is not review evidence.
-2. Select the latest submitted `COMMENT` full review for the current review
-   scope published by the account that posted the task issue's `undertake`
-   claim. Its GitHub review ID is the durable identifier and its `commit_id`
-   is the **scope SHA**. Other authors, human `APPROVE` or `CHANGES_REQUESTED`
-   verdicts and comments without a submitted review do not substitute. A
-   material scope change starts a new scope; earlier records do not count.
-3. Determine behavioral changes after that review from the review record,
-   finding dispositions and pushed-head history. A clean full review, or only
-   rejected or user-deferred findings without an implemented behavioral fix,
-   requires no `Review verification`; comment edits and thread resolution
-   alone do not require one. In that case the scope SHA is the evidence SHA.
-   Otherwise, for an implemented fix, CI or bot correction, conflict resolution
-   or other behavioral change, select the latest `Review verification`
-   comment by the claim author whose `scope reviewed` equals the scope SHA.
-   It must have `outcome: clear`, `defects: none`, and `wall: open`; its
-   `verified` SHA is the **evidence SHA**. A later defective, incomplete,
-   unavailable or walled record supersedes an earlier clear record for that
-   scope. A record for another scope does not count.
-4. The evidence covers the current head only if the evidence SHA equals it,
-   or walking first parents backward from the head reaches the evidence SHA
-   through merge commits only. A non-merge commit after the evidence SHA,
-   rewritten history removing that ancestry, an unavailable ancestry read, or
-   a non-merge conflict resolution makes evidence stale. Never substitute a
-   three-dot content comparison for this predicate; reviewers use that
-   comparison to classify a delta.
-5. The condition holds only when the selected review and any required
-   verification satisfy these rules. Missing, wrong-author, wrong-scope,
-   defective, incomplete, unavailable, walled or stale evidence returns to
-   the applicable full-review or fix-delta stage. Do not publish a replacement
-   completion marker or ask the user to certify the evidence.
+Credible review by an independent human or a suitable independent agent
+must cover the relevant changes. A submitted review or another durable record
+may establish this; neither the claiming account nor a particular GitHub
+review event is required. Read enough current review history and dispositions
+to establish coverage and avoid losing or duplicating findings. Reconstruct
+the complete history when resuming without incremental state, resolving a
+dispute, or when the available record is insufficient.
+
+Identify the reviewed content and compare it with the current head. A
+merge-only base update retains evidence when the relevant reviewed content is
+unchanged. A behavioral change, including conflict resolution or a fix,
+requires independent review of the affected changes under `review-cycle`;
+a material change of scope requires the applicable full review. Do not infer
+freshness from commit ancestry alone. If the content or review coverage cannot
+be established, obtain the missing review rather than treating it as current.
+
+Keep actionable findings durable. Each substantive finding must be fixed,
+rejected with a reason, or explicitly deferred by the owner. Verification
+records state the result concisely and identify the content checked; no fixed
+set of empty fields or literal state tokens is required. Missing, stale, or
+defective evidence returns to the applicable review stage.
 
 **When the reads agree and no explicit user hold applies, publish the
 first-readiness report if none exists, then mark the pull request ready in the

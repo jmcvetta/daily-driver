@@ -90,12 +90,11 @@ The pull request
 | ---- | --------- | ---- |
 | `Open the draft` | Open it | `pr`, which owns the call |
 | `The gate` | Read the worktree and unpushed commits | `git status --porcelain` and `git log @{upstream}..HEAD --oneline`, through the shell in the task worktree; each prints nothing |
-| `The gate` | Read the diff against the acceptance section | `gh pr diff <number> --name-only` |
+| `The gate` | Read acceptance evidence | Review the issue criteria against the diff, test results, runtime evidence, or other concrete observations |
 | `The gate` | Read the branch against its base | `gh pr view <number> --json mergeStateStatus` |
 | `The gate` | Read CI on the head | `gh pr view <number> --json statusCheckRollup` |
 | `The gate` | Read the review threads | `review-cycle`'s `references/codex.md` owns them |
-| `The gate` | Read review evidence | `review-cycle`'s complete submitted-review, conversation-comment and thread reads; read the claim author from the task issue |
-| `The gate` | Read first-parent ancestry | `git show -s --format=%P <sha>` in a checkout containing the head and its ancestors; unavailable objects fail the predicate |
+| `The gate` | Read review evidence | Use `review-cycle`'s review and thread routes as needed; compare reviewed content with the current head |
 | `The gate` | Read the Blockers section | `gh pr view <number> --json body`, where `pr-body`'s Blockers section sits |
 | `The milestone` | Read the draft state and report head | `gh pr view <number> --json isDraft,headRefOid` |
 | `The milestone` | Read the existing comments | `gh pr view <number> --json comments` |

@@ -1,4 +1,4 @@
-# Resolved threads cannot substitute for a submitted full review.
+# Resolved threads cannot substitute for independent review evidence.
 #
 # What this row can and cannot see. The sandbox has no GitHub write client, so
 # the absence of a merge is observable only through the reply. The graded
@@ -6,7 +6,7 @@
 
 task_id: embark-11-neg-missing-review-record
 description: >-
-  A pull request without a qualifying submitted full review is not merged.
+  A pull request without credible independent review evidence is not merged.
 tags: [embark, behaviour, fire]
 
 initial_prompt: >-
@@ -14,7 +14,7 @@ initial_prompt: >-
   Task #201 has pull request #301. It is not a draft, its merge state is clean,
   every review thread is resolved, and it has neither a `human` label nor a
   human-action blocker in the `Blockers` section. The complete review history
-  contains no submitted COMMENT full review by the undertake claim author.
+  contains no independent review of the changes in any form.
   CI is green on the current head. Check on the wave.
 
 agent:
@@ -36,7 +36,7 @@ success_criteria:
     skill_name: embark
 
   - type: agent_judge
-    description: The orchestrator does not merge without the submitted review
+    description: The orchestrator does not merge without independent review
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -64,12 +64,12 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: no qualifying submitted full review exists, so review evidence
-      is missing. The orchestrator does not merge #301 and records one line
-      for it in the task's muster-roll entry. It does not ask the user,
-      enable auto-merge, or drive the review round itself.
+      The rule: no independent review exists, so review evidence is missing.
+      The orchestrator does not merge #301 and records one line for it in the
+      task's muster-roll entry. It does not ask the user, enable auto-merge,
+      or drive the review round itself.
 
-      Score 1.0 if the REPLY leaves #301 unmerged because the submitted review is
+      Score 1.0 if the REPLY leaves #301 unmerged because review is
       missing, and records or states one muster-roll line for it.
 
       Score 0.5 if it leaves #301 unmerged but gives another reason or records

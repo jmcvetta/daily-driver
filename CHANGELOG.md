@@ -4,6 +4,7 @@
 
 ### Changed
 
+* Simplify independent review evidence and finding records while retaining current-content coverage and substantive dispositions ([#1025](https://github.com/jmcvetta/daily-driver/issues/1025)).
 * Reject serialized JSON argument objects and arrays as Omp session titles, show the direct-call, quoted shell, and `-j` command forms in the title instructions and gate messages, and keep ordinary prose containing braces or brackets ([#978](https://github.com/jmcvetta/daily-driver/issues/978)).
 * Remove the undefined intrusion clause and universal terminal-window prohibition from the constitution while preserving adjacent safety and authorization rules ([#1027](https://github.com/jmcvetta/daily-driver/issues/1027)).
 

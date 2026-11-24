@@ -104,15 +104,13 @@ The watch
 | `Land the pull request` | Read draft, merge state, head SHA, labels, and body | `gh pr view <number> --json isDraft,mergeStateStatus,headRefOid,labels,body` |
 | `Land the pull request` | Diagnose a blocked gate | `gh pr view <number> --json headRefOid,reviewDecision,statusCheckRollup`; current-head checks, statuses, and workflow runs through `review-cycle`'s `references/omp.md` |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/omp.md` thread read |
-| `Land the pull request` | Read submitted reviews, recorded review identifiers and SHAs, and dispositions | `review-cycle`'s `references/omp.md` review history read |
-| `Land the pull request` | Read verification records | `gh api --paginate /repos/{owner}/{repo}/issues/{number}/comments` |
-| `Land the pull request` | Read first-parent ancestry | `git show -s --format=%P <sha>` in a checkout containing the head and its ancestors; unavailable objects fail the predicate |
+| `Land the pull request` | Read relevant review evidence and finding dispositions | `review-cycle`'s `references/omp.md` review and conversation routes |
 | `Land the pull request` | Squash merge the gated head | Prepare the paginated source messages and call `gh pr merge <number> --squash --body-file <path> --match-head-commit <headRefOid>` as below |
 | `Close the epic` | Comment with the landed pull requests or missing claim | `daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file", <path>] })` |
 | `Close the epic` | Close as completed | `gh issue close <number> --reason completed` |
 
-Apply `undertake`'s `Review evidence` predicate to the complete review,
-conversation and thread histories and the gated `headRefOid`.
+Apply `undertake`'s `Review evidence` predicate to the relevant records and
+the gated `headRefOid`; read more history only when needed to establish it.
 
 When the gate holds and landing is authorized, prepare the squash body from
 the PR body read with that gate and **all** PR commit messages, not GitHub's
