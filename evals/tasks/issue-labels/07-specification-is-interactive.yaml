@@ -6,7 +6,8 @@ initial_prompt: >-
   Which issue kind fits collaborative authoring of executable offline editing
   scenarios when the operator must decide unresolved product choices before
   handing them to an implementation task? Compare task, proposal, research and
-  human. Explain only; do not create or label an issue.
+  human; explain eligibility for unattended dispatch and what completes this
+  specification issue. Explain only; do not create or label an issue.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
