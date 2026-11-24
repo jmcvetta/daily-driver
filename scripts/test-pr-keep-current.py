@@ -142,55 +142,42 @@ class KeepCurrentTests(unittest.TestCase):
             self.output.close()
             self.output = None
 
-    def test_behind_branch_attempts_an_update(self):
-        """Catch a watcher that polls a behind PR but never calls update-branch."""
-        self.start_watch()
+    def test_behind_branch_updates_during_in_flight_ci(self):
+        """A behind branch advances without waiting for its current CI run."""
+        self.start_watch(run_in_flight=True)
         self.wait_for(lambda: self.read_state()["updates"] == 1, "the base update")
-        self.assertEqual("CLEAN", self.read_state()["merge_state"])
+        state = self.read_state()
+        self.assertTrue(state["run_in_flight"])
+        self.assertEqual("CLEAN", state["merge_state"])
         self.assertEqual(1, self.read_log(self.log_path).splitlines().count("update"))
+        self.assertNotIn("view:statusCheckRollup", self.read_log(self.log_path))
 
-    def test_masked_currency_still_attempts_an_update(self):
-        """Catch draft or indeterminate merge states hiding a stale base forever."""
+    def test_masked_currency_updates_during_in_flight_ci(self):
+        """Draft and indeterminate states update without waiting for CI."""
         for merge_state in ("DRAFT", "BLOCKED", "UNKNOWN"):
             with self.subTest(merge_state=merge_state):
-                self.start_watch(merge_state=merge_state)
+                self.start_watch(merge_state=merge_state, run_in_flight=True)
                 try:
                     self.wait_for(lambda: self.read_state()["updates"] == 1, "the masked base update")
-                    self.assertEqual("CLEAN", self.read_state()["merge_state"])
+                    state = self.read_state()
+                    self.assertTrue(state["run_in_flight"])
+                    self.assertEqual("CLEAN", state["merge_state"])
+                    self.assertNotIn("view:statusCheckRollup", self.read_log(self.log_path))
                 finally:
                     self.stop_watch()
 
-    def test_draft_currency_waits_for_in_flight_ci(self):
-        """Catch a draft update restarting CI before the current run finishes."""
-        self.start_watch(merge_state="DRAFT", run_in_flight=True)
-        self.wait_for(lambda: "floor holds this tick" in self.read_log(self.output_path), "the draft CI floor")
-        self.assertEqual(0, self.read_state()["updates"])
-        state = self.read_state()
-        state["run_in_flight"] = False
-        self.write_state(state)
-        self.wait_for(lambda: self.read_state()["updates"] == 1, "the draft update after CI clears")
-
-    def test_in_flight_ci_blocks_merge_until_it_clears(self):
-        """Catch a watcher that restarts checks by merging during an in-flight run."""
-        self.start_watch(run_in_flight=True)
-        self.wait_for(lambda: "floor holds this tick" in self.read_log(self.output_path), "the in-flight floor")
-        self.assertEqual(0, self.read_state()["updates"])
-        state = self.read_state()
-        state["run_in_flight"] = False
-        self.write_state(state)
-        self.wait_for(lambda: self.read_state()["updates"] == 1, "the update after CI clears")
 
     def test_current_branch_does_not_get_an_update(self):
         """Catch a watcher that performs unnecessary merges on a current branch."""
         self.start_watch(merge_state="CLEAN")
-        self.wait_for(lambda: "view:statusCheckRollup" in self.read_log(self.log_path), "the first state read")
+        self.wait_for(lambda: "view:mergeStateStatus" in self.read_log(self.log_path), "the first state read")
         time.sleep(0.08)
         self.assertEqual(0, self.read_state()["updates"])
 
     def test_base_advance_after_handoff_triggers_update(self):
         """Catch a detached watch that checks currency only when it starts."""
         self.start_watch(merge_state="CLEAN")
-        self.wait_for(lambda: "view:statusCheckRollup" in self.read_log(self.log_path), "the initial clean check")
+        self.wait_for(lambda: "view:mergeStateStatus" in self.read_log(self.log_path), "the initial clean check")
         time.sleep(0.08)
         state = self.read_state()
         state["merge_state"] = "BEHIND"

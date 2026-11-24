@@ -36,14 +36,13 @@ reads below. Retain the new identifier. A wake with no successor loses
 maintenance after one tick.
 
 Immediately after create/update, and on each wake or return, read
-`mcp__github__pull_request_read`
-with method `get` for `state`, `draft`, `mergeable_state`, and `head.sha`, plus
-`get_check_runs` and `get_status`. If the PR is merged or closed, cancel the
+`mcp__github__pull_request_read` with method `get` for `state`, `draft`,
+`mergeable_state`, and `head.sha`. If the PR is merged or closed, cancel the
 wake and exit. If the user has stopped the watch, cancel it and exit before
-any update. If either CI endpoint reports a run in flight, defer the update.
-For `behind`, `draft`, `blocked`, or an indeterminate merge state, update with
-`mcp__github__update_pull_request_branch`. For `dirty`, stop before the update
-and escalate the conflict. For `clean` or `unstable`, do not update the branch.
+any update. For `behind`, `draft`, `blocked`, or an indeterminate merge state,
+call `mcp__github__update_pull_request_branch` even when current-head CI is in
+flight. For `dirty`, stop before the update and escalate the conflict. For
+`clean` or `unstable`, do not update the branch.
 
 After an update that can move the head, read `head.sha`, `get_check_runs`, and
 `get_status` again. The CI wait and result assessment use `review-cycle`'s
