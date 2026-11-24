@@ -99,9 +99,6 @@ The pull request
 | `The gate` | Read the review threads | `mcp__github__pull_request_read`, `get_reviews`, `get_review_comments` and `get_comments` — `review-cycle`'s reference owns them |
 | `The gate` | Read review evidence | Use `review-cycle`'s review and thread routes as needed; compare reviewed content with the current head |
 | `The gate` | Read the Blockers section | `mcp__github__pull_request_read`, method `get` — `body`, where `pr-body`'s Blockers section sits |
-| `The milestone` | Read the draft state and report head | `mcp__github__pull_request_read`, method `get` — `draft`, `head.sha` |
-| `The milestone` | Read the existing comments | `mcp__github__pull_request_read`, method `get_comments` |
-| `The milestone` | Post the report | `mcp__github__add_issue_comment` |
 | `Ready for review` | Take it out of draft | `mcp__github__update_pull_request`, `draft: false` |
 | `Keep it current` | Invoke `pr`'s ongoing base maintenance | [`pr` route](../../pr/references/claude.md#keep-it-current) |
 | `A round after ready goes back to draft` | Return it to draft | `mcp__github__update_pull_request`, `draft: true` |
@@ -183,45 +180,6 @@ from the task worktree's Git state, and its repository from the remote
 records when the call itself is absent.
 
 
-The milestone
-=============
-
-`SKILL.md` owns what the report says and when it is owed; these are the calls
-that read the readiness state, find the claim's timestamp, and post it.
-
-**The readiness state is `mcp__github__pull_request_read`, method `get`** —
-the same call `The gate` makes, asking a different question. `draft` must
-still be true, and `head.sha` is the SHA the report binds to. The report is
-posted while the pull request is still a draft, after the gate holds and
-before `Ready for review` marks it ready.
-
-`mergeable_state` is not a milestone condition. The gate uses it only for
-`behind`, `dirty` and `unknown`; `draft` and `blocked` do not answer branch
-currency or readiness. The independent gate reads for currency, current-head
-CI, review evidence, threads and blockers decide
-whether the report may be posted. Do not wait for a post-ready `clean` read.
-
-**The start is the claim comment's `created_at`.** Read the issue's comments
-with `mcp__github__issue_read`, method `get_comments` — the read `Read the
-issue and its edges` already makes — find the claim by its branch link plus
-`Model:` and `Session:` (a historical lowercase `session:` is the same
-field), and take `created_at`; where more than one comment
-carries that shape, the earliest is the start. The resumed sequence makes this
-read anyway; an issue with no recoverable claim leaves the timing `n/a`, per
-`SKILL.md`.
-
-**Post the report before marking ready.** Read the PR's comments with
-`mcp__github__pull_request_read`, method `get_comments`, and find the fixed
-`# First-readiness report 🎉` or historical unheaded marker before writing. If absent and the gate
-holds, post with `mcp__github__add_issue_comment`. Only after that write
-succeeds, call `mcp__github__update_pull_request` with `draft: false`. A
-failed report write leaves the PR draft; a failed ready write preserves the
-report for a revalidated retry.
-
-**The provenance** is `provenance`'s block, read the way its
-[`references/claude.md`](../../provenance/references/claude.md) names: the
-same `mcp__Claude_Code_Remote__get_session` call `The session` above uses.
-
 
 The orchestrator
 ================
@@ -260,9 +218,9 @@ The cadence
 owns the common watch; this undertaking invokes it and does not start another.
 
 Undertaking-specific continuation stays here. Use `review-cycle` for review
-and fix-delta work, then apply `Ready for review`
-and `The milestone` below. A capped wait, review wall, or human action reports
-unfinished work and its resume path; it never becomes completion.
+and fix-delta work, then apply `Ready for review`. A capped wait, review wall,
+or human action reports unfinished work and its resume path; it never becomes
+completion.
 
 `review-cycle` borrows the cadence slot for its CI wait and hands it back as
 `pr`'s reference directs. It does not own the standing watch.

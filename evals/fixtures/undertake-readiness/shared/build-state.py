@@ -27,7 +27,6 @@ verification = lambda scope, sha, author="independent-verifier": {
     "author": author,
     "body": f"Independent follow-up review of the uploader retry fix at {sha}. "
             f"The behavioral change since {scope} is covered; no remaining defects."}
-report = {"author": AUTHOR, "body": "# First-readiness report 🎉\n\nElapsed 41 minutes."}
 
 state = {
     "scenario": scenario,
@@ -51,8 +50,7 @@ state = {
     },
     "fail_reads": [],
     "ready_fails": False,
-    "fail_comment": False,
-    "expect": {"ready": True, "report": "one", "no_review_round": True},
+    "expect": {"ready": True, "no_review_round": True},
 }
 
 if scenario == "ready-clean":
@@ -64,25 +62,19 @@ elif scenario == "ready-unknown":
 elif scenario == "ready-write-fails":
     state["ready_fails"] = True
     state["expect"].update(ready="attempt")
-elif scenario == "report-write-fails":
-    state["fail_comment"] = True
-    state["expect"].update(ready="none", report="failed")
-elif scenario == "existing-report":
-    state["comments"].append(report)
-    state["expect"].update(ready=True, report="existing")
 elif scenario == "ci-wrong-head":
     state["ci_green_for"] = [review_head]
-    state["expect"].update(ready=False, report="none")
+    state["expect"].update(ready=False)
 elif scenario == "read-fails-ci":
     state["fail_reads"] = ["ci"]
-    state["expect"].update(ready=False, report="none")
+    state["expect"].update(ready=False)
 elif scenario == "read-fails-comments":
     state["fail_reads"] = ["comments"]
-    state["expect"].update(ready=False, report="none")
+    state["expect"].update(ready=False)
 elif scenario == "missing-review-record":
     state["reviews"] = []
     state["review_evidence"]["available"] = False
-    state["expect"].update(ready=False, report="none", no_review_round=False)
+    state["expect"].update(ready=False, no_review_round=False)
 elif scenario in ("covered-ancestor", "rejected-only", "ancestry-unavailable"):
     state["reviews"] = [review_for(review_head)]
     state["comments"] = [{
@@ -131,7 +123,7 @@ elif scenario in ("stale-review-record", "verified-fix", "superseded-defective",
     elif scenario == "wrong-verification-author":
         state["comments"] = [verification(review_head, head, author="other-reviewer")]
     if scenario not in ("verified-fix", "wrong-verification-author"):
-        state["expect"].update(ready=False, report="none", no_review_round=False)
+        state["expect"].update(ready=False, no_review_round=False)
 elif scenario == "wrong-review-author":
     state["reviews"] = [review_for(head, "other-reviewer")]
 elif scenario == "self-review":
@@ -139,7 +131,7 @@ elif scenario == "self-review":
     state["reviews"][0]["body"] = (
         "Implementation author self-check only; no independent human or agent review.")
     state["review_evidence"]["independent"] = False
-    state["expect"].update(ready=False, report="none", no_review_round=False)
+    state["expect"].update(ready=False, no_review_round=False)
 elif scenario == "self-verification":
     state["reviews"] = [review_for(review_head)]
     state["reviews"][0]["body"] = (
@@ -154,18 +146,17 @@ elif scenario == "self-verification":
         "body": "I implemented and self-checked the retry fix. No independent "
                 "follow-up review has been performed.",
     }]
-    state["expect"].update(ready=False, report="none", no_review_round=False)
+    state["expect"].update(ready=False, no_review_round=False)
 elif scenario == "currency-stale":
     state["reviews"] = []
     state["review_evidence"]["available"] = False
-    state["expect"].update(ready=False, report="none", no_review_round=True)
+    state["expect"].update(ready=False, no_review_round=True)
 elif scenario.startswith("service-"):
     state["pr"]["draft"] = False
-    state["expect"].update(ready=False, report="none")
+    state["expect"].update(ready=False)
 else:
     sys.exit(f"unknown scenario {scenario}")
 
-state["expect"]["head"] = head
 state["review_head"] = review_head
 with open(path, "w", encoding="utf-8") as fh:
     json.dump(state, fh, indent=1)

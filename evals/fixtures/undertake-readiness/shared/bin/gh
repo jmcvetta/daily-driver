@@ -85,7 +85,6 @@ def seen(state):
         "ci_in_flight": state.get("ci_in_flight", False),
         "review_covers_head": review_covers_head(state),
         "threads_open": threads_open(state),
-        "reports": sum(1 for c in state["comments"] if c["body"].startswith((REPORT, HISTORICAL_REPORT))),
     }
 
 
@@ -180,21 +179,14 @@ def do_ready(args, state, undo):
 
 def do_comment(args, state, body):
     first = body.splitlines()[0] if body else ""
-    is_report = first == REPORT
-    if state["fail_comment"]:
-        record(args, "comment", False, **seen(state), body_first_line=first,
-               is_report=is_report)
-        print("fixture gh: HTTP 403: comment refused", file=sys.stderr)
-        sys.exit(1)
+    is_report = first.startswith((REPORT, HISTORICAL_REPORT))
     state["comments"].append({"author": state["claim_author"], "body": body})
     save(state)
     os.makedirs(PUBLISHED, exist_ok=True)
     with open(os.path.join(PUBLISHED, f"{len(state['comments']):02d}.md"), "w", encoding="utf-8") as fh:
         fh.write(body)
-    named = re.findall(r"\b[0-9a-f]{7,40}\b", body)
     record(args, "comment", True, **seen(state), body_first_line=first,
-           is_report=is_report,
-           names_head=any(state["pr"]["head"].startswith(n) for n in named))
+           is_report=is_report)
     print("https://github.com/acme/widgets/pull/25#issuecomment-fixture")
 
 
