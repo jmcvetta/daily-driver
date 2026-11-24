@@ -153,74 +153,24 @@ that action, not only when opening a PR. Reading the policy does not authorize
 opening a PR.
 
 New CI checks add recurring execution, review, failure-triage and maintenance
-costs. More checks are not inherently better. Prefer established checks and
-necessary regression coverage. Routine CI integration for approved code is
-part of delivery, not an additional enforcement proposal.
+costs. Consider the check's value, runtime, trigger frequency and external
+cost. Prefer established validation and regression coverage; avoid duplicate
+checks and work that is gratuitously long or runs more often than needed.
+Routine tests for approved code, bug-fix regressions, typechecks, necessary
+builds and coverage integrated through existing project patterns are part of
+delivery, not a separate approval process.
 
-Before classifying a command as routine integration, inspect its effective
-execution chain: wrapper targets, prerequisite targets, and invoked scripts,
-including their material operations. A target named `check` or `test`, path-
-filtered execution, or placement in an existing job does not establish that
-its contents are ordinary validation. Use repository source and documented
-commands; do not run a build, smoke environment, or paid benchmark merely to
-discover its cost.
+Obtain owner approval before adding a material new paid service or other
+clearly significant recurring spend. Ordinary repository validation does not
+need separate cost approval. Do not run paid benchmarks merely to estimate a
+proposal's cost.
 
-Select new features, apps, or packages for the repository's established test,
-typecheck, build, and coverage commands; add them to existing path or package
-selection; and follow established per-component job patterns without separate
-approval. This remains routine integration when it adds recurring runner time
-or instantiates a package-specific job required by the repository's convention.
-Adding package membership to an existing package matrix does not add a matrix
-dimension; a new dimension adds a factor such as an operating system, runtime
-version, or browser. Ordinary tests, regression coverage, typechecks, necessary
-builds, and coverage remain routine integration.
-
-An umbrella command must not silently bring newly introduced image packaging
-or builds, or runtime smoke environments, into recurring CI under this
-exemption. When that work is not already authorized or required by the
-established validation contract, surface it as the named expansion and obtain
-approval before adding it. Approval of a feature, trial, or green CI alone
-does not authorize that expansion. Existing explicitly authorized container
-validation proceeds without renewed approval. Docker alone is not grounds to
-stop.
-
-For the expansion, use the existing **Failure caught**, **Existing coverage
-gap**, and **Recurring cost** fields. Name the effective build and smoke
-operations, selected trigger frequency, runner/matrix footprint, expected
-runtime, external charges, and replacement where applicable. Distinguish
-estimates from measurements and state unknowns. Never treat combined
-build-and-smoke timing as build-only time or infer charges from runtime.
-
-Do not add a job, workflow, tool, standalone check, or matrix dimension when
-existing tooling can catch the defect; placing a standalone check inside an
-existing job does not change this. Before proposing additional enforcement,
-name the concrete failure it catches and the gap in existing coverage. Extra
-confidence, best practice, or completeness alone is not a reason. Keep
-enforcement proportional to the task; do not make a task-local problem
-repository-wide or keep a one-time migration check permanently without a
-recurring need.
-
-Paid services, broader triggers, additional matrix dimensions, new kinds of
-enforcement, and redundant or standalone checks beyond normal implementation
-validation need user approval for the named expansion, not general feature or
-green-CI approval. Do not ask again when authorized. Ordinary tests for
-approved new or changed code, bug-fix regression coverage, and their routine
-integration in established CI need no separate approval.
-Proposals use only these three short fields: **Failure caught**, **Existing
-coverage gap**, and **Recurring cost**. State trigger frequency,
-runner/matrix footprint, expected runtime, external charges and what the
-check replaces, where applicable. Mark unknowns and distinguish estimates
-from measurements. Do not run paid benchmarks to fill these fields.
-
-For authorized additions, use appropriate timeouts, safe cancellation of
-superseded runs and relevant-change selection that preserves coverage and
-required-status reporting. Avoid duplicate enforcement. When a new check
-replaces an old one, remove the obsolete check in the same change without
-losing required coverage.
-
-This policy does not permit skipping required tests, weakening security,
-hiding failures or disabling established gates to save cost. Tests of testing
-machinery remain prohibited unless that machinery is the shipped product.
+Use existing project patterns and appropriate timeouts and change selection.
+Do not create redundant enforcement when existing checks cover the need. Keep
+established project gates and required coverage intact: never disable or
+weaken checks or security, hide failures, or treat unrun checks as passed.
+Tests of testing machinery remain prohibited unless that machinery is the
+shipped product.
 
 **CI is the gate** means use established project gates. It does not instruct
 you to invent a new gate for each task.
