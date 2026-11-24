@@ -16,7 +16,6 @@ git config --get remote.pushDefault
 git symbolic-ref --short refs/remotes/<remote>/HEAD
 git worktree list --porcelain -z
 git fetch <remote> +refs/heads/<base-branch>:refs/remotes/<remote>/<base-branch>
-git -C <primary-worktree> status --short
 git worktree add -b <task-branch> <task-path> <resolved-base>
 ```
 
@@ -46,5 +45,5 @@ before attaching. Never switch away from unrelated changes or abandon commits.
 Set `workdir` to the task worktree on every shell call. Run patch operations
 there and use absolute paths for direct file operations. Give delegated
 slices the same root. Coordinate shared-ref and same-worktree writers; never
-make ordinary commits to `master`. Compare the primary status with its setup
-baseline before delivery and report external changes without undoing them.
+make ordinary commits to `master`. Preserve the primary worktree; keep
+pre-existing and unrelated user changes outside the task commit.

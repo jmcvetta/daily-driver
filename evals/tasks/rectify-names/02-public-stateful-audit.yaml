@@ -1,0 +1,46 @@
+task_id: rectify-names-02-public-stateful-audit
+description: >-
+  Broad public and persisted-state naming changes retain durable evidence,
+  compatibility review and coordinated planning before implementation.
+tags: [rectify-names, proportionality, compatibility, fire]
+
+initial_prompt: >-
+  Apply the naming-correction workflow to a broader audit. The team is
+  considering renaming the exported `ArchiveClient` API to `RecordClient`, and
+  changing the persisted `archive_mode` key to `record_mode`. The API is used
+  by downstream packages, and stored records already contain the old key; the
+  compatibility and migration policy is not settled. These are two independently
+  useful corrections, and another session will continue the work. Examine the
+  evidence and propose the planning and agreement steps. Do not implement or
+  dispatch either change, and do not assume aliases or migration authority.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 180, task_timeout: 400}
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: Naming correction workflow is consulted
+    expected_skill: rectify-names
+    skill_name: rectify-names
+  - type: agent_judge
+    description: Public and persisted names retain coordinated compatibility review
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 4
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Score 1 only if the answer treats this as structured, cross-session work;
+      preserves separate stable candidate identities and concrete evidence for
+      both independently useful corrections; requires separate judgment and a
+      durable planning record mapping candidates to issues; examines downstream
+      API compatibility plus stored-state migration authority; and uses epic's
+      agreement and coordinated sequencing gates only after the scopes are
+      agreed. It must leave the migration decision unresolved, not invent an
+      alias or authority, and begin no implementation or dispatch. Score 0.5
+      for one material omission, and 0 for the bounded route, premature work,
+      guessed compatibility policy, or missing durable coordination.

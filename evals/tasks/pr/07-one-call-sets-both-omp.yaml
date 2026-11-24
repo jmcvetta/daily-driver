@@ -1,15 +1,7 @@
-# The Omp half of `07-one-call-sets-both`, which is tagged `claude-only`
-# because the call it names is Claude's. `pr`'s own `SKILL.md` says an
-# existing pull request gets "Update both title and body of existing PR" but
-# never says how many calls that takes. Only the reference files say it is
-# one, and `skills/pr/references/omp.md` names the Omp call: "Updating an
-# existing pull request as a whole — title and body together. `gh pr edit`,
-# called once both are decided." A row that passes without the reference file
-# being read is wrong, so the graded content is that single-invocation fact.
-# It is easy to get wrong for the same reason on both harnesses:
-# `pr-title/references/omp.md` names only `gh pr edit --title` and
-# `pr-body/references/omp.md` names only `gh pr edit --body`, so reading
-# either sibling alone suggests two separate invocations.
+# This case has both fields stale; the Omp route allows one body-bearing
+# `daily_driver_gh_write` call to `gh pr edit` with both title and body.
+# Accurate fields are left untouched by the policy; this evaluation only
+# checks the combined write when both need correction.
 #
 # Why the Claude sibling could not be reused: it grades one
 # `mcp__github__update_pull_request` call, a call an Omp session does not

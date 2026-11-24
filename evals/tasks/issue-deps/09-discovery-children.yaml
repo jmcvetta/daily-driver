@@ -1,19 +1,20 @@
-# Discovery children retain graph-derived story markers across promotion.
+# Parent reads preserve graph-derived story markers without mutation.
 task_id: issue-deps-09-discovery-children
 description: Discovery membership includes research and interactive specification.
 tags: [issue-deps, discovery, behaviour, fire]
 initial_prompt: >-
-  Use issue-deps: a discovery parent has ready research and one interactive
-  specification child. After the specification merges, staged tasks are
-  attached and the parent promotes to epic. Explain edge and story-marker
-  behavior without making changes.
+  Use issue-deps to read the parent and child relationships for discovery #700
+  and its research and interactive specification children. After the
+  specification merges, staged tasks are attached and the parent promotes to
+  epic. Explain how the parent read affects the story marker, including the
+  promotion and a failed graph read. Do not make changes.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
 run_limits: {max_turns: 8, turn_timeout: 180, task_timeout: 400}
 success_criteria:
   - type: agent_judge
-    description: Parent membership and marker are preserved
+    description: Parent reads preserve membership and markers without mutation
     include_agent_output: true
     include_tool_calls: true
     include_reference: false
@@ -22,9 +23,9 @@ success_criteria:
     turn_timeout: 120
     agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
     prompt: |
-      Score 1 if research passes readiness and class, at most one interactive
-      specification may be attached without an implementation class, tasks
-      stage only after merge and satisfy spec-backed readiness, and story follows
-      the confirmed direct parent for either discovery or epic without being
-      removed on promotion or failed graph read. Score 0 for rejecting the
-      specification child or dropping lineage; otherwise 0.5.
+      Score 1 if the response explains that reading parent/child relationships
+      never reconciles or writes `story`, a failed graph read preserves the
+      existing marker, and a confirmed epic-to-discovery promotion preserves
+      lineage because both parent kinds qualify. Score 0 if it recommends a
+      label write because of a read, treats a failed read as proof of absence,
+      or loses the marker on promotion; otherwise score 0.5.

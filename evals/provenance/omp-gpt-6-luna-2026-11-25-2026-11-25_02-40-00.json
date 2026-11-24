@@ -1,0 +1,643 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "A report-only file request produces a brief bug report",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A report-only file request produces a brief bug report",
+            "duration_seconds": 8.53,
+            "findings": [
+              "Issue kind correctly selected as Bug",
+              "Expected behavior (unchanged artifacts keep previous signatures) and observed behavior (all artifacts signed each run) both stated",
+              "Impact of eleven minutes included, matching user's supplied fact",
+              "No fix proposed and issue not posted",
+              "No mention of unknown cause, but cause is not misidentified either, so the report remains grounded and complete"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "435e8d994eb7cc3f52929a5e33d3207b11658309db1e8e4706827baecfaa421d",
+            "rationale": "The reply selects `bug` without asking and provides a brief report with the affected component (release script), expected vs. observed behavior, the supplied eleven-minute impact, and reproduction steps, without inventing facts, proposing a fix, or posting.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 896,
+              "cacheWrite": 0,
+              "input": 1098,
+              "output": 402
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "9860c4ca5467d3730e20b2b4d66d92bc62e1a45b1e2745d9112610e87c3bff43"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-17-file-issue-reports-bug",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "A report-only file request produces a brief bug report",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A report-only file request produces a brief bug report",
+            "duration_seconds": 6.83,
+            "findings": [
+              "Issue kind `bug` chosen directly, matching the kind contract.",
+              "Expected and observed behavior are both stated clearly for the release script.",
+              "Supplied impact (eleven-minute runs) is included and not fabricated.",
+              "Cause marked unknown; no fix, implementation plan, or posting added."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "435e8d994eb7cc3f52929a5e33d3207b11658309db1e8e4706827baecfaa421d",
+            "rationale": "The final reply selects `bug` without asking for clarification and delivers a brief, grounded bug report: it identifies the affected release script, states expected (unchanged artifacts keep previous signatures) and observed (re-signing every run) behavior, includes the supplied eleven-minute impact, notes the missing reproduction details, and leaves the cause unknown without inventing facts, proposing fixes, or posting.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 896,
+              "cacheWrite": 0,
+              "input": 1088,
+              "output": 321
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "9860c4ca5467d3730e20b2b4d66d92bc62e1a45b1e2745d9112610e87c3bff43"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-17-file-issue-reports-bug",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "A report-only create request produces a brief bug report",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A report-only create request produces a brief bug report",
+            "duration_seconds": 7.32,
+            "findings": [
+              "Issue kind 'Bug' chosen directly, no clarifying question",
+              "Affected component named as the release script, which the rubric accepts",
+              "Expected vs observed behavior clearly contrasted",
+              "Eleven-minute impact included, matching the user-supplied fact",
+              "No fix proposed or issue posted; report stays within scope"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "435e8d994eb7cc3f52929a5e33d3207b11658309db1e8e4706827baecfaa421d",
+            "rationale": "The reply selects the bug issue kind without asking, identifies the affected release script, states expected behavior (unchanged artifacts keep previous signatures), observed behavior (signed again each run), and the supplied eleven-minute impact, all grounded in the supplied facts. It adds no fix, no implementation plan, and does not post the issue.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 896,
+              "cacheWrite": 0,
+              "input": 1019,
+              "output": 505
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "9860c4ca5467d3730e20b2b4d66d92bc62e1a45b1e2745d9112610e87c3bff43"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-16-create-issue-reports-bug",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "A report-only create request produces a brief bug report",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A report-only create request produces a brief bug report",
+            "duration_seconds": 5.24,
+            "findings": [
+              "Issue kind `bug` chosen directly",
+              "Expected behavior (unchanged artifacts keep previous signatures) and observed behavior (re-signed every run) both stated",
+              "Supplied impact (eleven minutes per run) included; unknown root cause acknowledged",
+              "No fix, implementation plan, or posting included"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "435e8d994eb7cc3f52929a5e33d3207b11658309db1e8e4706827baecfaa421d",
+            "rationale": "The reply selects `bug` without asking which kind, and the body identifies the affected release script, expected vs. observed behavior, the eleven-minute impact, and the unknown cause without proposing a fix or posting.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 896,
+              "cacheWrite": 0,
+              "input": 1026,
+              "output": 197
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "9860c4ca5467d3730e20b2b4d66d92bc62e1a45b1e2745d9112610e87c3bff43"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-16-create-issue-reports-bug",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue` fires on an issue being opened",
+          "details": "observed='no', expected='yes' (skill_name='issue')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on the body being written",
+          "details": "observed='no', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The delivered body is a settled worker handoff with model class metadata",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The delivered body is a settled worker handoff with model class metadata",
+            "duration_seconds": 4.67,
+            "findings": [
+              "Selects 'Enhancement' rather than 'task'",
+              "No '## Human brief', '## Model class', or '## Detail' sections; no class token",
+              "Does name the correct comparison (same name plus same checksum) but the handoff structure required by the rule is absent"
+            ],
+            "index": 2,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "bc9c94d50a56086c2c39296d78fcdeaffc29210f0edd5b42d379877f9d2d42bd",
+            "rationale": "The reply selects 'Enhancement' as the issue kind instead of 'task', which the rule explicitly fails, and it also lacks the required class section and '## Human brief'/'## Model class'/'## Detail' structure.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 896,
+              "cacheWrite": 0,
+              "input": 1403,
+              "output": 158
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "9860c4ca5467d3730e20b2b4d66d92bc62e1a45b1e2745d9112610e87c3bff43"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.5,
+      "replicate_index": 0,
+      "task_id": "issue-01-open-a-task-issue",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue` fires on an issue being opened",
+          "details": "observed='yes', expected='yes' (skill_name='issue')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on the body being written",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The delivered body is a settled worker handoff with model class metadata",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The delivered body is a settled worker handoff with model class metadata",
+            "duration_seconds": 10.85,
+            "findings": [
+              "Kind explicitly `task`, posted as draft with no kind question asked",
+              "Class section: exactly one backtick-wrapped `mechanical` with a short rationale; no Model:/Effort: metadata",
+              "Comparison settled by name and checksum together within the existing `sign_changed(current, previous, sign)` interface",
+              "Acceptance covers unchanged (no call), changed/new (one call with current digest), and preserved empty-previous-manifest coverage",
+              "Removed-artifact handling is mentioned but not concretely verified \u2014 an acceptable omission under the rule",
+              "No diagram, which is permitted here since the work is simple and the text is clear"
+            ],
+            "index": 2,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "bc9c94d50a56086c2c39296d78fcdeaffc29210f0edd5b42d379877f9d2d42bd",
+            "rationale": "The reply explicitly selects `task` with no kind question, includes the required `## Human brief` \u2192 `## Model class` \u2192 `## Detail` structure with a single backtick-wrapped lowercase `mechanical` token plus rationale, and no model/effort metadata. It names the real `sign_changed` in `release.py` and `test_release.py` with offline pytest/CI verification, settles the name-and-checksum comparison (skip only when both name and digest match, sign when absent or changed), keeps the existing callback interface, and gives acceptance covering unchanged, changed, and new artifacts plus preserving the empty-previous-manifest test; the removed-artifact enumeration and diagram are optional omissions per the rule.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 896,
+              "cacheWrite": 0,
+              "input": 1941,
+              "output": 866
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "9860c4ca5467d3730e20b2b4d66d92bc62e1a45b1e2745d9112610e87c3bff43"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-01-open-a-task-issue",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 16.033010482788086,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-17-file-issue-reports-bug",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 9088,
+        "output_tokens": 463,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 1489
+      },
+      "tokens": 11040,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 44.388898849487305,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-17-file-issue-reports-bug",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 46592,
+        "output_tokens": 838,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 23291
+      },
+      "tokens": 70721,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 17.02915596961975,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-16-create-issue-reports-bug",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 6528,
+        "output_tokens": 393,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 4076
+      },
+      "tokens": 10997,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 27.210397958755493,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-16-create-issue-reports-bug",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 36224,
+        "output_tokens": 767,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20829
+      },
+      "tokens": 57820,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 22.739626169204712,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-01-open-a-task-issue",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 3200,
+        "output_tokens": 727,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 7466
+      },
+      "tokens": 11393,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 59.66471600532532,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-01-open-a-task-issue",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 20608,
+        "output_tokens": 2317,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 69063
+      },
+      "tokens": 91988,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-25T02:41:40.692242",
+  "experiment_id": "omp-gpt-6-luna",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "criterion_errors": 0,
+    "freeze_sha": "9860c4ca5467d3730e20b2b4d66d92bc62e1a45b1e2745d9112610e87c3bff43",
+    "judge_id": "omp-glm-5.3",
+    "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+    "models_observed": [
+      "zai/glm-5.3"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v3",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 5376,
+      "cacheWrite": 0,
+      "input": 7575,
+      "output": 2449
+    }
+  },
+  "plugin_revision": {
+    "commit": "203768685debc9aa163a19456b189f234077ae41",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-24T19:42:46.802286+00:00",
+  "run_id": "2026-11-25_02-40-00",
+  "schema_version": 5,
+  "started_at": "2026-11-25T02:40:00.669257",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-01-open-a-task-issue": [
+          0.0
+        ],
+        "issue-16-create-issue-reports-bug": [
+          1.0
+        ],
+        "issue-17-file-issue-reports-bug": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "issue-17-file-issue-reports-bug",
+        "issue-16-create-issue-reports-bug",
+        "issue-01-open-a-task-issue"
+      ],
+      "variant_id": "bare"
+    },
+    {
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-01-open-a-task-issue": [
+          1.0
+        ],
+        "issue-16-create-issue-reports-bug": [
+          1.0
+        ],
+        "issue-17-file-issue-reports-bug": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "issue-17-file-issue-reports-bug",
+        "issue-16-create-issue-reports-bug",
+        "issue-01-open-a-task-issue"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

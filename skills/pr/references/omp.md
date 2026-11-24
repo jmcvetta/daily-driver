@@ -32,11 +32,14 @@ is not active supervision; inspect its durable diagnostic and recover that recor
 
 Once authority is `active`, **do not run the legacy currency service, structured
 PR fallback, owner reminder or independent CI watcher for this PR**. The
-supervisor owns observation and one coalesced actionable delivery. Its work
-tool takes a fresh authoritative read before acknowledging a generation.
-The agent still owns substantive fixes, review, conflict decisions and the
-complete current-head readiness gate. An event, receipt or acknowledgment is
-not green CI or completion.
+supervisor owns observation and one coalesced actionable delivery. Its
+acknowledgment tool makes the fresh authoritative read and returns the
+normalized `observed` evidence. Use that result as the work input; do not
+inventory GitHub before the call or act first and acknowledge afterward. A
+rejected acknowledgment grants no authority, and an accepted read is not
+completion, green CI or readiness. The agent still owns substantive fixes,
+review, conflict decisions and the complete current-head readiness gate. An
+event, receipt or acknowledgment is not green CI or completion.
 
 Use the control tool's `stop` before a stop-time push and `hold`/`release` for
 explicit holds. Stop fences queued deliveries and drains remote mutations;
@@ -55,9 +58,12 @@ remains authoritative. Do not install their wakes alongside an active supervisor
   `gh pr view` (or `gh pr list --head <branch>`) finds it.
 - **Opening a new pull request.** `daily_driver_gh_write({ args: ["pr", "create", "--draft", "--title", <title>, "--body-file", <path>] })`, for the initial
   state this skill requires.
-- **Updating an existing pull request as a whole** — title and body
-  together. `daily_driver_gh_write`, called once both are decided (`pr-title`,
-  `pr-body`).
+- **Updating existing metadata.** Inspect the title and body; make no
+  metadata write when both are accurate. If only the title is stale, use
+  `gh pr edit <number> --title "…"`. If only the body is stale, use
+  `daily_driver_gh_write({ args: ["pr", "edit", <number>, "--body-file",
+  <path>] })`. If both are stale, one body-bearing wrapper call may carry
+  both `--title` and `--body-file`. Keep any necessary PR label update separate.
 
 
 Base currency checkpoint

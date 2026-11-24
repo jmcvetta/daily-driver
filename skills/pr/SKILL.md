@@ -1,13 +1,12 @@
 ---
 name: pr
 description: >-
-  Read for `/pr` before validation, proposing or changing CI enforcement, or
-  opening or updating a pull request. The policy applies without an issue or
-  PR, and reading it starts neither. For the current branch, triggers include
-  opening, raising, or updating a PR and any agent-initiated call before
-  creating one or updating one beyond its title or body. Supplies the branch
-  guard, the existing-PR check, draft state, ongoing base maintenance, and the
-  issue-reference call; title is `pr-title` and body is `pr-body`.
+  Read for `/pr` before PR operations and before proposing or changing CI
+  enforcement. It applies with or without an issue; reading starts neither.
+  For the current branch, triggers include opening, raising, or updating a PR,
+  and agent-initiated calls before creating one or updating it beyond title or
+  body. Supplies the branch guard, existing-PR check, draft state, ongoing base
+  maintenance, and issue-reference call; title is `pr-title`, body is `pr-body`.
 ---
 
 # PR Workflow
@@ -45,8 +44,9 @@ current task branch. For the verified primary-held designation mapping, it is
 the designated branch resolved from the local execution branch's upstream.
 If a PR exists, update that PR rather than creating another.
 
-- Update both title and body of existing PR — the title under `pr-title`,
-  which does not rewrite a type this session did not write
+- Inspect the existing title and body, then update only stale or incorrect
+  fields. Leave accurate metadata untouched; make no write when both fields are
+  accurate. The title follows `pr-title`, and the body follows `pr-body`.
 
 
 Title
@@ -144,6 +144,9 @@ Run broader local validation at meaningful checkpoints when its cost is
 justified. A failure reproduction or experiment is not required. Read
 [`docs/testing-standards.md`](../../docs/testing-standards.md) when writing,
 changing, or reviewing tests.
+
+Read this skill for PR operations and CI-enforcement changes, not before each
+local test, linter or formatter.
 
 Push and read CI. Never bypass or remove validation for cost or effort. Only
 explicit owner direction may reduce CI scope or spending: disclose lost
