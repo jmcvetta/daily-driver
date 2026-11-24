@@ -1,6 +1,6 @@
 # A specification issue must not inherit unattended task metadata or proposal completion.
 task_id: issue-23-specification-interactive-contract
-description: A specification issue preserves its collaborative workspace and merged-document completion.
+description: A specification issue preserves its collaborative workspace and agreed-scenario handoff.
 tags: [issue, specification, behaviour, fire]
 initial_prompt: >-
   Draft a specification issue for offline editing. The operator still needs to
@@ -17,7 +17,7 @@ success_criteria:
     expected_skill: issue-body
     skill_name: issue-body
   - type: agent_judge
-    description: Specification is interactive and requires an approved merged document
+    description: Specification is interactive and completes on agreed-scenario handoff
     include_agent_output: true
     include_tool_calls: true
     include_reference: false
@@ -28,8 +28,9 @@ success_criteria:
     prompt: |
       Score 1 only if the draft retains conflict resolution as an open operator
       decision on a specification issue, has no implementation model class,
-      allows interactive agent work but not unattended dispatch, and requires
-      explicit operator approval, operator merge of the canonical document and
-      a recorded handoff for completion. Proposal acceptance alone is not that
-      completion. Score 0 for invented product decisions or claims of posting;
-      otherwise score 0.5 for a material omission.
+      allows interactive agent work but not unattended dispatch, and completes
+      on operator-agreed scenarios plus a recorded handoff naming the
+      implementation task issue, task branch, scenario paths and applicable
+      allocations or exclusions. It does not wait for implementation or merge.
+      Score 0 for invented decisions, claims of posting, or a separately merged
+      document prerequisite; otherwise 0.5 for a material omission.

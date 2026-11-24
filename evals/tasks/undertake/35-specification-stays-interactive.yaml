@@ -4,8 +4,9 @@ description: Undertake stops and routes specification issues to interactive coll
 tags: [undertake, specification, behaviour, fire]
 initial_prompt: >-
   Undertake issue #91, which has exactly the specification kind label and asks
-  us to settle and publish a canonical specification collaboratively. What is
-  the route? Explain only; no GitHub writes, branch or worktree creation.
+  us to agree executable offline editing scenarios collaboratively before handing
+  them to an implementation task. What is the route and completion boundary?
+  Explain only; no GitHub writes, branch or worktree creation.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
@@ -26,8 +27,12 @@ success_criteria:
     turn_timeout: 120
     agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
     prompt: |
-      Score 1 only if the answer stops the unattended undertaking before claim,
+      Score 1 only if the answer stops unattended undertaking before claim,
       route selection or worktree creation and routes to interactive
-      specification collaboration, without calling the issue human-only. It
-      must not claim writes occurred or suggest embark dispatch. Score 0 for
-      implementation dispatch or a claimed write; otherwise 0.5 for an omission.
+      specification collaboration, without calling the issue human-only.
+      Completion requires operator-agreed scenarios and a recorded handoff
+      naming the implementation task issue, task branch, scenario paths, and
+      applicable allocation or exclusions, not implementation or merge. It
+      must not claim writes or suggest embark dispatch. Score 0 for dispatch,
+      claimed writes, or a merged-document prerequisite; otherwise 0.5 for
+      a material omission.

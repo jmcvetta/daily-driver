@@ -39,22 +39,27 @@ The natural unit is often a **domain operation or user journey**, not an individ
 
 **Product invariants** (e.g., “refunds never exceed captured payments”) and enduring capabilities can guide agentic review of proposed *changes to the acceptance contract*. Some invariants can be tested mechanically; semantic ones may require agentic review and escalation to humans. Such review complements rather than replaces deterministic acceptance tests.
 
-## Tooling options
+## TypeScript tooling
 
-| Tool | Potential role | Main consideration |
-| --- | --- | --- |
-| **Gherkin + Cucumber** | Natural-language executable acceptance scenarios | Clean `Given`/`When`/`Then` source; requires trusted step definitions |
-| **Gauge** | Markdown-like executable specifications | Flexible, readable prose; assess ecosystem and maintenance |
-| **Concordion** | Executable prose, tables, and living documentation | Rendered output is readable; source annotations add clutter |
-| **Robot Framework** | Keyword-driven ATDD | Mature approach, but can become procedural and verbose |
-| **Playwright** | Browser/API execution for acceptance tests | Execution layer, not the human-readable contract language |
-| **Vitest / pytest** | Conventional deterministic test runners | Useful underneath; raw code takes more effort to scan |
-| **Testcontainers** | Isolated service dependencies | Helps make execution reproducible |
-| **Hypothesis / fast-check** | Property-based or stateful testing | Useful for machine-checkable invariants |
-| **Spec Kit** | Structured agentic specification/development workflow | Workflow guidance, **not** a deterministic acceptance engine |
-| **Pact** | Consumer-provider API compatibility contracts | Valuable for API development, but generally below the product-level acceptance boundary; especially relevant when the API is the product |
+Gherkin and `@cucumber/cucumber` are the initial TypeScript default. Use the
+[`atdd` skill](../skills/atdd/SKILL.md) to resolve and run its bundled bootstrap
+against an npm or pnpm repository with one lockfile. It installs the pinned
+dependencies and creates reusable configuration, not product scenarios.
 
-**No framework selected yet.** Human-readable, natural-language specifications are preferred to writing the core acceptance contract directly in pytest or TypeScript. Gherkin, Gauge, and Concordion warrant hands-on comparison.
+Write the project's own `.feature` files under `acceptance/features/` and
+TypeScript step definitions under `acceptance/steps/`; put shared support under
+`acceptance/support/`. Run `npm run acceptance` or `pnpm acceptance` and include
+that command in the project's established test, typecheck and CI conventions.
+For preinstalled dependencies, the bootstrap also supports `--no-install`.
+Add Playwright only when a pilot needs browser execution.
+
+Agree scenarios on the implementation branch, record agreement and exclusions
+on the task issue, establish the behavioral failure, and deliver scenarios,
+bindings and implementation together. An optional separate specification issue
+records the implementation issue, branch, scenario paths and any allocation or
+exclusions before completing. Review implementation and trusted bindings against
+the agreed scenarios; discuss a wrong, incomplete or ambiguous scenario with
+the operator before treating an amendment as accepted.
 
 ## Gherkin's table-driven capabilities
 
@@ -75,9 +80,7 @@ Scenario Outline: Cancellation eligibility
 
 ## Open design questions
 
-- Which human-readable format offers the best **readability, precision, compactness, and maintainability** at product scale?
 - How should trusted step definitions and test fixtures be governed so the written contract cannot lose its meaning?
 - How should proposed contract changes be reviewed against product invariants and enduring capabilities?
 - How can the team evaluate whole-product coherence and usability beyond the cases covered by deterministic tests?
 
-**Practical next step:** Express a representative set of product behaviors—state transitions, permissions, edge cases, and user journeys—in Gherkin, Gauge, and Concordion. Compare both the source and the resulting execution/reporting workflows before choosing a foundation.

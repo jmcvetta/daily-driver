@@ -40,12 +40,35 @@ including the return to draft while a later round runs. This skill borrows the
 watch's CI wake but owns neither base maintenance nor readiness. Nothing here
 marks a draft ready or merges anything.
 
-For a specification-backed task, review the implementation against both the
-task's allocation and exclusions and the referenced requirement IDs in the
-document at its exact recorded commit. Check the delivered revision and
-evidence in the PR body. A changed governing specification or mismatched
-allocation is a finding routed to `epic`, not implicit approval to change
-the contract or amend the specification in an implementation PR.
+For executable-scenario work, review the agreed scenarios, trusted bindings
+and fixtures, implementation and required lower-level tests together. Check the
+task's allocation and explicit exclusions, recorded operator agreement, and
+changed scenario paths and observed execution evidence in the PR body.
+Bindings must exercise real product behavior and assert meaningful outcomes;
+green scenarios with weakened assertions or fixtures that bypass that behavior
+do not establish delivery. Ordinary current-head CI is the deterministic
+execution evidence; do not introduce a second acceptance-evidence gate.
+
+Classify findings by the agreed behavior:
+
+- Implementation violates an agreed scenario: fix implementation and continue.
+- A binding or fixture fails to express the agreed scenario: repair it and
+  continue with independent review under the existing fix-delta rule.
+- A scenario is wrong, incomplete or ambiguous: pause only affected behavior,
+  discuss it with the operator, and record the decision on the implementation
+  task or its specification issue. Continue unaffected work; new behavior is
+  not accepted until the operator agrees.
+- A missing case is a proposal. A reviewer cannot make new behavior mandatory
+  by editing scenarios or withholding the PR without operator agreement.
+- A scenario change alters the epic's agreed scope or decomposition: use
+  `epic`'s ordinary `Agree the plan` route, not automatic parent demotion.
+
+After agreement, edit scenarios in the same branch and PR and continue this
+cycle. Material scope changes use `Does it go again?`'s full-review rule.
+Mechanical conflict resolutions that preserve agreed scenario text and
+behavior proceed normally; base changes or conflicts that change, remove or
+contradict an allocated scenario need the affected-behavior product decision
+above, not a silent choice of either revision.
 
 
 The round

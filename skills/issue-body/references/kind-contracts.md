@@ -115,28 +115,34 @@ Convert the issue in place only under the existing label policy. Acceptance is
 not delivery. Deferral alone is not delivery; a `not planned` closure follows
 the existing disposition rules.
 
-## Specification — closes on an approved, merged document
+## Specification — closes on agreed scenarios and an implementation handoff
 
 Carry the problem, intended outcome, known context and constraints, references,
 and the questions or decisions that remain open. The issue is the interactive
 workspace for research references, alternatives, operator decisions and draft
-revisions. It carries no implementation model class.
+scenario revisions. It carries no implementation model class. A separate
+specification issue is optional; `specification` may work on the implementation
+task itself.
 
 **Ready for collaboration** means the purpose and initial context are clear
 enough to start elicitation; unresolved product decisions are expected. The
 agent investigates and drafts, while the operator decides unresolved intent.
 This is neither a `human` issue nor an unattended assignment.
 
-**Ready for approval** means the canonical document meets `specification`'s
-document contract and has no omission preventing implementation. Open
-questions and research remain on the issue or research issues, not in the
-document. Independent review does not replace explicit operator approval.
+**Ready for agreement** means concise executable scenarios express intended
+behavior and acceptance with no unresolved omission preventing the affected
+implementation. Planning notes are non-authoritative; questions and research
+stay on issues. Independent review does not replace operator agreement.
 
-**Complete** means the operator approved and merged the specification PR and
-the handoff is recorded on the issue. Approval of a proposed decomposition is
-separate. Rejection or abandonment follows the existing disposition rules.
-Unlike a `proposal`, whose acceptance records a decision or handoff, a
-specification completes only with the approved, merged document and handoff.
+**Complete** means the operator's agreement and implementation handoff are
+recorded on the issue. The handoff names the implementation task issue, task
+branch, scenario paths, and explicit exclusions or allocated behavior where
+applicable. Completion does not wait for implementation or merge, and needs
+no separate specification PR or Markdown document. The implementation task
+owns delivery and completion. When both activities share one task issue,
+record agreement there without creating a second issue or handoff comment;
+the task remains open for delivery. Approval of a decomposition is separate.
+Rejection or abandonment follows the existing disposition rules.
 
 ## Human — closes on a person's observable action or decision
 

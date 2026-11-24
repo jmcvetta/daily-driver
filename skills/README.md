@@ -18,8 +18,9 @@ limits; a shared skill does not imply identical capabilities on every harness.
 
 | Skill | When to use it |
 | ----- | -------------- |
-| [specification](specification/SKILL.md) | Collaborate on a canonical specification and publish it through an operator-approved, reviewed PR. |
-| [epic](epic/SKILL.md) | Coordinate discovery and specification-backed promotion, or break settled work into issues with dependencies and completion criteria. |
+| [atdd](atdd/SKILL.md) | Establish and use executable acceptance contracts in TypeScript repositories. |
+| [specification](specification/SKILL.md) | Agree executable scenarios interactively on the implementation branch. |
+| [epic](epic/SKILL.md) | Coordinate discovery or break settled work into issues with dependencies and completion criteria. |
 | [rectify-names](rectify-names/SKILL.md) | Examine repository naming, judge evidence-backed candidates, agree issue-backed corrections, and rectify them incrementally. |
 | [undertake](undertake/SKILL.md) | Complete assigned issues; also read its execution policy before delegation or unfinished stops without starting an issue. |
 | [task-worktree](task-worktree/SKILL.md) | Establish an isolated feature branch and worktree before repository-changing work. |

@@ -46,9 +46,12 @@ The body of a pull request, whether it is being opened or rewritten. In order:
   Keep unverified requirements, stale results, risks and outstanding approvals
   visible. Distinguish observed checks, attributed judgments and agent reports.
   Do not publish private source quotes or sensitive local details.
-  For a specification-backed task, identify the document path, exact delivered
-  specification commit and requirement IDs, and distinguish evidence of
-  delivery from unverified allocation.
+  For executable-scenario work, identify changed scenario files, allocated
+  behavior and exclusions where applicable, and observed red/green execution
+  evidence. Distinguish current-head CI from earlier local results and
+  unverified behavior. Scenarios, bindings, implementation and required
+  lower-level tests belong in this one ordinary PR; no separate document
+  commit, requirement-ID allocation or acceptance-evidence gate is required.
 - **Unopinionated**: This is a short description of the branch, NOT a code
   review. Do NOT do opine on code quality or security.
 - **Provenance**: The active harness route attaches `provenance`'s block. For

@@ -1,12 +1,12 @@
-# A draft with unresolved product decisions must not masquerade as a complete specification.
+# An unresolved product decision must not masquerade as agreed scenario behavior.
 task_id: specification-01-interactive-draft
-description: Interactive drafting keeps unresolved decisions on the issue and uses stable textual requirements.
+description: Interactive scenario authoring preserves unresolved product decisions and the implementation handoff.
 tags: [specification, behaviour, fire]
 initial_prompt: >-
-  Use specification to collaborate on an offline editing specification. The
-  operator has not decided conflict resolution. The repository establishes a
-  local draft API. Explain the next steps and the document contract; do not
-  write files or claim an approval or merge.
+  Use specification to collaborate on offline editing in a supported TypeScript
+  repository without an acceptance harness. Conflict resolution is undecided.
+  A separate specification issue and implementation task are planned. Explain
+  the next steps, agreement and handoff; do not write files or claim actions.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
@@ -18,7 +18,7 @@ success_criteria:
     expected_skill: specification
     skill_name: specification
   - type: agent_judge
-    description: Unresolved intent stays outside the authoritative specification
+    description: Scenario agreement and implementation handoff retain unresolved intent
     include_agent_output: true
     include_tool_calls: true
     include_reference: false
@@ -27,10 +27,13 @@ success_criteria:
     turn_timeout: 120
     agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
     prompt: |
-      Score 1 only if the answer keeps conflict resolution on the issue for
-      the operator, does not invent it, and says a document with an omission
-      preventing implementation is not ready. It names docs/specs/<feature>.md,
-      stable requirement IDs and acceptance criteria, textual authority over
-      summaries and diagrams, independent review and explicit operator approval
-      and merge. Score 0 if it claims an external action occurred or treats
-      agent review as approval; otherwise score 0.5 for a material omission.
+      Score 1 only if the answer leaves conflict resolution for the operator
+      without inventing behavior, establishes or adopts the implementation task
+      branch via task-worktree, invokes atdd for the missing harness, and proposes
+      concise scenarios for interactive operator review. It records agreement
+      and exclusions on the issue and completes the separate specification issue
+      once agreement and a handoff naming the implementation task issue, task
+      branch, scenario paths and applicable allocation or exclusions are recorded.
+      Implementation and merge are not prerequisites. Score 0 for invented
+      agreement, claimed actions, or a separately merged document prerequisite;
+      otherwise 0.5 for a material omission.

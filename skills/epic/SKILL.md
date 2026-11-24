@@ -30,49 +30,58 @@ either table.
 
 **Cite steps by their stable names**, not their sequence numbers.
 
-Discovery and specification-backed delivery
-===========================================
+Discovery and behavioral children
+=================================
 
-When research and a collaboratively settled specification must precede
-decomposition, open the coordinating issue as `discovery`, not an `epic`.
-Keep that issue number, comments and parent/child lineage throughout. Its body
-states the intended outcome, open research, interactive specification child,
-and sequencing; it does not pretend implementation is settled. The parent
-may have eligible `research` children and at most one active interactive
-`specification` child. Do not open implementation tasks before the operator
-has approved and merged the specification. `embark` runs eligible research
-only and returns here when it is exhausted; it never closes the discovery on
-child count or dispatches the interactive specification.
+When research must precede settled decomposition, use `discovery`. Preserve
+the coordinating issue number, comments and parent/child lineage. State the
+intended outcome, open research and decisions, and sequencing without
+pretending implementation is settled. `embark` runs eligible research only;
+it returns here when research is exhausted and never closes discovery on
+child count or dispatches interactive specification work.
 
-After operator approval and merge to `master`, record the exact merge commit
-and canonical document path on the parent. With separately agreed
-decomposition, create implementation tasks under that same discovery, each
-allocating stable requirement IDs at that exact commit, with exclusions,
-grounded implementation map, verification and model class as `issue-body`
-requires. Write and verify every parent and blocked-by edge and sequencing.
-Read the document at the pinned commit and confirm each ID exists, every
-allocation is covered, and every task passes readiness. The discovery label
-remains the dispatch authority throughout staging: no staged implementation
-task may run. Only after all gates pass, atomically replace `discovery` with
-`epic` in one label update and report readiness for `embark`. A failed gate
-leaves the parent in discovery and identifies the defect.
+Promote under the ordinary epic gates: agreed scope and decomposition, ready
+assignable children, and a truthful verified dependency graph and sequencing.
+Preserve the parent identity and change its kind through `issue-labels` when
+those gates hold. Scenario files need not merge before promotion, and the
+parent does not pin scenario revisions or allocate requirement IDs. A failed
+gate leaves the parent in discovery and identifies the defect. If the agreed
+outcome fits one PR, convert the same parent to one task only with scope
+agreement, rather than making an artificial epic. If evidence supports not
+proceeding, record it and close the parent as not planned.
 
-If the agreed outcome fits one PR, convert the same parent to a single
-specification-backed `task` only with scope agreement, rather than creating an
-artificial epic. If evidence supports not proceeding, record it and close the
-parent as not planned.
+Each behavioral child follows `specification`'s per-feature flow on its
+implementation task branch and lands its scenario slice with its bindings,
+implementation and required lower-level tests in one ordinary PR. A child
+that still needs interactive scenario agreement performs that activity before
+implementation; do not dispatch it as unattended settled work until its issue
+and scenario handoff are ready. Research and ordinary nonbehavioral children
+retain their existing paths, and small tasks with adequate ordinary
+acceptance and verification need no ATDD ceremony.
 
-For a substantive amendment, atomically demote the same `epic` to `discovery`
-before affected work proceeds. Preserve all existing issues, edges, allocations
-and provenance. Identify and pause only affected implementation; independent
-eligible implementation already in progress may continue against its existing
-contract, but discovery dispatch never starts a staged implementation task.
-Add needed research and one active interactive amendment specification child.
-`specification` owns renewed operator agreement, review and operator merge.
-After merge, reconcile affected allocations and execution contracts to the new
-exact SHA with original-user authority for material changes. Recheck all
-references, graph, readiness and coverage before the atomic re-promotion.
-An implementation PR must never silently amend its governing specification.
+Use the same amendment rules as `undertake` and `review-cycle`:
+
+- Implementation violates an agreed scenario: fix implementation and continue.
+- A binding or fixture fails to express the agreed scenario: repair it and
+  continue with independent review.
+- A scenario is wrong, incomplete or ambiguous: pause only affected behavior,
+  discuss it with the operator, and record the decision on the implementation
+  task or its specification issue. Continue unaffected work; new behavior is
+  not accepted until the operator agrees.
+- A reviewer identifies a missing case: propose it. The reviewer cannot make
+  new behavior mandatory by editing scenarios or withholding the PR without
+  operator agreement.
+- An amendment changes the epic's agreed scope or decomposition: use
+  `Agree the plan`. Otherwise handle it inside the affected child. Do not
+  automatically demote the parent for a scenario amendment.
+
+After agreement, edit scenarios in the same child branch and PR and use the
+existing review cycle, including full review for a material scope change.
+Mechanical conflict resolutions that preserve agreed scenario text and
+behavior proceed normally. Base changes or conflicts that change, remove or
+contradict an allocated scenario follow the affected-behavior amendment rule,
+not a silent choice of either revision. Epic completion retains the ordinary
+child-completion and coordinated-outcome rules.
 
 
 The sequence
@@ -180,10 +189,10 @@ It does not require a GitHub assignee or an available concrete model in the
 authoring session. Do not assign anyone as part of planning.
 
 For an implementation epic, dispatchable stories exclude `proposal`,
-`specification`, `human` and nested parent issues. The closed interactive
-specification and research lineage remains attached after promotion; it is not
-a dispatch candidate or a planning defect. A discovery's active specification
-child is likewise a valid parent member, not a dispatchable story.
+`specification`, `human` and nested parent issues. Interactive specification
+and research lineage remains attached; a specification issue is not a
+dispatch candidate or a planning defect. Discovery may contain interactive
+specification work, but dispatches only eligible research.
 
 Each story records what was asked and no more. Scope invented to round out a
 plan is scope every pull request is then measured against. A plan padded to

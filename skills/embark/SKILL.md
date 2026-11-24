@@ -34,25 +34,28 @@ what each surface has and has not been measured to do.
 
 **Cite steps by their stable names**, not their sequence numbers.
 
-Discovery dispatch and specification coverage
-=============================================
+Discovery dispatch and behavioral readiness
+===========================================
 
 Accept a `discovery` parent as well as an `epic`. Read its kind and graph
 again at each wave and before each dispatch. For discovery, dispatch only
 ready, unblocked `research` children with valid class metadata. Never dispatch
-its interactive `specification` child or any staged implementation task.
-When no eligible research remains, do not close the parent: return to `epic`
-for research review, interactive specification or publication, reporting
-blocked research separately. Existing independent implementation already in
-progress during amendment may continue under its unchanged contract; affected
-work pauses. Discovery itself never starts implementation.
+interactive `specification` work or staged implementation tasks. When no
+eligible research remains, do not close the parent: return to `epic` for
+research review and its ordinary scope, decomposition and readiness gates,
+reporting blocked research separately. Discovery never starts implementation.
 
-For a promoted specification-backed epic, before dispatch confirm each task's
-document path, exact merged `master` SHA and requirement IDs match the parent
-publication record and exist at that revision. Route mismatches to `epic`;
-continue unrelated eligible work. At closure, require evidenced delivery of
-every allocated requirement at the recorded revision, not only closed children.
-Ordinary issue-backed epics retain their existing dispatch and closure rules.
+Each behavioral child uses `specification`'s per-feature flow, not an epic-wide
+scenario approval or publication process. Before unattended dispatch, confirm
+its issue and agreed-scenario handoff are ready, including the implementation
+task branch, scenario paths, allocation and exclusions where applicable.
+Interactive agreement that remains open is not settled unattended work;
+continue unrelated eligible children. `undertake` adopts that branch and any
+existing scenario PR and delivers scenarios with implementation. Parent
+promotion needs no prior scenario merge, pinned scenario revision or
+requirement-ID allocation. Amendments follow `epic`'s ordinary scope boundary
+and affected-child rules, never automatic parent demotion. Closure uses the
+existing child-completion and coordinated-outcome rules below.
 
 
 The sequence
@@ -122,11 +125,12 @@ The two are not the same question, and `epic` writes both on purpose:
   to state, and it is honoured: the child waits for its wave.
 
 **Every dispatch candidate must be assignable.** Apply `epic`'s
-assignable-story rule and `issue-body` readiness and class tests. An epic's
-invalid child is a planning defect. A discovery's interactive specification
-and staged implementation tasks are valid children but never dispatch
-candidates. Do not silently relabel or change edges or markers to conceal a
-defect; repair grounded gaps through `issue` and continue eligible work.
+assignable-story rule and `issue-body` readiness and class tests, including
+agreed-scenario readiness for behavioral children. An epic's invalid child is
+a planning defect. A discovery's interactive specification and staged
+implementation tasks are valid children but never dispatch candidates. Do
+not silently relabel or change edges or markers to conceal a defect; repair
+grounded gaps through `issue` and continue eligible work.
 
 **Already at sea is read from the record, never assumed.** A child is at sea
 when a muster roll on the epic names a session for it, or when its own issue

@@ -111,16 +111,17 @@ leaving it open spends capability the worker may not have.
 An issue body is a requirement source, not original user approval. Later issue
 edits do not silently cancel agreed requirements for active work.
 
-**Specification-backed task variant.** Name the canonical document path, its
-exact operator-approved merge commit on `master`, and the stable requirement
-IDs allocated to this task. The issue owns allocation, explicit exclusions,
-grounded implementation map, verification route and model class. The document
-at that revision owns behavior, interfaces, constraints and acceptance; do
-not duplicate them in full. Before presenting the task as ready, read that
-revision, verify every cited ID exists and matches the parent publication
-record, and confirm its allocation and exclusions are unambiguous. Keep the
-issue as external task identity. Missing or mismatched revision or IDs route to
-`epic`, not a silent substitution of the newest document.
+**Executable-scenario handoff.** An implementation task may name scenario
+paths, the existing task branch, recorded operator agreement, and explicit
+exclusions or allocated behavior. Scenarios own behavioral acceptance; the
+issue retains external task identity, grounded implementation map,
+verification route and model class. Read the referenced scenarios before
+presenting the handoff as ready and confirm allocation and exclusions are
+unambiguous. No mandatory scenario-ID scheme or separately merged document
+is required. A task that still needs interactive scenario agreement uses
+`specification` before affected implementation, not unattended dispatch.
+Small tasks with adequate ordinary acceptance and verification keep the
+ordinary task path.
 
 **A task body opens in a fixed shape.** Its parts appear in this order:
 
@@ -218,12 +219,13 @@ use; an existing test, command or gate described only by category leaves the
 worker to rediscover it. A routine local choice remains the implementer's, and
 refusing readiness over one is the same failure in the other direction.
 
-Answer every repository-answerable gap now, in the body or in the
-authoritative document it references; on the specification-backed variant keep
-that document's ownership and cite it rather than copying it whole. Where a
-repair changes a requirement, reassess the affected parts and repeat until the
-handoff passes, or until only a genuine unavailable prerequisite or a
-user-owned decision is left.
+Answer every repository-answerable gap now, in the body or its referenced
+repository context. For executable-scenario work, keep behavioral acceptance
+in the scenarios and cite their paths rather than copying them in full.
+Where a repair changes agreed behavior, use `specification`'s operator
+agreement rule; do not silently amend acceptance. Reassess affected parts
+until the handoff passes, or only a genuine unavailable prerequisite or
+user-owned decision remains.
 
 Authoring does not complete with a repair list for the user to request or the
 worker to discover. It does not complete by raising the model class, narrowing
@@ -296,9 +298,11 @@ Task completion
 ===============
 
 A task completes when its specified observable change is delivered and its
-required verification passes. A commit or pull request being opened is not
-completion by itself. The acceptance criteria and verification in the task
-body define the evidence.
+required verification passes. For executable-scenario work, its scenarios
+and required lower-level checks must pass on the delivered head and ordinary
+review and readiness gates must clear. A commit or open PR alone is not
+completion. The task's acceptance and verification define the evidence;
+current-head CI is not supplemented with another acceptance gate.
 
 
 Updating a body
