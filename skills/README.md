@@ -20,7 +20,7 @@ limits; a shared skill does not imply identical capabilities on every harness.
 | ----- | -------------- |
 | [specification](specification/SKILL.md) | Collaborate on a canonical specification and publish it through an operator-approved, reviewed PR. |
 | [epic](epic/SKILL.md) | Coordinate discovery and specification-backed promotion, or break settled work into issues with dependencies and completion criteria. |
-| [rectify-names](rectify-names/SKILL.md) | Examine repository naming, judge evidence-backed candidates, agree issue-backed corrections, and rectify them incrementally. |
+| [rectify-names](rectify-names/SKILL.md) | Examine naming within a scope, then take a bounded internal correction through its ordinary issue-backed PR or keep durable candidates and coordinated compatibility review for a broad, public or stateful audit. |
 | [undertake](undertake/SKILL.md) | Complete assigned issues; also read its execution policy before delegation or unfinished stops without starting an issue. |
 | [task-worktree](task-worktree/SKILL.md) | Establish an isolated feature branch and worktree before repository-changing work. |
 | [embark](embark/SKILL.md) | Dispatch discovery research or eligible epic children in parallel and monitor the work. |
