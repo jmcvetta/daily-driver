@@ -65,9 +65,11 @@ Actions, Ansible, containers and Claude Code plugins.
 ### Apply it to a project
 
 The catalog records control status and previously decided changes. It does
-not authorize unsolicited control expansion during unrelated work.
-[`pr`'s recurring CI cost policy](../skills/pr/SKILL.md#recurring-ci-costs)
-governs proposals for new checks and other recurring CI expansion.
+not authorize unsolicited control expansion during unrelated work. Consider
+the value, runtime, frequency and external cost of new recurring checks;
+avoid unnecessary duplication and preserve established validation. See
+[`pr`'s recurring CI cost guidance](../skills/pr/SKILL.md#recurring-ci-costs)
+for the owner-approval boundary on material recurring spending.
 
 1. Implement every universal control and applicable decided change recorded
    for the project, within the constitution's approval boundary.

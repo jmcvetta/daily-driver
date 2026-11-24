@@ -330,8 +330,8 @@ remaining step needs a person. Use `undertake`'s operational escalation
 contract to distinguish already-authorized preparation from the exact gated
 operation. Steer the implementor through `Recover a session` with the next
 permitted action; do not ask again for authorization the task already carries.
-The implementor still owns commands, code, checks and readiness. This watch
-does not take over its branch or clear its draft.
+The task session owns its branch and readiness until ownership is transferred;
+the orchestrator does not take over its branch or clear its draft implicitly.
 
 The orchestrator owns the agreed epic outcome, not each worker's lifetime.
 A worker may complete its component contract without remaining alive until
@@ -401,12 +401,14 @@ So on every wake:
 issue stays open and its session is spent, so nothing here re-dispatches it:
 say which child it was, and leave it to the person who closed it.
 
-**This skill does not manage the branches.** `pr` owns `Keep it current` for
-each agent-opened PR, merging its actual base on the harness's supported
-continuation route. A sibling whose base moved is maintained by that PR's
-owner, and a real content conflict stops there rather than here. An
-orchestrator resolving a conflict in code it never wrote is the wrong hand on
-the tiller.
+**This skill does not manage branches automatically.** `pr` owns `Keep it
+current` for each agent-opened PR, merging its actual base on the harness's
+supported continuation route. A sibling whose base moved is maintained by
+that PR's owner by default. A real content conflict stays with that owner
+unless the worker explicitly hands off the branch and stops editing; after
+that transfer, the orchestrator may resolve an ordinary repair without
+redispatching it. One writer owns the branch at a time, and behavioral changes
+still require independent review.
 
 **One wake slot, and a turn never ends with it empty** while a wave is at sea.
 [`0034`](../../docs/notes/0034-the-wake-slot-is-never-empty.md) is the rule.
@@ -426,14 +428,14 @@ stood down is read and dropped: the state it reports is already on GitHub.
 prompt written for the next check-in is read on arrival, while this file is
 not, and the wake it lands in — like every pull-request event beside it —
 arrives with harness guidance addressed to whoever opened the pull request.
-Under this skill that is never this session. So the prompt states what
-`Non-goals` states: each pull request is its task session's to drive — a
-failing check, a review finding or a conflict is that session's work. The
-prompt also requires reading unfinished work and steering
-the implementor through already-authorized preparation under `undertake`'s
-escalation contract. A real prerequisite pauses only the affected operation
-after independent permitted work is complete, unless safety requires an
-immediate stop. Landing a merge-ready pull request, marking the wave, and
+Under this skill that is normally not this session. So the prompt states what
+`Non-goals` states: each pull request is its task session's to drive by default;
+a failing check, review finding or conflict is that session's work unless it
+explicitly transfers ownership. The prompt also requires reading unfinished
+work and steering the implementor through already-authorized preparation under
+`undertake`'s escalation contract. A real prerequisite pauses only the affected
+operation after independent permitted work is complete, unless safety requires
+an immediate stop. Landing a merge-ready pull request, marking the wave, and
 closing the epic are this session's work. The backstop preserves both work
 supervision and ownership; issue numbers and `draft=true` alone do neither.
 
@@ -602,9 +604,13 @@ dependency.** Leave the epic open and classify the gap before selecting a stop:
 
 - **Missing evidence:** gather it through available routes.
 - **Repairable defect within agreed scope:** route repair through the existing
-  task workflow. Do not reopen correctly completed children merely because
-  integration work is missing. The orchestrator does not implement the repair;
-  `review-cycle` owns review, including the fallback exception below.
+  task workflow. The orchestrator may instead take explicit ownership of an
+  ordinary repair without opening a replacement issue or redispatching it.
+  First establish that the worker has stopped editing and hand off the branch
+  and relevant context; then the orchestrator owns the repair through
+  verification and review by an independent reviewer, not the repair's author.
+  Do not reopen correctly completed children merely because integration work
+  is missing.
 - **Invalidated design assumption:** diagnose the failed premise and prepare a
   bounded repair through `epic`. Do not rotate workers through the unchanged
   disproved plan or automatically escalate to frontier.
@@ -708,14 +714,16 @@ Non-goals
 - **Does not decompose.** The tasks, the edges and the waves are `epic`'s, and
   an epic whose plan is wrong is corrected there rather than worked around
   here.
-- **Does not implement, drive, or answer a review.** Each task session does
-  its own work through `undertake` and the round that skill runs. It fixes a
-  failing check, answers a review finding, and resolves a conflict. The
-  exception is the strong-model review `Open the sessions` requires of a
-  fallback implementor's pull request: that round is the orchestrator's or
-  the shared advisor's to run, because the rule exists precisely so the
-  implementor does not review itself. Landing is narrower: a mechanical read
-  followed by one squash-merge call.
+- **Does not automatically implement or take over a worker's pull request.**
+  Each task session normally drives its own work through `undertake` and the
+  review round. If the orchestrator explicitly takes ownership of a repair,
+  it becomes the sole writer on the branch until another handoff; the worker
+  stops editing. The repair follows `undertake`'s verification and review
+  requirements, including an independent review of behavioral changes. The
+  strong-model review `Open the sessions` requires of a fallback implementor's
+  pull request remains the orchestrator's or shared advisor's to run, because
+  the implementor must not review its own work. Landing is narrower: a
+  mechanical read followed by one squash-merge call.
 - **Preserves a story's exact required class.** It resolves that class through
   eligible harness routes on the same family, provider, backend, and
   authentication route. A missing route is reported for that story; it is never

@@ -104,10 +104,9 @@ checks that failed or remain unrun honestly. Safety, authorization, test and
 CI requirements remain in force.
 
 New CI checks recur in execution, review, triage and maintenance. Read `pr`
-before validation or any CI-enforcement change: it owns recurring-cost
-approval, the routine-integration exemption, effective-command-chain
-inspection, and the fields a proposed expansion carries. A policy-only read
-starts no PR and no issue work.
+before validation or any CI-enforcement change: it gives concise cost and
+value guidance, including when material recurring spending needs owner
+approval. A policy-only read starts no PR and no issue work.
 
 Never bypass established validation to save effort; disclose coverage lost when
 an explicit owner instruction reduces CI scope, without hiding failures or
@@ -115,6 +114,10 @@ weakening security or required tests.
 
 ## Delegation
 
-Plan first, then delegate; `undertake`'s execution policy owns delegation scope
-and batching. Preserve full agent-facing context and the original approval
-boundaries, limits and conditions in every handoff.
+Plan enough to state the objective, relevant context, boundaries, expected
+result, and who owns the outcome. Delegate when parallelism, specialization,
+or a bounded handoff helps; work may also be delegated sequentially or shared
+with its owner. Keep one clear writer for each branch or file at a time, avoid
+duplicated work and excess capability, and retain independent review for
+behavioral changes. Preserve the original approval boundaries, limits and
+conditions in every handoff.

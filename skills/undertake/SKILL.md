@@ -61,10 +61,13 @@ Execution policy outside the issue sequence
 Read these policies before their action, including ordinary work without an
 issue. Reading them does not start the sequence below.
 
-**Delegation.** Plan first. Delegate only independent parallel work; single
-tasks stay with their owner. Avoid excess capability or workers; batch suitable
-work. Launch independent file slices together before your own work.
-Quota is the user's money.
+**Delegation.** Plan enough to state the objective, relevant context,
+boundaries, expected result, and owner. Use delegation when parallelism,
+specialization, or a bounded handoff helps; a useful handoff may be sequential,
+or a worker may implement while the owner retains responsibility. Keep one
+clear writer per branch or file at a time. Avoid duplicated work, excess
+capability and unnecessary workers. Preserve the original approval boundaries,
+limits and conditions in every handoff. Quota is the user's money.
 
 **Errors and unfinished stops.** Diagnose errors, repair within scope, revise
 the plan, and continue permitted work. A failed command or approach alone is
@@ -434,8 +437,10 @@ nothing, as before.
 5 — Implement
 -------------
 
-**The session running this sequence writes the code itself.** No implementor
-dispatch is used for ordinary undertakings.
+**The undertaking owner remains accountable for the agreed result.** The owner
+may implement directly, delegate implementation, or share it with a worker.
+Keep ownership clear, prevent overlapping edits, and retain the required
+independent review; the author of a behavioral change is not its sole verifier.
 
 **Own the agreed result through a pause.** A review-ready pull request is the
 result when the assignment stops there; ownership does not add deployment or
@@ -558,9 +563,10 @@ delta` sends a briefed subagent because the author of a delta cannot be an
 independent reader.
 
 **Parallelism across issues is `embark`'s.** Where several task issues are
-worked at once, that skill opens a session or a subagent per task, and each of
-them runs this sequence in its own context. Delegation there is what buys the
-parallelism; delegation here duplicates a session that is already on the work.
+worked at once, that skill opens a session or subagent per task, and each runs
+this sequence in its own context. Within one undertaking, the owner may also
+delegate useful sequential or specialized work under `Delegation`; issue-level
+parallel dispatch does not replace that ownership.
 
 The constitution governs coding and commit discipline. `pr` governs validation and
 CI execution. This skill owns execution sequencing and operational escalation.

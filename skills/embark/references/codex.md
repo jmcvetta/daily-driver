@@ -124,6 +124,9 @@ model — that is what makes it a named surface carrying its own rubric and
 publication route, rather than an ad-hoc dispatch with neither, and why the
 round runs it once per diff rather than once per push.
 
+A repair authored by the orchestrator is reviewed by the shared advisor or
+another independent reviewer, never by its author.
+
 
 What would have to become true
 ==============================
