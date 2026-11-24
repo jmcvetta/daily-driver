@@ -183,9 +183,9 @@ valid.
 which children. `story` is derived for a confirmed direct child of either.
 Parent-relationship reads are read-only: they never invoke reconciliation, and
 a failed graph read is not evidence for a label change. After a confirmed
-membership change or parent-kind change, verify the direct parent and invoke
-`issue-labels` to reconcile the marker. Continue verifying relationship writes
-from the opposite end. Promotion or demotion does not remove lineage.
+membership change or parent-kind change, verify the relationship from the
+opposite end, read the direct parent, and invoke `issue-labels` to reconcile
+the marker. Promotion or demotion does not remove lineage.
 
 
 Which PR closes an issue

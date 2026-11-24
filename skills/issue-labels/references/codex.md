@@ -38,6 +38,8 @@ If no parent is confirmed or neither kind is present, use `gh issue edit
 <number> --remove-label story`. A failed graph read preserves the current labels and reports the
 limitation. These additive writes preserve the issue kind,
 stock labels, bot labels, and unrelated labels.
+Invoke this reconciliation only after a confirmed parent-membership change or
+parent-kind change; reading a relationship alone never writes a label.
 
 Finding the issues that carry a label is `gh issue list --label task`, or
 `gh search issues` with `label:task` in the query.

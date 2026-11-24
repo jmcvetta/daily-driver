@@ -28,6 +28,8 @@ set. If no parent is confirmed or neither kind is present, remove `story`.
 A failed graph read preserves the current set and reports the limitation. The
 replacement write includes the existing issue kind, stock labels, bot labels,
 and unrelated labels; `story` is never a substitute for a kind.
+Invoke this reconciliation only after a confirmed parent-membership change or
+parent-kind change; reading a relationship alone never writes a label.
 
 Finding the issues that carry a label is `mcp__github__list_issues` with
 `labels`, or `mcp__github__search_issues` with `label:task` in the query —
