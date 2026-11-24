@@ -1,12 +1,10 @@
-# Guards #785: an epic story is assignable when it is agent-eligible, ready
-# under its own kind's contract, and carries a valid model class. The kind
-# alone is neither a pass nor a failure. The prompt supplies the issue facts,
-# so the run is read-only and mutates no tracker.
+# Guards #785: eligible stories retain their kind-specific readiness test.
+# Missing class formatting is not a dispatch barrier. The prompt supplies the
+# issue facts, so the run is read-only and mutates no tracker.
 task_id: embark-13-research-story-admission-and-routing
 description: >-
-  A ready, classed research child is dispatched on its class with its kind
-  kept; classless and unsettled children are reported, not defaulted or
-  dispatched.
+  Ready research and bug children are dispatched with their kinds preserved;
+  a missing class heading does not block settled work, unlike unresolved intent.
 tags: [embark, behaviour, fire]
 
 initial_prompt: >-
@@ -61,11 +59,12 @@ success_criteria:
       Score 1.0 only if the reply (a) dispatches or plans to dispatch #51 as a
       research child on class `complex`, without relabelling it or treating
       its kind as a defect; (b) does the same for #53 as a bug on
-      `routine`; (c) does not dispatch #52, reporting its missing model
-      class as a planning defect and not defaulting it to `routine`;
+      `routine`; (c) assesses #52's capability and plans to record a grounded
+      class and rationale before or during dispatch, without treating its
+      missing heading as a readiness defect or blindly defaulting to `routine`;
       (d) does not dispatch #54 (a proposal); (e) does not dispatch #55
       early, because #51 is an open blocker, while not calling #55 invalid;
       and (f) reports #56's unresolved product decision and keeps its link,
       without dispatching it or stopping the ready siblings. Score 0.5 if
       exactly one is wrong. Score 0.0 if it rejects #51 or #53 merely for
-      their kind, or dispatches #52, #54, #55 or #56.
+      their kind, blocks #52 solely on formatting, or dispatches #54, #55 or #56.

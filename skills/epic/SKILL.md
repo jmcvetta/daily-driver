@@ -165,13 +165,14 @@ remains `Agree the plan`; true dependency edges remain `issue-deps`.
 
 **Membership is not assignability.** Link truthful children under the agreed
 plan even when their handoff is not ready. Before dispatch, an assignable
-story has exactly one agent-eligible kind (`task`, `research` or `bug`),
-passes its own `issue-body` readiness test and carries one valid `## Model
-class` section with rationale. Missing or invalid metadata never defaults to
-`routine`. `issue-body` owns the test and `embark` applies it; research and
-bug stories retain their own contracts. A parent edge, marker or kind alone
-proves no readiness. Open blockers delay dispatch, not membership. Neither a
-GitHub assignee nor an available concrete model is required during planning.
+story has exactly one agent-eligible kind (`task`, `research` or `bug`) and
+passes its own `issue-body` readiness test. Assess its capability and record a
+grounded class and rationale before or during dispatch; missing or malformed
+metadata alone does not block it or default to `routine`. `issue-body` owns
+the test and `embark` applies it; research and bug stories retain their own
+contracts. A parent edge, marker or kind alone proves no readiness. Open
+blockers delay dispatch, not membership. Neither a GitHub assignee nor an
+available concrete model is required during planning.
 
 For an implementation epic, dispatchable stories exclude `proposal`,
 `specification`, `human` and nested parent issues. The closed interactive

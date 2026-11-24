@@ -341,9 +341,10 @@ adapter pattern.
 
 `undertake` assesses class and, where grounded, records missing or legacy
 metadata before or during dispatch for a classed `task`, `research` or `bug`.
-It attempts the initial class selection once through the active harness's
-configuration authority before worktree creation or claim. Omp uses its
-effective class role, including model/provider and effort; Claude Code retains
+When the class is grounded, it attempts the initial class selection once
+through the active harness's configuration authority before worktree creation
+or claim. Omp uses its effective class role, including model/provider and
+effort; Claude Code retains
 its supported class-appropriate route. Failure is informational: name the
 attempted target, failure and actual route, then continue ordinary work without
 confirmation or repair. Later operator choices and resume never reselect.
