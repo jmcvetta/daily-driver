@@ -302,6 +302,10 @@ entire original provenance block, including all fields and values, exactly
 below the body's closing rule. A `Model:` inside that block is provenance, not
 task metadata; never move its fields into the task sections.
 
+When asked to show a revised body, include the complete body and its unchanged
+provenance block; attribution is part of the delivered revision, not optional
+reporting.
+
 A deliberately revised task emits the new section and removes its trailing
 task `Model:` field — the legacy class-metadata field below `## Human brief`, never
 a `provenance` block below the closing `---` rule, which follows `provenance`'s

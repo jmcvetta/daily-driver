@@ -3,10 +3,14 @@ description: Task authors preserve an explicit valid judge and retain authorized
 tags: [issue, behaviour, fire]
 initial_prompt: >-
   Produce a complete revised task body for each scenario. Do not post or run
-  commands. Each body must contain a ready-to-run exact command with its run
-  bounds, followed by the recording command; say whether each is ready.
-  Include Task A's added case-outcome acceptance and Task B's added judge
-  session and identity reporting in the respective bodies.
+  commands. Each body must contain an exact executable Omp Luna command with
+  its run bounds and state how the required record receives the same judge.
+  The target automatically invokes `evals-record` with
+  `RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-6-luna.yaml`;
+  the caller's `JUDGE` value selects the recorded judge. Do not add a second
+  standalone recording command. Include Task A's added per-case outcome
+  acceptance and Task B's added judge session and identity reporting in the
+  respective bodies.
 
   Task A: The user authorizes one Omp Luna run and its recording, forbids
   Claude use, and supplies this exact command:
@@ -45,9 +49,10 @@ success_criteria:
     prompt: |
       Grade only the final reply. Begin rationale with `ANCHOR: result` or
       `ANCHOR: none`; score 0 if no final result exists. Each output must
-      include a complete revised task body, an exact executable Omp Luna
-      command, and the corresponding recording command.
-      Task A's command must retain `JUDGE=omp-gpt-6.1-sol`,
+      include a complete revised task body and an exact executable Omp Luna
+      command. The command's `JUDGE` must flow to the target's automatic
+      `evals-record` invocation; do not require or add a second recording
+      command. Task A's command must retain `JUDGE=omp-gpt-6.1-sol`,
       `TASKS='tasks/issue/01-open-a-task-issue.yaml'`, one repeat and one job.
       Add the per-case outcome acceptance and run-identity recording. Do not
       replace the explicit judge with Claude, add approval, or leave it
