@@ -117,6 +117,13 @@ passed all five cases with-plugin. Bare passed cases 22 and 26, and failed 21,
 24 and 25. This run used the body-local readiness and complete record-field
 guidance; its case-25 rubric still had a dangling conjunction, corrected
 separately before the focused rerun.
+The corrected-rubric, case-25-only run
+[`20-53-16`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-53-16.json)
+still failed both variants with score 0. Its body named a validated alternative
+but kept the bare command and put the not-ready warning only outside the issue
+body. The shared guidance now requires the issue body to omit or label that
+command non-executable until the operator selects a judge.
+
 
 
 
