@@ -121,12 +121,13 @@ The two are not the same question, and `epic` writes both on purpose:
   disagreement. It is the scheduling choice `epic` requires that child line
   to state, and it is honoured: the child waits for its wave.
 
-**Every dispatch candidate must be assignable.** Apply `epic`'s
-assignable-story rule and `issue-body` readiness and class tests. An epic's
-invalid child is a planning defect. A discovery's interactive specification
-and staged implementation tasks are valid children but never dispatch
-candidates. Do not silently relabel or change edges or markers to conceal a
-defect; repair grounded gaps through `issue` and continue eligible work.
+**Every dispatch candidate must be assignable.** Apply `issue-body`'s
+kind-specific readiness and required class tests, and check open blockers.
+Membership may be truthful before readiness. Name each precise defect without
+dispatching that child, and continue eligible independent work. A discovery's
+interactive specification and staged implementation tasks are valid children
+but never dispatch candidates. Do not change edges or markers to conceal a
+defect; repair grounded gaps through `issue`.
 
 **Already at sea is read from the record, never assumed.** A child is at sea
 when a muster roll on the epic names a session for it, or when its own issue

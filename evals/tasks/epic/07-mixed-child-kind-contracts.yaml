@@ -20,6 +20,13 @@ initial_prompt: |
   approval that agents cannot provide. Show me the proposed epic and child
   bodies without posting them.
 
+  Also describe the result of this offline graph operation: the agreed
+  parent repo/plan#10 includes repo/app#11 and repo/app#12; #11 is not
+  ready because a product decision remains open, while #12 is ready.
+  The #11 parent edge was written and verified from both ends; the #12 write
+  failed. Report this operation once, without claiming the failed edge exists
+  or dispatching either child. Do not perform live tracker operations.
+
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
   disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
@@ -70,8 +77,13 @@ success_criteria:
       answer or task class. The reserved approval is a human child with safe
       action evidence, not agent work or a class. Do not require Model class
       metadata on the research or human children. Epic completion requires
-      evidence for the coordinated outcome; closed children
-      alone, a canceled child, or inconclusive research do not suffice. Score
-      1.0 if these distinctions hold, 0.5 for a mostly correct decomposition
-      with a material omission, and 0.0 if task format/classes spread to all
-      children or closure is treated as success by itself.
+      evidence for the coordinated outcome; closed children alone, a canceled
+      child, or inconclusive research do not suffice.
+      The graph operation must have one concise report naming both repository-
+      qualified ends of the verified #10 → #11 edge, its membership evidence,
+      and the failed #10 → #12 write. It must not claim both writes succeeded,
+      suppress #11 because it is unready, invent a blocker or user approval,
+      or dispatch during authoring.
+      Score 1.0 if these distinctions hold, 0.5 for a mostly correct
+      decomposition with a material omission, and 0.0 if task format/classes
+      spread to all children or closure is treated as success by itself.
