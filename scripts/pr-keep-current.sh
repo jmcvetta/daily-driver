@@ -3,11 +3,8 @@
 #
 # Usage: pr-keep-current.sh <pull-request-number>
 #
-# Runs until one of its exits, one tick every two minutes. Each tick reads
-# the pull request's state and merge status through `gh`, then merges the
-# base branch in server-side with `gh pr update-branch` when needed. The only
-# write this script ever performs is that one call: it never checks out a
-# worktree, never rebases, and never judges a review.
+# Each tick compares the actual pinned base and head, then revalidates before
+# the server-side update. It never checks out a worktree or judges a review.
 #
 # Exits 0 when the pull request is merged or closed, 3 on a merge conflict
 # (the call fails and changes nothing; the conflict stop is the session's),
@@ -24,12 +21,17 @@ set -u
 PR="${1:?usage: pr-keep-current.sh <pull-request-number>}"
 INTERVAL="${KEEP_CURRENT_INTERVAL:-120}"
 MAX_READ_FAILURES=30
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+pending_head=
 
 failures=0
 
 while :; do
-    if pr_state=$(gh pr view "$PR" --json state --jq '.state') &&
-        merge_state=$(gh pr view "$PR" --json mergeStateStatus --jq '.mergeStateStatus'); then
+    if pr_url=$(gh pr view "$PR" --json url --jq '.url') &&
+        observation=$(python3 "$SCRIPT_DIR/pr-supervisor.py" currency --url "$pr_url") &&
+        pr_state=$(printf '%s' "$observation" | jq -er '.state') &&
+        currency=$(printf '%s' "$observation" | jq -r '.currency') &&
+        head=$(printf '%s' "$observation" | jq -er '.head'); then
         failures=0
     else
         failures=$((failures + 1))
@@ -49,17 +51,38 @@ while :; do
             ;;
     esac
 
-    case "$merge_state" in
-        DIRTY)
+    case "$currency" in
+        conflict)
             echo "pr-keep-current: pull request $PR conflicts with its base; watch ends for the conflict stop" >&2
             exit 3
             ;;
-    esac
-
-    case "$merge_state" in
-        BEHIND | DRAFT | BLOCKED | UNKNOWN)
-            echo "pr-keep-current: testing base currency ($merge_state); merging if needed"
-            if update_output=$(gh pr update-branch "$PR" 2>&1); then
+        current)
+            pending_head=
+            ;;
+        update_candidate)
+            if [ -n "$pending_head" ]; then
+                if [ "$pending_head" = "$head" ]; then
+                    echo "pr-keep-current: accepted update has not settled; observing without replay"
+                    sleep "$INTERVAL"
+                    continue
+                fi
+                pending_head=
+            fi
+            if ! latest=$(python3 "$SCRIPT_DIR/pr-supervisor.py" currency --url "$pr_url"); then
+                echo "pr-keep-current: pre-update comparison failed; retrying next tick" >&2
+                sleep "$INTERVAL"
+                continue
+            fi
+            if [ "$observation" != "$latest" ]; then
+                echo "pr-keep-current: PR changed before update; reconciling next tick"
+                sleep "$INTERVAL"
+                continue
+            fi
+            pending_head=$head
+            endpoint=$(printf '%s' "$pr_url" | jq -Rr 'sub("^https://[^/]+/"; "") | sub("/pull/"; "/pulls/")')
+            hostname=$(printf '%s' "$pr_url" | jq -Rr 'capture("^https://(?<host>[^/]+)/").host')
+            echo "pr-keep-current: proven stale; requesting server-side update"
+            if update_output=$(gh api --hostname "$hostname" --method PUT "repos/$endpoint/update-branch" -f "expected_head_sha=$head" 2>&1); then
                 printf '%s\n' "$update_output"
             else
                 printf '%s\n' "$update_output" >&2
@@ -69,7 +92,7 @@ while :; do
                         exit 3
                         ;;
                 esac
-                echo "pr-keep-current: update-branch failed; retrying next tick"
+                echo "pr-keep-current: update-branch outcome uncertain; observing without replay" >&2
             fi
             ;;
     esac

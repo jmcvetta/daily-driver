@@ -17,6 +17,7 @@ import sqlite3
 import subprocess
 import time
 import uuid
+from urllib.parse import urlparse
 
 INTERVAL = 120
 LEASE_SECONDS = 110
@@ -347,14 +348,57 @@ class GitHub:
         except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError) as error:
             raise ObservationError("review-thread inventory unavailable") from error
 
+    def observe_currency(self):
+        """Read pinned ancestry independently of CI and bracket it with PR reads."""
+        try:
+            pr = self.api(f"pulls/{self.number}")
+            def fields(value):
+                state = "MERGED" if value["merged"] else value["state"].upper()
+                head, base = value["head"]["sha"], value["base"]
+                if (state not in ("OPEN", "CLOSED", "MERGED")
+                        or not re.fullmatch(r"[0-9a-fA-F]{40}", head)
+                        or not re.fullmatch(r"[0-9a-fA-F]{40}", base["sha"])
+                        or not isinstance(base["ref"], str) or not base["ref"]):
+                    raise ObservationError("invalid PR identity/state")
+                return state, head, base["ref"], base["sha"]
+            state, head, base, base_sha = fields(pr)
+            ancestry = None
+            currency = None
+            if state == "OPEN":
+                if pr["mergeable"] is False or pr["mergeable_state"] == "dirty":
+                    currency = "conflict"
+                else:
+                    comparison = self.api(f"compare/{base_sha}...{head}")
+                    merge_base = comparison["merge_base_commit"]["sha"]
+                    behind = comparison["behind_by"]
+                    if (not isinstance(merge_base, str)
+                            or not re.fullmatch(r"[0-9a-fA-F]{40}", merge_base)
+                            or not isinstance(behind, int) or isinstance(behind, bool) or behind < 0
+                            or (merge_base.lower() == base_sha.lower()) != (behind == 0)):
+                        raise ObservationError("inconsistent ancestry comparison")
+                    ancestry = {"merge_base_sha": merge_base, "behind_by": behind}
+                    currency = "current" if behind == 0 else "update_candidate"
+            final = self.api(f"pulls/{self.number}")
+            if fields(final) != (state, head, base, base_sha):
+                raise ObservationError("PR changed during ancestry comparison")
+            if state == "OPEN" and (final["mergeable"] is False or final["mergeable_state"] == "dirty"):
+                currency, ancestry = "conflict", None
+            return {"head": head, "base": base, "base_sha": base_sha, "state": state,
+                    "currency": currency, "ancestry": ancestry}
+        except (KeyError, TypeError, AttributeError, ValueError) as error:
+            raise ObservationError("malformed currency evidence") from error
+
     def observe(self):
         """Collect a stable-head snapshot; a concurrent head/base move is unknown."""
         try:
+            currency_snapshot = self.observe_currency()
             pr = self.api(f"pulls/{self.number}")
             head, base = pr["head"]["sha"], pr["base"]
             state = "MERGED" if pr["merged"] else str(pr["state"]).upper()
-            if state not in ("OPEN", "CLOSED", "MERGED") or not head or not base["ref"] or not base["sha"]:
-                raise ObservationError("invalid PR identity/state")
+            if (head, base["ref"], base["sha"], state) != (
+                    currency_snapshot["head"], currency_snapshot["base"],
+                    currency_snapshot["base_sha"], currency_snapshot["state"]):
+                raise ObservationError("PR changed before inventory")
             checks, statuses, workflows, feedback = [], [], [], []
             if state == "OPEN":
                 checks = self.pages(f"commits/{head}/check-runs?per_page=100", "check_runs")
@@ -382,9 +426,6 @@ class GitHub:
             if (final["head"]["sha"] != head or final["base"] != base
                     or final["state"] != pr["state"] or final["merged"] != pr["merged"]):
                 raise ObservationError("PR changed during observation; discard inventory")
-            merge_state = final["mergeable_state"]
-            currency = ("conflict" if merge_state == "dirty" or final["mergeable"] is False else
-                        "current" if merge_state in ("clean", "unstable") else "update_candidate")
             inventory = {
                 "checks": sorted([[run["id"], run["status"], run["conclusion"]] for run in checks]),
                 "statuses": sorted([[status["id"], status["context"], status["state"]] for status in statuses]),
@@ -392,7 +433,8 @@ class GitHub:
                                      for run in workflows]),
             }
             return {"head": head, "base": base["ref"], "base_sha": base["sha"], "state": state,
-                    "currency": currency, "ci": ci_state(checks, statuses, workflows),
+                    "currency": currency_snapshot["currency"], "ancestry": currency_snapshot["ancestry"],
+                    "ci": ci_state(checks, statuses, workflows),
                     "inventory": inventory,
                     "failures": _ci_failures(checks, statuses, workflows),
                     "metadata": {"draft": final.get("draft", False),
@@ -419,7 +461,7 @@ def reconcile(ledger, key, github, clock=time.time):
 def main():
     """Expose explicit opt-in shadow observation, never install a live watch."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--database", required=True, type=Path, help="owner-only ledger outside Git")
+    parser.add_argument("--database", type=Path, help="owner-only ledger outside Git")
     commands = parser.add_subparsers(dest="command", required=True)
     register = commands.add_parser("register")
     register.add_argument("--host", default="github.com")
@@ -427,6 +469,8 @@ def main():
     register.add_argument("--number", required=True, type=int)
     register.add_argument("--owner", required=True, help="GitHub login of the author")
     register.add_argument("--context", required=True, type=Path, help="nonsecret task context JSON")
+    currency = commands.add_parser("currency", help="read pinned PR ancestry without a ledger")
+    currency.add_argument("--url", required=True)
     commands.add_parser("reconcile", help="observe each due shadow record once")
     commands.add_parser("list")
     for command in ("stop", "hold", "release"):
@@ -434,6 +478,19 @@ def main():
         control.add_argument("identity")
         control.add_argument("--reason", required=True)
     args = parser.parse_args()
+    if args.command == "currency":
+        parsed = urlparse(args.url)
+        match = re.fullmatch(r"/([^/]+/[^/]+)/pull/([1-9][0-9]*)", parsed.path)
+        if parsed.scheme != "https" or not parsed.hostname or parsed.query or parsed.fragment or not match:
+            parser.error("currency requires an exact HTTPS PR URL")
+        try:
+            source = GitHub(parsed.hostname, match[1], int(match[2]), "")
+            print(json.dumps(source.observe_currency(), sort_keys=True))
+        except (ObservationError, ValueError) as error:
+            parser.exit(1, f"currency observation failed: {error}\n")
+        return
+    if args.database is None:
+        parser.error("--database is required for ledger commands")
     ledger = Ledger(args.database)
     try:
         if args.command == "register":

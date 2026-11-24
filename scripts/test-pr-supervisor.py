@@ -250,6 +250,7 @@ class GitHubConsumerTests(unittest.TestCase):
         self.pr = {"head": {"sha": "a" * 40}, "base": {"ref": "release", "sha": "b" * 40},
                    "state": "open", "merged": False, "mergeable": True, "mergeable_state": "clean"}
         self.state = {"pr": [self.pr], "calls": [], "responses": {
+            f"compare/{'b' * 40}...{'a' * 40}": {"merge_base_commit": {"sha": "b" * 40}, "behind_by": 0},
             f"commits/{'a' * 40}/check-runs?per_page=100": [{"total_count": 1, "check_runs": [check()]}],
             f"commits/{'a' * 40}/statuses?per_page=100": [[]],
             f"actions/runs?head_sha={'a' * 40}&per_page=100": [{"total_count": 0, "workflow_runs": []}],
@@ -272,8 +273,8 @@ class GitHubConsumerTests(unittest.TestCase):
         self.assertEqual(result["base"], "release")
         self.assertEqual(len(result["inventory"]["checks"]), 2)
         calls = json.loads(self.fixture.read_text())["calls"]
-        self.assertEqual(len(calls), 9)
-        self.assertTrue(all("--paginate" in call and "--slurp" in call for call in calls[1:-1]))
+        self.assertEqual(len(calls), 12)
+        self.assertTrue(any("--paginate" in call and "--slurp" in call for call in calls))
         self.assertFalse(any("update-branch" in call for call in calls))
 
     def test_only_matching_head_and_pr_workflows_affect_ci(self):
@@ -289,7 +290,7 @@ class GitHubConsumerTests(unittest.TestCase):
         changed = copy.deepcopy(self.pr)
         changed["head"]["sha"] = "c" * 40
         self.state["pr"] = [self.pr, changed]
-        with self.assertRaisesRegex(SUPERVISOR.ObservationError, "changed during observation"):
+        with self.assertRaisesRegex(SUPERVISOR.ObservationError, "changed during ancestry"):
             self.observe()
 
     def test_incomplete_and_malformed_inventories_are_unknown(self):
@@ -311,10 +312,20 @@ class GitHubConsumerTests(unittest.TestCase):
         self.assertEqual([(item[0], item[1]) for item in feedback],
             [("issues/7/comments", 2), ("issues/7/comments", 3), ("pulls/7/reviews", 1)])
 
-    def test_masked_currency_does_not_write_or_claim_current(self):
+    def test_masked_currency_uses_ancestry(self):
+        endpoint = f"compare/{'b' * 40}...{'a' * 40}"
         for status in ("behind", "draft", "blocked", "unknown", None):
             self.pr["mergeable_state"] = status
+            self.assertEqual(self.observe()["currency"], "current")
+            self.state["responses"][endpoint] = {"merge_base_commit": {"sha": "c" * 40}, "behind_by": 1}
             self.assertEqual(self.observe()["currency"], "update_candidate")
+            self.state["responses"][endpoint] = {"merge_base_commit": {"sha": "b" * 40}, "behind_by": 0}
+
+    def test_inconsistent_comparison_is_unknown(self):
+        self.state["responses"][f"compare/{'b' * 40}...{'a' * 40}"] = {
+            "merge_base_commit": {"sha": "b" * 40}, "behind_by": 1}
+        with self.assertRaisesRegex(SUPERVISOR.ObservationError, "inconsistent"):
+            self.observe()
 
     def test_cli_registers_and_observes_without_installation_or_wakes(self):
         self.fixture.write_text(json.dumps(self.state))
@@ -328,7 +339,7 @@ class GitHubConsumerTests(unittest.TestCase):
         rows = json.loads(run.stdout)
         self.assertEqual(rows[0]["mode"], "shadow")
         self.assertEqual(json.loads(rows[0]["observed"])["ci"], "success")
-        self.assertEqual(len(json.loads(self.fixture.read_text())["calls"]), 9)
+        self.assertEqual(len(json.loads(self.fixture.read_text())["calls"]), 12)
         repeated = subprocess.run(prefix + ["reconcile"], check=True, capture_output=True, env=self.environment, text=True)
         self.assertEqual(json.loads(repeated.stdout), [])
 
