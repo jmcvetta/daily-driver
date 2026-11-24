@@ -112,16 +112,21 @@ leaving it open spends capability the worker may not have.
 An issue body is a requirement source, not original user approval. Later issue
 edits do not silently cancel agreed requirements for active work.
 
-**Specification-backed task variant.** Reference one specific, stable parent
-publication record and name the allocated requirement IDs and explicit
-exclusions. The record owns the approved canonical path and exact merged
-`master` commit; the task owns allocation, implementation map, verification
-and class. Resolve that record and read the document at that commit; verify
-the IDs exist, allocation and exclusions are unambiguous, and decomposition
-was separately agreed. Missing, changed, ambiguous or inaccessible records
-route to `epic`, never to the latest revision. Existing task contracts that
-pin their own path and SHA remain valid and keep that binding; do not reinterpret
-them as a newer publication. The document owns behavior and acceptance.
+**Specification-backed task variant.** Each new task carries
+`Canonical: <repository-relative document path>@<full merged commit SHA>`,
+`Approval: <exact issue-comment or pull-request-review URL recording explicit
+operator approval>`, allocated stable requirement IDs and explicit exclusions.
+The task also owns its implementation map, verification and class. Read the
+document at that exact commit; verify that the commit is the corresponding
+specification's merged `master` revision, the approval belongs to its issue or
+merged specification PR, the IDs exist, allocation and exclusions are clear,
+and decomposition was separately agreed. Agent review or a silent merge is
+not product approval. Missing, ambiguous, inaccessible, unmerged or mismatched
+evidence blocks precisely and routes to `epic`; never select the latest revision.
+A parent publication record is an optional index, not another permission source,
+and cannot override accessible equivalent evidence. Existing parent-record
+bindings and tasks pinned to a path and SHA remain valid under their original
+contract. The document owns behavior and acceptance.
 
 **A task body opens in a fixed shape.** Its parts appear in this order:
 
