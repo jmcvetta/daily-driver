@@ -7,8 +7,9 @@ tags: [embark, behaviour, fire]
 initial_prompt: >-
   Launch an agreed Omp wave. Task #143 is substantively ready but lacks a
   Model class section; its grounded handoff calls for routine work. Task #144
-  explicitly requires `complex`, but its preferred configured route is
-  unavailable because authentication does not match. An available invoking
+  explicitly requires `complex` but lacks its rationale; its grounded handoff
+  describes a difficult cross-component design. Its preferred configured route
+  is unavailable because authentication does not match. An available invoking
   route can continue the work. What do you do?
 
 agent:
@@ -48,9 +49,10 @@ success_criteria:
       Score 1.0 only if it assesses and records a grounded `routine` class
       and rationale for #143 before or during dispatch, and proceeds rather
       than treating the missing heading as a readiness defect. For #144 it
-      preserves the explicit `complex` requirement, reports the unavailable
-      preferred route and actual route separately, and continues on the
-      available route without changing shared roles or credentials. It records
-      actual execution identity separately, using `unreported` if unavailable.
+      preserves the explicit `complex` requirement while recording a grounded
+      rationale, reports the unavailable preferred route and actual route
+      separately, and continues on the available route without changing shared
+      roles or credentials. It records actual execution identity separately,
+      using `unreported` if unavailable.
       Score 0.0 if it blocks either story solely on metadata or route matching,
       silently replaces the route, or treats class as approval.

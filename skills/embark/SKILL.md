@@ -178,9 +178,10 @@ The harness denies the first dispatch until this session is titled, as
 `session-title`'s `When to set it` says; `Title the session` precedes this step.
 
 **Assess capability before dispatch.** Apply `issue-body` to each story,
-whatever its kind. Preserve a valid explicit class; assess and record a
-grounded class and rationale for missing or legacy metadata before or during
-dispatch. Formatting alone is not a readiness defect and never defaults to
+whatever its kind. Preserve an explicit recognized class even if its rationale
+is missing; assess and record a grounded class and rationale for missing or
+legacy metadata before or during dispatch. Formatting alone is not a readiness
+defect and never defaults to
 `routine`. A bare `story` marker does not establish readiness. `proposal`,
 `specification`, `human` and `epic` issues are not dispatch candidates. A
 story with an open blocker is not dispatched early.

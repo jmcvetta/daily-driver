@@ -244,10 +244,11 @@ A repository-answerable question is answered now by the author. An unresolved
 user decision makes the issue unready at every class. Missing, duplicate or
 invalid class metadata is not a product-readiness defect: assess the grounded
 handoff and record the lowest reasonable class and rationale before or during
-dispatch. Preserve an explicit valid class and its capability requirement;
-never default to `routine` without evidence. A `frontier` assignment needs its
-rationale, not a separate approval record. Frontier research remains `research`
-and carries no task template.
+dispatch. Preserve an explicit recognized class even when its rationale is
+missing, and record a grounded rationale without changing its capability
+requirement; never default to `routine` without evidence. A `frontier`
+assignment needs its rationale, not a separate approval record. Frontier
+research remains `research` and carries no task template.
 
 Preserve supplied execution bounds and applicable authority in a handoff.
 Do not add an approval checkpoint for a requested operation merely because

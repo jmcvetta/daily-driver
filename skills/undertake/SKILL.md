@@ -187,7 +187,8 @@ apply `issue-body`'s readiness test for the effective kind. Repair only gaps
 answerable from the repository and preserve valid content; ask about unresolved
 intent or unavailable prerequisites. Do not silently relabel an underspecified
 bug or research issue `human`. A task must still pass its stricter settled-
-intent and model-class checks. A research issue may finish with an answer,
+intent test; assess class as routing metadata, not a readiness gate. A research
+issue may finish with an answer,
 follow-on issue specifications, or a supported no; do not open an empty PR
 when its agreed deliverable is answer-only. Bounded inconclusive research is
 complete only with the evidence, limitation, and resolution path required by
@@ -208,19 +209,22 @@ A discovery parent never authorizes new implementation dispatch.
 A `task` always does. A `research` or `bug` does when it is an epic story,
 carries a `## Model class` section, or is assigned `frontier`. Apply
 `issue-body` to assess and record missing or legacy metadata from a grounded
-handoff before or during dispatch; preserve an explicit valid class and its
-capability requirement. Metadata formatting alone does not stop settled work,
-and an unclear capability need is reported rather than blindly defaulted to
+handoff before or during dispatch; preserve an explicit recognized class even
+when its rationale is missing, and preserve its capability requirement.
+Metadata formatting alone does not stop settled work, and an unclear capability
+need is reported rather than blindly defaulted to
 `routine`. A classed `research` or `bug` keeps its own readiness and completion
 tests, not the task template. A standalone `bug` or `research` with no story
 role and no class section uses its kind-specific readiness test alone.
 Class guides routing; it is not an approval gate.
 
-**Attempt initial class selection once before the worktree or claim.** This
-covers classed `task`, `research` and `bug` assignments. Use the active
-harness's configuration authority and supported selection route, not a second
-policy map. Matching model and effort need no setters. Do not change shared
-roles or credentials to make selection succeed.
+**Attempt initial class selection once before the worktree or claim when the
+class is grounded.** This covers classed `task`, `research` and `bug`
+assignments. If the capability need is unclear, report it and continue on an
+available route without inventing a class. Use the active harness's
+configuration authority and supported selection route, not a second policy
+map. Matching model and effort need no setters. Do not change shared roles or
+credentials to make selection succeed.
 
 Omp's effective class role is authoritative, including its model, provider,
 and effort, across global/project settings, CLI overlays, and Roles UI edits.
