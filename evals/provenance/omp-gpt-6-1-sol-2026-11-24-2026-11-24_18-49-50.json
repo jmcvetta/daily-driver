@@ -1,0 +1,164 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`stand-down` fires on a fleet being stood down",
+          "details": "observed='yes', expected='yes' (skill_name='stand-down')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "`session_01Gone` is named as a residual rather than waited on, and the stand-down still completes \u2014 handoff, stops, cancelled watches, and a printed banner",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "`session_01Gone` is named as a residual rather than waited on, and the stand-down still completes \u2014 handoff, stops, cancelled watches, and a printed banner",
+            "duration_seconds": 7.29,
+            "findings": [
+              "Task handoff distinguishes local-only abc123 at /work/task-511 from remote def456 and records the failed push.",
+              "Reconciliation is required before another writer is dispatched.",
+              "Attempted epic record retains failed watch cancellation as a residual.",
+              "Failed session remains an unsecured-work residual, not a blocker to live-worker wrap-up.",
+              "Final reply acknowledges failed task and epic writes and zero confirmed stops."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "31aef22fa072d2069d29c255e9f76889d044b84e3a2eaf36d07d2c28f2ec9110",
+            "rationale": "ANCHOR: result The transcript preserves all required recovery facts and explicitly proposes live-worker interruption, work security, and archival through owning controls without waiting for the failed worker. The final reply reports unavailable controls, unconfirmed stops, and failed publications rather than claiming delivery.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 3476,
+              "output": 147
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "1a959d8be8fa9b98528b624c5bd26b18bdc3f38c27fa02d9348ee9b7e60be8a5"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "stand-down-02-neg-residual-does-not-block-stops",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 111.49617409706116,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "stand-down-02-neg-residual-does-not-block-stops",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 140928,
+        "output_tokens": 2941,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 33456
+      },
+      "tokens": 177325,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-24T18:51:42.265853",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "1a959d8be8fa9b98528b624c5bd26b18bdc3f38c27fa02d9348ee9b7e60be8a5",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v3",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 3476,
+      "output": 147
+    }
+  },
+  "plugin_revision": {
+    "commit": "c20be2fa828ea97d8d6764b4da038454f3d9fbc6",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-24T11:51:51.643727+00:00",
+  "run_id": "2026-11-24_18-49-50",
+  "schema_version": 5,
+  "started_at": "2026-11-24T18:49:50.764986",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "stand-down-02-neg-residual-does-not-block-stops": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "stand-down-02-neg-residual-does-not-block-stops"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
