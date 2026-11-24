@@ -192,9 +192,10 @@ complete only with the evidence, limitation, and resolution path required by
 
 For a behavioral task with an agreed-scenario handoff, read its task branch,
 scenario paths, operator agreement, allocation and exclusions before claim.
-Use that branch and confirm the allocated scenarios exist; do not create a
-second feature branch for the contract. If interactive scenario agreement is
-still needed, route the affected behavior through `specification` before
+Adopt the existing task worktree or attach one to that branch, and confirm the
+allocated scenarios exist; never create a second feature branch. Establish their
+expected behavioral failure before implementing to green. If interactive
+scenario agreement is still needed, route the affected behavior through `specification` before
 implementation; do not dispatch it as unattended settled work. A discovery
 parent never authorizes new implementation dispatch, including staged tasks.
 Small tasks with adequate ordinary acceptance and verification need no ATDD
