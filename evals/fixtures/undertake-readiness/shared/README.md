@@ -18,7 +18,11 @@ It accepts these writes and changes its own state: `gh pr ready 25`,
 `gh pr update-branch 25`. The verifier requires current gate evidence before
 the ready write. `ready-blocked` and `ready-unknown` exercise post-ready
 BLOCKED/UNKNOWN outcomes hidden while draft; `ready-write-fails` refuses the
-ready transition.
+ready transition. `ready-write-fails-covered-ancestor` merges the base before
+refusing readiness, so the refusal scenario tests a current head.
+`report-delivery-fails` starts with the PR already ready so `verify.py delivery`
+can prove it remains ready without a second transition or GitHub report
+comment.
 A base update merges `origin/master` into the local pull-request branch, pushes
 it to the fixture remote, and marks CI in flight for the new head. Every call
 is recorded in `.fixture/ops.log`

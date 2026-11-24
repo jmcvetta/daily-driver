@@ -692,6 +692,10 @@ owns the content comparison and rejected-finding evidence rule.
 
 The harness pull-request client takes it out of draft only after `The gate`
 below holds. `review-cycle` supplies the review evidence the gate consumes.
+The transition and its report are ordered: mark the pull request ready, observe
+that the write succeeded, then send a dedicated user-visible readiness report.
+The report does not add a gate condition. A failed write or unmet gate never
+produces a success report.
 
 Before reporting completion, confirm the requested work and required review
 and approval are complete. Report checks, attributed judgments, failures,
@@ -716,7 +720,10 @@ pausing. On resume, revalidate the evidence and return through the gate.
 Pending CI and other external waits use their existing continuation.
 
 When the gate clears, mark the pull request ready. Existing supervision
-continues without a second owner.
+continues without a second owner. After success, deliver the dedicated
+`Ready for review` report described below to the user, and copy it to the
+orchestrator when an address was supplied. A failed delivery does not undo
+readiness or cause a retry loop.
 
 11 — Keep it current
 --------------------
@@ -1071,19 +1078,29 @@ Reporting to an orchestrator
 ============================
 
 An undertaking `embark` dispatched may be handed the address of the session
-that dispatched it — its orchestrator. **Where no address was given, this
-section does nothing**, and the sequence runs exactly as it does without it.
-Where one was given, the sequence reports to it at three moments:
+that dispatched it — its orchestrator. **User delivery of the first readiness
+report is unconditional**, whether or not an orchestrator address exists.
+When one exists, send the same report to both recipients. Other reports in
+this section remain conditional on the address:
 
 - **Every stop**, from `Where it stops and waits` or from `review-cycle`'s own,
   with the question it asks or the condition it reports.
 - **`Open the draft`**, once the draft exists.
-- **`Ready for review`**, once the pull request is marked ready.
+- **`Ready for review`**, once the pull request is marked ready; send this
+  report to the user and, when addressed, the orchestrator.
 
 Each report opens with the fixed line `Implementor report for #<task issue>`,
 then names the pull request where one exists, the moment reached, and the
-question or condition where there is one. The orchestrator finds reports by that
-line.
+question or condition where there is one. The readiness report includes the
+task identity, linked pull request, and explicit moment `Ready for review`.
+Use the available user-facing conversation route. A child whose output reaches
+only its parent must have that orchestrator visibly relay the readiness report
+to the user's conversation; parent-only delivery is not user delivery. Do not
+invent a remote session address.
+
+Ordinary catch-up does not repeat an initial readiness report when session
+history already shows it. Do not add a durable marker, timestamp, timer or
+telemetry write to deduplicate reports.
 
 **A report is sent, not a conversation.** It never waits for an answer, and
 the stop it reports still stops. An answer arrives, if it comes, as a message
@@ -1094,9 +1111,9 @@ record outlives both sessions and the report does not. Send actionable events,
 not repeated unchanged gate reports or a second status ledger; delivery does
 not prove receipt or transfer ownership.
 
-**A failed report is reported, not retried in a loop.** Say once, in the
-session, that the report did not go, and carry on with the sequence. The
-orchestrator's GitHub watch still sees the pull request.
+**A failed report delivery is reported once through the available conversation.**
+Do not claim that a recipient received it, block or reverse an otherwise
+successful ready transition, or retry in a loop. Continue the existing sequence.
 
 The reference file for the harness in use names the route.
 

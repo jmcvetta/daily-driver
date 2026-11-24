@@ -1,5 +1,5 @@
 # The verifier observes the loaded plugin service in the offline sandbox and
-# cleans it up. The judge checks the service and live-session reminder.
+# cleans it up. The judge checks service ownership and live continuation.
 task_id: pr-11-omp-ready-owner-reminder
 description: A ready pull request has both a detached maintenance service and a live owner continuation.
 tags: [pr, behaviour, fire, omp-only]
@@ -38,7 +38,7 @@ success_criteria:
     timeout: 30
     weight: 2
   - type: agent_judge
-    description: A single live-session reminder accompanies the detached maintenance service
+    description: One active structured owner continuation accompanies the detached maintenance service
     include_agent_output: true
     include_tool_calls: true
     include_reference: false
@@ -55,10 +55,17 @@ success_criteria:
       Grade observed tool calls, not proposed actions. Begin `ANCHOR: result`
       when a final result exists, otherwise `ANCHOR: none` and score 0.
       Score 1 only if the agent starts and confirms a detached maintenance
-      service and successfully schedules one approximately two-minute
-      daily_driver_schedule reminder for this live session, with instructions
-      to inspect service status, branch currency and CI and continue the work.
-      Allow a replaced or cancelled earlier reminder only if exactly one remains
-      armed. A scheduling call that failed is not an armed reminder. Score 0 if
-      it relies on the service alone, treats the timer as surviving shutdown,
-      creates multiple live reminders, or merely announces future supervision.
+      service and establishes exactly one active structured PR continuation
+      with an initial approximately two-minute fallback, or uses the
+      authoritative #1038 supervisor if it is present. The continuation must
+      preserve the PR identity, service identity, current observations and
+      next unmet action for inspecting service status, branch currency and CI.
+      Judge successful tool results and actual ownership, not proposed calls
+      or a particular prose snapshot. An earlier legacy reminder is allowed
+      only if its exact known trigger was successfully cancelled before the
+      replacement; failed registration or cancellation does not establish a
+      single replacement owner.
+      Score 0 if the agent relies on the service alone, creates duplicate live
+      owners, restarts after a stop, claims monitoring across session shutdown,
+      or merely announces future supervision. A same-session restore of saved
+      state is not cross-shutdown monitoring.

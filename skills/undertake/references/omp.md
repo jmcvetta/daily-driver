@@ -65,9 +65,11 @@ A new issue may select once without finishing old work, falsely completing it,
 or losing its cancellation ownership. Same-issue re-entry and resume never
 restore a saved model or effort. Wrong-owner finish remains an error.
 
-The successful finish persists and releases the undertaking before its
-automatic completion notification. Do not call `daily_driver_notify` again for
-that completion. A stopped or incomplete undertaking is not a completion.
+The successful finish persists and releases the undertaking, stopping its
+matching watches before the automatic completion notification. Report a stop
+failure; do not claim all continuations were cancelled. Do not call
+`daily_driver_notify` again for that completion. A stopped or incomplete
+undertaking is not a completion.
 
 For a genuine unresolved human handoff, before the chat handoff call
 `daily_driver_notify({ reason: "attention_required", key: "<stable action key>",
@@ -129,9 +131,12 @@ The pull request
 | `The gate` | Read the branch against its base | `gh pr view <number> --json mergeStateStatus` |
 | `The gate` | Read CI on the head | `gh pr view <number> --json statusCheckRollup` |
 | `The gate` | Read the review threads | `review-cycle`'s `references/omp.md` owns them |
-| `The gate` | Read review evidence | Use `review-cycle`'s review and thread routes as needed; compare reviewed content with the current head |
+| `The gate` | Read review evidence | Read the current `gh pr diff <number>`, submitted reviews, and conversation comments through `review-cycle`'s paginated routes; select current-scope independent evidence and compare it with the diff |
 | `The gate` | Read the Blockers section | `gh pr view <number> --json body`, where `pr-body`'s Blockers section sits |
-| `Ready for review` | Take it out of draft | `gh pr ready <number>` |
+| `Ready for review` | Take it out of draft | Only after all current gate evidence above succeeds: `gh pr ready <number>` |
+| `Ready for review` | Deliver the user-facing report | A dedicated final conversation message after observing `gh pr ready <number>` succeed; include the fixed report opening and task/PR/moment fields |
+| `Ready for review` | Copy to an addressed orchestrator | Omp has no remote session-messaging client: include the report in the child result returned to its orchestrator. The orchestrator must visibly relay it in the user-facing conversation; parent-only receipt does not satisfy user delivery |
+| `Ready for review` | Report delivery failure | State the failed delivery once in the available conversation; leave the PR ready and continue |
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
 
@@ -186,10 +191,14 @@ Otherwise take the common catch-up look, then continue this sequence:
 read `gh pr view <number> --json statusCheckRollup` for the resulting
 `headRefOid`; `review-cycle`'s three-source read remains the CI verdict.
 Pending or unregistered checks retain its renewable bounded observation and
-the common PR owner reminder. Window expiration is not a task blocker.
-Failed checks return to `Fix, answer, resolve, push`; unavailable logs require
-diagnosis, not a green verdict. A live idle owner must retain the common reminder. Process
-persistence alone does not resume an owner after session shutdown.
+the common structured PR owner continuation. Window expiration is not a task
+blocker. Record the undertaking's issue as `ownerIssue`; use the PR route's
+`register`, `get`, `checkpoint` and `stop` contract, including its exact legacy
+trigger cancellation before live cutover. Checkpoint after relevant current
+reads or permitted work, not an unrelated question. Failed checks return to
+`Fix, answer, resolve, push`; unavailable logs require diagnosis, not a green
+verdict. A live idle owner retains the continuation. Process persistence alone
+does not resume an owner after session shutdown.
 
 The common merge loop remains mechanical. It does not assess the gate or
 mark a draft ready.
@@ -203,9 +212,16 @@ The stop
 | Operation | Call |
 | --------- | ---- |
 | Read the issue's comments, for the claim and any equivalent handoff | `gh issue view <number> --json comments` |
-| Cancel the owner reminder | `daily_driver_cancel_schedule({triggerId})`, using the common PR slot |
+| Stop the owner continuation | `daily_driver_watch({action: "stop", key: <common PR key>})`; cancel an exact known legacy trigger separately if not yet migrated |
 | End the merge watch | `write proc://keep-current-<number>/kill`, the service name it was started under |
 | Post the handoff | `daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file", <path>] })` |
+
+Stop the matching watch before abort/wait or any stop-time push. Native
+`/undertaking cancel <issue>` also stops watches owned by that issue after
+ownership checks; report a callback failure rather than claiming cancellation.
+Stop owned CI and maintenance services separately. A stale wake cannot clear a
+hold or authorize a new registration; only a later explicitly authorized
+invocation may create a fresh run. Do not cancel unrelated requested reminders.
 
 The wrapper appends provenance to the handoff body. Do not format or include a
 block in the body file. A CI watcher this session holds is stopped by its

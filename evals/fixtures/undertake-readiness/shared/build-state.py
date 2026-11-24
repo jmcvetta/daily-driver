@@ -55,11 +55,13 @@ state = {
 
 if scenario == "ready-clean":
     pass
+elif scenario == "report-delivery-fails":
+    state["pr"]["draft"] = False
 elif scenario == "ready-blocked":
     state["pr"]["post_ready_merge_state"] = "BLOCKED"
 elif scenario == "ready-unknown":
     state["pr"]["post_ready_merge_state"] = "UNKNOWN"
-elif scenario == "ready-write-fails":
+elif scenario in ("ready-write-fails", "ready-write-fails-covered-ancestor"):
     state["ready_fails"] = True
     state["expect"].update(ready="attempt")
 elif scenario == "ci-wrong-head":
@@ -75,7 +77,7 @@ elif scenario == "missing-review-record":
     state["reviews"] = []
     state["review_evidence"]["available"] = False
     state["expect"].update(ready=False, no_review_round=False)
-elif scenario in ("covered-ancestor", "rejected-only", "ancestry-unavailable"):
+elif scenario in ("covered-ancestor", "ready-write-fails-covered-ancestor", "rejected-only", "ancestry-unavailable"):
     state["reviews"] = [review_for(review_head)]
     state["comments"] = [{
         "author": "independent-reviewer",

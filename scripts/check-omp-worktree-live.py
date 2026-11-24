@@ -100,8 +100,12 @@ def main() -> None:
                 request = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
                 messages = request.get("messages", [])
                 count = sum(len(message.get("tool_calls", [])) for message in messages if message.get("role") == "assistant")
-                if count and messages[-1].get("role") == "tool":
-                    results[calls[count - 1][0]] = str(messages[-1].get("content", ""))
+                if count:
+                    tool_result = next((message for message in reversed(messages)
+                                        if message.get("role") == "tool"
+                                        and message.get("tool_call_id") == calls[count - 1][0]), None)
+                    if tool_result is not None:
+                        results[calls[count - 1][0]] = str(tool_result.get("content", ""))
                 if count < len(calls):
                     label, name, arguments, _blocked = calls[count]
                     delta = {"role": "assistant", "tool_calls": [{

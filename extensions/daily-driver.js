@@ -52,6 +52,7 @@ import { installNotificationPolicy } from "./notification-policy.mjs";
 import { installUndertakingRouting } from "./undertaking-routing.mjs";
 import installPrSupervisionInbox from "./pr-supervision-inbox.mjs";
 import { installPrSupervisorTools } from "./pr-supervisor-tools.mjs";
+import { installWatchContinuations } from "./watch-continuation.mjs";
 
 /**
  * What the model is told when it calls Omp's `ask` tool. Mirrors the wording
@@ -2519,15 +2520,20 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 		return routingSettings.get(ctx.cwd);
 	}
 	const notificationPolicy = installNotificationPolicy(pi, settingsFor, notificationDependencies);
+	const watchContinuations = installWatchContinuations(pi);
 	const undertakingRouting = installUndertakingRouting(
 		pi,
 		settingsFor,
-		async (ctx, issue) => notificationPolicy.notify(ctx, {
-			reason: "work_complete",
-			key: `undertaking-${issue}-complete`,
-			message: `Undertaking #${issue} is complete.`,
-			workIdentity: `undertaking:${issue}`,
-		}),
+		async (ctx, issue) => {
+			await watchContinuations.stopOwner(ctx, issue);
+			await notificationPolicy.notify(ctx, {
+				reason: "work_complete",
+				key: `undertaking-${issue}-complete`,
+				message: `Undertaking #${issue} is complete.`,
+				workIdentity: `undertaking:${issue}`,
+			});
+		},
+		(ctx, issue) => watchContinuations.stopOwner(ctx, issue),
 	);
 	pi.on("session_start", async (_event, ctx) => {
 		invalidateStartupState();

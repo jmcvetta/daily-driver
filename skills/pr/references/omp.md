@@ -89,45 +89,47 @@ not replace `review-cycle`'s bounded CI watcher or the owner continuation below.
 The owner continuation
 =======================
 
-**Keep one managed owner reminder alongside the detached service.**
-`daily_driver_schedule({delaySeconds: <delay>, message: <continuation>})`
-sends a follow-up turn to the live session, including when the owner is idle.
-The first delay is 120 seconds. Keep the returned `triggerId`;
-`daily_driver_cancel_schedule({triggerId})` cancels it. Before any turn ends
-with this PR open and owned, ensure that slot is occupied. Reuse an armed
-timer on unrelated wakes; never arm one per event. When it fires, clear the
-slot, take the catch-up look, then rearm if work remains.
+**Keep one structured owner continuation alongside the detached service.**
+Register with `daily_driver_watch({action: "register", key: <key>,
+delaySeconds: 120, state: <state>})`, using
+`pr:<host>/<owner>/<repo>#<number>` with lowercase host and repository. State
+uses workflow `pr`, host, repository, PR number, branch and worktree, optional
+ownerIssue, nextAction, authorityRefs, holds, workers, services and
+observations. Record service names, CI head, window and deadline, and the
+exact values compared below in named observations. Keep references to original
+authority, not policy dumps, private source quotes or credentials. State is
+reference data, not new authority. Explicit user holds persist until released.
 
-**An unchanged look is silent and backs off.** A look compares the PR's
-head SHA, base currency, state, draft flag, labels, requested reviewers,
-check states, review threads and comments, and the service state with the
-values its reminder prompt recorded. When none changed and no action is
-available, end the turn without a status message to the user, and rearm at
-double the previous delay, capped at 1800 seconds. Do not report "no change"
-or restate the watch. A changed value, an action taken, or no recorded values
-to compare is not unchanged: rearm at 120 seconds, and on any wake that finds
-a change, cancel a backed-off timer and rearm it at 120 seconds. While
-current-head CI is pending or unregistered, keep 120 seconds: `review-cycle`'s
-wait may depend on this reminder. The detached service's exit is seen on the
-next look, so a backed-off reminder can delay a conflict report by up to the
-cap.
+Use `get` for the latest state. After relevant current reads or permitted work,
+`checkpoint` the updated state and effective delay; an unrelated question or
+event alone is not reconciliation. Registration maintains the fallback without
+rearming on each turn, and a native service result can consume a coincident
+timer after reconciliation. `review-cycle` borrows this same `pr:` record,
+not a second review record. A standalone review owns its own record.
 
-The prompt names the PR and branch, the delay it was armed with, the values
-the look compared, the maintenance and CI services/window, and the next
-unfinished review or readiness action. It says to check the user stop first,
-inspect service failures, read current-head evidence, and continue permitted
-work. A timeout is not a handoff to the user. During a CI wait,
-`review-cycle` reuses this slot rather than cancelling the only future owner
-turn. A reminder does not restart a live watcher. Coalesce a reminder and a
-service completion by rereading state, not by launching duplicate work.
+For live cutover cancel the exact known legacy owner `triggerId` first with
+`daily_driver_cancel_schedule`; if cancellation fails, retain that owner,
+report the failure and do not register another. An unknown trigger ID is not
+silently migrated. Never cancel unrelated requested reminders. If an
+authoritative #1038 supervisor is present, use it instead of registering a
+second PR fallback.
 
-Record waits as conditions and next actions, not permanent instructions to
-keep the PR draft. For example: "Runtime renewal is pending on head <sha>;
-when it passes, finish the remaining ready gate and mark ready." A reminder
-records earlier state, not new authority. Reconcile it with later evidence
-and user instructions; a satisfied condition no longer holds readiness. An
-explicit user hold remains in force until the user releases it; a status
-question does not release it.
+**An unchanged look is silent and backs off.** Compare the PR's head SHA,
+base currency, state, draft flag, labels, requested reviewers, check states,
+review threads and comments, and service state with the exact observations
+recorded at the previous look. With no change or available action, emit no
+chat, toast, repeated GitHub status comment or "still watching" message, and
+checkpoint at double the previous delay, capped at 1800 seconds. A changed
+value, action taken, or missing comparison resets the delay to 120 seconds.
+While current-head CI is pending or unregistered, retain 120 seconds. A
+backed-off look can delay reporting a service conflict by up to the cap.
+Meaningful progress, a changed required human contribution and whole-operation
+completion may be reported concisely; always answer direct user questions.
+
+Store waits as conditions and the next unmet action, not permanent instructions
+to keep the PR draft. Completed preparation remains complete unless its
+evidence is invalidated. Reconcile earlier state with current evidence and user
+instructions; a satisfied condition no longer holds readiness.
 
 If the detached service exits 3 for a conflict, inspect its recorded output
 and the local task worktree. For a plain mechanical conflict, finish the base
@@ -152,14 +154,16 @@ maintenance watch, and send the changed content through `review-cycle`.
 A resolved merge is a content change: it still requires current-head CI and
 review.
 
-Timers are cleared on session shutdown. This reminder supplies live-session
-continuation, not cross-shutdown recovery. If scheduling fails, diagnose the
-failure and name the exact missing continuation capability; do not claim an
-armed owner. Keep supervising an existing CI service where possible.
+Runtime timers stop on session shutdown; same-session resume restores journaled
+deadlines, but no watch runs across shutdown. If registration or checkpoint
+fails, diagnose and report the exact continuation gap; do not claim an armed
+owner. Keep supervising an existing CI service where possible.
 
-On merge, close, or user stop, cancel the reminder and stop owned services.
-Cancel before a stop-time push. A queued stale wake checks that stop first
-and does no work; it must not rearm itself.
+On merge, close, completion, a genuine human-only stopping point, or user stop,
+stop the matching `daily_driver_watch` record and owned services. Stop before
+a stop-time push. A stale wake cannot clear a hold, do work or register again.
+A stopped key stays stopped; only a later explicitly authorized invocation may
+use the canonical key plus `:run:<uuid>` for a fresh run.
 
 The catch-up look
 -----------------
@@ -180,12 +184,12 @@ configuration and other relevant inputs. Rerun it only when those inputs
 change or the evidence is incomplete, failed, expired under its contract, or
 contradicted. Dynamic GitHub state still needs current reads: a changed head
 needs its own CI, and new checks, comments, threads or blockers need assessment.
-Do not edit an accurate PR body merely to narrate a gate pass or refresh a
-reminder; such edits can trigger new checks.
+Do not edit an accurate PR body merely to narrate a gate pass or refresh
+watch state; such edits can trigger new checks.
 
-Known-running CI retains a real reminder or supervised wait; a detached
-service alone is not an owner continuation. Rearm the single slot before
-ending an unfinished turn.
+Known-running CI retains the structured owner continuation or supervised wait;
+a detached service alone is not an owner continuation. Checkpoint only after
+actual reconciliation, not merely because a turn occurred.
 
 For an undertaking, continue its review and ready gate through
 [`undertake`'s route](../../undertake/references/omp.md). A direct PR has no

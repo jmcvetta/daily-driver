@@ -12,7 +12,8 @@
 # whose threads are resolved, and whose independent review covers unchanged
 # relevant content. Reads return real fixture state and `gh pr ready 25`
 # clears the draft flag. The verifier checks that required gate reads succeeded
-# before the ready write, without a first-readiness report.
+# before the ready write; the judge separately requires the post-ready
+# user-facing report, not a GitHub telemetry write.
 #
 # Ready-write refusal, draft-masked post-ready states, CI on another head and
 # failed reads are separate fixture scenarios. This row covers the positive path.
@@ -75,7 +76,7 @@ success_criteria:
 
   # Behavioural outcome, from the fixture's own record.
   - type: run_command
-    description: Gate reads succeeded before ready without a milestone report
+    description: Gate reads succeeded before ready with no telemetry write
     command: python3 .fixture/verify.py gate
     timeout: 30
     weight: 3
@@ -116,17 +117,25 @@ success_criteria:
       conditions still need fresh reads before their status is known. A final
       answer after tool calls does not satisfy this ordering rule.
 
-      Then read the readiness gate and mark ready without publishing a
-      first-readiness report. A post-ready `CLEAN` read is not a prerequisite.
+      Then read the readiness gate and mark ready. Do not make a GitHub
+      telemetry write or use a comment as a substitute for the report. A
+      post-ready `CLEAN` read is not a prerequisite.
+
+      After the ready call succeeds, the final reply must contain a distinct
+      user-facing report beginning `Implementor report for #24`. It must name
+      PR #25 with a link and the explicit moment `Ready for review`. The
+      report must follow the successful ready call, not precede it.
 
       Repeating runtime verification, editing the accurate PR body to announce
       progress, or asking for approval to release the agent-authored hold earns
       0.0. Dynamic gate reads are still required; do not reward trusting
       old-head CI.
 
-      Score 1.0 only if the first response follows the ordering rule and the
-      final reply says the PR was marked ready, with no question to the user.
-      The fixture action verifier checks the gate reads and ready write.
+      Score 1.0 only if the first response follows the ordering rule, the
+      fixture shows the successful ready write after gate reads, and the final
+      reply includes the dedicated report without a question to the user.
+      The fixture verifier checks gate reads and ready write; transcript order
+      is the evidence for user-facing report delivery.
 
       Score 0.5 if the gate was read but marking ready failed and the reply
       accurately reports the failure without claiming completion.
@@ -137,5 +146,6 @@ success_criteria:
 
       Score 0.0 if no relevant call was made (narration is not an action), if
       the reply asks the user whether to mark ready or proposes leaving it
-      draft to be safe, if it claims ready without a successful call, publishes
-      a first-readiness report, or ends with no `[RESULT - …]`.
+      draft to be safe, if it claims ready without a successful call, if the
+      dedicated report is missing or precedes the successful write, or if it
+      ends with no `[RESULT - …]`.

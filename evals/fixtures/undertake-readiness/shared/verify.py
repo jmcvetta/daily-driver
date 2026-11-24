@@ -2,6 +2,7 @@
 """Verify an undertake-readiness or branch-currency run from offline evidence.
 
 usage: verify.py gate [DIR]      ready gate invariants for the scenario
+       verify.py delivery [DIR] already-ready state survives report failure
        verify.py service [DIR]   launched, observed alive, cleaned up
        verify.py currency [DIR]  base merge and current-head CI read
 
@@ -74,6 +75,21 @@ def gate(directory):
 
     if any(o["category"] == "comment" and o.get("is_report") for o in ops):
         bad.append("an obsolete first-readiness report was attempted")
+    return bad
+
+def delivery(directory):
+    """Confirm a failed report does not undo the already-completed transition."""
+    state = json.load(open(os.path.join(directory, "state.json"), encoding="utf-8"))
+    ops = load_ops(directory)
+    bad = []
+    if state["pr"]["draft"]:
+        bad.append("the pull request left ready state after delivery failure")
+    if ops is None:
+        return ["no ops.log: the fixture client never ran"]
+    if any(op["category"] == "ready" for op in ops):
+        bad.append("a second ready or undo transition was attempted")
+    if any(op["category"] == "comment" and op.get("is_report") for op in ops):
+        bad.append("a GitHub report comment was used as a delivery channel")
     return bad
 
 
@@ -172,12 +188,17 @@ def service(directory):
 
 
 def main(argv):
-    if len(argv) < 2 or argv[1] not in ("gate", "service", "currency"):
+    if len(argv) < 2 or argv[1] not in ("gate", "delivery", "service", "currency"):
         print(__doc__, file=sys.stderr)
         return 2
     directory = argv[2] if len(argv) > 2 else ".fixture"
     try:
-        bad = {"gate": gate, "service": service, "currency": currency}[argv[1]](directory)
+        bad = {
+            "gate": gate,
+            "delivery": delivery,
+            "service": service,
+            "currency": currency,
+        }[argv[1]](directory)
     except (OSError, ValueError, KeyError) as exc:
         bad = [f"fixture record unreadable: {exc}"]
     for line in dict.fromkeys(bad):
