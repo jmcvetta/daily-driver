@@ -75,6 +75,10 @@ before ending this workflow. Updating an existing PR reuses its watch or
 starts a missing one; reaching ready never starts a second watch. No issue or
 claim is required.
 
+Omp's optional read-only shadow ledger does not satisfy this requirement or
+replace the active harness route. Its observations and proposed actions are
+not agent delivery or uninterrupted supervision.
+
 Use the active harness reference's currency checkpoint and continuation route.
 Read the PR's actual base rather than assuming `master`. Merge that base into
 the head with the harness's server-side update-branch call, never a rebase or

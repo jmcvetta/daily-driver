@@ -434,5 +434,40 @@ export function installWatchContinuations(pi, { now = Date.now } = {}) {
 		return { messages };
 	});
 
-	return { stopOwner, stopWorkflow };
+	function matchesPr(record, identity) {
+		return ["pr","review-cycle"].includes(record.state.workflow) &&
+			`${record.state.host}/${record.state.repository}/${record.state.number}` === identity;
+	}
+
+	return {
+		stopOwner, stopWorkflow,
+		snapshotPr(ctx, identity) {
+			bind(ctx);
+			return active(journal(ctx)).filter(record => matchesPr(record,identity)).map(record => structuredClone(record));
+		},
+		stopPr(ctx, identity) {
+			return stopMatching(ctx,record => matchesPr(record,identity));
+		},
+		restorePr(ctx, saved) {
+			bind(ctx);
+			const facts = journal(ctx);
+			const keys = [];
+			for (const raw of saved) {
+				const record = validateRecord(raw);
+				if (record.sessionId !== facts.id || !["pr","review-cycle"].includes(record.state.workflow)) {
+					throw new Error("A prior PR watch belongs to another owner or workflow");
+				}
+				const identity = `${record.state.host}/${record.state.repository}/${record.state.number}`;
+				const existing = active(facts).find(item => matchesPr(item,identity) && item.state.workflow === record.state.workflow);
+				if (existing) { keys.push(existing.key); continue; }
+				// A rollback is a new watch incarnation; prior stop tombstones
+				// remain intact even across session rewind and repeated recovery.
+				const key = record.key.replace(/:run:.*$/u,"") + `:run:${randomUUID()}`;
+				keys.push(persist(ctx,{...record,key,registrationId:randomUUID(),revision:0,
+					lifecycle:"active",pending:false,lastDeliveryError:null},facts).key);
+			}
+			arm(ctx,facts);
+			return keys;
+		},
+	};
 }

@@ -1,0 +1,182 @@
+#!/usr/bin/env node
+/** Exercise opt-in runtime PR registration and owner controls without GitHub. */
+import assert from "node:assert/strict";
+import { execFileSync, spawn } from "node:child_process";
+import { mkdtempSync, mkdirSync, writeFileSync, chmodSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, delimiter } from "node:path";
+import { installPrSupervisorTools } from "../extensions/pr-supervisor-tools.mjs";
+import dailyDriverExtension from "../extensions/daily-driver.js";
+
+const root = mkdtempSync(join(tmpdir(), "pr-supervisor-tools-"));
+const priorPath = process.env.PATH;
+const priorDatabase = process.env.DAILY_DRIVER_PR_SUPERVISOR;
+try {
+	const primary = join(root, "repository");
+	const worktree = join(root, "task");
+	const bin = join(root, "bin");
+	mkdirSync(primary);
+	mkdirSync(bin);
+	execFileSync("git", ["init", "--initial-branch=master", primary], {stdio:"pipe"});
+	execFileSync("git", ["-C", primary, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "--allow-empty", "-m", "Fixture base"], {stdio:"pipe"});
+	execFileSync("git", ["-C", primary, "worktree", "add", "-b", "task", worktree], {stdio:"pipe"});
+	const fake = join(bin, "gh");
+	writeFileSync(fake, `#!/usr/bin/env python3
+import json, sys
+args = sys.argv[1:]
+if args[:4] == ["api","--hostname","isolated.example","graphql"]:
+ print(json.dumps([{"data":{"repository":{"pullRequest":{"reviewThreads":{"nodes":[],"pageInfo":{"hasNextPage":False,"endCursor":None}}}}}}]))
+else:
+ assert args[:5] == ["api","--hostname","isolated.example","--method","GET"], args
+ endpoint = "user" if args[5] == "user" else args[-1]
+ if endpoint == "user":
+  print("fixture-author")
+ elif endpoint == "/repos/fixture/project/pulls/7":
+  print(json.dumps({"head":{"ref":"task","sha":"a"*40},"base":{"ref":"release","sha":"b"*40},
+   "state":"open","merged":False,"mergeable":True,"mergeable_state":"clean"}))
+ elif "/check-runs?" in endpoint:
+  print(json.dumps([{"total_count":1,"check_runs":[{"id":1,"status":"completed","conclusion":"success"}]}]))
+ elif "/actions/runs?" in endpoint:
+  print(json.dumps([{"total_count":0,"workflow_runs":[]}]))
+ else:
+  assert any(part in endpoint for part in ("/statuses?","/comments?","/reviews?")), endpoint
+  print("[[]]")
+`);
+	chmodSync(fake, 0o755);
+	process.env.PATH = bin + delimiter + priorPath;
+	process.env.DAILY_DRIVER_PR_SUPERVISOR = join(root, "private", "supervisor.sqlite");
+	const node = {optional() { return this; },int() { return this; },min() { return this; },
+		max() { return this; },describe() { return this; }};
+	const tools = new Map();
+	const pi = {zod:{object:value=>({...value,optional() {return this;}}),string:()=>node,number:()=>node,array:()=>node,enum:()=>node},
+		registerTool:tool=>tools.set(tool.name,tool)};
+	let timersTaken = 0;
+	const service = installPrSupervisorTools(pi, {takeTimers() { timersTaken++; return []; },restoreTimers() { return []; },
+		takeWatches:()=>[],stopWatches() {},restoreWatches:()=>[]});
+	await service.initialize();
+	const ctx = {cwd:primary,hasPendingMessages:()=>false,
+		sessionManager:{getSessionId:()=>"fixture-owner",getSessionFile:()=>join(root,"owner.jsonl")}};
+	const url = "https://isolated.example/fixture/project/pull/7";
+	const register = tools.get("daily_driver_pr_supervisor_register");
+	const result = await register.execute("register", {url}, undefined, undefined, ctx);
+	assert.equal(result.details.authority.state, "shadow");
+	assert.equal(result.details.identity, "isolated.example/fixture/project/7");
+	assert.equal(result.details.delivery, null);
+	await service.afterWrite(["pr","create"], url + "\n", ctx);
+	await service.afterWrite(["pr","edit","7"], url + "\n", ctx);
+	const control = tools.get("daily_driver_pr_supervisor_control");
+	const status = await control.execute("status", {operation:"status",identity:result.details.identity}, undefined, undefined, ctx);
+	assert.equal(status.details.authority.state, "shadow");
+	assert.equal(status.details.authority.legacy, undefined);
+	await assert.rejects(control.execute("transfer", {operation:"transfer",identity:result.details.identity}, undefined, undefined, ctx), /No active lifecycle controller/);
+	assert.equal(timersTaken, 0, "host absence must not cancel existing owner continuation");
+	const other = {...ctx,sessionManager:{...ctx.sessionManager,getSessionId:()=>"another-owner"}};
+	await assert.rejects(control.execute("hold", {operation:"hold",identity:result.details.identity,reason:"wrong owner"}, undefined, undefined, other), /recorded live owner/);
+	await control.execute("hold", {operation:"hold",identity:result.details.identity,reason:"explicit hold"}, undefined, undefined, ctx);
+	assert.equal(await service.allowsLegacy(result.details.identity), false);
+	await control.execute("release", {operation:"release",identity:result.details.identity,reason:"explicit release"}, undefined, undefined, ctx);
+	assert.equal(await service.allowsLegacy(result.details.identity), true);
+	// Drive the real runtime reminder adapter through transfer, rollback and
+	// retransfer. No custom callback stands in for cancellation/restoration.
+	const supervisorScript = new URL("./pr-active-supervisor.py", import.meta.url).pathname;
+	const host = spawn("python3", [supervisorScript,"--database",process.env.DAILY_DRIVER_PR_SUPERVISOR,"run"], {stdio:["ignore","pipe","pipe"]});
+	try {
+		await new Promise((resolveReady,reject) => {
+			const deadline = setTimeout(()=>reject(new Error("fixture controller did not acquire its lease")),5000);
+			host.stdout.once("data",()=>{clearTimeout(deadline);resolveReady();});
+			host.once("error",reject);
+			host.once("exit",code=>{clearTimeout(deadline);reject(new Error(`fixture controller exited ${code}`));});
+		});
+		const events = new Map(), runtimeTools = new Map(), timers = new Map(), sent = [], entries = [];
+		let nextTimer = 0, aborted = 0;
+		const runtime = {zod:pi.zod,on(name,handler) {events.set(name,[...(events.get(name)??[]),handler]);},
+			registerTool:tool=>runtimeTools.set(tool.name,tool),registerCommand() {},
+			getActiveTools:()=>["read","write"],getAllTools:()=>[...runtimeTools.values()],
+			sendUserMessage:(content,options)=>sent.push({content,options}),sendMessage() {},
+			appendEntry(customType,data) {entries.push({type:"custom",customType,data});}};
+		dailyDriverExtension(runtime,{notificationDependencies:{lookup:()=>({override(){}})}});
+		const timerContext = {...ctx,cwd:worktree,agent:{kind:"main",id:"Main"},
+			sessionManager:{...ctx.sessionManager,getSessionName:()=>"#7 Fixture",getBranch:()=>entries,getEntries:()=>entries},
+			setTimeout(fn,delay) {timers.set(++nextTimer,{fn,delay});return nextTimer;},
+			clearTimer:id=>timers.delete(id),abort:async()=>{aborted++;}};
+		const schedule = runtimeTools.get("daily_driver_schedule");
+		const original = (await schedule.execute("timer",{delaySeconds:60,message:"Original owner continuation"},undefined,undefined,timerContext)).details.triggerId;
+		const watchState = {workflow:"pr",host:"isolated.example",repository:"fixture/project",number:7,
+			ownerIssue:7,branch:"task",worktree,nextAction:"Read current fixture evidence",authorityRefs:["issue://7"],
+			holds:[],workers:[],services:[],observations:[]};
+		const watch = runtimeTools.get("daily_driver_watch");
+		const watched = await watch.execute("watch",{action:"register",key:"pr:isolated.example/fixture/project#7",
+			delaySeconds:60,state:watchState},undefined,undefined,timerContext);
+		assert.equal(watched.details.registered,true);
+		let runtimeControl = runtimeTools.get("daily_driver_pr_supervisor_control");
+		const invoke = (operation,timerIds=[]) => runtimeControl.execute(operation,
+			{operation,identity:result.details.identity,timerIds,services:[]},undefined,undefined,timerContext);
+		await invoke("transfer",[original]);
+		assert.equal(timers.size,0,"transfer cancels the original timer");
+		const rollback = await invoke("rollback");
+		assert.equal(rollback.details.timerIds.length,1);
+		assert.equal(rollback.details.watchKeys.length,1);
+		assert.equal(timers.size,2,"rollback restores the generic timer and structured PR watch");
+		const restoredWatch = entries.find(entry=>entry.data.key===rollback.details.watchKeys[0]);
+		assert.deepEqual(restoredWatch.data.state,watchState,"structured context survives rollback unchanged");
+		await invoke("rollback");
+		assert.equal(timers.size,2,"repeated rollback cannot duplicate either wake owner");
+		const [restoredId,restored] = [...timers.entries()][0];
+		timers.delete(restoredId);
+		await restored.fn();
+		assert.equal(sent.length,1);
+		assert.match(sent[0].content,/Original owner continuation/);
+		const lostWake = sent[0].content;
+		for (const handler of events.get("session_shutdown")??[]) await handler({},timerContext);
+		assert.equal(timers.size,0,"shutdown clears in-memory retry handles, not durable pending work");
+		sent.length = 0; // Drop the queued transport delivery before owner admission.
+		// Advance only the isolated fixture's persisted lease clock. The Python
+		// consumer tests assert the actual 120-second deadline and retry budget.
+		const advanceClock = join(root,"advance-legacy-clock.py");
+		writeFileSync(advanceClock, `import sqlite3,sys,time
+db=sqlite3.connect(sys.argv[1])
+changed=db.execute("UPDATE authorities SET legacy_deadline=? WHERE identity=? AND legacy_running=0 AND legacy_delivery IS NOT NULL",
+ (time.time()-1,"isolated.example/fixture/project/7")).rowcount
+assert changed==1
+db.commit()
+`);
+		execFileSync("python3",[advanceClock,process.env.DAILY_DRIVER_PR_SUPERVISOR]);
+		events.clear();
+		runtimeTools.clear();
+		dailyDriverExtension(runtime,{notificationDependencies:{lookup:()=>({override(){}})}});
+		runtimeControl = runtimeTools.get("daily_driver_pr_supervisor_control");
+		for (const handler of events.get("session_switch")??[]) await handler({},timerContext);
+		const recoveredRetry = [...timers.entries()].find(([,entry])=>entry.delay<=1);
+		assert.ok(recoveredRetry,"owner rebind recovers an expired queued admission from the database");
+		timers.delete(recoveredRetry[0]);
+		await recoveredRetry[1].fn();
+		assert.equal(sent.length,1,"lost queued work is redelivered after owner rebind");
+		assert.match(sent[0].content,/Original owner continuation/);
+		assert.notEqual(sent[0].content,lostWake,"recovery must rotate the queued token");
+		for (const handler of events.get("before_agent_start")??[]) await handler({prompt:lostWake},timerContext);
+		assert.equal(aborted,1,"the abandoned queued token cannot start after recovery");
+		// Transfer after timer admission but before native message delivery:
+		// the authority epoch must reject the queued wake before owner work.
+		await invoke("transfer");
+		for (const handler of events.get("before_agent_start")??[]) {
+			await handler({prompt:sent[0].content},timerContext);
+		}
+		assert.equal(aborted,2,"the recovered queued timer also cannot start work after retransfer");
+		assert.equal(timers.size,0,"retransfer also fences the restored structured fallback");
+	} finally {
+		host.kill("SIGTERM");
+		await new Promise(resolveExit=>host.once("exit",resolveExit));
+	}
+	await control.execute("stop", {operation:"stop",identity:result.details.identity,reason:"explicit stop"}, undefined, undefined, ctx);
+	assert.equal(await service.allowsLegacy(result.details.identity), false);
+	await register.execute("adopt", {url}, undefined, undefined, other);
+	const stopped = await control.execute("status", {operation:"status",identity:result.details.identity}, undefined, undefined, ctx);
+	assert.equal(stopped.details.stopped, "explicit stop");
+	await assert.rejects(service.afterWrite(["pr","create"], "", ctx), /no registration identity/);
+	console.log("PR runtime controls: registration/adoption, owner isolation, missing host, holds/stops and safe metadata passed");
+} finally {
+	process.env.PATH = priorPath;
+	if (priorDatabase === undefined) delete process.env.DAILY_DRIVER_PR_SUPERVISOR;
+	else process.env.DAILY_DRIVER_PR_SUPERVISOR = priorDatabase;
+	rmSync(root, {recursive:true,force:true});
+}
