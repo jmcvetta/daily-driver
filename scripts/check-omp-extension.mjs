@@ -433,6 +433,13 @@ const ISSUE_TITLE = "#52 Rotate the Aurora access token";
 const EPIC_TITLE = "⛵ EPIC #12 Rotate the tokens";
 const GH_COMMENT = "gh issue comment 52 -b 'Claiming it.'";
 const GH_COMMENT_ARGS = ["issue", "comment", "52", "-b", "Claiming it."];
+/** One attributed non-comment report, which both title gates admit. */
+const GH_REPORT_SHELL = `daily_driver_gh_write -j ${
+	JSON.stringify(JSON.stringify({
+		args: ["issue", "create", "--repo", "jmcvetta/daily-driver", "--label", "bug",
+			"--title", "Title recovery blocked", "--body", "Failure details"],
+	}))
+}`;
 
 /** A tool context whose session reads `name`; `undefined` is an unnamed session. */
 function namedCtx(name) {
@@ -1062,6 +1069,9 @@ check("title recovery follows shell interpreters and command wrappers", () => {
 			"bash -c \"$script\"",
 			"sh -c \"$script\"",
 			'eval "$script"',
+			"printf 'task {}' | bash -c 'xargs -I{} sh -c {}'",
+			"script='task {}'; bash -c 'bash -c \"$script\"'",
+			"bash -c 'env -S \"task\"'",
 			"xargs task",
 			"xargs -0 task",
 			"xargs -I{} sh -c '{}'",
@@ -1082,6 +1092,13 @@ check("title recovery follows shell interpreters and command wrappers", () => {
 			"find . -name '*.js' -exec sh -c 'task {}' \\;",
 			`bash -c '${comment}'`,
 			`sh -c '${comment}'`,
+			`watch ${comment}`,
+			`stdbuf -oL ${comment}`,
+			`strace -f ${comment}`,
+			`ssh example.invalid ${comment}`,
+			`parallel ${comment}`,
+			`env -Z ${comment}`,
+			`bash -c 'watch ${comment}'`,
 		]) {
 			const result = titleCall(s, "bash", { command }, ctx);
 			assert.equal(result?.block, true, `${status}: ${command}`);
@@ -1103,6 +1120,7 @@ check("title recovery follows shell interpreters and command wrappers", () => {
 			"bash scripts/provision-disposable.sh status",
 			"echo $(( 1 + 1 ))",
 			"bash -c 'echo \"task is data\"'",
+			`watch ${GH_REPORT_SHELL}`,
 		]) {
 			assert.equal(titleCall(s, "bash", { command }, ctx), undefined, `${status}: ${command}`);
 		}
@@ -1357,7 +1375,13 @@ function assertTitleBlocked(decision) {
 check("unreadable shell payloads stay ordinary outside epic recovery", () => {
 	const s = makeSession();
 	const ctx = { ...namedCtx(undefined), cwd: worktrees.task };
-	for (const command of ['eval "$script"', 'bash -c "$script"', 'sh -c "$script"']) {
+	for (const command of [
+		'eval "$script"', 'bash -c "$script"', 'sh -c "$script"',
+		"printf 'task {}' | bash -c 'xargs -I{} sh -c {}'",
+		"script='task {}'; bash -c 'bash -c \"$script\"'",
+		"bash -c 'env -S \"task\"'",
+		`watch ${GH_REPORT_SHELL}`,
+	]) {
 		assert.equal(titleCall(s, "bash", { command }, ctx), undefined, command);
 	}
 	const comment = `daily_driver_gh_write -j ${
@@ -1365,6 +1389,9 @@ check("unreadable shell payloads stay ordinary outside epic recovery", () => {
 	}`;
 	for (const command of [
 		"bash -c 'task {}'", "xargs task", "timeout 30 task", `bash -c '${comment}'`,
+		`watch ${comment}`, `stdbuf -oL ${comment}`, `strace -f ${comment}`,
+		`ssh example.invalid ${comment}`, `parallel ${comment}`, `env -Z ${comment}`,
+		`bash -c 'watch ${comment}'`,
 	]) {
 		assertTitleBlocked(titleCall(s, "bash", { command }, ctx));
 	}

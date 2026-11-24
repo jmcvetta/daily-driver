@@ -2292,23 +2292,14 @@ function commandExecution(words, start = 0) {
 function protectedExecution(words, execution, failClosed) {
 	if (execution === null) return false;
 	if (execution.name === "task") return true;
-	if (execution.name === "daily_driver_gh_write") {
-		const option = words[execution.index + 1]?.text;
-		const value = words[execution.index + 2];
-		if (!["-j", "--json"].includes(option) || !value?.literal) return true;
-		try {
-			return isGitHubCommentWrite(JSON.parse(value.text)?.args);
-		} catch {
-			return true;
-		}
-	}
 	if (!STRING_INTERPRETERS.has(execution.name)) return false;
 	try {
 		const invocation = shellInvocation(
 			execution.name,
 			execution.operands ?? words.slice(execution.index + 1),
 		);
-		if (invocation.command && runsProtectedWorkflow(invocation.command.text)) {
+		if (invocation.command &&
+			runsProtectedWorkflow(invocation.command.text, failClosed)) {
 			return true;
 		}
 	} catch (err) {
@@ -2316,6 +2307,22 @@ function protectedExecution(words, execution, failClosed) {
 		return failClosed;
 	}
 	return false;
+}
+
+/**
+ * Whether one literal `daily_driver_gh_write` word carries a claim or comment
+ * write. The scan is positioned on the word rather than the command head, so
+ * a runner outside the wrapper table still exposes the write it is given.
+ */
+function protectedClaimWrite(words, index) {
+	const option = words[index + 1]?.text;
+	const value = words[index + 2];
+	if (!["-j", "--json"].includes(option) || !value?.literal) return true;
+	try {
+		return isGitHubCommentWrite(JSON.parse(value.text)?.args);
+	} catch {
+		return true;
+	}
 }
 
 /** Recognize shell dispatch and provenance-wrapped claim calls. */
@@ -2335,6 +2342,13 @@ function runsProtectedWorkflow(command, failClosed = false) {
 		if (arithmeticStack.at(-1) === true) continue;
 		const words = segment.words ?? [];
 		if (words.length === 0) continue;
+		// Claim writes are recognized wherever the word stands in the segment,
+		// because a runner outside the wrapper table still executes its operands.
+		for (let index = 0; index < words.length; index++) {
+			const word = words[index];
+			if (!word.literal || basename(word.text) !== "daily_driver_gh_write") continue;
+			if (protectedClaimWrite(words, index)) return true;
+		}
 		try {
 			if (protectedExecution(words, commandExecution(words), failClosed)) return true;
 			// `find -exec` and `-execdir` run the words after them as a command
