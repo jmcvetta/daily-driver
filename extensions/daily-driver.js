@@ -2170,6 +2170,16 @@ function needsTitle(event) {
 		runsProtectedWorkflow(event.input.command)
 	);
 }
+/** Language-server actions that only read and cannot apply edits. */
+const READ_ONLY_LSP_ACTIONS = new Set([
+	"diagnostics", "definition", "references", "hover", "symbols",
+	"type_definition", "implementation", "status", "capabilities",
+]);
+
+/** Whether this call is a language-server action that can mutate files. */
+function mutatingLanguageServer(event) {
+	return event.toolName === "lsp" && !READ_ONLY_LSP_ACTIONS.has(event.input?.action);
+}
 
 /**
  * State carried on the active session branch while an explicit Omp embark
@@ -2858,7 +2868,8 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 				return { block: true, reason: embarkTitleReason(startup) };
 			}
 		}
-		if (["awaiting", "required"].includes(startup?.status) && needsTitle(event)) {
+		if (["awaiting", "required"].includes(startup?.status) &&
+			(needsTitle(event) || mutatingLanguageServer(event))) {
 			return { block: true, reason: embarkTitleReason(startup) };
 		}
 		// After the worktree check: the session's first issue comment and first

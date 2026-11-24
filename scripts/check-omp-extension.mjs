@@ -1031,8 +1031,8 @@ check("title recovery admits diagnostics but rejects mutation-capable routes", (
 			"type_definition", "implementation", "status", "capabilities"]) {
 			assert.equal(titleCall(s, "lsp", { action, file: "extensions/daily-driver.js" }, ctx), undefined, action);
 		}
-		for (const action of ["rename", "rename_file", "code_actions", "request", "reload"]) {
-			assert.equal(titleCall(s, "lsp", { action, file: "extensions/daily-driver.js" }, ctx), undefined, action);
+		for (const action of ["rename", "rename_file", "code_actions", "request", "reload", "unknown_action"]) {
+			assert.equal(titleCall(s, "lsp", { action, file: "extensions/daily-driver.js" }, ctx)?.block, true, action);
 		}
 		for (const command of ["find . -delete", "sed -n '1p' -i README.md", "awk '{system(\"date\")}' README.md"]) {
 			assert.equal(titleCall(s, "bash", { command }, ctx), undefined, command);
