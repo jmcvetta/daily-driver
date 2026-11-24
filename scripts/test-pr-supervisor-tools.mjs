@@ -108,7 +108,7 @@ else:
 		const watched = await watch.execute("watch",{action:"register",key:"pr:isolated.example/fixture/project#7",
 			delaySeconds:60,state:watchState},undefined,undefined,timerContext);
 		assert.equal(watched.details.registered,true);
-		const runtimeControl = runtimeTools.get("daily_driver_pr_supervisor_control");
+		let runtimeControl = runtimeTools.get("daily_driver_pr_supervisor_control");
 		const invoke = (operation,timerIds=[]) => runtimeControl.execute(operation,
 			{operation,identity:result.details.identity,timerIds,services:[]},undefined,undefined,timerContext);
 		await invoke("transfer",[original]);
@@ -126,13 +126,42 @@ else:
 		await restored.fn();
 		assert.equal(sent.length,1);
 		assert.match(sent[0].content,/Original owner continuation/);
+		const lostWake = sent[0].content;
+		for (const handler of events.get("session_shutdown")??[]) await handler({},timerContext);
+		assert.equal(timers.size,0,"shutdown clears in-memory retry handles, not durable pending work");
+		sent.length = 0; // Drop the queued transport delivery before owner admission.
+		// Advance only the isolated fixture's persisted lease clock. The Python
+		// consumer tests assert the actual 120-second deadline and retry budget.
+		const advanceClock = join(root,"advance-legacy-clock.py");
+		writeFileSync(advanceClock, `import sqlite3,sys,time
+db=sqlite3.connect(sys.argv[1])
+changed=db.execute("UPDATE authorities SET legacy_deadline=? WHERE identity=? AND legacy_running=0 AND legacy_delivery IS NOT NULL",
+ (time.time()-1,"isolated.example/fixture/project/7")).rowcount
+assert changed==1
+db.commit()
+`);
+		execFileSync("python3",[advanceClock,process.env.DAILY_DRIVER_PR_SUPERVISOR]);
+		events.clear();
+		runtimeTools.clear();
+		dailyDriverExtension(runtime,{notificationDependencies:{lookup:()=>({override(){}})}});
+		runtimeControl = runtimeTools.get("daily_driver_pr_supervisor_control");
+		for (const handler of events.get("session_switch")??[]) await handler({},timerContext);
+		const recoveredRetry = [...timers.entries()].find(([,entry])=>entry.delay<=1);
+		assert.ok(recoveredRetry,"owner rebind recovers an expired queued admission from the database");
+		timers.delete(recoveredRetry[0]);
+		await recoveredRetry[1].fn();
+		assert.equal(sent.length,1,"lost queued work is redelivered after owner rebind");
+		assert.match(sent[0].content,/Original owner continuation/);
+		assert.notEqual(sent[0].content,lostWake,"recovery must rotate the queued token");
+		for (const handler of events.get("before_agent_start")??[]) await handler({prompt:lostWake},timerContext);
+		assert.equal(aborted,1,"the abandoned queued token cannot start after recovery");
 		// Transfer after timer admission but before native message delivery:
 		// the authority epoch must reject the queued wake before owner work.
 		await invoke("transfer");
 		for (const handler of events.get("before_agent_start")??[]) {
 			await handler({prompt:sent[0].content},timerContext);
 		}
-		assert.equal(aborted,1,"an already-queued old timer cannot start work after retransfer");
+		assert.equal(aborted,2,"the recovered queued timer also cannot start work after retransfer");
 		assert.equal(timers.size,0,"retransfer also fences the restored structured fallback");
 	} finally {
 		host.kill("SIGTERM");

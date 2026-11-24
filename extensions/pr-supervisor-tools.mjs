@@ -119,8 +119,11 @@ export function installPrSupervisorTools(pi, { takeTimers, restoreTimers, takeWa
 
 	return {
 		databasePath, initialize,
-		legacyWake(identity, operation, token, epoch) {
-			return backend("legacy-wake", [identity], {operation,token,epoch});
+		legacyWake(identity, operation, token, epoch, context) {
+			return backend("legacy-wake", [identity], {operation,token,epoch,context});
+		},
+		recoverLegacy(session) {
+			return backend("recover-legacy", [session]);
 		},
 		async allowsLegacy(identity) {
 			const state = await backend("status", [identity]);

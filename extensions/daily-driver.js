@@ -2635,16 +2635,54 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 		return true;
 	}
 
+	const legacyRetries = new Map();
+	let legacyLifecycle = 0;
+
+	function cancelLegacyRetry(identity, token) {
+		const entry = legacyRetries.get(identity);
+		if (!entry || token && entry.token !== token) return;
+		entry.ctx.clearTimer(entry.handle);
+		legacyRetries.delete(identity);
+	}
+
+	function dispatchLegacyWake(ctx, delivery) {
+		if (delivery.authorized || delivery.pending) {
+			const identity = delivery.identity;
+			const existing = legacyRetries.get(identity);
+			if (!existing || existing.token !== delivery.token) {
+				cancelLegacyRetry(identity);
+				const lifecycle = legacyLifecycle;
+				const session = ctx.sessionManager.getSessionId();
+				const handle = ctx.setTimeout(async () => {
+					if (legacyRetries.get(identity)?.handle !== handle) return;
+					legacyRetries.delete(identity);
+					if (lifecycle !== legacyLifecycle || ctx.sessionManager.getSessionId() !== session) return;
+					const retry = await prSupervisor.legacyWake(identity,"retry",delivery.token,delivery.epoch);
+					if (lifecycle !== legacyLifecycle || ctx.sessionManager.getSessionId() !== session) return;
+					dispatchLegacyWake(ctx,retry);
+				}, Math.max(1,Math.ceil(delivery.deadline*1000-Date.now())));
+				legacyRetries.set(identity,{ctx,handle,token:delivery.token});
+			}
+		}
+		if (delivery.authorized) {
+			pi.sendUserMessage(`DAILY_DRIVER_PR_LEGACY ${delivery.identity} ${delivery.epoch} ${delivery.token}\n${delivery.context.message}`,
+				{deliverAs:"followUp",attribution:"agent"});
+		} else if (delivery.error) {
+			console.error("daily-driver: legacy PR wake retry limit reached; owner recovery required");
+		}
+	}
+
 	function scheduleReminder(ctx, params) {
 		const triggerId = newTriggerId();
 		const dueAt = Date.now() + params.delaySeconds * 1000;
+		const lifecycle = legacyLifecycle;
 		const handle = ctx.setTimeout(async () => {
 			TRIGGERS.delete(triggerId);
 			if (params.identity && prSupervisor) {
-				const admitted = await prSupervisor.legacyWake(params.identity,"admit");
-				if (!admitted.authorized) return;
-				pi.sendUserMessage(`DAILY_DRIVER_PR_LEGACY ${params.identity} ${admitted.epoch} ${admitted.token}\n${params.message}`,
-					{deliverAs:"followUp",attribution:"agent"});
+				const session = ctx.sessionManager.getSessionId();
+				const admitted = await prSupervisor.legacyWake(params.identity,"admit",undefined,undefined,
+					{message:params.message,delaySeconds:params.delaySeconds});
+				if (lifecycle === legacyLifecycle && ctx.sessionManager.getSessionId() === session) dispatchLegacyWake(ctx,admitted);
 				return;
 			}
 			pi.sendMessage({customType: REMINDER_CUSTOM_TYPE, content:params.message,
@@ -2655,7 +2693,10 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 	}
 	const prSupervisor = installPrSupervisorTools(pi, {
 		takeWatches: (ctx,identity) => watchContinuations.snapshotPr(ctx,identity),
-		stopWatches: (ctx,identity) => watchContinuations.stopPr(ctx,identity),
+		stopWatches: (ctx,identity) => {
+			cancelLegacyRetry(identity);
+			return watchContinuations.stopPr(ctx,identity);
+		},
 		restoreWatches: (ctx,watches) => watchContinuations.restorePr(ctx,watches),
 		takeTimers(ids, ctx, {cancel = true, identity} = {}) {
 			const entries = ids.map(id => {
@@ -2682,12 +2723,31 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 	});
 	if (prSupervisor) installPrSupervisionInbox(pi, prSupervisor);
 	let legacyWakeToken;
+	function clearLegacyRetries() {
+		legacyLifecycle++;
+		for (const identity of legacyRetries.keys()) cancelLegacyRetry(identity);
+		legacyWakeToken = undefined;
+	}
+	for (const event of ["session_start","session_switch","session_branch","session_tree"]) {
+		pi.on(event, (_event,ctx) => {
+			clearLegacyRetries();
+			if (!prSupervisor) return;
+			const lifecycle = legacyLifecycle;
+			const session = ctx.sessionManager.getSessionId();
+			return prSupervisor.recoverLegacy(session).then(deliveries => {
+				if (lifecycle !== legacyLifecycle || ctx.sessionManager.getSessionId() !== session) return;
+				for (const delivery of deliveries) dispatchLegacyWake(ctx,{...delivery,pending:true,authorized:false});
+			});
+		});
+	}
+	pi.on("session_shutdown",clearLegacyRetries);
 	pi.on("before_agent_start", (event, ctx) => {
 		const match = event.prompt?.match(/DAILY_DRIVER_PR_LEGACY (\S+) (\d+) (\S+)/);
 		legacyWakeToken = match ? {identity:match[1],epoch:Number(match[2]),token:match[3]} : undefined;
 		if (!legacyWakeToken || !prSupervisor) return;
 		const {identity,token,epoch} = legacyWakeToken;
 		return prSupervisor.legacyWake(identity,"start",token,epoch).then(result => {
+			if (result.authorized) cancelLegacyRetry(identity,token);
 			if (!result.authorized) return ctx.abort();
 		});
 	});

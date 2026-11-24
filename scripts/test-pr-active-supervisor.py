@@ -457,19 +457,73 @@ class ActiveTests(unittest.TestCase):
               json.dumps({"active":active,"legacy":baseline},sort_keys=True))
 
     def test_queued_legacy_wake_is_fenced_and_running_work_must_drain(self):
-        wake = self.actor.legacy_wake(self.key,"admit")
+        wake = self.actor.legacy_wake(self.key,"admit",context={"message":"Read current PR state","delaySeconds":120})
         self.assertTrue(wake["authorized"])
         self.activate()
         self.assertFalse(self.actor.legacy_wake(self.key,"start",wake["token"],wake["epoch"])["authorized"])
         with patch.object(self.actor,"source",return_value=Source()):
             self.actor.rollback(self.key,lambda *_args:None)
-        wake = self.actor.legacy_wake(self.key,"admit")
+        wake = self.actor.legacy_wake(self.key,"admit",context={"message":"Read current PR state","delaySeconds":120})
         self.assertTrue(self.actor.legacy_wake(self.key,"start",wake["token"],wake["epoch"])["authorized"])
         with self.assertRaisesRegex(ValueError,"drain"):
             self.activate()
         self.actor.legacy_wake(self.key,"finish",wake["token"],wake["epoch"])
         self.activate()
         self.assertFalse(self.actor.legacy_wake(self.key,"check",wake["token"],wake["epoch"])["authorized"])
+
+    def test_lost_legacy_admission_recovers_after_restart_and_fences_old_tokens(self):
+        context = {"message":"Retain the original owner continuation","delaySeconds":120}
+        lost = self.actor.legacy_wake(self.key,"admit",context=context)
+        self.now = 60
+        restarted = ACTIVE.ActiveSupervisor(self.path,clock=lambda:self.now)
+        try:
+            recovered = restarted.recover_legacy("owner")
+            self.assertEqual(len(recovered),1)
+            self.assertEqual(recovered[0]["context"],context)
+            self.assertEqual(restarted.recover_legacy("another-owner"),[])
+            early = restarted.legacy_wake(self.key,"retry",lost["token"],lost["epoch"])
+            self.assertFalse(early["authorized"])
+            self.assertTrue(early["pending"])
+            self.now = 120
+            renewed = restarted.legacy_wake(self.key,"retry",lost["token"],lost["epoch"])
+            self.assertTrue(renewed["authorized"])
+            self.assertNotEqual(renewed["token"],lost["token"])
+            self.assertEqual(renewed["context"],context)
+            self.assertFalse(restarted.legacy_wake(self.key,"start",lost["token"],lost["epoch"])["authorized"])
+            restarted.legacy_wake(self.key,"finish",lost["token"],lost["epoch"])
+            self.assertTrue(restarted.legacy_wake(self.key,"start",renewed["token"],renewed["epoch"])["authorized"])
+            # A queued lease can expire. A running owner cannot be reclaimed
+            # merely because its timestamp is old or this process restarted.
+            self.now = 10000
+            self.assertFalse(restarted.legacy_wake(self.key,"retry",renewed["token"],renewed["epoch"])["authorized"])
+            self.assertFalse(restarted.legacy_wake(self.key,"admit",context=context)["authorized"])
+            self.assertEqual(restarted.recover_legacy("owner"),[])
+            self.assertTrue(restarted.legacy_wake(self.key,"check",renewed["token"],renewed["epoch"])["authorized"])
+            restarted.control(self.key,"stop","explicit owner stop")
+            self.assertFalse(restarted.legacy_wake(self.key,"check",renewed["token"],renewed["epoch"])["authorized"])
+        finally:
+            restarted.close()
+
+    def test_legacy_retry_budget_and_hold_transfer_fences_survive_restart(self):
+        context = {"message":"Read current PR state","delaySeconds":120}
+        wake = self.actor.legacy_wake(self.key,"admit",context=context)
+        for attempt in range(2,6):
+            self.now += 120
+            wake = self.actor.legacy_wake(self.key,"retry",wake["token"],wake["epoch"])
+            self.assertTrue(wake["authorized"])
+        self.now += 120
+        self.assertFalse(self.actor.legacy_wake(self.key,"retry",wake["token"],wake["epoch"])["authorized"])
+        self.assertEqual(self.actor.status(self.key)["authority"]["legacy_attempts"],5)
+        self.assertIn("retry limit",self.actor.status(self.key)["authority"]["error"])
+        self.actor.control(self.key,"hold","explicit hold")
+        self.assertEqual(self.actor.recover_legacy("owner"),[])
+        self.actor.control(self.key,"release","explicit release")
+        fresh = self.actor.legacy_wake(self.key,"admit",context=context)
+        self.assertTrue(fresh["authorized"])
+        self.assertFalse(self.actor.legacy_wake(self.key,"start",wake["token"],wake["epoch"])["authorized"])
+        self.activate()
+        self.assertFalse(self.actor.legacy_wake(self.key,"retry",fresh["token"],fresh["epoch"])["authorized"])
+        self.assertEqual(self.actor.recover_legacy("owner"),[])
 
 
 if __name__ == "__main__":

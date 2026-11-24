@@ -228,6 +228,12 @@ An incomplete transfer retains the recovery record; do not start a second owner.
 
 Transferred and restored legacy timers carry an authority-epoch admission.
 A timer that fires before transfer but delivers afterwards cannot run.
+Queued legacy admissions have a 120-second lease, their original message and
+a five-attempt retry budget. A managed retry rotates an abandoned queued token;
+an owner restart/rebind rebuilds that retry from the private database. Old
+tokens cannot start or finish replacement work. Once owner work has started,
+its token does not expire by age: only completion or an explicit control fence
+can release it. This does not give the old route autonomous cold activation.
 Already-running admitted legacy work must drain before transfer. Rollback
 first fences new deliveries and drains mutations, then reads fresh state and
 restores only the recorded prior services and original reminder message/deadline.

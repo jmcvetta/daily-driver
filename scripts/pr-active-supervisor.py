@@ -55,7 +55,9 @@ class ActiveSupervisor:
             if "hint_due" not in {row[1] for row in self.db.execute("PRAGMA table_info(authorities)")}:
                 self.db.execute("ALTER TABLE authorities ADD COLUMN hint_due REAL")
             columns = {row[1] for row in self.db.execute("PRAGMA table_info(authorities)")}
-            for name, declaration in (("legacy_delivery","TEXT"),("legacy_running","INTEGER NOT NULL DEFAULT 0")):
+            for name, declaration in (("legacy_delivery","TEXT"),("legacy_running","INTEGER NOT NULL DEFAULT 0"),
+                                      ("legacy_deadline","REAL"),("legacy_context","TEXT"),
+                                      ("legacy_attempts","INTEGER NOT NULL DEFAULT 0")):
                 if name not in columns:
                     self.db.execute(f"ALTER TABLE authorities ADD COLUMN {name} {declaration}")
 
@@ -105,11 +107,15 @@ class ActiveSupervisor:
         if record["stopped"]:
             if delivery:
                 self.inbox.stop(key)
-            self.db.execute("UPDATE authorities SET epoch=epoch+1,update_head=NULL WHERE identity=?", (key,))
+            self.db.execute("""UPDATE authorities SET epoch=epoch+1,update_head=NULL,
+                legacy_delivery=NULL,legacy_running=0,legacy_deadline=NULL,legacy_context=NULL,legacy_attempts=0
+                WHERE identity=?""", (key,))
             return
         if record["held"]:
             if delivery:
                 self.inbox.hold(key, record["held"])
+            self.db.execute("""UPDATE authorities SET epoch=epoch+1,legacy_delivery=NULL,legacy_running=0,
+                legacy_deadline=NULL,legacy_context=NULL,legacy_attempts=0 WHERE identity=?""", (key,))
             return
         if not actor or actor["state"] != "active":
             return
@@ -244,30 +250,64 @@ class ActiveSupervisor:
                             (generation, json.dumps(fresh), key))
             return {"acknowledged": True, "generation": generation, "head": fresh["head"], "observed": fresh}
 
-    def legacy_wake(self, key, operation, token=None, epoch=None):
-        """Atomically admit or drain an old-route wake across authority transfer."""
+    def legacy_wake(self, key, operation, token=None, epoch=None, context=None):
+        """Lease queued old-route wakes without expiring already-running owner work."""
         with self.ledger.transaction():
             record = self.ledger.get(key)
             actor = self.db.execute("SELECT * FROM authorities WHERE identity=?", (key,)).fetchone()
             if actor is None:
                 return {"authorized":False}
             if operation == "finish":
-                self.db.execute("""UPDATE authorities SET legacy_delivery=NULL,legacy_running=0
-                    WHERE identity=? AND legacy_delivery=?""", (key,token))
+                self.db.execute("""UPDATE authorities SET legacy_delivery=NULL,legacy_running=0,
+                    legacy_deadline=NULL,legacy_context=NULL,legacy_attempts=0,error=NULL
+                    WHERE identity=? AND legacy_delivery=? AND epoch=?""", (key,token,epoch))
                 return {"authorized":False}
             allowed = not record["stopped"] and not record["held"] and actor["state"] == "shadow"
-            if operation == "admit":
-                if not allowed or actor["legacy_delivery"]:
+            if operation in ("admit","retry"):
+                if not allowed or actor["legacy_running"]:
                     return {"authorized":False}
+                if operation == "retry" and (actor["legacy_delivery"] != token or actor["epoch"] != epoch):
+                    return {"authorized":False}
+                saved = json.loads(actor["legacy_context"]) if actor["legacy_context"] else None
+                if actor["legacy_delivery"] and actor["legacy_deadline"] and actor["legacy_deadline"] > self.clock():
+                    return {"authorized":False,"pending":True,"identity":key,"token":actor["legacy_delivery"],
+                            "epoch":actor["epoch"],"deadline":actor["legacy_deadline"],"context":saved}
+                context = saved or context
+                if (not isinstance(context,dict) or set(context) != {"message","delaySeconds"}
+                        or not isinstance(context["message"],str) or not context["message"].strip()
+                        or type(context["delaySeconds"]) is not int or not 1 <= context["delaySeconds"] <= 86400):
+                    raise ValueError("legacy wake requires its original message and bounded delay")
+                attempts = actor["legacy_attempts"] + 1 if actor["legacy_delivery"] else 1
+                if attempts > 5:
+                    self.db.execute("UPDATE authorities SET error='legacy wake retry limit reached; owner recovery required' WHERE identity=?", (key,))
+                    return {"authorized":False,"error":"legacy wake retry limit reached; owner recovery required"}
                 token = str(uuid.uuid4())
-                self.db.execute("UPDATE authorities SET legacy_delivery=?,legacy_running=0 WHERE identity=?", (token,key))
-                return {"authorized":True,"identity":key,"token":token,"epoch":actor["epoch"]}
+                deadline = self.clock() + SHADOW.INTERVAL
+                self.db.execute("""UPDATE authorities SET legacy_delivery=?,legacy_running=0,legacy_deadline=?,
+                    legacy_context=?,legacy_attempts=?,error=NULL WHERE identity=?""",
+                    (token,deadline,json.dumps(context),attempts,key))
+                return {"authorized":True,"identity":key,"token":token,"epoch":actor["epoch"],
+                        "deadline":deadline,"context":context}
             if operation not in ("start","check"):
                 raise ValueError("unknown legacy-wake operation")
-            allowed = allowed and actor["legacy_delivery"] == token and actor["epoch"] == epoch
+            allowed = (allowed and actor["legacy_delivery"] == token and actor["epoch"] == epoch
+                       and (actor["legacy_running"] or (actor["legacy_deadline"] or 0) > self.clock()))
             if allowed and operation == "start":
                 self.db.execute("UPDATE authorities SET legacy_running=1 WHERE identity=?", (key,))
             return {"authorized":bool(allowed)}
+
+    def recover_legacy(self, session):
+        """Return only this owner's queued, nonrunning legacy work for managed retry."""
+        pending = []
+        for row in self.db.execute("""SELECT records.identity,context,stopped,held,authorities.*
+                FROM records JOIN authorities USING(identity) WHERE state='shadow'
+                AND legacy_delivery IS NOT NULL AND legacy_running=0"""):
+            if row["stopped"] or row["held"] or json.loads(row["context"]).get("session") != session:
+                continue
+            if row["legacy_context"] and row["legacy_deadline"]:
+                pending.append({"identity":row["identity"],"token":row["legacy_delivery"],"epoch":row["epoch"],
+                                "deadline":row["legacy_deadline"],"context":json.loads(row["legacy_context"])})
+        return pending
 
     def prepare_transfer(self, key, services, cancelled_timers, watches=None):
         """Persist rollback identity before the live owner cancels any timer."""
@@ -285,7 +325,8 @@ class ActiveSupervisor:
             if actor["legacy_running"]:
                 raise ValueError("legacy owner work is running; drain it before transfer")
             self.db.execute("""UPDATE authorities SET state='transferring',epoch=epoch+1,legacy=?,error=NULL,
-                legacy_delivery=NULL,legacy_running=0 WHERE identity=?""",
+                legacy_delivery=NULL,legacy_running=0,legacy_deadline=NULL,
+                legacy_context=NULL,legacy_attempts=0 WHERE identity=?""",
                 (json.dumps({"services": services, "timers": cancelled_timers, "watches":watches or []}), key))
             self.db.execute("UPDATE records SET epoch=epoch+1,lease_owner=NULL,lease_until=0 WHERE identity=?", (key,))
         return self.status(key)
@@ -470,6 +511,7 @@ def main():
     legacy = sub.add_parser("legacy-wake")
     legacy.add_argument("identity")
     legacy.add_argument("--request", type=Path, required=True)
+    sub.add_parser("recover-legacy").add_argument("session")
     complete = sub.add_parser("complete-rollback")
     complete.add_argument("identity")
     complete.add_argument("--request", type=Path, required=True)
@@ -515,6 +557,8 @@ def main():
         elif args.command == "legacy-wake":
             request = json.loads(sys.stdin.read() if str(args.request) == "-" else args.request.read_text())
             output = actor.legacy_wake(args.identity, **request)
+        elif args.command == "recover-legacy":
+            output = actor.recover_legacy(args.session)
         elif args.command == "complete-rollback":
             request = json.loads(sys.stdin.read() if str(args.request) == "-" else args.request.read_text())
             output = actor.complete_rollback(args.identity, request["timer_ids"], request.get("watch_keys",[]))
