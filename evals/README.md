@@ -128,6 +128,15 @@ The focused case-25 run
 also failed both variants with score 0. The issue body left `JUDGE` unset and
 put the not-ready explanation outside the body. The shared rule now requires
 an exact in-body readiness sentence when selection remains with the operator.
+The exact-sentence case-25 run
+[`21-05-06`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_21-05-06.json)
+still failed the semantic criterion in both variants: bare scored 0, while
+with-plugin scored 0.5, below the 0.7 pass threshold. Bare retained an
+executable command without the required in-body sentence. With-plugin used
+the exact sentence and labeled the command non-executable, but omitted the
+explicit case-outcome check. The runner's task-level status is `SUCCESS` for
+both variants; the separate judge records are authoritative for semantic
+scores.
 
 
 
