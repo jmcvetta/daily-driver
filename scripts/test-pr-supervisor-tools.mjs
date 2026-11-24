@@ -10,6 +10,7 @@ import dailyDriverExtension from "../extensions/daily-driver.js";
 
 const root = mkdtempSync(join(tmpdir(), "pr-supervisor-tools-"));
 const priorPath = process.env.PATH;
+const priorPythonLog = process.env.PR_SUPERVISOR_TEST_PYTHON_LOG;
 const priorDatabase = process.env.DAILY_DRIVER_PR_SUPERVISOR;
 try {
 	const primary = join(root, "repository");
@@ -19,6 +20,16 @@ try {
 	mkdirSync(bin);
 	execFileSync("git", ["init", "--initial-branch=master", primary], {stdio:"pipe"});
 	execFileSync("git", ["-C", primary, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "--allow-empty", "-m", "Fixture base"], {stdio:"pipe"});
+	const python = execFileSync("python3", ["-c", "import sys; print(sys.executable)"], {encoding:"utf8"}).trim();
+	const pythonLog = join(root, "python-calls.jsonl");
+	const pythonShim = join(bin, "python3");
+	writeFileSync(pythonShim, `#!${python}
+import json, os, sys
+with open(os.environ["PR_SUPERVISOR_TEST_PYTHON_LOG"], "a") as log:
+ log.write(json.dumps(sys.argv[1:]) + "\\n")
+os.execv(${JSON.stringify(python)}, [${JSON.stringify(python)}, *sys.argv[1:]])
+`);
+	chmodSync(pythonShim, 0o755);
 	execFileSync("git", ["-C", primary, "worktree", "add", "-b", "task", worktree], {stdio:"pipe"});
 	const fake = join(bin, "gh");
 	writeFileSync(fake, `#!/usr/bin/env python3
@@ -44,6 +55,7 @@ else:
 `);
 	chmodSync(fake, 0o755);
 	process.env.PATH = bin + delimiter + priorPath;
+	process.env.PR_SUPERVISOR_TEST_PYTHON_LOG = pythonLog;
 	process.env.DAILY_DRIVER_PR_SUPERVISOR = join(root, "private", "supervisor.sqlite");
 	const node = {optional() { return this; },int() { return this; },min() { return this; },
 		max() { return this; },describe() { return this; }};
@@ -57,6 +69,10 @@ else:
 	const ctx = {cwd:primary,hasPendingMessages:()=>false,
 		sessionManager:{getSessionId:()=>"fixture-owner",getSessionFile:()=>join(root,"owner.jsonl")}};
 	const url = "https://isolated.example/fixture/project/pull/7";
+	const unboundCalls = readFileSync(pythonLog, "utf8");
+	assert.deepEqual(await service.legacyWake("isolated.example/fixture/7", "check", "token", 1),
+		{authorized:false,reason:"Legacy admission reader is not bound"});
+	assert.equal(readFileSync(pythonLog, "utf8"), unboundCalls, "an unbound check fails closed without Python");
 	const register = tools.get("daily_driver_pr_supervisor_register");
 	const result = await register.execute("register", {url}, undefined, undefined, ctx);
 	assert.equal(result.details.authority.state, "shadow");
@@ -76,6 +92,54 @@ else:
 	assert.equal(await service.allowsLegacy(result.details.identity), false);
 	await control.execute("release", {operation:"release",identity:result.details.identity,reason:"explicit release"}, undefined, undefined, ctx);
 	assert.equal(await service.allowsLegacy(result.details.identity), true);
+	const identity = result.details.identity;
+	const admitted = await service.legacyWake(identity, "admit", undefined, undefined,
+		{message:"Fixture legacy wake",delaySeconds:30});
+	assert.equal(admitted.authorized, true, "legacy admission remains a durable backend transition");
+	const readerCalls = [];
+	const deadline = Date.now() + 30_000;
+	let running = false;
+	let finished = false;
+	service.bindLegacyAdmissionReader((candidateIdentity, token, epoch) => {
+		readerCalls.push([candidateIdentity,token,epoch]);
+		const identityMatches = candidateIdentity === identity && token === admitted.token && epoch === admitted.epoch;
+		return {authorized:identityMatches && !finished && (running || Date.now() < deadline)};
+	});
+	const backendCallsBeforeCheck = readFileSync(pythonLog, "utf8");
+	const checked = await service.legacyWake(identity, "check", admitted.token, admitted.epoch);
+	assert.deepEqual(checked, {authorized:true}, "the bound admission reader supplies the guarded response");
+	assert.deepEqual(readerCalls, [[identity,admitted.token,admitted.epoch]]);
+	assert.equal(readFileSync(pythonLog, "utf8"), backendCallsBeforeCheck,
+		"the read-only legacy boundary does not start Python");
+	assert.equal((await service.legacyWake(identity, "check", "stale-token", admitted.epoch)).authorized, false,
+		"a stale token is rejected by the bound reader");
+	assert.equal(readFileSync(pythonLog, "utf8"), backendCallsBeforeCheck,
+		"stale read-only checks also avoid Python");
+	service.bindLegacyAdmissionReader(() => { throw new Error("fixture query failure"); });
+	assert.deepEqual(await service.legacyWake(identity, "check", admitted.token, admitted.epoch),
+		{authorized:false,reason:"Legacy admission reader failed; authorization denied"},
+		"a failed admission read fails closed");
+	assert.equal(readFileSync(pythonLog, "utf8"), backendCallsBeforeCheck,
+		"a failed read also does not fall back to Python");
+	service.bindLegacyAdmissionReader((candidateIdentity, token, epoch) => {
+		readerCalls.push([candidateIdentity,token,epoch]);
+		const identityMatches = candidateIdentity === identity && token === admitted.token && epoch === admitted.epoch;
+		return {authorized:identityMatches && !finished && (running || Date.now() < deadline)};
+	});
+	const backendCallsBeforeStart = readFileSync(pythonLog, "utf8");
+	const started = await service.legacyWake(identity, "start", admitted.token, admitted.epoch);
+	assert.equal(started.authorized, true, "legacy start remains a durable backend transition");
+	assert.notEqual(readFileSync(pythonLog, "utf8"), backendCallsBeforeStart,
+		"legacy start still invokes the mutating backend");
+	running = true;
+	assert.deepEqual(await service.legacyWake(identity, "check", admitted.token, admitted.epoch), {authorized:true});
+	const backendCallsBeforeFinish = readFileSync(pythonLog, "utf8");
+	await service.legacyWake(identity, "finish", admitted.token, admitted.epoch);
+	assert.notEqual(readFileSync(pythonLog, "utf8"), backendCallsBeforeFinish,
+		"legacy finish still invokes the mutating backend");
+	finished = true;
+	assert.deepEqual(await service.legacyWake(identity, "check", admitted.token, admitted.epoch), {authorized:false},
+		"the read-only response can deny finished work without another backend call");
 	// Drive the real runtime reminder adapter through transfer, rollback and
 	// retransfer. No custom callback stands in for cancellation/restoration.
 	const supervisorScript = new URL("./pr-active-supervisor.py", import.meta.url).pathname;
@@ -235,10 +299,12 @@ else:
 	const stopped = await control.execute("status", {operation:"status",identity:result.details.identity}, undefined, undefined, ctx);
 	assert.equal(stopped.details.stopped, "explicit stop");
 	await assert.rejects(service.afterWrite(["pr","create"], "", ctx), /no registration identity/);
-	console.log("PR runtime controls: registration/adoption, owner isolation, missing host, holds/stops and safe metadata passed");
+	console.log("PR runtime controls: legacy read reuse, registration/adoption, owner isolation, missing host, holds/stops and safe metadata passed");
 } finally {
 	process.env.PATH = priorPath;
 	if (priorDatabase === undefined) delete process.env.DAILY_DRIVER_PR_SUPERVISOR;
 	else process.env.DAILY_DRIVER_PR_SUPERVISOR = priorDatabase;
+	if (priorPythonLog === undefined) delete process.env.PR_SUPERVISOR_TEST_PYTHON_LOG;
+	else process.env.PR_SUPERVISOR_TEST_PYTHON_LOG = priorPythonLog;
 	rmSync(root, {recursive:true,force:true});
 }

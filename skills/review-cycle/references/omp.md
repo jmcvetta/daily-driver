@@ -93,8 +93,10 @@ The wait
 For a PR transferred to the [opt-in active supervisor](../../pr/references/omp.md#opt-in-active-supervision),
 that actor owns the single durable observation/delivery route. Do not start the
 legacy CI service or owner fallback below alongside it. Handle a supervisor
-delivery, acknowledge only through its fresh-read work tool, and retain the
-same three-source current-head verdict and independent-review requirements.
+delivery, acknowledge only through its fresh-read work tool, use that result's
+`observed` evidence as the work input without a prerequisite GitHub inventory,
+and retain the same three-source current-head verdict and independent-review
+requirements.
 These transport operations do not establish readiness.
 
 **A bounded service observes CI; a live owner handles its result.** Use named

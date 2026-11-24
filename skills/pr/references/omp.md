@@ -32,11 +32,14 @@ is not active supervision; inspect its durable diagnostic and recover that recor
 
 Once authority is `active`, **do not run the legacy currency service, structured
 PR fallback, owner reminder or independent CI watcher for this PR**. The
-supervisor owns observation and one coalesced actionable delivery. Its work
-tool takes a fresh authoritative read before acknowledging a generation.
-The agent still owns substantive fixes, review, conflict decisions and the
-complete current-head readiness gate. An event, receipt or acknowledgment is
-not green CI or completion.
+supervisor owns observation and one coalesced actionable delivery. Its
+acknowledgment tool makes the fresh authoritative read and returns the
+normalized `observed` evidence. Use that result as the work input; do not
+inventory GitHub before the call or act first and acknowledge afterward. A
+rejected acknowledgment grants no authority, and an accepted read is not
+completion, green CI or readiness. The agent still owns substantive fixes,
+review, conflict decisions and the complete current-head readiness gate. An
+event, receipt or acknowledgment is not green CI or completion.
 
 Use the control tool's `stop` before a stop-time push and `hold`/`release` for
 explicit holds. Stop fences queued deliveries and drains remote mutations;

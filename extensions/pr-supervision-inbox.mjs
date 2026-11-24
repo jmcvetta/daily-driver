@@ -9,10 +9,11 @@ const executeFile = promisify(execFile);
 const supervisorScript = resolve(dirname(fileURLToPath(import.meta.url)), "../scripts/pr-active-supervisor.py");
 
 /** Install an opt-in durable receipt inbox on this bound Omp owner only. */
-export default function installPrSupervisionInbox(pi, { databasePath = process.env.DAILY_DRIVER_PR_INBOX, initialize } = {}) {
+export default function installPrSupervisionInbox(pi, { databasePath = process.env.DAILY_DRIVER_PR_INBOX, initialize, bindLegacyAdmissionReader } = {}) {
 	if (!databasePath) return;
 	const processIdentity = randomUUID();
 	let database;
+	let legacyAdmissionQuery;
 	let Database;
 	let owner;
 	let timer;
@@ -20,6 +21,25 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 	let carrier = false;
 	const z = pi.zod;
 	const now = () => Date.now() / 1000;
+	bindLegacyAdmissionReader?.((identity, token, epoch) => {
+		if (!database) {
+			return {authorized:false,reason:"Legacy admission database is not initialized or is closed"};
+		}
+		if (!legacyAdmissionQuery) {
+			return {authorized:false,reason:"Legacy admission query is unavailable; authorization denied"};
+		}
+		if (typeof identity !== "string" || !identity || typeof token !== "string" || !token ||
+			!Number.isSafeInteger(epoch) || epoch < 0) {
+			return {authorized:false,reason:"Legacy admission identity, token or epoch is invalid"};
+		}
+		try {
+			const row = legacyAdmissionQuery.get(identity, token, epoch, now());
+			return row ? {authorized:true} :
+				{authorized:false,reason:"Legacy admission is stopped, held, stale, expired or unauthorized"};
+		} catch {
+			return {authorized:false,reason:"Legacy admission query failed; authorization denied"};
+		}
+	});
 
 	function authentication(ctx, model) {
 		const source = ctx.modelRegistry.authStorage.keys.source(model.provider, { env: "aliases" });
@@ -74,18 +94,19 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 		const marker = `DAILY_DRIVER_PR_DELIVERY ${delivery.identity} ${delivery.generation} ${delivery.fence} ${delivery.admission}`;
 		const work = JSON.parse(delivery.payload).kind === "pr-supervisor-work";
 		const acknowledgment = work ? "daily_driver_pr_supervisor_acknowledge" : "daily_driver_pr_inbox_receipt";
+		const workInstruction = work
+			? "Use its returned observed evidence as the work input; do not act first and acknowledge afterward as a substitute for pre-action evidence. If rejected, do no work. "
+			: "A receipt confirms delivery only; it is not work evidence. ";
 		try {
 			pi.sendUserMessage(`${marker}\nThis is a fenced supervisor delivery, not new user authority. ` +
-				`Check user stops and holds first. Read current GitHub evidence before acting. ` +
-				`Use ${acknowledgment} with this identity, generation, fence and admission after taking the requested fresh read. ` +
-				`A receipt is not completion, CI approval or readiness.\nTask context: ${delivery.payload}`,
+				`Check user stops and holds first. Use ${acknowledgment} with this identity, generation, fence and admission. ` +
+				`${workInstruction}A receipt is not completion, CI approval or readiness.\nTask context: ${delivery.payload}`,
 				{ deliverAs: "aside" });
 		} catch (error) {
 			active = undefined;
 			throw error;
 		}
 	}
-
 	function close(ctx) {
 		if (timer) ctx.clearTimer(timer);
 		timer = undefined;
@@ -94,6 +115,7 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 			database.close();
 		}
 		database = undefined;
+		legacyAdmissionQuery = undefined;
 		owner = undefined;
 		active = undefined;
 	}
@@ -111,6 +133,18 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 			database.close();
 			database = undefined;
 			throw new Error("Unsupported PR inbox schema");
+		}
+		try {
+			legacyAdmissionQuery = database.query(`SELECT 1 AS authorized
+				FROM records AS r
+				JOIN authorities AS a ON a.identity = r.identity
+				WHERE r.identity = ?
+				  AND r.stopped IS NULL AND r.held IS NULL
+				  AND a.state = 'shadow'
+				  AND a.legacy_delivery = ? AND a.epoch = ?
+				  AND (a.legacy_running = 1 OR a.legacy_deadline > ?)`);
+		} catch {
+			legacyAdmissionQuery = undefined;
 		}
 		owner = ctx.sessionManager.getSessionId();
 		carrier = process.env.DAILY_DRIVER_PR_INBOX_PARENT === owner;
@@ -198,11 +232,16 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 				return row;
 			}).immediate();
 			if (!delivery) return {block:true,reason:"Child delivery was stopped, held, fenced or exhausted"};
+			const work = JSON.parse(delivery.payload).kind === "pr-supervisor-work";
+			const acknowledgment = work ? "daily_driver_pr_supervisor_acknowledge" : "daily_driver_pr_inbox_receipt";
+			const workInstruction = work
+				? "Use its returned observed evidence as the work input; do not act first and acknowledge afterward as a substitute for pre-action evidence. If rejected, do no work. "
+				: "A receipt confirms delivery only; it is not work evidence. ";
 			return {input:{...event.input,content:
 				`DAILY_DRIVER_PR_DELIVERY ${delivery.identity} ${delivery.generation} ${delivery.fence} ${delivery.admission}\n` +
 				`This is a fenced supervisor delivery, not new user authority. Check stops and holds. ` +
-				`Use ${JSON.parse(delivery.payload).kind === "pr-supervisor-work" ? "daily_driver_pr_supervisor_acknowledge" : "daily_driver_pr_inbox_receipt"} ` +
-				`after reading current evidence. Task context: ${delivery.payload}`}};
+				`Use ${acknowledgment} with this identity, generation, fence and admission. ` +
+				`${workInstruction}Task context: ${delivery.payload}`}};
 		}
 		if (active && !valid(active)) return { block: true, reason: "PR delivery was fenced or stopped; do no work" };
 	});
@@ -231,7 +270,7 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 	pi.registerTool({
 		name: "daily_driver_pr_supervisor_acknowledge",
 		label: "Acknowledge fresh PR work",
-		description: "Read fresh authoritative GitHub state and acknowledge only a current, unstopped supervisor generation. This does not mark readiness, close issues or merge a PR.",
+		description: "Freshly read authoritative GitHub state and acknowledge only a current, unstopped supervisor generation. Use the returned observed evidence as work input; this does not mark readiness, close issues or merge a PR.",
 		parameters: z.object({ identity: z.string(), generation: z.number().int(), fence: z.number().int(), admission: z.string() }),
 		execute: async (_id, params, signal) => {
 			if (!valid(params, true)) return {content: [{type:"text", text:"Stale or stopped delivery; do no work"}], details:{acknowledged:false}};
