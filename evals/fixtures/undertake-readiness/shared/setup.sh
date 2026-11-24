@@ -36,7 +36,7 @@ case "${scenario}" in
   missing-review-record | covered-ancestor | rejected-only | ancestry-unavailable | ci-wrong-head)
     git merge -q --no-ff master -m 'Merge master into issue-24-uploader-retry'
     ;;
-  stale-review-record | verified-fix | superseded-defective | superseded-incomplete | wrong-scope | wrong-verification-author)
+  stale-review-record | verified-fix | superseded-defective | superseded-incomplete | wrong-scope | wrong-verification-author | self-verification)
     printf 'more\n' >>uploader.txt
     git commit -qam 'fix: handle a zero-length body'
     ;;

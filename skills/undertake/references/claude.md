@@ -93,12 +93,11 @@ The pull request
 | ---- | --------- | ---- |
 | `Open the draft` | Open it | `pr`, which owns the call |
 | `The gate` | Read the worktree and unpushed commits | `git status --porcelain` and `git log @{upstream}..HEAD --oneline`, through `Bash` in the task worktree; each prints nothing |
-| `The gate` | Read the diff against the acceptance section | `mcp__github__pull_request_read`, method `get_files`, paged to the end (30 files a page) |
+| `The gate` | Read acceptance evidence | Review the issue criteria against the diff, test results, runtime evidence, or other concrete observations |
 | `The gate` | Read the branch against its base | `mcp__github__pull_request_read`, method `get` — `mergeable_state` |
 | `The gate` | Read CI on the head | `mcp__github__pull_request_read`, **both** `get_check_runs` and `get_status` |
 | `The gate` | Read the review threads | `mcp__github__pull_request_read`, `get_reviews`, `get_review_comments` and `get_comments` — `review-cycle`'s reference owns them |
-| `The gate` | Read review evidence | `review-cycle`'s complete submitted-review, conversation-comment and thread reads; read the claim author from the task issue |
-| `The gate` | Read first-parent ancestry | `git show -s --format=%P <sha>` in a checkout containing the head and its ancestors; unavailable objects fail the predicate |
+| `The gate` | Read review evidence | Use `review-cycle`'s review and thread routes as needed; compare reviewed content with the current head |
 | `The gate` | Read the Blockers section | `mcp__github__pull_request_read`, method `get` — `body`, where `pr-body`'s Blockers section sits |
 | `Ready for review` | Take it out of draft | `mcp__github__update_pull_request`, `draft: false` |
 | `Keep it current` | Invoke `pr`'s ongoing base maintenance | [`pr` route](../../pr/references/claude.md#keep-it-current) |

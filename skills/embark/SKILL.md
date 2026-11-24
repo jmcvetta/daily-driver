@@ -496,8 +496,11 @@ pull request.
    `review-cycle`'s reference for the active harness.
 4. **The current head has complete review evidence.** Apply `undertake`'s
    `Review evidence` predicate without a separate author or head-coverage
-   rule. Check CI, finding dispositions and threads separately. Missing or
-   stale evidence fails this read and returns to the applicable review stage.
+   rule. Independent human or agent review must cover the relevant content,
+   with durable substantive findings and dispositions. An update that leaves
+   that content unchanged retains the evidence; a behavioral change needs
+   relevant new review. Check CI and threads separately. Missing or stale
+   evidence returns to the applicable review stage.
 5. **No human action is owed.** The pull request carries neither the `human`
    label nor `pr-body`'s human-action blocker.
 

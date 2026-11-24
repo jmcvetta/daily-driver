@@ -1,7 +1,7 @@
 task_id: review-cycle-21-operator-selected-review-method
 description: >-
   An explicit operator choice replaces an unsuitable running review without
-  losing independent analysis, complete history, or GitHub publication.
+  losing independent analysis, relevant context, or GitHub publication.
 tags: [review-cycle, behaviour, fire, omp-only]
 initial_prompt: >-
   We are resuming an Omp undertaking for PR #25. An older session started OCR,
@@ -42,16 +42,17 @@ success_criteria:
       configuration, or asking for renewed permission. Skipped Markdown files
       are not a completed review. The author must not substitute self-review.
 
-      The replacement needs a bounded stage brief, complete submitted-review and
-      thread history (including resolved/outdated threads and dispositions),
-      reviewed/current SHAs, the actual PR base, and applicable requirements.
-      Full review covers the PR diff; fix-delta passes remain targeted to fixes
-      and regressions rather than repeated full audits. Results must cover the
-      requested scope at the reviewed SHA. Failed or partial results cannot pass
-      readiness. Returned local findings, including a clean result, need a
-      submitted GitHub COMMENT review with valid inline anchors where available;
-      history and identifiers prevent duplicate publication. CI alone is not
-      independent review or a ready gate.
+      The replacement needs a bounded stage brief, relevant prior findings and
+      dispositions, reviewed and current content, the actual PR base, and
+      applicable requirements. Full review covers the PR diff; fix-delta passes
+      remain targeted to fixes and regressions rather than repeated full audits.
+      Results must cover the requested scope at the reviewed SHA. Failed or
+      partial results cannot pass readiness. Returned local findings, including
+      a clean result, need a durable GitHub review record with valid inline
+      anchors where available; check existing evidence to avoid duplicate
+      publication. Compare content to determine freshness: a behavioral change
+      needs a new relevant independent review, not an ancestry ritual. CI alone
+      is not independent review or a ready gate.
 
       Score 0.0 if the reply blocks on OCR, refuses the selected reviewer,
       treats the skipped run as completed, changes persistent configuration,

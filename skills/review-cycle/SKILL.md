@@ -4,7 +4,7 @@ description: >-
   Use for `/review-cycle` whenever a pull request is reviewed, alone or then
   answered, its threads replied to or resolved, or its checks awaited. Supplies
   the CI wait on the pushed head, the review invocation and level, a durable
-  inline record, the finding response protocol, bounded independent fix-delta
+  review record, the finding response protocol, bounded independent fix-delta
   verification, and the test for whether a later push changes the full-review
   scope. Not for opening or updating a pull request (`pr`) or marking a draft
   ready, which is the caller's gate.
@@ -76,9 +76,9 @@ The round
 
 | # | Stage | Owner |
 | - | ----- | ----- |
-| 1 | `Review the head` | the harness's review surface |
+| 1 | `Review the head` | an independent reviewer |
 | 2 | `Fix, answer, resolve, push` | this skill |
-| 3 | `Verify the fix delta` | the harness's review surface |
+| 3 | `Verify the fix delta` | an independent reviewer |
 | 4 | `Does it go again?` | this skill |
 
 **Every stage has a name, and the name is how it is cited** — here and in
@@ -99,9 +99,9 @@ somebody asked to have answered, which is worse than not firing at all.
 `Review the head` is for a head nobody has reviewed yet; `Does it go again?`
 still decides what happens after.
 
-**A standalone review ends after `Review the head`.** It reads the history,
-reviews the requested pull request, publishes a submitted review, and reports
-the result. It does not enter `Fix, answer, resolve, push`, resolve its new
+**A standalone review ends after `Review the head`.** It reads the relevant
+history, reviews the requested pull request, records its result durably, and
+reports it. It does not enter `Fix, answer, resolve, push`, resolve its new
 threads, alter draft state, or merge. A request to fix or answer existing
 findings is not standalone and follows the relevant later stage.
 
@@ -119,10 +119,11 @@ CI remains required by the caller's readiness gate.
 Reuse an existing review or CI watch for the same head rather than starting
 duplicates. An unavailable CI wait does not prevent review.
 
-First **read the complete review record**, then run the harness's review
-surface against the pull request. The record and current head tell the reviewer
-what has already been considered; the reference file names both the reader and
-the publication route.
+First **read the relevant review record**, then use an independent human or
+agent review of the pull request. Existing credible review can satisfy this
+stage when it covers the relevant current content; do not repeat it merely
+because it used a different account, method, or GitHub review event. The
+reference file names the default invocation and recording routes.
 
 How to wait
 -----------
@@ -222,62 +223,60 @@ use is.
 Review record, not transcript
 -----------------------------
 
-**Every reviewer carries a bounded brief and a publication contract.** What
-disqualifies a dispatch is not that it is a subagent — the constitution reaches
-every subagent here, through `SubagentStart` — it is a dispatch with no rubric
-bounding what it reviews and no route landing its findings as resolvable
-threads under a submitted `COMMENT` review. What stays forbidden is a dispatch missing either half.
+**Independent review needs a bounded scope and a durable result.** A suitable
+human or agent reviewer inspects the relevant changes for concrete defects and
+unmet requirements. The author cannot substitute self-review. Give an invoked
+reviewer the requirements, reviewed revision, relevant prior findings and
+dispositions, and a route for recording the result on the pull request.
 
 **Use the active harness route's default review surface unless the operator
 explicitly selects another independent review method.** Honor that selection
 for its stated scope, including a requested switch away from a running review;
 stop the superseded invocation before starting its replacement. Do not silently
-fall back or change persistent reviewer configuration. Record the selected
-method and scope with the reviewed SHA. An operator-selected method still needs
-a bounded brief, complete review history, independent analysis, and the same
-publication and readiness evidence. The author cannot substitute self-review.
-If the selected method is unavailable or cannot meet those requirements, report
-the precise gap; do not treat selection alone as a completed review. The harness
-reference supplies its default invocation and publication route and the bounded
-brief for `Verify the fix delta`. For a selected alternative, use its supported
-invocation and the publication contract below; a missing alternative-specific
-example in the reference is not itself an unavailable-method verdict.
+fall back or change persistent reviewer configuration. Keep the selected
+method and scope clear in the review evidence. An operator-selected method
+still needs independent analysis of the relevant content and durable findings;
+selection alone is not a completed review. If the method is unavailable or
+its coverage is incomplete, report the precise gap. The harness reference
+supplies its default invocation and the bounded brief for `Verify the fix
+delta`. A missing alternative-specific example is not itself evidence that
+the selected method is unavailable.
 
-**Read the complete GitHub review history before each review.** Read submitted
-reviews and every inline thread, including resolved and outdated threads, their
-replies, and the recorded dispositions. Paginate to the end; the newest page
-is not the history. Give the reviewer that history, the reviewed SHA, and the
-current head rather than leaving the prior decision only in the author's
-context.
+**Read enough history to preserve decisions and avoid duplicate findings.**
+Use the last known review state, new reviews and replies, open findings, and
+prior decisions relevant to the delta. Pass that context to the reviewer,
+not just the author's verdict. Retain a concise checkpoint or links so the next
+round can read incrementally. Reconstruct the full history, including resolved
+and outdated threads and their replies, on resume without reliable state, a
+dispute, or a gap in that context. Paginate each needed query to completion.
 
-**Every actionable line-specific finding is an inline thread in a submitted
-`COMMENT` review.** The event is `COMMENT`: a review round states findings, and
-approving or requesting changes is the human reviewer's verdict to give, not
-this stage's. Anchor each finding to the reviewed commit, path, side, and a
-valid diff line — or, across more than one line, a start and end that both fall
-in the diff.
-Use a suggestion block only where it makes the concrete replacement clearer;
-it never replaces the explanation of the defect. A finding with no valid
-anchor, and a clean review, goes in the submitted review summary. Never invent
-an anchor.
+**Keep actionable findings durable and easy to answer.** Prefer inline
+threads for line-specific defects when valid diff anchors are available.
+Anchor them to the reviewed commit, path, side, and valid line or range.
+Use a suggestion block only when it clarifies the replacement; it never
+replaces the explanation of the defect. Put cross-cutting or unanchorable
+findings in a review summary or pull-request comment; never invent an anchor.
+A clean review needs a concise durable result too. No particular account,
+GitHub review event, or comment format is required.
 
-**Use the surface's native publication where it has one; otherwise publish its
-returned findings through the available GitHub route.** Read the surface output
-and existing review record first, and compare against the recorded review
-identifier rather than the finding text, so a resumed run does not post the
-same review twice. A reviewer returning findings locally is not permission to
-leave them in the transcript.
+**Use native publication where available; otherwise record the returned
+result through the available GitHub route.** Link existing human or agent
+review rather than republishing it. Check the relevant existing record and
+returned identifiers or links before posting, so a resumed run does not
+duplicate findings. A local reviewer result must not remain only in the
+author's transcript when a pull request is available.
 
-**Re-read the head and re-validate every anchor immediately before
-publication.** The head can move while the review is being prepared, and an
-anchor validated against the old diff then lands on the wrong line or is
-rejected. Publication keeps the reviewed SHA it was produced against; it never
-re-attributes findings to a head they did not review.
+**Check freshness and anchors immediately before publication.** Keep the
+reviewed revision attached to its result; never attribute it to content the
+reviewer did not inspect. If the head moved, compare the relevant content.
+Unchanged content can retain the evidence; behavioral changes require the
+applicable new review. Revalidate inline anchors, or preserve the findings in
+a summary with clear file and code references when inline publication cannot
+be used.
 
-**A publication that does not complete is reported, never rounded up.** An
-absent GitHub client, a changed head, an invalid anchor, a permission problem,
-or a GitHub rejection each leaves the findings intact and the recording step
-named as incomplete. Never claim a durable review.
+**Report incomplete recording, never claim it succeeded.** If no durable
+GitHub route works, retain the findings and state the publication failure.
+An invalid inline anchor alone need not prevent a durable summary.
 
 **One finding has one conversation.** A repeated finding links to the earlier
 thread and disposition rather than reopening the argument. A recommendation
@@ -289,27 +288,29 @@ demonstrated defect.
 GitHub recording is unavailable.** It does not create a pull request to obtain
 a record.
 
-**Record the reviewed SHA, review identifier, findings, and dispositions on the
-pull request.** That record defines the scope, links the summary and threads,
-and gives a resumed session the evidence it needs to enforce the bound. The
-harness route names the durable format. Where the record is posted as its own
-comment rather than folded into the submitted review, the active route adds
-`provenance`'s block. Omp's wrapper appends it to the comment automatically.
+**Keep enough evidence to establish coverage and follow findings.** A review
+or linked pull-request comment identifies the reviewed revision or content,
+scope, independent source, result, and any findings. Replies or linked
+follow-up records preserve substantive dispositions. This is evidence, not
+a required field set or a separate ledger. Existing credible records need
+not be rewritten. Published artifacts follow ordinary `provenance`; missing
+historical attribution is not a new review gate.
 
 
 2 — Fix, answer, resolve, push
 ==============================
 
-Every finding gets a verdict, on its thread, and the thread is closed:
+Every substantive finding gets a durable disposition. Reply on its thread
+when it has one, and close the thread after answering:
 
-1. **Implemented** — fix it, reply saying so, resolve the thread.
-2. **Rejected** — reply with the reason, and resolve it anyway. A rejection is
+1. **Implemented** — fix it, record the fix, and resolve any thread.
+2. **Rejected** — record the reason, and resolve any thread. A rejection is
    an answer; only silence is not.
 3. **Deferred** — only where the user asks for it. The agent does not propose a
    deferral: `judgement-call` names "leave a TODO" as the option that is never
    a real one, so a deferral the agent offers is the noise that skill deletes.
-   When the user does defer, reply naming what was deferred and to where, then
-   resolve — an open thread would claim the question is still live.
+   When the user does defer, record what was deferred and to where, then
+   resolve any thread — an open thread would claim the question is still live.
 4. **A repeat finding** — a reviewer opening a new thread for something already
    rejected in an earlier round — is resolved with the same message as before.
    A fresh variation invites a fresh argument over a question that was already
@@ -319,9 +320,9 @@ Every finding gets a verdict, on its thread, and the thread is closed:
 
 
 Every reviewer uses this protocol — the agent's own findings, a human's, a
-bot's, or locally returned output. GitHub threads are the durable record, so a
-reviewer that did not create them is followed by publication rather than a
-transcript-only degradation.
+bot's, or locally returned output. For findings recorded in a summary or
+comment rather than threads, record each disposition there or in a linked
+follow-up. No substantive finding may disappear in a transcript-only exchange.
 
 The reply
 ---------
@@ -370,12 +371,13 @@ for verification. Per-finding verification is prohibited.
 verification may overlap CI on that head. Passing CI does not replace this pass.
 A red result does not approve the head or satisfy the caller's readiness gate.
 
-Give one reviewer the recorded full-review SHA, current SHA, original findings,
-and their recorded dispositions. It verifies that implemented fixes solve their
-findings and do not regress affected behavior. It may read surrounding code and
-affected callers. It must not restart a full pull-request audit, solicit style
-work, or accept the author's verdict as verification. The harness route names
-the concrete invocation.
+Give one independent human or agent reviewer the prior reviewed revision,
+current revision, relevant original findings, and recorded dispositions.
+It verifies that implemented fixes solve their findings and do not regress
+affected behavior. It may read surrounding code and affected callers. It must
+not restart a full pull-request audit, solicit style work, or accept the
+author's verdict as verification. The harness route names a concrete invocation;
+existing independent review that covers this delta can also supply the result.
 
 Classify the pull-request content delta, not commit provenance. A change to
 behavior, a contract, or a workflow rule requires a pass, including Markdown
@@ -385,12 +387,9 @@ does not. Mixed changes require a pass. This content comparison also applies
 after a rebase, amend, or squash: a missing ancestor is never evidence of no
 change.
 
-**A pushed fix batch always earns the pass that confirms it.** Verification of
-a pushed fix is never refused for having spent a budget: an unverified fix
-sitting on a pull request is worse than the pass that would have read it, and
-a caller left holding one has no way to reach its own gate. The bound below
-counts what actually goes wrong — fixes that do not converge — rather than
-passes as such.
+**Every behavioral fix batch needs the pass that confirms it.** Do not refuse
+verification of a pushed fix because an arbitrary pass budget was spent.
+The bound below counts fixes that do not converge, not passes as such.
 
 **The loop ends on the first clean pass.** A pass that records concrete
 defects earns one batched correction, pushed, and one more targeted pass over
@@ -416,10 +415,12 @@ Rejected findings remain closed unless new evidence defeats the recorded
 rejection. Repeating a rejected finding without that evidence is not a defect
 and does not consume a pass.
 
-Record every pass on the pull request: reviewed SHA, verified SHA, pass number,
-original findings and dispositions, outcome, actionable defects, and whether
-the wall was reached. Record reviewer token usage where the harness exposes it;
-otherwise record `unavailable`, never an estimate or a telemetry service.
+Record a concise result on the pull request, or link an existing independent
+result: what revision or content and fixes were checked, whether they passed,
+and any remaining defects or coverage limits. Preserve enough prior results
+to recognize three consecutive defect-producing passes without a fixed
+verification template, empty fields, wall-state token, usage record, or
+reviewer-transcript inspection.
 
 
 

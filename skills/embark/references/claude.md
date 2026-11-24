@@ -167,8 +167,7 @@ The watch
 | `Land the pull request` | Diagnose blocked CI | `review-cycle`'s `references/claude.md` checks and status reads |
 | `Land the pull request` | Read the aggregate review decision when available | Authenticated `gh pr view <number> --repo <owner>/<repo> --json headRefOid,reviewDecision`; if unavailable, report that evidence gap |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/claude.md` thread read |
-| `Land the pull request` | Read submitted reviews, recorded review identifiers and SHAs, dispositions, and verification records | `review-cycle`'s `references/claude.md` review history and conversation-comment reads, all pages |
-| `Land the pull request` | Read first-parent ancestry | `git show -s --format=%P <sha>` in a checkout containing the head and its ancestors; unavailable objects fail the predicate |
+| `Land the pull request` | Read relevant review evidence and finding dispositions | `review-cycle`'s `references/claude.md` review and conversation routes |
 | `Land the pull request` | Squash merge the gated PR | `mcp__github__merge_pull_request`, `merge_method: squash`, `expectedHeadSha: <head.sha>` |
 | `Close the epic` | Comment with outcome evidence or an unsupported claim | `mcp__github__add_issue_comment` |
 | `Close the epic` | Close as completed | `mcp__github__issue_write`, `method: update`, `state: closed`, `state_reason: completed` |
@@ -184,8 +183,8 @@ Landing and close
 -----------------
 
 The PR `get` supplies `draft`, `mergeable_state`, `head.sha`, labels and body.
-Apply `undertake`'s `Review evidence` predicate to the complete review,
-conversation and thread histories and the gated `head.sha`.
+Apply `undertake`'s `Review evidence` predicate to the relevant records and
+the gated `head.sha`; read more history only when needed to establish it.
 
 The merge call is made only for a task pull request,
 after those reads hold. `expectedHeadSha` makes it fail closed if the task
