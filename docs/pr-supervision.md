@@ -174,8 +174,9 @@ The controller reads complete authoritative current-head inventories. It
 defers updates for in-flight or unregistered CI, rereads immediately before
 and after GitHub's expected-head update-branch request, and discards old-head
 evidence. It never rebases, force-pushes, marks ready, closes issues or merges PRs.
-A per-PR drain lock serializes a remote mutation with stop/hold; SQLite
-transactions remain short so other records and heartbeats stay writable.
+Stop/hold first commits a durable fence in a short SQLite transaction. It then
+waits on a per-PR mutation lock; remote work never holds a database transaction.
+Other PRs, owner heartbeats and management reads remain usable during drain.
 
 Changed actionable observations coalesce into one generation. The owner tool
 `daily_driver_pr_supervisor_acknowledge` makes another complete authoritative
@@ -245,11 +246,39 @@ that restored fallback as well.
 Retransfer creates a new fenced transport incarnation from fresh evidence.
 Stops and holds are never cleared by rollback or re-registration.
 
-Use operation `stop` before any stop-time push. It fences observations,
-pending admissions and queued work, drains an in-flight mutation, and stops
-recorded old services. Owned cold RPC work is aborted when its deliveries
-are stopped or held. Merge/close observations retain terminal evidence and
-leave the due set. `release` clears an explicit hold, not a stop.
+Use operation `stop` before any stop-time push. Accepted stop/hold commits the
+control intent and advances observation, delivery and legacy-admission fences
+**before** waiting for prior remote work. The next durable admission and
+supervised tool boundary rejects the old authority. A readiness-only hold is
+not a supervision hold: it does not authorize cancellation of other work.
+
+Control and status results include `control: {operation, fence, drain,
+diagnostic?}`. While the call waits, another status connection sees
+`drain: "pending"`. Only `drain: "complete"` establishes local quiescence for
+a stop-time push. An unresolved expected-head request remains `pending`;
+timeouts, failed cancellation or unavailable accounting return `failed` with
+a sanitized diagnostic. Both retain the fence. Retrying the same control
+drains the same fence, not a new actor. Release cannot clear a stop, and cannot
+clear a hold while its prior drain remains incomplete.
+
+An operation admitted before the fence can still issue or finish its external
+request. Abort cannot undo an issued GitHub or provider request. The controller
+retains the expected head, request start, accepted/unknown outcome and recovery
+observation separately from the fenced writer. A 202 or unchanged head is not
+completed mutation. Restart retries accounting, never the stopped PUT or owner
+work. It retains request evidence after settlement without advancing a stopped
+owner obligation.
+
+The inbox fences queued work immediately. Owned cold RPC activation drains
+under its own cross-process lock; live and legacy turns retain their running
+identity until their actual terminal event. Missing host/process evidence is
+not a successful drain: an unresolved owned activation remains a diagnostic
+after restart and blocks replacement activation. Its recorded lifecycle owner
+must establish termination before recovery can clear that record. There is no
+automatic fallback maintenance on failure. Stop also stops recorded old
+services. Merge/close observations retain terminal evidence and leave the due
+set. Registration and rollback preserve stops and holds.
+
 After an authorized conflict resolution is pushed, release any explicit hold
 and reconcile the same identity; do not create another actor.
 

@@ -72,7 +72,11 @@ else:
 	assert.equal(timersTaken, 0, "host absence must not cancel existing owner continuation");
 	const other = {...ctx,sessionManager:{...ctx.sessionManager,getSessionId:()=>"another-owner"}};
 	await assert.rejects(control.execute("hold", {operation:"hold",identity:result.details.identity,reason:"wrong owner"}, undefined, undefined, other), /recorded live owner/);
-	await control.execute("hold", {operation:"hold",identity:result.details.identity,reason:"explicit hold"}, undefined, undefined, ctx);
+	const held = await control.execute("hold", {operation:"hold",identity:result.details.identity,reason:"explicit hold"}, undefined, undefined, ctx);
+	assert.equal(held.details.control.operation, "hold");
+	assert.equal(held.details.control.drain, "complete");
+	assert.equal(typeof held.details.control.fence, "number");
+	assert.equal(held.details.control.diagnostic, undefined);
 	assert.equal(await service.allowsLegacy(result.details.identity), false);
 	await control.execute("release", {operation:"release",identity:result.details.identity,reason:"explicit release"}, undefined, undefined, ctx);
 	assert.equal(await service.allowsLegacy(result.details.identity), true);
@@ -167,11 +171,15 @@ db.commit()
 		host.kill("SIGTERM");
 		await new Promise(resolveExit=>host.once("exit",resolveExit));
 	}
-	await control.execute("stop", {operation:"stop",identity:result.details.identity,reason:"explicit stop"}, undefined, undefined, ctx);
+	const stopResult = await control.execute("stop", {operation:"stop",identity:result.details.identity,reason:"explicit stop"}, undefined, undefined, ctx);
+	assert.equal(stopResult.details.control.operation, "stop");
+	assert.equal(stopResult.details.control.drain, "complete");
+	assert.match(stopResult.content[0].text, /drain=complete/);
 	assert.equal(await service.allowsLegacy(result.details.identity), false);
 	await register.execute("adopt", {url}, undefined, undefined, other);
 	const stopped = await control.execute("status", {operation:"status",identity:result.details.identity}, undefined, undefined, ctx);
 	assert.equal(stopped.details.stopped, "explicit stop");
+	assert.deepEqual(stopped.details.control, stopResult.details.control);
 	await assert.rejects(service.afterWrite(["pr","create"], "", ctx), /no registration identity/);
 	console.log("PR runtime controls: registration/adoption, owner isolation, missing host, holds/stops and safe metadata passed");
 } finally {

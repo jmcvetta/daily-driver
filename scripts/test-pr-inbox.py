@@ -172,6 +172,35 @@ class InboxTests(unittest.TestCase):
                 self.assertEqual(HOST.activate(self.inbox,owner,"omp"),"parent-held-or-unknown")
                 spawn.assert_not_called()
 
+    def test_stop_during_lease_probe_prevents_late_owner_spawn(self):
+        """An activation's old target list must not outlive a committed fence."""
+        owner = self.owner()
+        owner["file"] = str(Path(self.temporary.name) / "owner.jsonl")
+        Path(owner["file"]).write_text(json.dumps({"type":"session","id":"owner"}) + "\n")
+        owner["authentication"] = "config"
+        def lease(*_args, **_kwargs):
+            self.inbox.stop(IDENTITY)
+            return subprocess.CompletedProcess([], 0, '{"held":[],"unknown":[]}', "")
+        with patch.object(HOST.subprocess, "run", side_effect=lease), \
+                patch.object(HOST.subprocess, "Popen") as spawn:
+            self.assertEqual(HOST.activate(self.inbox, owner, "omp"), "stopped-or-idle")
+        spawn.assert_not_called()
+        self.assertIsNone(self.inbox.db.execute("SELECT 1 FROM activations").fetchone())
+
+    def test_unresolved_owned_activation_blocks_duplicate_after_restart(self):
+        """A missing host is not proof that its already-spawned RPC child ended."""
+        owner = self.owner()
+        self.inbox.db.execute("INSERT INTO activations VALUES (?,?,?)", ("owner", "orphan", json.dumps([IDENTITY])))
+        other = INBOX.Inbox(self.path)
+        try:
+            with patch.object(HOST.subprocess, "Popen") as spawn:
+                outcome = HOST.deliver(other, owner, "omp")
+            self.assertEqual(outcome, "degraded:owned-activation-termination-unresolved")
+            spawn.assert_not_called()
+            self.assertIsNotNone(other.db.execute("SELECT 1 FROM activations").fetchone())
+        finally:
+            other.close()
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -30,6 +30,7 @@ HOST_SPEC = importlib.util.spec_from_file_location("pr_inbox_host", ROOT / "scri
 HOST = importlib.util.module_from_spec(HOST_SPEC)
 HOST_SPEC.loader.exec_module(HOST)
 IDENTITY = "isolated.example/fixture/project/7"
+FENCED_IDENTITY = "isolated.example/fixture/project/8"
 REQUESTS = []
 
 
@@ -48,6 +49,10 @@ class Provider(BaseHTTPRequestHandler):
         token = re.search(r"DAILY_DRIVER_PR_DELIVERY (\S+) (\d+) (\d+) (\S+)", text)
         REQUESTS.append({"model": body.get("model"), "generation": int(token[2]) if token else None})
         replied = any(message.get("role") == "tool" for message in messages[latest + 1:])
+        if token and token[1] == FENCED_IDENTITY and not replied:
+            self.server.request_entered.set()
+            if not self.server.release_request.wait(10):
+                raise AssertionError("fenced provider request was not released")
         # Lose the first generation-1 receipt deliberately, so the actual
         # extension must redeliver it after the durable retry deadline.
         dropped = token and token[2] == "1" and sum(item["generation"] == 1 for item in REQUESTS) == 1
@@ -169,6 +174,8 @@ def main():
     if len(sys.argv) == 3 and sys.argv[1] == "--worker":
         raise SystemExit(worker(Path(sys.argv[2])))
     server = ThreadingHTTPServer(("127.0.0.1", 0), Provider)
+    server.request_entered = threading.Event()
+    server.release_request = threading.Event()
     threading.Thread(target=server.serve_forever, daemon=True).start()
     try:
         with tempfile.TemporaryDirectory(prefix="pr-inbox-proof-") as temporary:
@@ -205,6 +212,20 @@ def main():
                     rpc.terminal()
                     assert inbox.get(IDENTITY)["status"] == "received"
                     assert inbox.get(IDENTITY)["attempts"] == 2
+                    # A real provider call can already be in flight at stop.
+                    # The old tool admission must fail, and running evidence
+                    # must survive the fence until Omp emits its terminal event.
+                    inbox.enqueue(FENCED_IDENTITY, session, 1, {"issue":"isolated fenced fixture","action":"receipt"})
+                    assert server.request_entered.wait(10), "fenced fixture did not reach the provider"
+                    running = inbox.get(FENCED_IDENTITY)["running"]
+                    assert running, "actual agent start did not persist its running identity"
+                    stopped = inbox.stop(FENCED_IDENTITY)
+                    assert stopped["running"] == running, "fencing falsely reported the turn as ended"
+                    server.release_request.set()
+                    rpc.terminal()
+                    fenced = inbox.get(FENCED_IDENTITY)
+                    assert fenced["status"] == "stopped" and fenced["receipt"] is None, fenced
+                    assert fenced["running"] is None, "terminal owner turn did not finish its drain evidence"
                 finally:
                     rpc.close()
                 inbox.enqueue(IDENTITY, session, 2, {"issue": "isolated fixture", "action": "receipt"})
@@ -228,6 +249,7 @@ def main():
                 summary = json.loads((base / "result.json").read_text())
                 assert not any(item["generation"] == 4 for item in REQUESTS), REQUESTS
                 summary.update({"live_owner_generation_received": 1, "lost_receipt_delivery_attempts": 2,
+                    "live_request_fenced_before_terminal": True,
                     "external_requests": 0,
                     "provider_models": sorted({item["model"] for item in REQUESTS}),
                     "active_pr_supervision": "not implemented by receipt transport"})

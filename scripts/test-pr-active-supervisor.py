@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise active PR authority, fresh work acknowledgment and migration offline."""
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import closing
 import copy
 import fcntl
 import importlib.util
@@ -299,13 +300,25 @@ class ActiveTests(unittest.TestCase):
 
     def test_stop_drains_remote_mutation_without_locking_heartbeats(self):
         self.activate()
-        entered, stop_requested, stopped = threading.Event(), threading.Event(), threading.Event()
+        # Seed existing admitted work; fencing before the first observation
+        # completes now correctly prevents creation of a delivery altogether.
+        self.actor.reconcile(self.key, Source())
+        self.admit()
+        entered, fenced, stopped = threading.Event(), threading.Event(), threading.Event()
+        results, errors = [], []
         def stop():
             other = ACTIVE.ActiveSupervisor(self.path, clock=lambda: 0)
             try:
-                stop_requested.set()
-                other.control(self.key, "stop", "stop before push")
+                commit = other.ledger.control
+                def publish(*args, **kwargs):
+                    result = commit(*args, **kwargs)
+                    fenced.set()
+                    return result
+                other.ledger.control = publish
+                results.append(other.control(self.key, "stop", "stop before push"))
                 stopped.set()
+            except BaseException as error:
+                errors.append(error)
             finally:
                 other.close()
         source = Source(snapshot(currency="update_candidate"), snapshot(currency="update_candidate"),
@@ -314,7 +327,12 @@ class ActiveTests(unittest.TestCase):
             source.updates.append(head)
             entered.set()
             worker.start()
-            self.assertTrue(stop_requested.wait(5))
+            self.assertTrue(fenced.wait(5), "the fence must commit while the PUT is blocked")
+            visible = self.actor.status(self.key)
+            self.assertEqual(visible["stopped"], "stop before push")
+            self.assertEqual(visible["control"]["drain"], "pending")
+            self.assertEqual(visible["authority"]["update_head"], head)
+            self.assertIsNone(self.actor.ledger.acquire(self.key, "late-writer", 0))
             heartbeat = ACTIVE.ActiveSupervisor(self.path, clock=lambda: 0)
             try:
                 heartbeat.db.execute("PRAGMA busy_timeout=0")
@@ -327,11 +345,205 @@ class ActiveTests(unittest.TestCase):
         self.actor.reconcile(self.key, source)
         worker.join(5)
         self.assertTrue(entered.is_set())
+        self.assertEqual(errors, [])
+        self.assertEqual(results[0]["control"]["drain"], "complete")
+        self.assertIsNone(results[0]["authority"]["update_head"])
+        self.assertTrue(json.loads(results[0]["authority"]["update_evidence"])["settled"])
         self.assertTrue(stopped.is_set())
         later = Source(snapshot(currency="update_candidate"))
         self.actor.reconcile(self.key, later)
         self.assertEqual(later.reads, 0)
         self.assertEqual(self.actor.inbox.get(self.key)["status"], "stopped")
+
+    def test_stop_and_hold_publish_before_blocked_pre_update_observation(self):
+        """A drain lock must not hide intent or allow a PUT after a late read."""
+        self.activate()
+        for operation in ("hold", "stop"):
+            with self.subTest(operation=operation):
+                fenced, finished = threading.Event(), threading.Event()
+                results, errors = [], []
+                def control():
+                    other = ACTIVE.ActiveSupervisor(self.path, clock=lambda: 0)
+                    try:
+                        commit = other.ledger.control
+                        def publish(*args, **kwargs):
+                            result = commit(*args, **kwargs)
+                            fenced.set()
+                            return result
+                        other.ledger.control = publish
+                        results.append(other.control(self.key, operation, "explicit control"))
+                    except BaseException as error:
+                        errors.append(error)
+                    finally:
+                        finished.set()
+                        other.close()
+                worker = threading.Thread(target=control)
+                source = Source(snapshot(currency="update_candidate"))
+                observe = source.observe
+                def blocked_read():
+                    if source.reads == 1:
+                        worker.start()
+                        self.assertTrue(fenced.wait(5))
+                        state = self.actor.status(self.key)
+                        self.assertEqual(state["control"]["drain"], "pending")
+                        self.assertFalse(finished.is_set())
+                        # An unrelated PR and heartbeat remain writable.
+                        key = self.actor.register("github.com", "example/project", 8, "author", self.context)["identity"]
+                        self.actor.reconcile(key, Source())
+                        self.actor.db.execute("UPDATE owners SET heartbeat=1")
+                    return observe()
+                source.observe = blocked_read
+                result = self.actor.reconcile(self.key, source)
+                worker.join(5)
+                self.assertFalse(worker.is_alive())
+                self.assertEqual(errors, [])
+                self.assertEqual(source.updates, [])
+                self.assertEqual(results[0]["control"]["drain"], "complete")
+                self.assertIsNone(result["authority"]["update_head"])
+                repeated = self.actor.control(self.key, operation, "explicit control")
+                self.assertEqual(repeated["control"], results[0]["control"])
+                if operation == "hold":
+                    self.actor.control(self.key, "release", "authorized release")
+
+    def test_restart_accounts_for_uncertain_request_without_replaying_it(self):
+        """An interrupted PUT must remain identifiable after the fence and reopen."""
+        self.activate()
+        old = snapshot(currency="update_candidate")
+        class ControllerCrash(BaseException):
+            pass
+        source = Source(old)
+        def interrupted(head):
+            source.updates.append(head)
+            raise ControllerCrash()
+        source.update = interrupted
+        with self.assertRaises(ControllerCrash):
+            self.actor.reconcile(self.key, source)
+        pending = self.actor.control(self.key, "hold", "owner hold", source=Source(old))
+        self.assertEqual(pending["control"]["drain"], "pending")
+        self.assertEqual(pending["authority"]["update_head"], old["head"])
+        self.assertEqual(json.loads(pending["authority"]["update_evidence"])["outcome"], "unknown")
+        released = self.actor.control(self.key, "release", "release", source=Source(old))
+        self.assertEqual(released["held"], "owner hold")
+        self.assertEqual(released["control"]["drain"], "pending")
+        with closing(ACTIVE.ActiveSupervisor(self.path, clock=lambda: 0)) as restarted:
+            unchanged = Source(old)
+            self.assertEqual(restarted.reconcile(self.key, unchanged)["held"], "owner hold")
+            self.assertEqual(unchanged.reads, 0)
+            new = Source(snapshot(head="c" * 40))
+            result = restarted.control(self.key, "hold", "owner hold", source=new)
+            self.assertEqual(result["control"]["fence"], pending["control"]["fence"])
+            self.assertEqual(result["control"]["drain"], "complete")
+            self.assertIsNone(result["authority"]["update_head"])
+            self.assertEqual(new.updates, [])
+            restarted.control(self.key, "release", "authorized release")
+        self.assertEqual(source.updates, [old["head"]])
+
+    def test_accepted_async_request_is_not_quiescent_until_observed_settled(self):
+        self.activate()
+        old = snapshot(currency="update_candidate")
+        source = Source(old)
+        self.actor.reconcile(self.key, source)
+        result = self.actor.control(self.key, "stop", "stop", source=Source(old))
+        self.assertEqual(result["control"]["drain"], "pending")
+        self.assertEqual(json.loads(result["authority"]["update_evidence"])["outcome"], "accepted")
+        self.actor.register("github.com", "example/project", 7, "other", self.context)
+        with self.assertRaises(ValueError):
+            self.actor.control(self.key, "release", "release")
+        with patch.object(self.actor, "source", return_value=Source()):
+            self.assertFalse(self.actor.rollback(self.key)["restored"])
+        result = self.actor.control(self.key, "stop", "stop", source=Source(snapshot(head="c" * 40)))
+        self.assertEqual(result["control"]["drain"], "complete")
+        self.assertEqual(source.updates, [old["head"]])
+
+    def test_failed_drain_keeps_fence_and_sanitized_diagnostic(self):
+        self.activate()
+        with self.actor.mutation_guard(self.key):
+            with closing(ACTIVE.ActiveSupervisor(self.path, clock=lambda: 0)) as other:
+                result = other.control(self.key, "stop", "stop", timeout=0)
+        self.assertEqual(result["stopped"], "stop")
+        self.assertEqual(result["control"]["drain"], "failed")
+        self.assertIn("remote mutation", result["control"]["diagnostic"])
+        retry = self.actor.control(self.key, "stop", "stop")
+        self.assertEqual(retry["control"]["fence"], result["control"]["fence"])
+        self.assertEqual(retry["control"]["drain"], "complete")
+
+    def test_late_ack_and_legacy_completion_cannot_restore_stopped_authority(self):
+        wake = self.actor.legacy_wake(self.key, "admit", context={"message":"PR work","delaySeconds":120})
+        self.assertTrue(self.actor.legacy_wake(self.key, "start", wake["token"], wake["epoch"])["authorized"])
+        result = self.actor.control(self.key, "stop", "stop", timeout=0)
+        self.assertEqual(result["control"]["drain"], "failed")
+        self.actor.legacy_wake(self.key, "finish", wake["token"], wake["epoch"])
+        self.assertFalse(self.actor.legacy_wake(self.key, "start", wake["token"], wake["epoch"])["authorized"])
+        self.assertEqual(self.actor.control(self.key, "stop", "stop")["control"]["drain"], "complete")
+
+    def test_late_fresh_ack_cannot_clear_the_control_fence(self):
+        self.activate()
+        self.actor.reconcile(self.key, Source())
+        delivery = self.admit()
+        source = Source()
+        observe = source.observe
+        def late_read():
+            self.actor.control(self.key, "stop", "stop")
+            return observe()
+        source.observe = late_read
+        result = self.actor.acknowledge(self.key, delivery["generation"], delivery["fence"], "delivery-token", source)
+        self.assertFalse(result["acknowledged"])
+        self.assertEqual(self.actor.inbox.get(self.key)["status"], "stopped")
+
+    def test_owned_activation_drains_after_fence_without_replacement(self):
+        self.activate()
+        self.actor.reconcile(self.key, Source())
+        entered, fenced = threading.Event(), threading.Event()
+        def activate(inbox, _owner, _omp):
+            inbox.db.execute("INSERT INTO activations VALUES (?,?,?)", ("owner", "owned-rpc", json.dumps([self.key])))
+            entered.set()
+            self.assertTrue(fenced.wait(5))
+            self.assertEqual(inbox.get(self.key)["status"], "stopped")
+            inbox.db.execute("DELETE FROM activations WHERE session='owner'")
+            return "stopped-or-idle"
+        def deliver():
+            with closing(ACTIVE.INBOX.Inbox(self.path)) as inbox:
+                return ACTIVE.HOST.deliver(inbox, {"session":"owner"}, "unused")
+        commit = self.actor.ledger.control
+        def publish(*args, **kwargs):
+            result = commit(*args, **kwargs)
+            fenced.set()
+            return result
+        with patch.object(ACTIVE.HOST, "activate", side_effect=activate), \
+                patch.object(self.actor.ledger, "control", side_effect=publish), ThreadPoolExecutor(max_workers=1) as workers:
+            future = workers.submit(deliver)
+            self.assertTrue(entered.wait(5))
+            result = self.actor.control(self.key, "stop", "stop")
+            self.assertEqual(result["control"]["drain"], "complete")
+            self.assertEqual(future.result(timeout=5), "stopped-or-idle")
+
+    def test_orphan_activation_is_not_missing_process_success(self):
+        self.activate()
+        self.actor.reconcile(self.key, Source())
+        self.actor.db.execute("INSERT INTO activations VALUES (?,?,?)", ("owner", "orphan", json.dumps([self.key])))
+        result = self.actor.control(self.key, "stop", "stop", timeout=0)
+        self.assertEqual(result["control"]["drain"], "failed")
+        self.assertIn("termination evidence", result["control"]["diagnostic"])
+        with closing(ACTIVE.ActiveSupervisor(self.path)) as restarted:
+            result = restarted.control(self.key, "stop", "stop", timeout=0)
+            self.assertEqual(result["control"]["drain"], "failed")
+            self.assertIsNotNone(restarted.db.execute("SELECT 1 FROM activations").fetchone())
+
+    def test_live_turn_must_end_and_unrelated_activation_is_not_cancelled(self):
+        """Fencing cannot clear a running turn or abort another PR's activation."""
+        self.activate()
+        self.actor.reconcile(self.key, Source())
+        self.actor.db.execute("UPDATE deliveries SET running='old-turn'")
+        self.actor.db.execute("INSERT INTO activations VALUES (?,?,?)", ("owner", "other-pr", json.dumps(["other/pr/8"])))
+        result = self.actor.control(self.key, "hold", "hold", timeout=0)
+        self.assertEqual(result["control"]["drain"], "failed")
+        self.assertEqual(self.actor.inbox.get(self.key)["running"], "old-turn")
+        self.assertIsNotNone(self.actor.db.execute("SELECT 1 FROM activations").fetchone())
+        self.actor.db.execute("UPDATE deliveries SET running=NULL WHERE running='old-turn'")
+        result = self.actor.control(self.key, "release", "release", timeout=0)
+        self.assertEqual(result["control"]["drain"], "complete")
+        self.assertIsNone(result["held"])
+        self.assertIsNotNone(self.actor.db.execute("SELECT 1 FROM activations").fetchone())
 
     def test_update_client_uses_only_expected_head_server_merge(self):
         source = ACTIVE.GitHub("github.com", "example/project", 7, "author")
@@ -499,7 +711,10 @@ class ActiveTests(unittest.TestCase):
             self.assertFalse(restarted.legacy_wake(self.key,"admit",context=context)["authorized"])
             self.assertEqual(restarted.recover_legacy("owner"),[])
             self.assertTrue(restarted.legacy_wake(self.key,"check",renewed["token"],renewed["epoch"])["authorized"])
-            restarted.control(self.key,"stop","explicit owner stop")
+            result = restarted.control(self.key,"stop","explicit owner stop",timeout=0)
+            self.assertEqual(result["control"]["drain"], "failed")
+            restarted.legacy_wake(self.key,"finish",renewed["token"],renewed["epoch"])
+            self.assertEqual(restarted.control(self.key,"stop","explicit owner stop")["control"]["drain"], "complete")
             self.assertFalse(restarted.legacy_wake(self.key,"check",renewed["token"],renewed["epoch"])["authorized"])
         finally:
             restarted.close()

@@ -37,7 +37,7 @@ export function installPrSupervisorTools(pi, { takeTimers, restoreTimers, takeWa
 	function publicResult(result) {
 		if (!result.authority) return result;
 		return {identity:result.identity, stopped:result.stopped, held:result.held,
-			generation:result.generation, degraded:result.degraded,
+			generation:result.generation, degraded:result.degraded, control:result.control,
 			authority:{state:result.authority.state,epoch:result.authority.epoch,acknowledged:result.authority.acknowledged,error:result.authority.error},
 			delivery:result.delivery ? {generation:result.delivery.generation,status:result.delivery.status,
 				attempts:result.delivery.attempts,last_error:result.delivery.last_error} : null};
@@ -76,7 +76,7 @@ export function installPrSupervisorTools(pi, { takeTimers, restoreTimers, takeWa
 	pi.registerTool({
 		name: "daily_driver_pr_supervisor_control",
 		label: "Control PR supervision",
-		description: "Read, hold, release, stop, transfer or roll back one registered PR. Stop fences the actor and delivery before a stop-time push. Transfer cancels the supplied live owner timer IDs and verified owned Omp services; it never installs a host.",
+		description: "Read, hold, release, stop, transfer or roll back one registered PR. Stop/hold records a durable fence before waiting for prior work. Only control.drain=complete permits a stop-time push; pending/failed retains the fence and diagnostic. Already-issued remote requests cannot be undone. Transfer cancels supplied live owner timer IDs and verified owned Omp services; it never installs a host. A readiness-only hold is not a supervision hold.",
 		parameters: z.object({identity: z.string(), operation: z.enum(["status", "stop", "hold", "release", "transfer", "rollback"]),
 			reason: z.string().optional(), services: z.array(z.string()).optional(), timerIds: z.array(z.string()).optional()}),
 		execute: async (_id, params, signal, _onUpdate, ctx) => {
@@ -113,7 +113,8 @@ export function installPrSupervisorTools(pi, { takeTimers, restoreTimers, takeWa
 				result = await backend(params.operation, args, undefined, signal);
 				if (params.operation === "stop") stopWatches(ctx,params.identity);
 			}
-			return {content: [{type: "text", text: `Supervisor ${params.operation} recorded; no readiness or merge decision was made`}], details: publicResult(result)};
+			const outcome = result.control ? `fence=${result.control.fence}; drain=${result.control.drain}` : "recorded";
+			return {content: [{type: "text", text: `Supervisor ${params.operation}: ${outcome}; no readiness or merge decision was made`}], details: publicResult(result)};
 		},
 	});
 
