@@ -189,13 +189,11 @@ fires on a renamed CI job, and misses the one-line change to a comparison that
 decides access. At `high` that guess is cheap and worth making. Above it, the
 same guess is not.
 
-**Where the surface takes no level, or where the active harness route names an
-external review surface whose model and effort belong to persistent operator
-configuration, the round names the surface without supplying a level.** The two
-rules above then have nothing to bind: the round neither infers `medium` or
-`high` from the diff nor overrides the operator's saved settings, and depth
-remains with the surface or its saved configuration. The reference file says
-which case the harness in use is.
+**Where the surface takes no level, the round names the surface and nothing
+more**, and the depth judgement is the surface's. The two rules above then have
+nothing to bind: they exist because a level can be remembered, and a surface
+with no level remembers none. The reference file says which case the harness in
+use is.
 
 Review record, not transcript
 -----------------------------
