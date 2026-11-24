@@ -1047,25 +1047,30 @@ check("title recovery admits diagnostics but rejects mutation-capable routes", (
 
 /** Shell interpreters and wrappers must not hide protected workflow calls. */
 check("title recovery follows shell interpreters and command wrappers", () => {
-	const comment = `daily_driver_gh_write -j '${
-		JSON.stringify({ args: ["issue", "comment", "582", "-b", "claim"] })
-	}'`;
+	const comment = `daily_driver_gh_write -j ${
+		JSON.stringify(JSON.stringify({ args: ["issue", "comment", "582", "-b", "claim"] }))
+	}`;
 	for (const status of ["awaiting", "required"]) {
 		const s = makeSession();
-		const ctx = startupCtx(s);
+		const ctx = { ...startupCtx(s), cwd: worktrees.task };
 		s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
 		if (status === "required") deliverEpicRead(s, ctx);
 		for (const command of [
 			"task '{}'",
 			"bash -c 'task {}'",
 			"sh -c 'task {}'",
+			"bash -c \"$script\"",
+			"sh -c \"$script\"",
+			'eval "$script"',
 			"xargs task",
 			"xargs -0 task",
+			"xargs -I{} sh -c '{}'",
 			"nohup task",
 			"timeout 30 task",
 			"timeout 30 -k 5 task",
 			"FOO=1 task",
 			"env FOO=1 task",
+			"env -S 'task {}'",
 			"command task",
 			"exec task",
 			"bash -c 'xargs task'",
@@ -1347,6 +1352,24 @@ function titleCall(session, toolName, input, ctx) {
 function assertTitleBlocked(decision) {
 	assert.deepEqual(decision, { block: true, reason: TITLE_BLOCK_REASON });
 }
+
+/** The ordinary title gate claims workflow calls, not unreadable payloads. */
+check("unreadable shell payloads stay ordinary outside epic recovery", () => {
+	const s = makeSession();
+	const ctx = { ...namedCtx(undefined), cwd: worktrees.task };
+	for (const command of ['eval "$script"', 'bash -c "$script"', 'sh -c "$script"']) {
+		assert.equal(titleCall(s, "bash", { command }, ctx), undefined, command);
+	}
+	const comment = `daily_driver_gh_write -j ${
+		JSON.stringify(JSON.stringify({ args: GH_COMMENT_ARGS }))
+	}`;
+	for (const command of [
+		"bash -c 'task {}'", "xargs task", "timeout 30 task", `bash -c '${comment}'`,
+	]) {
+		assertTitleBlocked(titleCall(s, "bash", { command }, ctx));
+	}
+	assertTitleBlocked(titleCall(s, "task", {}, ctx));
+});
 
 check("the title reason names the call, both forms, session-title and no retry", () => {
 	assert.match(TITLE_BLOCK_REASON, /do not retry/i);

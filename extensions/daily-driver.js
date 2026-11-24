@@ -2286,9 +2286,10 @@ function commandExecution(words, start = 0) {
 /**
  * Whether one command position runs dispatch or a provenance-wrapped claim
  * write. An interpreter's literal command string is read in turn; one the
- * scan cannot read is protected, because the workflow it may run is unknowable.
+ * scan cannot read is protected only where the caller refuses what it cannot
+ * enumerate, because the workflow it may run is then unknowable.
  */
-function protectedExecution(words, execution) {
+function protectedExecution(words, execution, failClosed) {
 	if (execution === null) return false;
 	if (execution.name === "task") return true;
 	if (execution.name === "daily_driver_gh_write") {
@@ -2312,13 +2313,13 @@ function protectedExecution(words, execution) {
 		}
 	} catch (err) {
 		if (!(err instanceof UnreadableCommandError)) throw err;
-		return true;
+		return failClosed;
 	}
 	return false;
 }
 
 /** Recognize shell dispatch and provenance-wrapped claim calls. */
-function runsProtectedWorkflow(command) {
+function runsProtectedWorkflow(command, failClosed = false) {
 	const { segments, unreadable } = shellSegments(command);
 	if (unreadable !== null) return true;
 	const arithmeticStack = [];
@@ -2335,24 +2336,24 @@ function runsProtectedWorkflow(command) {
 		const words = segment.words ?? [];
 		if (words.length === 0) continue;
 		try {
-			if (protectedExecution(words, commandExecution(words))) return true;
+			if (protectedExecution(words, commandExecution(words), failClosed)) return true;
 			// `find -exec` and `-execdir` run the words after them as a command
 			// the segment head does not reach.
 			for (let index = 0; index < words.length; index++) {
 				const word = words[index];
 				if (!word.literal || !["-exec", "-execdir"].includes(word.text)) continue;
-				if (protectedExecution(words, commandExecution(words, index + 1))) return true;
+				if (protectedExecution(words, commandExecution(words, index + 1), failClosed)) return true;
 			}
 		} catch (err) {
 			if (!(err instanceof UnreadableCommandError)) throw err;
-			return true;
+			if (failClosed) return true;
 		}
 	}
 	return runsGitHubComment(command);
 }
 
 /** Whether this call is one the title must precede. */
-function needsTitle(event) {
+function needsTitle(event, failClosed = false) {
 	if (event.toolName === DISPATCH_TOOL) return true;
 	if (event.toolName === "daily_driver_gh_write") {
 		return isGitHubCommentWrite(event.input?.args);
@@ -2360,7 +2361,7 @@ function needsTitle(event) {
 	return (
 		event.toolName === "bash" &&
 		typeof event.input?.command === "string" &&
-		runsProtectedWorkflow(event.input.command)
+		runsProtectedWorkflow(event.input.command, failClosed)
 	);
 }
 /** Language-server actions that only read and cannot apply edits. */
@@ -3062,7 +3063,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 			}
 		}
 		if (["awaiting", "required"].includes(startup?.status) &&
-			(needsTitle(event) || mutatingLanguageServer(event))) {
+			(needsTitle(event, true) || mutatingLanguageServer(event))) {
 			return { block: true, reason: embarkTitleReason(startup) };
 		}
 		// After the worktree check: the session's first issue comment and first
