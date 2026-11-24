@@ -21,7 +21,6 @@ commits = {head: {"parents": parents(head)}, review_head: {"parents": parents(re
 review_for = lambda sha, author=AUTHOR: {"id": 101, "user": {"login": author}, "state": "COMMENTED", "commit_id": sha, "submitted_at": "2026-01-01T00:00:00Z", "body": "Full review: clean."}
 verification = lambda scope, sha, outcome="clear", defects="none", wall="open", author=AUTHOR: {
     "author": author, "body": f"Review verification\nscope reviewed: {scope}\nverified: {sha}\noutcome: {outcome}\ndefects: {defects}\nwall: {wall}"}
-report = {"author": AUTHOR, "body": "# First-readiness report 🎉\n\nElapsed 41 minutes."}
 
 state = {
     "scenario": scenario,
@@ -39,8 +38,7 @@ state = {
     "behavior_changed": False,
     "fail_reads": [],
     "ready_fails": False,
-    "fail_comment": False,
-    "expect": {"ready": True, "report": "one", "no_review_round": True},
+    "expect": {"ready": True, "no_review_round": True},
 }
 
 if scenario == "ready-clean":
@@ -52,31 +50,25 @@ elif scenario == "ready-unknown":
 elif scenario == "ready-write-fails":
     state["ready_fails"] = True
     state["expect"].update(ready="attempt")
-elif scenario == "report-write-fails":
-    state["fail_comment"] = True
-    state["expect"].update(ready="none", report="failed")
-elif scenario == "existing-report":
-    state["comments"].append(report)
-    state["expect"].update(ready=True, report="existing")
 elif scenario == "ci-wrong-head":
     state["ci_green_for"] = [review_head]
-    state["expect"].update(ready=False, report="none")
+    state["expect"].update(ready=False)
 elif scenario == "read-fails-ci":
     state["fail_reads"] = ["ci"]
-    state["expect"].update(ready=False, report="none")
+    state["expect"].update(ready=False)
 elif scenario == "read-fails-comments":
     state["fail_reads"] = ["comments"]
-    state["expect"].update(ready=False, report="none")
+    state["expect"].update(ready=False)
 elif scenario == "missing-review-record":
     state["reviews"] = []
-    state["expect"].update(ready=False, report="none", no_review_round=False)
+    state["expect"].update(ready=False, no_review_round=False)
 elif scenario in ("covered-ancestor", "rejected-only", "ancestry-unavailable"):
     state["reviews"] = [review_for(review_head)]
     if scenario == "rejected-only":
         state["reviews"][0]["body"] = "Full review: finding rejected; no behavioral fix implemented."
     if scenario == "ancestry-unavailable":
         state["fail_reads"] = ["commits"]
-        state["expect"].update(ready=False, report="none", no_review_round=False)
+        state["expect"].update(ready=False, no_review_round=False)
 elif scenario in ("stale-review-record", "verified-fix", "superseded-defective", "superseded-incomplete", "wrong-scope", "wrong-verification-author"):
     state["reviews"] = [review_for(review_head)]
     state["reviews"][0]["body"] = "Full review: finding identified; behavioral fix implemented after review."
@@ -92,20 +84,19 @@ elif scenario in ("stale-review-record", "verified-fix", "superseded-defective",
     elif scenario == "wrong-verification-author":
         state["comments"] = [verification(review_head, head, author="other-reviewer")]
     if scenario != "verified-fix":
-        state["expect"].update(ready=False, report="none", no_review_round=False)
+        state["expect"].update(ready=False, no_review_round=False)
 elif scenario == "wrong-review-author":
     state["reviews"] = [review_for(head, "other-reviewer")]
-    state["expect"].update(ready=False, report="none", no_review_round=False)
+    state["expect"].update(ready=False, no_review_round=False)
 elif scenario == "currency-stale":
     state["reviews"] = []
-    state["expect"].update(ready=False, report="none", no_review_round=True)
+    state["expect"].update(ready=False, no_review_round=True)
 elif scenario.startswith("service-"):
     state["pr"]["draft"] = False
-    state["expect"].update(ready=False, report="none")
+    state["expect"].update(ready=False)
 else:
     sys.exit(f"unknown scenario {scenario}")
 
-state["expect"]["head"] = head
 state["review_head"] = review_head
 with open(path, "w", encoding="utf-8") as fh:
     json.dump(state, fh, indent=1)

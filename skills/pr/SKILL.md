@@ -72,8 +72,8 @@ Keep it current
 **Every PR the agent opens gets ongoing base-branch maintenance**, including
 drafts and direct PR work outside `undertake`. Start after opening the PR,
 before ending this workflow. Updating an existing PR reuses its watch or
-starts a missing one; reaching ready never starts a second watch. No issue,
-claim, or undertaking milestone is required.
+starts a missing one; reaching ready never starts a second watch. No issue or
+claim is required.
 
 Use the active harness reference's currency checkpoint and continuation route.
 Read the PR's actual base rather than assuming `master`. Merge that base into
@@ -108,10 +108,10 @@ readiness. Before resuming PR work, take the harness's catch-up look. Answer
 direct user questions first under the constitution; a catch-up look is not a
 prerequisite for answering from known evidence.
 
-`undertake` invokes this maintenance and retains its review, ready gate, and
-first-readiness report. Direct PR work does not inherit those issue-specific
-steps. A clean base merge earns no review round; a conflict resolution or
-other content change follows `review-cycle`.
+`undertake` invokes this maintenance and retains its review and ready gate.
+Direct PR work does not inherit those issue-specific steps. A clean base merge
+earns no review round; a conflict resolution or other content change follows
+`review-cycle`.
 
 
 Github Issues

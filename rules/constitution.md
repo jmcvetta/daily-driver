@@ -114,6 +114,10 @@ weakening security or required tests.
 
 ## Delegation
 
-Plan first, then delegate; `undertake`'s execution policy owns delegation scope
-and batching. Preserve full agent-facing context and the original approval
-boundaries, limits and conditions in every handoff.
+Plan enough to state the objective, relevant context, boundaries, expected
+result, and who owns the outcome. Delegate when parallelism, specialization,
+or a bounded handoff helps; work may also be delegated sequentially or shared
+with its owner. Keep one clear writer for each branch or file at a time, avoid
+duplicated work and excess capability, and retain independent review for
+behavioral changes. Preserve the original approval boundaries, limits and
+conditions in every handoff.
