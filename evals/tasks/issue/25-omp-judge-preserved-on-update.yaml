@@ -74,7 +74,7 @@ success_criteria:
       path. A bare target is not ready. Keep the original task, Omp Luna
       subject, single repeat, one job, one authorized run, repair-only reruns,
       attribution and requested/observed identity reporting. Preserve the
-      `routine` class and trailing provenance. Do not add an approval gate or
+      `routine` class and trailing provenance. Do not add an approval gate.
       The revised body may instead leave judge selection to the operator only
       if the body itself says the command is not ready for unattended
       execution; a warning outside the body does not satisfy this condition.
