@@ -44,17 +44,16 @@ has approved and merged the specification. `embark` runs eligible research
 only and returns here when it is exhausted; it never closes the discovery on
 child count or dispatches the interactive specification.
 
-After operator approval and merge to `master`, publish one stable, identifiable
-parent record (for example, a uniquely linked parent comment) containing the
-canonical document path, exact merged commit and evidence of operator approval.
-Do not overwrite it on amendment. With separately agreed decomposition, each
-implementation task references that particular record and allocates stable
-requirement IDs and exclusions, plus the map, verification and class required
-by `issue-body`. Resolve the record and read the document at its exact commit;
-verify each ID, allocation, exclusions and agreement before dispatch. Missing,
-changed, ambiguous or inaccessible records cannot authorize work: report the
-gap and return it to `epic`, never select the latest revision. Existing tasks
-that pin their own path and SHA remain valid under that original contract.
+After operator approval and merge to `master`, stage separately agreed
+implementation tasks with direct canonical path and full merged commit SHA,
+explicit operator approval URL, allocated stable requirement IDs and
+exclusions, plus the map, verification and class required by `issue-body`.
+Verify the merged revision, approval evidence, IDs, allocation, exclusions and
+agreement before dispatch. A parent publication record may index these facts
+but is not another permission source and cannot override accessible equivalent
+evidence. Existing parent records and tasks pinned to a path and SHA remain
+valid under their original contract. Report missing, ambiguous, inaccessible,
+unmerged or mismatched evidence precisely; never select the latest revision.
 Write and verify the graph. The discovery label prohibits dispatch of staged
 implementation until all gates pass and the parent is atomically promoted.
 
@@ -63,18 +62,16 @@ specification-backed `task` only with scope agreement, rather than creating an
 artificial epic. If evidence supports not proceeding, record it and close the
 parent as not planned.
 
-For a substantive amendment, atomically demote the same `epic` to `discovery`
-before affected work proceeds. Preserve all existing issues, edges, allocations
-and provenance. Identify and pause only affected implementation; independent
-eligible implementation already in progress may continue against its existing
-contract, but discovery dispatch never starts a staged implementation task.
-Add needed research and one active interactive amendment specification child.
-`specification` owns renewed operator agreement, review and operator merge.
-After merge, create a distinct publication record and reconcile affected
-allocations and execution contracts with original-user authority for material
-changes. In-progress work retains its original binding until an authorized
-transition. Recheck references, graph, readiness and coverage before atomic
-re-promotion. An implementation PR must not silently amend its specification.
+For a substantive amendment, identify and pause only tasks whose allocated
+requirements or exclusions changed. Preserve all issues, edges, allocations
+and provenance; unrelated work continues under its existing immutable binding
+and its lineage is not demoted or reconciled for ceremony. Add needed research
+and an interactive amendment specification child. `specification` owns renewed
+operator agreement, review and operator merge. After merge, affected tasks need
+an authorized transition to the new canonical SHA, approval evidence and
+allocation before using the amendment. Recheck affected references, graph,
+readiness and coverage. An implementation PR must not silently amend its
+specification.
 
 
 The sequence
