@@ -129,6 +129,7 @@ function fakeSession(options = {}) {
 		prompt: () => fire("before_agent_start", { prompt: "Continue" }),
 		request: () => fire("before_provider_request", { payload: { model: current.id } }),
 		assistant: () => fire("assistant_message", { message: { role: "assistant", provider: current.provider, model: current.id, content: [{ type: "text", text: "Response" }] } }),
+		emitRoute: () => fire("assistant_message", { message: { content: [{ type: "toolCall", name: "daily_driver_route_undertaking" }] } }),
 		spawn: (key, patterns = [qualified(FOREIGN)], agent = "routine", modelRole = "routine") =>
 			fire("before_subagent_spawn", { agent, modelRole, patterns, spawnKey: key }),
 		async close() { if (!closed) { closed = true; await fire("session_shutdown"); } },
@@ -637,6 +638,50 @@ export default function registerUndertakingRoutingChecks(check) {
 		assertAllowed(await s.tool("task", {}));
 		proceed.resolve();
 		assert.notEqual((await routing).isError, true);
+	});
+
+	// Tool emission cannot leave a phantom selection after a completed early return.
+	for (const outcome of ["completed", "invalid", "cancelled", "aborted"]) {
+		routingCheck(`emitted ${outcome} re-entry reports no phantom selection`, async create => {
+			const s = await create();
+			await s.route();
+			if (outcome === "cancelled") await s.command("cancel 755");
+			else await s.finish();
+			await s.emitRoute();
+			const controller = new AbortController();
+			if (outcome === "aborted") controller.abort();
+			const result = await s.route(outcome === "invalid" ? { modelClass: "invalid" } : {}, controller.signal);
+			if (outcome !== "completed") assertGap(result);
+			else assert.notEqual(result.isError, true);
+			await s.command("status");
+			const info = JSON.parse(s.calls.notifications.at(-1).message);
+			assert.equal(info.state, outcome === "cancelled" ? "cancelled" : "none");
+			await s.command("cancel 755");
+			assert.match(s.calls.notifications.at(-1).message, /No active undertaking/u);
+		});
+	}
+
+	// An early return must not clear the marker for another selector that is actually pending.
+	routingCheck("emitted re-entry preserves a genuinely in-flight selection", async create => {
+		const entered = deferred();
+		const proceed = deferred();
+		const s = await create({ getApiKey: async () => {
+			entered.resolve(); await proceed.promise; return "fixture";
+		} });
+		const selection = s.route({ modelClass: "complex" });
+		await entered.promise;
+		await s.emitRoute();
+		const result = await s.route();
+		assert.match(result.content[0].text, /already in progress/u);
+		await s.command("status");
+		assert.equal(JSON.parse(s.calls.notifications.at(-1).message).state, "selecting");
+		proceed.resolve();
+		await selection;
+		await s.finish();
+		await s.command("status");
+		assert.equal(JSON.parse(s.calls.notifications.at(-1).message).state, "none");
+		await s.command("cancel 755");
+		assert.match(s.calls.notifications.at(-1).message, /No active undertaking/u);
 	});
 
 	// A failure after either setter must restore only selector-owned changes.

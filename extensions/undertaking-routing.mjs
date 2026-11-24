@@ -352,8 +352,10 @@ export function installUndertakingRouting(pi, getSettings, onCompleted = () => {
 				...(stopped ? { isError: true } : {}),
 				content: [{ type: "text", text }], details: describe(ctx),
 			});
+			const selectionInFlight = inFlightSelections.has(sessionId);
+			if (!selectionInFlight) selecting.delete(sessionId);
 			if (signal?.aborted || isCancelled(previous)) return result("Undertaking selection is cancelled.", true);
-			if (inFlightSelections.has(sessionId)) return result("Initial selection is already in progress. Ordinary work can continue.");
+			if (selectionInFlight) return result("Initial selection is already in progress. Ordinary work can continue.");
 			if (!Number.isSafeInteger(params.issue) || params.issue < 1 || !CLASSES.includes(params.modelClass)) {
 				return result("A valid issue and required model class are mandatory.", true);
 			}
