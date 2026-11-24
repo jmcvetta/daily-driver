@@ -178,7 +178,9 @@ Where a Claude session has neither the subscription nor the scheduler, the wait
 is what that surface can block on, with a human watching the terminal:
 `gh pr checks --watch <number>` where the CLI is installed, inside the Bash
 timeout. Failing that, this is the surface `SKILL.md` says cannot wait: read
-the checks once, and where they have not all reported, say so and stop.
+the checks once and report any pending checks and the continuation limit.
+Proceed with review of the stable pushed head; readiness still requires
+current-head green CI.
 
 
 Review history, publication, and threads

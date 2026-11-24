@@ -2362,7 +2362,7 @@ here; the spike in #181 measured that Codex does not use it.
 | `pr` | `07-one-call-sets-both` | `07-one-gh-pr-edit-sets-both-codex` | one `gh pr edit` carrying both |
 | `pr-title` | `07-mcp-not-gh-pr-edit` | `07-gh-pr-edit-title-codex` | `gh pr edit --title` |
 | `pr-body` | `07-mcp-not-gh-pr-edit` | `07-body-file-not-body-codex` | `gh pr edit --body-file`, not `--body` |
-| `review-cycle` | `07-wait-for-ci-is-not-a-sleep` | `07-there-is-no-wait-codex` | no sleep on a harness that ships one, and the stop |
+| `review-cycle` | `07-wait-for-ci-is-not-a-sleep` | `07-there-is-no-wait-codex` | review during pending CI without an invented wait or readiness claim |
 | `review-cycle` | `08-subscribe-before-first-read` | `08-both-endpoints-once-codex` | the check runs and the commit statuses, one read each |
 | `session-title` | `07-get-session-before-set` | `07-one-call-or-no-surface-codex` | one `agent_tasks` call with `threadId` omitted, or the stop |
 | `undertake` | `08-wake-slot-is-refilled` | `08-no-wake-to-keep-codex` | no durable wake, so the cadence is handed on |
@@ -2372,8 +2372,7 @@ here; the spike in #181 measured that Codex does not use it.
 
 None is its sibling's stem plus `-codex`, for the reason the Omp table above
 gives: the stem states Claude's route, and on Codex the row grades the opposite.
-Two of them grade a *stop* — Codex is the first harness where the right answer
-to "title this session" and to "wait for CI" is that there is no way to do it.
+The session-title row grades a stop when the harness has no title surface.
 
 Three of the eleven — `pr`, `pr-title` and `deps` — grade the same `gh` call their
 Omp counterpart does, because Codex has no GitHub tool of its own either. They
