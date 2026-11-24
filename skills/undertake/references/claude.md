@@ -238,8 +238,9 @@ The stop
 | Drop a pull-request subscription | `mcp__github__unsubscribe_pr_activity`, one call per subscription |
 | Post the handoff | `mcp__github__add_issue_comment` |
 
-The pushed head is `git rev-parse HEAD` after a push that succeeded, and the
-last head `git ls-remote origin <branch>` reports where it did not.
+Read `git ls-remote origin <branch>` for the observed remote pushed head and
+`git rev-parse HEAD` for the local tip. A failed read is unknown; preserve
+local-only commits and their worktree path when a push fails.
 
 `The wrap-up`'s `End the watch` uses the same two cancel routes before its
 push. Neither is skipped because the orchestrator archives this session next:

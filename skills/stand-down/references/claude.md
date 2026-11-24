@@ -29,6 +29,11 @@ The fleet
 | `Write the handoff` | Comment on a task issue or the epic | `mcp__github__add_issue_comment` |
 | `Stop the fleet` | Retire a session | `mcp__Claude_Code_Remote__archive_session` |
 
+Use the available task record and remote branch read to distinguish the
+observed pushed head from local-only work. Record the local commit and
+worktree location when known; otherwise mark them unknown. A successful send
+does not prove the worker received it or secured the work.
+
 **Addressing a session is the same route `embark`'s `Recover a session`
 uses**, named in that skill's [`claude.md`](../../embark/references/claude.md):
 `send_message` to the session id the muster roll records. Nothing here loads

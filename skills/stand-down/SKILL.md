@@ -72,21 +72,15 @@ The sequence
 0 — Read the fleet
 ------------------
 
-The record decides what is at sea, never a session status.
+Read the epic's ownership transitions and latest landing preference, and each
+named task's current claim and handoffs. Consult the harness lifecycle and
+dispatch handles where available. A historical claim alone is not liveness.
+A confirmed finished or failed worker is retired; an unknown lifecycle is not
+proof of retirement. Treat an unconfirmed live worker as a residual, and do
+not authorize a concurrent writer. Cold recovery uses the durable mapping and
+task records, not lost dispatch handles.
 
-Read the epic's comments — **all the muster rolls, not only the latest** —
-and every task issue a roll names, read at its claim comments and any
-handoff a previous stand-down left. Read the landing mode from the latest
-record that carries it. A task is at sea when the latest entry for it names
-a live implementor; a row already marked retired, and an implementor the
-harness reports as finished or failed, are not the fleet. On the
-harness-local fallback, the dispatch handles the orchestrator holds are the
-second half of the read — but the GitHub record is what outlives them, and a
-stand-down asked of a cold session, its dispatch handles gone, works from the
-record alone.
-
-The reads run in one parallel batch. No full comment histories are paged:
-the rolls and the claims carry what this step needs.
+The reads run in one parallel batch.
 
 **No epic, or an epic with nothing at sea, is not an error.** `Cancel the
 watches` still runs, because a backstop or a subscription can outlive the
@@ -103,9 +97,9 @@ case: left subscribed, each result would arrive as a pull-request event
 during the wrap-up wait. Fire-and-forget, by the identifiers the record holds,
 in one parallel batch, sent with `Secure the work`'s interrupts: the backstop
 timer behind the wake slot, any persistent watcher a CI wait left running,
-and every pull-request subscription the watch subscribed. Their identifiers
-go in the epic's stand-down comment at `Write the handoff`, so a reader can
-see what was silenced as well as what was stopped.
+and every pull-request subscription the watch subscribed. Record failed
+cancellations and live watches as residuals, not successful transient timer
+identifiers.
 
 A cancel that fails is a residual for the banner, not a wait. The
 orchestrator's own session ends at the banner regardless: no wake is
@@ -184,22 +178,20 @@ it asks for a commit and a push, never for a summary or an answer.
 ```markdown
 ## Handoff — fleet stood down <UTC timestamp>
 
-Implementor `<id>` (<session|subagent>) was retired by stand-down. The work
-is yours to reclaim.
+Implementor `<id>` (<session|subagent>): <confirmed retired or lifecycle
+unknown/live>. The work awaits safe recovery.
 
-- Branch: `<remote push branch>` — <link>. The origin tip is authoritative
-  as of this comment. Local execution branch: `<branch>` when it differs.
-- Pull request: <#N and state, or "none open">.
-- Worktree (this machine): <path, or "none">.
-- Secured: <yes — work in progress was committed and pushed before the stop
-  | no — residual, see the stand-down comment on the epic>.
-- Session: <link, left running or interrupted and unarchived where it could
-  not be messaged — push or archive it yourself; otherwise "retired">.
+- Branch: `<remote push branch>` — <link>; observed remote pushed head:
+  `<sha>` or "unknown". Local execution branch: `<branch>` when different.
+- Pull request: <#N and state, or "none open" or "unknown">.
+- Unsecured work: <local-only commit SHA and worktree path, uncommitted work,
+  failed push and its reason, or "none known"; mark unknown facts "unknown">.
+- Worker: <retired, or live/unknown with address and failed stop>.
 - Outstanding: <unverified work, risks and outstanding approvals; or "unknown">.
-  Use existing information; do not run checks or copy private source quotes.
-- Authorization: <task-scoped operations and targets, original authority
-  references and limits, including expiry or revocation; or "none recorded">.
-  Do not copy private source contents into a public issue.
+- Authorization and stop limits: <original task-scoped operations, targets,
+  authority references, conditions, expiry and revocations; or "unknown">.
+- Next action: <concrete recovery or explicit resume action, including
+  reconciliation of local-only work before another writer is dispatched>.
 
 ```
 
@@ -213,35 +205,30 @@ does not grant permission, and an unavailable private source is not verified
 authority. Do not delay stand-down to reconstruct missing records or request
 approval.
 
-**One stand-down comment on the epic**, shaped like a muster roll with its
-rows marked retired. What the retired rows buy is honesty in the epic's
-latest record: a resumed `embark` reads that the named implementors no
-longer exist, instead of steering or re-reading sessions that are gone. The
-claims on the task issues still read at sea, so the resume converges
-through `Recover a session`, which reopens each quiet task on the branch
-its claim comment or pull request names:
+**One stand-down comment on the epic** records the landing preference,
+affected ownership transitions, links to the task handoffs and exceptional
+residuals such as a failed push, failed stop, unknown worker lifecycle or live
+watch. Do not repeat the full task handoffs or successful transient timer IDs.
+Say "none known" only when no residual was observed; mark unknowns as unknown.
+Do not claim a worker retired when its stop was not confirmed.
 
 ```markdown
 ## Stand-down — <UTC timestamp>
 
-The watch was ended at the user's instruction. Every implementor below was
-retired; a row marked retired names an implementor that no longer exists.
-This comment supersedes the muster rolls above it.
-
 Landing: <orchestrator|by hand>
 
-| Task | Implementor | State at the stop |
-| ---- | ----------- | ----------------- |
-| #144 — Validate against the schema. | `session_01AbC…` — retired | branch `…`, PR #… open, unmerged |
+| Task and handoff | Worker transition |
+| ---------------- | ----------------- |
+| #144 — <handoff link> | `session_01AbC` — retired |
 
-Watches retired with this session: <timer ids>, <watcher names>,
-<subscriptions>.
-
-Each task issue carries its own handoff. Resume: run `/embark` — it reads
-the muster rolls and this comment, watches the tasks still open, and
-recovers each quiet task by reopening on the branch its claim or pull
-request names.
+Exceptional residuals: <failed stops, unsecured work or live watches; or none known>.
+Resume: an explicit `/embark <epic>` reads these records and checks lifecycle
+and current claims before dispatch; a later wake alone does not resume work.
 ```
+
+An explicit resumption is not automatic replacement after cancellation. It
+does not waive original authority, stop limits or exhausted recovery bounds.
+Resolve unsecured local-only work before dispatching another writer.
 
 **The stand-down comment ends with an envoi in its authored body**: a brief
 farewell stanza for the watch, each line italicised as
@@ -265,12 +252,12 @@ at-sea status from.
 **Idempotent re-entry.** A stand-down interrupted by a session death is
 re-run, not duplicated, and the writes are idempotent one by one: a handoff
 comment already on a task issue is not posted twice, and a stand-down
-comment already on the epic is not posted again. A `## Handoff —` comment
-that `undertake`'s `The stop` posted, after the latest claim (or anywhere, when
-the issue has no claim comment) and naming the current pushed head, counts as
-the handoff already present. `Write the handoff` writes
-only what is missing, and a record that is complete sends this step
-straight to the stops.
+comment already on the epic is not posted again when its facts are unchanged.
+A `## Handoff —` comment after the latest claim (or anywhere when there is no
+claim) counts only if it captures the same observed pushed head, unsecured
+local work, worker state and stop limits. Unknown or changed recovery facts
+require a new handoff; the same remote head alone is not enough. Write only
+what is missing.
 
 4 — Stop the fleet
 ------------------

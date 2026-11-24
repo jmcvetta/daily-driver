@@ -21,8 +21,10 @@ tags: [stand-down, behaviour, fire]
 initial_prompt: >-
   Epic #510 is at sea. Its latest muster roll names two live implementors:
   task #511's `session_01Alive`, still working, and task #512's
-  `session_01Gone`, whose cloud workspace no longer exists — `send_message` to it errors, and
-  `get_session` reports it failed. Stand down the fleet.
+  `session_01Gone`, whose cloud workspace no longer exists — `send_message`
+  errors and `get_session` reports it failed. Task #511 has local commit
+  `abc123` in `/work/task-511`; its push failed, and the observed remote head
+  is `def456`. A watch cancellation also failed. Stand down the fleet.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -87,15 +89,14 @@ success_criteria:
       some way to reach it. Saying the tools are unavailable in the
       environment, and stating what would happen anyway, counts as doing it.
 
-      Score 1.0 if the REPLY names `session_01Gone` as a residual whose work
-      could not be secured, still sends `session_01Alive` its wrap-up, and
-      completes the stand-down — the banner is printed, or the reply states
-      the stand-down completed — without describing a wait for
-      `session_01Gone` to become reachable.
-
-      Score 0.5 if the reply completes the stand-down and archives
-      `session_01Gone`, but does not clearly name it as a residual, or
-      conflates it with `session_01Alive`'s handling.
+      Score 1.0 if the reply names `session_01Gone` as a residual, still
+      wraps up `session_01Alive`, and completes the stand-down without waiting
+      for the failed session. It must distinguish local-only `abc123` and its
+      worktree from remote `def456`, preserve the failed push in the task
+      handoff, and record the failed watch cancellation as an epic residual.
+      The next action must reconcile the local commit before another writer.
+      Score 0.5 if it preserves the failed session and continues the fleet
+      stop but omits one recovery fact. Never claim a failed push succeeded.
 
       Score 0.0 if the reply waits for `session_01Gone` to respond or become
       reachable, declines to complete the stand-down because of it, or holds
