@@ -94,20 +94,30 @@ and [`19-04-35`](provenance/omp-gpt-6-1-sol-2026-10-31-2026-10-31_19-04-35.json)
 The subject's served identity was unreported; the Omp GPT 6.1 Sol judge scored
 each case. The successive-revision cases use one turn, not a resumed session.
 The Omp judge-selection regressions for issue #1062 cover new and revised
-task handoffs, explicit non-Claude overrides, and explicitly authorized Claude
-judging. Four bounded runs used requested subject `openai-codex/gpt-6-luna`
-and validated judge `omp-gpt-6.1-sol` (observed `gpt-6.1-sol`); the subject's
-served identity was unreported. The initial five-case run
-[`19-50-03`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_19-50-03.json)
-passed the new-task and authorized-Claude cases, but failed the revised-task,
-judge-controls, and existing campaign-provenance cases. After repairing the
-campaign guidance, [`20-03-54`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-03-54.json)
-passed the campaign case but not judge controls. The next run
-[`20-12-43`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-12-43.json)
-again passed campaign provenance but not judge controls. The final targeted
-run [`20-18-19`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-18-19.json)
-passed both judge-control variants. These bounded runs test workflow
-decisions; they do not estimate fleet reliability.
+task handoffs, explicit judge preservation, and authorized Claude judging.
+The runs used requested subject `openai-codex/gpt-6-luna` and validated judge
+`omp-gpt-6.1-sol` (observed `gpt-6.1-sol`); the subject's served identity was
+unreported. Recorded outcomes are per variant:
+
+- [`19-50-03`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_19-50-03.json):
+  bare passed cases 21 and 22; with-plugin passed 22, 24 and 25. Both variants
+  failed case 26; bare also failed 24 and 25, while with-plugin failed 21.
+- [`20-03-54`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-03-54.json):
+  both variants failed cases 21 and 26.
+- [`20-12-43`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-12-43.json):
+  bare passed 26 and failed 21; with-plugin passed 21 and failed 26.
+- [`20-18-19`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-18-19.json):
+  bare scored 0.5, below the 0.7 threshold, and failed; with-plugin scored
+  1.0 and passed.
+
+These bounded runs preserve each variant's result; they do not estimate fleet
+reliability.
+The first five-case rerun after making the shared guidance provider-neutral,
+[`20-28-39`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-28-39.json),
+passed cases 21 and 22 in both variants. Bare passed case 26; with-plugin
+passed case 24. Bare failed cases 24 and 25; with-plugin failed cases 25 and
+26. The new and revised handoff cases still need repair.
+
 
 
 A separate two-turn Omp 18.14.1 smoke used `--plugin-dir` pointing at this

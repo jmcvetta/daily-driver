@@ -213,17 +213,19 @@ independently from the actual target, experiment, task defaults and explicit
 overrides. A subject selector alone does not establish a non-default judge:
 when `JUDGE` is unset, the task-pinned `agent_judge` remains in effect. Check
 the selected judge's execution session and authorization boundary as well as
-route compatibility. When the default route is not authorized, an exact
-command must name a supported validated alternative `JUDGE=<id>` compatible
-with the task criteria and existing authority, or leave selection explicitly
-to the operator and state that the command is not ready for unattended
-execution. Do not infer a judge from the subject, invent a selector, alter
+route compatibility. When the default route is not authorized, the issue body
+itself must either name a supported validated alternative `JUDGE=<id>`
+compatible with the task criteria and existing authority, or state that judge
+selection remains with the operator and the command is not ready for
+unattended execution. A warning outside the body does not make an unsafe
+command ready. Do not infer a judge from the subject, invent a selector, alter
 grading criteria, disable semantic grading, or treat the handoff itself as
 approval. Preserve a caller-supplied valid judge, subject selection, bounds,
-rerun restrictions, provenance and approval conditions; carry the judge
-through required recording and reruns. An authorized judge remains valid
-through its supported execution session. This does not change the default
-judge or add an approval checkpoint.
+rerun restrictions, provenance, approval conditions and required record
+fields, including the run identifier, requested and observed identities, and
+case outcomes when assigned; carry these through recording and reruns. An
+authorized judge remains valid through its supported execution session. This
+does not change the default judge or add an approval checkpoint.
 
 When a genuine gap remains, state it precisely and do not present or dispatch
 the issue as ready. A truthful parent edge may still be recorded under

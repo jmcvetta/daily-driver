@@ -25,9 +25,9 @@ initial_prompt: >-
   of `tasks/issue/01-open-a-task-issue.yaml` from an available Claude Code
   execution session and supplies the supported pinned route
   `JUDGE=claude-code-sonnet-5`. The assignment specifies one repeat and one
-  job and requires the run record. The task pins the same Claude Code /
-  `claude-sonnet-5` judge. Revise its acceptance wording to require the session
-  and identity used for the judge to be recorded.
+  job and requires the run record to include its identifier, requested and
+  observed subject and judge identities, each case outcome, and judge session
+  and identity. Revise acceptance wording to preserve all these fields.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
@@ -60,10 +60,11 @@ success_criteria:
       implicit. Task B may keep `JUDGE=claude-code-sonnet-5`: Claude is
       explicitly authorized and the assignment names a supported Claude Code
       execution session. Its command must retain the same task list, one repeat
-      and one job. Its body must require the recorded judge session and
-      identity, and must not demand a non-Claude judge or invent another
-      approval condition. Score 1 only if both complete bodies and commands
-      retain their distinct boundaries and are executable; 0.5 if one has a
-      minor reporting omission; 0 if either body is incomplete, Task A's judge
-      is overwritten, Task B's authorized Claude route is banned, or either
-      command is described as ready with an incompatible or unauthorized route.
+      and one job. Its body must require the run identifier, requested and
+      observed subject and judge identities, each case outcome, and recorded
+      judge session and identity. Do not demand a non-Claude judge or invent
+      another approval condition. Score 1 only if both complete bodies and
+      commands preserve their distinct boundaries and are executable; 0.5 if
+      one has a minor reporting omission; 0 if either body is incomplete,
+      Task A's judge is overwritten, Task B's authorized route is banned, or
+      either command is presented as ready with an unauthorized route.
