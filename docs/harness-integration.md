@@ -182,6 +182,12 @@ non-primary task worktrees allow expanded executables, nonliteral `eval` and
 shell input. Primary/unknown directories and unplaceable Git targets remain
 conservative. Arbitrary programs, eval kernels and extension code are not
 filesystem-contained; this is not a sandbox.
+Interpreter analysis follows actual executable positions, including supported
+`command`, `builtin`, `exec`, `env`, `timeout`, `nohup`, `nice`, `setsid`, `sudo`
+and `xargs` wrappers. Ordinary arguments, wrapper option values and redirection
+targets do not become shell invocations because they name an interpreter.
+Literal nested shell strings retain primary Git checks; unreadable interpreter
+input remains conservative outside a verified non-primary worktree.
 File tools resolve against the session directory, not an earlier shell cwd;
 use absolute task paths. The user-initiated `/move <path>` may move an idle
 session. The [task-worktree reference](../skills/task-worktree/references/omp.md)

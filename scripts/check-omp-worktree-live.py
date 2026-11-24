@@ -79,6 +79,11 @@ def main() -> None:
             ("expanded-python", "bash", {"command": f'PYTHON={quote(sys.executable)}; "$PYTHON" -m pytest -q test_feature.py', "cwd": str(task)}, False),
             ("opaque-eval", "bash", {"command": 'script=\'printf "eval executed\\n" > eval.txt\'; eval "$script"', "cwd": str(task)}, False),
             ("opaque-script", "bash", {"command": 'script=\'printf "script executed\\n" > script.txt\'; bash -c "$script"', "cwd": str(task)}, False),
+            ("primary-interpreter-data", "bash", {"command": "printf '%s\\n' bash eval sh", "cwd": str(primary)}, False),
+            ("outside-interpreter-data", "bash", {"command": "env -u bash printf '%s\\n' sh", "cwd": str(outside)}, False),
+            ("primary-shell-stdin", "bash", {"command": "sh </dev/null", "cwd": str(primary)}, True),
+            ("task-shell-stdin", "bash", {"command": "sh </dev/null", "cwd": str(task)}, False),
+            ("wrapped-primary-shell", "bash", {"command": f"env -u bash sh -c {quote('git -C ' + quote(str(primary)) + ' reset --hard HEAD')}", "cwd": str(task)}, True),
             ("primary-write", "write", {"path": str(primary / "forbidden.txt"), "content": "forbidden\n"}, True),
             ("symlink-write", "write", {"path": str(task / "primary-link/forbidden.txt"), "content": "forbidden\n"}, True),
             ("nested-primary", "write", {"path": str(nested / "forbidden.txt"), "content": "forbidden\n"}, True),
@@ -170,7 +175,8 @@ error:
                 result = results.get(label)
                 if result is None:
                     raise AssertionError(f"missing actual tool result: {label}\n{completed.stdout}")
-                if blocked and "blocked" not in result.lower():
+                expected = "commands from redirected input" if label == "primary-shell-stdin" else "blocked"
+                if blocked and expected not in result.lower():
                     raise AssertionError(f"protected route was not blocked: {label}: {result}")
                 if not blocked and "blocked" in result.lower():
                     raise AssertionError(f"ordinary feature operation was refused: {label}: {result}")
@@ -178,6 +184,8 @@ error:
             assert (task / "feature.txt").read_text() == "feature edit\n"
             assert (task / "eval.txt").read_text() == "eval executed\n"
             assert (task / "script.txt").read_text() == "script executed\n"
+            assert "bash" in results["primary-interpreter-data"], results["primary-interpreter-data"]
+            assert "sh" in results["outside-interpreter-data"], results["outside-interpreter-data"]
             assert (outside / "ordinary.txt").read_text() == "non-repository work\n"
             assert git(detached, "symbolic-ref", "HEAD") == "refs/heads/feature/recovered"
             assert git(detached, "show", "HEAD:recovered.txt") == "recoverable edit"
