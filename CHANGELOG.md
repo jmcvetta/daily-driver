@@ -49,8 +49,8 @@
 
 ### Fixed
 
+* Classify report-only requests as `bug` and keep settled implementation requests as `task`; preserve filing and implementation as distinct purposes ([#1085](https://github.com/jmcvetta/daily-driver/issues/1085)).
 * Retry failed Omp notification delivery without persisting a duplicate-suppression entry; retain one durable entry after successful delivery ([#1091](https://github.com/jmcvetta/daily-driver/issues/1091)).
-
 * Preserve Omp commit provenance through selective commits, local conflict-resolution merges, and explicitly prepared squash landing messages; keep GitHub-authored update-branch messages distinct ([#1029](https://github.com/jmcvetta/daily-driver/issues/1029)).
 
 * Distinguish delegated reviewer identity from publisher provenance in Omp reviews and verification records ([#973](https://github.com/jmcvetta/daily-driver/issues/973)).
