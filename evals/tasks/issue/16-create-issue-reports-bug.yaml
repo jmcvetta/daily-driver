@@ -51,6 +51,7 @@ run_limits:
 success_criteria:
   - type: agent_judge
     description: A report-only create request produces a brief bug report
+    include_agent_output: true
     include_reference: false
     weight: 2
     max_turns: 5

@@ -4,7 +4,6 @@
 
 ### Changed
 
-
 * Fetch Projected Releases commit history in batches of 25 using the shared release-please configuration ([#1071](https://github.com/jmcvetta/daily-driver/issues/1071)).
 * Add opt-in fenced PR supervision with fresh-read work acknowledgment, parent-mediated Omp child recovery, bounded activation retries, and rollback-compatible timer/watch/service transfer; retain existing maintenance until per-PR transfer and prove restart/stop behavior only in an isolated harness ([#1038](https://github.com/jmcvetta/daily-driver/issues/1038)).
 
