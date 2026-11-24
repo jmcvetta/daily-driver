@@ -40,6 +40,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
+import { prepareCommitMessage } from "./commit-message.mjs";
 import { installModelClassDefaults, readModelClassRoutes } from "./role-default-helper.mjs";
 import {
 	createGitHubWriteRunner,
@@ -2763,6 +2764,27 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 					isError: true,
 				};
 			}
+		},
+	});
+
+	pi.registerTool({
+		name: "daily_driver_commit_message",
+		label: "Prepare commit attribution",
+		description:
+			"Prepare a commit body with distinct Git attribution trailers, using the live Omp session. " +
+			"Return details.body for native selective commits, local merge completion, or an explicit squash body. " +
+			"This tool does not stage, commit, push, merge, or change settings.",
+		parameters: z.object({
+			body: z.string().describe("Substantive commit body, including any existing trailers"),
+			sourceMessages: z.array(z.string()).optional().describe("Complete source commit messages in source order for squash attribution"),
+			coAuthor: z.string().optional().describe("Verbatim Name <address> identity positively verified in the user's Omp configuration; omit when unavailable"),
+		}),
+		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => {
+			const prepared = prepareCommitMessage(params, ctx);
+			return {
+				content: [{ type: "text", text: prepared.body }],
+				details: prepared,
+			};
 		},
 	});
 
