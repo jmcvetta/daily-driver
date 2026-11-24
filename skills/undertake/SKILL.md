@@ -371,7 +371,7 @@ Beyond the claim itself the comment always carries:
 - **`provenance`'s block.** Where the agent supplies it, place it immediately
   after the work identity lines. It names the serving model, provider,
   harness/version, and session under the exact `Model:`, `Provider:`,
-  `Harness:`, and `Session:` shapes used by claim lookup and milestone timing;
+  `Harness:`, and `Session:` shapes used by claim lookup;
   claim lookup also accepts historical blocks whose session field is
   lowercase. Where the serving model differs from the session's configured
   model, name both. For Omp body-bearing GitHub writes, the GitHub-write
@@ -416,19 +416,8 @@ implementation begins.
 handoff names the branch, or the user handed the issue over to continue it.
 Otherwise a prior claim from another session stays a collision, reported as
 above. On a resume this session still posts its own claim, naming the adopted
-branch or the branch-free research route; the earliest-claim rule below
-already keeps the clock start, so no new timing rule is needed. A re-entry by
-the same session posts nothing, as before.
-
-**The claim's timestamp is the undertaking's clock start.** The comment's own
-`created_at` is what `The milestone` reads back when the pull request first
-passes the ready-for-review gate — through resumes and later draft states. No
-timestamp is written into the claim for the milestone's sake: the durable
-start is the post, not a line in it. Where more than one comment carries the
-claim's shape — the collision the policy above permits — the earliest of them
-is the start: a later claim does not restart a clock already running. A claim
-that was never posted leaves the milestone with no start to read, and `The
-milestone` reports the timing as unavailable rather than guessing at one.
+branch or the branch-free research route. A re-entry by the same session posts
+nothing, as before.
 
 5 — Implement
 -------------
@@ -579,8 +568,8 @@ updates it, and no second pull request is opened.
 
 **Opening or reusing the draft starts supervision.** `pr` starts or reuses
 common currency maintenance. The undertaking retains assessment of CI, review,
-`The gate`, and `The milestone` while draft and after ready. Its active
-harness reference names the continuation and any owner-resume limitation.
+`The gate` while draft and after ready. Its active harness reference names the
+continuation and any owner-resume limitation.
 
 **The body is `pr-body`'s, and so are blockers that go with a Tofu diff.**
 Where the branch changes the infrastructure Tofu stack — `pr-body`'s test, the
@@ -722,14 +711,8 @@ complete independent permitted work and publish the required handoff before
 pausing. On resume, revalidate the evidence and return through the gate.
 Pending CI and other external waits use their existing continuation.
 
-When the gate clears, the milestone's moment has arrived: publish the
-first-readiness report through `The milestone` below, before marking the pull
-request ready. The report records that the ready-for-review gate cleared; it
-does not claim the PR is already ready to merge. The existing supervision
-continues without a second owner. A pull request that stops here on a human
-action publishes nothing: it has not passed the gate, and a report naming
-readiness over a bar only a person can clear is the false claim the gate exists
-to refuse.
+When the gate clears, mark the pull request ready. Existing supervision
+continues without a second owner.
 
 11 — Keep it current
 --------------------
@@ -748,8 +731,8 @@ already taken in this turn also serves `Ready for review`; do not repeat it
 without a relevant state change. Currency is not proof of completion.
 
 After currency settles, assess CI on the resulting head through
-`review-cycle`'s `How to wait`, then continue review, the ready gate, and
-`The milestone` when their conditions permit. Missing logs remain an
+`review-cycle`'s `How to wait`, then continue review and the ready gate when
+their conditions permit. Missing logs remain an
 evidence blocker. A cap, review wall, human action, or evidence blocker
 reports the outstanding condition and actual resume path; it does not reset
 the bound, authorize a retry, or call the undertaking complete. Where the
@@ -865,9 +848,9 @@ approval that must be renewed.
    do not infer required approval from the enum. Holding a draft until approval
    can stall the transition that requests that review. `has_hooks` is a
    passing state with a hook configured.
-   **`clean` is not a gate condition**: the report is published while the PR is
-   still a draft, after the gate's independent reads establish currency and
-   green CI. The milestone does not wait for a post-ready merge-state read.
+   **`clean` is not a gate condition**: the gate's independent reads establish
+   currency and green CI while the PR is draft. Do not wait for a post-ready
+   merge-state read.
 - **CI on the head commit**, for the condition that it is green. Read the
    checks themselves rather than inferring them from the merge state, which
    reports a draft's status before its checks': the union of check runs and
@@ -930,19 +913,15 @@ CI, finding dispositions and resolved threads are separate conditions.
    the applicable full-review or fix-delta stage. Do not publish a replacement
    completion marker or ask the user to certify the evidence.
 
-**When the reads agree and no explicit user hold applies, publish the
-first-readiness report if none exists, then mark the pull request ready in the
-same turn.** The harness calls are in `The milestone` and the reference file;
-no summary, permission request or turn boundary comes between the gate and
-these actions. A failed report write leaves the PR draft. If marking ready
-fails after the report posts, preserve the report and revalidate the gate
-before retrying.
+**When the reads agree and no explicit user hold applies, mark the pull request
+ready in the same turn.** The reference file names the harness call; no summary,
+permission request or turn boundary comes between the gate and that action. If
+marking ready fails, revalidate the gate before retrying.
 
 **The user is never asked to certify the gate.** A direct user hold on the
-readiness transition remains controlling: do not publish the first-readiness
-report or mark ready while the hold applies. A status question does not release
-it. An agent-authored reminder is not a user hold and does not outlive the
-condition it records.
+readiness transition remains controlling: do not mark ready while the hold
+applies. A status question does not release it. An agent-authored reminder is
+not a user hold and does not outlive the condition it records.
 
 A branch behind its base, red CI, an open thread, or a human action still
 owed, or an issue item the diff does not carry, means it **stays a draft**,
@@ -968,82 +947,6 @@ two stalls that prompted it.
 completeness read, and the draft before a content push.
 
 
-The milestone
-=============
-
-The first-readiness report records the first time an undertaking passes the
-ready-for-review gate. Publish it on the pull request after every condition in
-`The gate` holds on the current head, but before `Ready for review` marks the
-pull request ready. The reference file for the harness in use names the calls
-that read the claim's timestamp, find an existing report and post it.
-
-**The report is a milestone, not the end.** Posting it does not mark the
-pull request ready by itself, stop the watch at `Keep it current`, stop a
-process or cancel a scheduled wake, close the issue, or merge anything. The
-watch's exits — merged, closed, or the user says to stop — are what they were
-before the comment existed, and a base-branch advance after it runs the same
-update, CI wait, and return through the gate as any other.
-
-
-The report records readiness for review, not merge readiness. Publish it only
-while the PR is draft, after `The gate` holds.
-
-
-What the report carries
------------------------
-
-- **The timing, labelled as what it is** — wall-clock time from the claim to
-  the first successful ready-for-review gate. It runs from the claim comment's
-  timestamp, read back off the issue through resumes and later draft states.
-  The claim's timestamp is the durable start, so a session arriving late never
-  restarts the clock. After the gate reads pass, capture the current UTC time
-  immediately before posting the report; that is the milestone timestamp.
-  Preserve the telemetry-readable line shape:
-  `Elapsed: <duration>, from claim (<UTC timestamp>) to first ready-for-review gate (<UTC timestamp>).`
-  The interval covers implementation, review, fixes and waits; it excludes
-  maintenance after the first report and is never called compute time or total
-  undertaking duration. If the claim start is unrecoverable, report timing as
-  unavailable. If posting fails, publish no milestone; revalidate the gate and
-  capture a new time before retrying.
-
-- **`provenance`'s block.** The active route supplies attribution. Omp's
-  wrapper attaches the current write's live model/harness/session tuple; do
-  not perform identity reads or format a block for it. Each claim or report is
-  its own comment, so attribution on an earlier claim remains there rather
-  than being copied into this report. Other routes follow the agent-supplied
-  block rules above.
-
-- **The head it binds to.** The pull request's head SHA and the report
-  timestamp. The comment is a statement about that head: a later head — after
-  a base merge, conflict resolution or any push — is not what it described,
-  and nothing in the comment claims otherwise.
-
-
-Once per undertaking
---------------------
-
-The report posts once for an undertaking and its pull request. Before posting,
-read the pull request's existing comments and look for the comment that opens
-with the fixed line `# First-readiness report 🎉`. Also recognize the historical
-unheaded `First-readiness report` marker for deduplication. A resumed sequence,
-a failed ready transition, or a later return through draft finds the original
-report and does not duplicate or overwrite it. An existing report does not
-replace current-head gate evidence:
-re-read every condition before attempting to mark the pull request ready.
-
-Post the report only after all gate conditions hold. If the report write fails,
-leave the pull request in draft and stop before the ready write. If the report
-posts but marking ready fails, preserve that report; revalidate the current
-gate before retrying readiness. Do not rewrite the report's original timestamp
-or head on a later pass.
-
-**A short read is a reason to look again, not to stop.** A gate read that comes
-back blocked, unknown or otherwise short of the conditions above leaves the
-report unpublished, and the standing continuation carries the evaluation.
-Every check-in and catch-up look reads current-head CI after currency, then
-takes the gate's remaining reads when CI permits progress. An approval that
-arrives or a mergeability answer that settles moves no head or base — the look
-that observes all gate conditions is what posts the report.
 
 
 The wrap-up

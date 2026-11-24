@@ -13,11 +13,10 @@ description: >-
 
 One shape for the record every write leaves: which model wrote it, which
 provider served it, on which harness and version, in which session.
-`undertake`'s claim comment and
-first-readiness report already carried a version of this; every other
-writing skill carried nothing, or only a harness's own generic footer. This
-skill is the one owner of that record, cited rather than restated wherever a
-body, a comment, a review reply, or a commit is written.
+`undertake`'s claim comment carried a version of this; every other writing
+skill carried nothing, or only a harness's own generic footer. This skill is
+the one owner of that record, cited rather than restated wherever a body, a
+comment, a review reply, or a commit is written.
 
 **The routes are per harness, and they live beside this file.** Every
 operation below is named in words here and resolved to a route there:
@@ -87,7 +86,7 @@ block that explains why it has no session id publishes a diagnostic instead
 of a record.
 
 **The line shapes are fixed, because other skills key their reads off them.**
-`undertake`'s claim lookup and first-readiness timing find the claim comment
+`undertake`'s claim lookup finds the claim comment
 by its `Model:` and `Session:` lines. Historical blocks carrying lowercase
 `session:` remain readable and are never rewritten; a reader accepts either
 capitalization. Changing the `Model:` line or dropping the session field
@@ -120,9 +119,6 @@ The scope is one artifact, not a thread. A new comment or review carries its
 own block even when another comment has the same attribution. Do not copy the
 thread's history into a reply or suppress the reply's own attribution.
 
-`undertake`'s claim comment and first-readiness report keep their own timing
-and once-per-undertaking rules for the block they carry; this section governs
-every other body and comment.
 
 
 
