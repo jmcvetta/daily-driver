@@ -2,7 +2,7 @@
 /** Exercise opt-in runtime PR registration and owner controls without GitHub. */
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, chmodSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, chmodSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, delimiter } from "node:path";
 import { installPrSupervisorTools } from "../extensions/pr-supervisor-tools.mjs";
@@ -95,7 +95,8 @@ else:
 			sendUserMessage:(content,options)=>sent.push({content,options}),sendMessage() {},
 			appendEntry(customType,data) {entries.push({type:"custom",customType,data});}};
 		dailyDriverExtension(runtime,{notificationDependencies:{lookup:()=>({override(){}})}});
-		const timerContext = {...ctx,cwd:worktree,agent:{kind:"main",id:"Main"},
+		const timerContext = {...ctx,cwd:worktree,model:{id:"fixture-model"},
+			models:{current:()=>({id:"fixture-model",provider:"fixture-provider"})},agent:{kind:"main",id:"Main"},
 			sessionManager:{...ctx.sessionManager,getSessionName:()=>"#7 Fixture",getBranch:()=>entries,getEntries:()=>entries},
 			setTimeout(fn,delay) {timers.set(++nextTimer,{fn,delay});return nextTimer;},
 			clearTimer:id=>timers.delete(id),abort:async()=>{aborted++;}};
@@ -163,6 +164,67 @@ db.commit()
 		}
 		assert.equal(aborted,2,"the recovered queued timer also cannot start work after retransfer");
 		assert.equal(timers.size,0,"retransfer also fences the restored structured fallback");
+	writeFileSync(fake, `#!/usr/bin/env python3
+import json, os, sys
+args = sys.argv[1:]
+if args[:2] == ["pr","create"]:
+ with open(os.environ["DD_WRITE_COUNT"], "a") as count:
+  count.write("write\\n")
+ print(os.environ["DD_WRITE_URL"])
+ sys.exit(int(os.environ.get("DD_WRITE_EXIT", "0")))
+else:
+ assert args[:5] == ["api","--hostname","isolated.example","--method","GET"], args
+ endpoint = "user" if args[5] == "user" else args[-1]
+ if endpoint == "user":
+  print("fixture-author")
+ elif endpoint.startswith("/repos/fixture/project/pulls/"):
+  if os.environ.get("DD_FAIL_REGISTRATION") == "1":
+   sys.exit(7)
+  print(json.dumps({"head":{"ref":"task","sha":"a"*40},"base":{"ref":"release","sha":"b"*40},
+   "state":"open","merged":False,"mergeable":True,"mergeable_state":"clean"}))
+ else:
+  raise AssertionError(endpoint)
+`);
+	chmodSync(fake, 0o755);
+	dailyDriverExtension(runtime,{
+		githubWriteDependencies:{versionReader:()=>"omp/fixture"},
+		notificationDependencies:{lookup:()=>({override(){}})},
+	});
+	const ghWriteCount = join(root,"gh-write-count");
+	process.env.DD_WRITE_COUNT = ghWriteCount;
+	const ghWriter = runtimeTools.get("daily_driver_gh_write");
+	const runPrCreate = () => ghWriter.execute("fixture-write",
+		{args:["pr","create","--title","fixture","--body","fixture body"]},undefined,undefined,timerContext);
+
+	process.env.DD_WRITE_URL = "https://isolated.example/fixture/project/pull/8";
+	delete process.env.DD_WRITE_EXIT;
+	delete process.env.DD_FAIL_REGISTRATION;
+	const registeredWrite = await runPrCreate();
+	assert.equal(registeredWrite.isError, undefined, "a successful write with successful registration remains successful");
+	assert.equal(registeredWrite.details.exitCode, 0);
+	assert.match(registeredWrite.details.stdout,/pull\/8/u);
+	assert.doesNotMatch(registeredWrite.content.map(item=>item.text).join("\n"),/registration failed/u);
+	assert.equal(readFileSync(ghWriteCount,"utf8").trim().split("\n").length,1);
+
+	process.env.DD_WRITE_URL = "https://isolated.example/fixture/project/pull/9";
+	process.env.DD_FAIL_REGISTRATION = "1";
+	const unregisteredWrite = await runPrCreate();
+	assert.equal(unregisteredWrite.isError, undefined, "registration failure must not turn a successful PR write into a tool error");
+	assert.equal(unregisteredWrite.details.exitCode, 0);
+	assert.match(unregisteredWrite.details.stdout,/pull\/9/u);
+	assert.match(unregisteredWrite.content.map(item=>item.text).join("\n"),/supervision registration failed/u);
+	assert.equal(readFileSync(ghWriteCount,"utf8").trim().split("\n").length,2,"the failed registration does not retry the GitHub write");
+
+	process.env.DD_WRITE_URL = "https://isolated.example/fixture/project/pull/10";
+	process.env.DD_WRITE_EXIT = "9";
+	const failedWrite = await runPrCreate();
+	assert.equal(failedWrite.isError, true, "a failed GitHub write remains a tool error");
+	assert.equal(failedWrite.details.exitCode, 9);
+	assert.equal(readFileSync(ghWriteCount,"utf8").trim().split("\n").length,3,"a failed GitHub write is not retried automatically");
+	delete process.env.DD_WRITE_EXIT;
+	delete process.env.DD_FAIL_REGISTRATION;
+	delete process.env.DD_WRITE_COUNT;
+	delete process.env.DD_WRITE_URL;
 	} finally {
 		host.kill("SIGTERM");
 		await new Promise(resolveExit=>host.once("exit",resolveExit));
