@@ -47,12 +47,14 @@ blocked research separately. Existing independent implementation already in
 progress during amendment may continue under its unchanged contract; affected
 work pauses. Discovery itself never starts implementation.
 
-For a promoted specification-backed epic, before dispatch confirm each task's
-document path, exact merged `master` SHA and requirement IDs match the parent
-publication record and exist at that revision. Route mismatches to `epic`;
-continue unrelated eligible work. At closure, require evidenced delivery of
-every allocated requirement at the recorded revision, not only closed children.
-Ordinary issue-backed epics retain their existing dispatch and closure rules.
+For a promoted specification-backed epic, resolve each task's specific parent
+publication record before dispatch. Read its approved exact merged `master`
+revision, verify the allocated IDs exist, exclusions are clear and allocation
+was separately agreed. Missing, changed, ambiguous or inaccessible records
+cannot authorize dispatch; report and route them to `epic`, while continuing
+unrelated eligible work. Legacy tasks with their own pinned path and SHA retain
+that original binding, not a newer record. At closure require evidenced
+delivery of every allocation against its governing revision.
 
 
 The sequence
@@ -109,17 +111,14 @@ sequence's: say so in a line and go on to `Take the wave`.
 2 — Take the wave
 -----------------
 
-The batch that sails together: eligible open children whose blockers are
-closed, less those already at sea. Under discovery this means research only.
-
-**The graph decides what can run; the epic's `Sequencing` decides what does.**
-The two are not the same question, and `epic` writes both on purpose:
-
-- **Blocked in the graph, placed early in the body** is a disagreement. The
-  graph wins — `epic` says so, and says the body is fixed in the same turn.
-- **Unblocked in the graph, placed in a later wave by the body** is not a
-  disagreement. It is the scheduling choice `epic` requires that child line
-  to state, and it is honoured: the child waits for its wave.
+Derive the batch from the current parent and blocked-by graph: ready open
+children whose blockers are closed, less those already at sea. Under discovery
+this means research only. Apply the epic's explicit non-graph scheduling
+constraints before each dispatch: a global serial limit permits only one
+active implementation even when several children are independent. Spending
+limits also remain binding. Never turn either into a false blocker edge.
+Historical wave lists or statuses do not override the graph or require edits.
+Re-read the graph when a child completes or dependencies change.
 
 **Every dispatch candidate must be assignable.** Apply `issue-body`'s
 kind-specific readiness and required class tests, and check open blockers.
@@ -168,8 +167,8 @@ here to be routed again:
 3 — Open the sessions
 ---------------------
 
-Open one session or subagent per ready, agent-eligible child issue, all before
-the watch starts. Each ship carries the child issue, the instruction to
+Open one session or subagent per selected ready child, subject to the recorded
+constraints, before the watch starts. Each ship carries the child issue, the instruction to
 undertake it, a `session-title` title where the surface supports one, and
 inherited permissions. The issue is the work statement; do not copy its scope
 into the prompt.
@@ -244,11 +243,10 @@ One comment on the epic as the wave launches, and it goes up **after** the
 sessions are open, because it records their identifiers.
 
 It is what this skill does instead of asking, so it has to be readable by
-somebody who did not ask for it. The wave's heading from `Sequencing`, and then
-one row per task:
+somebody who did not ask for it. Name the dispatch batch, then one row per task:
 
 ```markdown
-### Wave 2 — after #143 · in progress
+### Dispatch batch
 
 Landing: orchestrator
 
@@ -283,16 +281,8 @@ after the couplet. On other routes, the authored block precedes it, so a reader
 who wants the rows never reads past verse to reach them — the order
 `undertake`'s claim comment keeps.
 
-**The wave headings carry state, and nothing else moves it.** `epic` writes
-that state into the epic's `Sequencing` at decomposition time and never
-returns. This skill marks a wave `in progress` as it launches and `done` as it
-comes in, in the epic's own body. That is the one edit this skill makes to an
-epic body; everything else about it is `epic`'s.
-
-**Those two words are the whole vocabulary**, because they are `epic`'s and
-`epic` owns the format. A third state invented here — *at sea*, however well it
-reads — is one `epic` does not know, and its `Fill in the epic` replaces the
-body outright, so the invention survives exactly until the next edit there.
+The muster roll records ownership, not graph status. Do not edit the epic body
+to mark a wave in progress or done; derive current eligibility from the graph.
 
 5 — Watch the wave
 ------------------
@@ -380,10 +370,9 @@ So on every wake:
   reads the gate and returns here, whether it merges or waits.
 - **Read the epic's graph and child evidence** against the completion
   contracts at the start of this step; report unsupported closure.
-- **The wave is in when every child in it has a completed disposition and the
-  evidence satisfies its kind's contract.** Mark the wave `done` in the epic's
-  body, and go back to `Take the wave`, which routes what happens next — the
-  following wave, or `Close the epic`.
+- **The batch is in when every child in it has a completed disposition and the
+  evidence satisfies its kind's contract.** Return to `Take the wave` and
+  derive the next eligible set from the current graph and constraints.
 - **A completed child has no session left to run, archived once.** Unless
   landing is by hand, archive its session after reading the issue's completion
   evidence. Do not archive a pull request child while its PR is green but
@@ -432,8 +421,8 @@ explicitly transfers ownership. The prompt also requires reading unfinished
 work and steering the implementor through already-authorized preparation under
 `undertake`'s escalation contract. A real prerequisite pauses only the affected
 operation after independent permitted work is complete, unless safety requires
-an immediate stop. Landing a merge-ready pull request, marking the wave, and
-closing the epic are this session's work. The backstop preserves both work
+an immediate stop. Landing a merge-ready pull request and closing the epic are
+this session's work. The backstop preserves both work
 supervision and ownership; issue numbers and `draft=true` alone do neither.
 
 **Ten minutes, not two.** `undertake` checks in every two because its branch
@@ -661,10 +650,8 @@ notifications. The notification does not replace the record or chat handoff.
 Waves launch without confirmation
 =================================
 
-`epic` stops once, at `Agree the plan`, and what it agrees there is the whole
-decomposition — the tasks, the edges, and therefore the waves. Asking again
-before each wave asks the same question a second time, and a plan that has to
-be re-agreed wave by wave was not agreed.
+`epic` agrees the decomposition and actual edges once. Deriving each dispatch
+batch from the current graph and recorded constraints needs no new agreement.
 
 Landing and archiving are separate from launching. Where the harness
 classifier applies, the first reply asks only for the user's authorization of
@@ -692,7 +679,6 @@ Each pause has a specific cause; missing evidence alone is not one.
   by something open, so name the issue that blocks and wait for it.
 - **An unreadable question or a live session that cannot be messaged:**
   `Recover a session`.
-- **Graph and body disagree about a blocker:** `Take the wave` and `epic`.
 - **Unsupported outcome:** `Close the epic`.
 - **Landing or archive is denied by the auto-mode classifier.** Do not post a
   record that claims the action happened, and do not seek another route to the

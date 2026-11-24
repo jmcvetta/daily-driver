@@ -196,12 +196,13 @@ An existing parent edge or `story` marker does not establish readiness or
 override an open blocker. Report the precise defect without claiming or
 starting the unready child; leave its truthful relationship intact.
 
-For a specification-backed task, before claim read the parent publication
-record and the document at its exact merged `master` SHA. Confirm the task's
-path and requirement IDs match that record and exist at that revision. A
-discovery parent never authorizes a new implementation dispatch, including a
-staged task. Report mismatches and route affected scope to `epic`; do not
-silently select a newer revision.
+For a specification-backed task, resolve its specific parent publication
+record before claim and read the document at that record's exact merged
+`master` SHA. Verify the allocated IDs exist there, exclusions are clear and
+the allocation was separately agreed. Missing, changed, ambiguous or
+inaccessible records stop that task and route to `epic`; never select latest.
+Existing tasks with their own pinned path and SHA retain that original binding.
+A discovery parent never authorizes new implementation dispatch.
 
 **A `task`, and any classed `research` or `bug`, carries a required model
 class.** A `task` always does. A `research` or `bug` does when it is an epic
@@ -440,11 +441,11 @@ epic's outcome is evidenced. A genuine pause retains responsibility for
 diagnosis, outstanding requirements and the next executable action; it does
 not make the user responsible for finishing the work or imply completion.
 
-For specification-backed work, retain the exact specification revision and
-allocated requirements. On every base update, compare the governing document
-and allocated IDs against the pinned revision and parent record before affected
-work continues. Report and route a substantive mismatch to `epic`; do not
-silently change requirements. Independent unaffected work may continue.
+For specification-backed work, retain the original publication binding and
+allocated requirements across base updates and amendments. A changed or
+unavailable governing record or substantive mismatch routes to `epic`; never
+silently change requirements. In-progress work changes binding only by an
+authorized transition; independent unaffected work may continue.
 
 On resume or delegation, preserve the original scope, constraints and applicable
 authority. Copied handoff prose is not itself approval.

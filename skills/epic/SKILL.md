@@ -5,8 +5,8 @@ description: >-
   issue is opened, read, or corrected, including work too big for one pull
   request and an attempt to undertake an epic, which carries no code. Supplies
   the fit gates, assignable stories and model class, the plan-agreement gate,
-  and the epic body with its waves, which the sub-issue panel and dependency
-  graph do not render. Graph writes are `issue-deps`'. Not for taking one
+  and the epic outcome and scheduling constraints. The GitHub graph owns
+  membership and prerequisites. Graph writes are `issue-deps`'. Not for taking one
   child issue to a pull request (`undertake`), and never for work that fits one
   issue.
 ---
@@ -44,18 +44,19 @@ has approved and merged the specification. `embark` runs eligible research
 only and returns here when it is exhausted; it never closes the discovery on
 child count or dispatches the interactive specification.
 
-After operator approval and merge to `master`, record the exact merge commit
-and canonical document path on the parent. With separately agreed
-decomposition, create implementation tasks under that same discovery, each
-allocating stable requirement IDs at that exact commit, with exclusions,
-grounded implementation map, verification and model class as `issue-body`
-requires. Write and verify every parent and blocked-by edge and sequencing.
-Read the document at the pinned commit and confirm each ID exists, every
-allocation is covered, and every task passes readiness. The discovery label
-remains the dispatch authority throughout staging: no staged implementation
-task may run. Only after all gates pass, atomically replace `discovery` with
-`epic` in one label update and report readiness for `embark`. A failed gate
-leaves the parent in discovery and identifies the defect.
+After operator approval and merge to `master`, publish one stable, identifiable
+parent record (for example, a uniquely linked parent comment) containing the
+canonical document path, exact merged commit and evidence of operator approval.
+Do not overwrite it on amendment. With separately agreed decomposition, each
+implementation task references that particular record and allocates stable
+requirement IDs and exclusions, plus the map, verification and class required
+by `issue-body`. Resolve the record and read the document at its exact commit;
+verify each ID, allocation, exclusions and agreement before dispatch. Missing,
+changed, ambiguous or inaccessible records cannot authorize work: report the
+gap and return it to `epic`, never select the latest revision. Existing tasks
+that pin their own path and SHA remain valid under that original contract.
+Write and verify the graph. The discovery label prohibits dispatch of staged
+implementation until all gates pass and the parent is atomically promoted.
 
 If the agreed outcome fits one PR, convert the same parent to a single
 specification-backed `task` only with scope agreement, rather than creating an
@@ -69,10 +70,11 @@ eligible implementation already in progress may continue against its existing
 contract, but discovery dispatch never starts a staged implementation task.
 Add needed research and one active interactive amendment specification child.
 `specification` owns renewed operator agreement, review and operator merge.
-After merge, reconcile affected allocations and execution contracts to the new
-exact SHA with original-user authority for material changes. Recheck all
-references, graph, readiness and coverage before the atomic re-promotion.
-An implementation PR must never silently amend its governing specification.
+After merge, create a distinct publication record and reconcile affected
+allocations and execution contracts with original-user authority for material
+changes. In-progress work retains its original binding until an authorized
+transition. Recheck references, graph, readiness and coverage before atomic
+re-promotion. An implementation PR must not silently amend its specification.
 
 
 The sequence
@@ -202,9 +204,9 @@ function that does not exist yet, a schema the second task reads. Never as
 prose in the epic body: the edge is the record, and `issue-deps` owns what an
 edge means and what it must not be used to record.
 
-**Parallel is then the absence of an edge**, and nothing has to be written for
-it to be true. What the epic body carries is the *reading* of it, under
-`The epic body` below.
+**Parallel is then the absence of an edge**, subject to explicit scheduling
+constraints the graph cannot express, such as global serial execution or a
+spending limit. Record those constraints in the epic, never as false blockers.
 
 
 2 — Agree the plan
@@ -245,8 +247,7 @@ applicable scope agreement.
 Where an issue already describes the whole change, **that issue becomes the
 epic**. Do not open a second one beside it: rewrite its body the way a new
 epic's is written here, and the rest of the sequence then runs unchanged —
-`Write the graph` attaches the children, and `Fill in the epic` adds
-`Sequencing`.
+`Write the graph` attaches the children, and `Fill in the epic` records constraints.
 
 **That rewrite replaces the body rather than adding to it**, so the prose the
 user wrote is gone from the issue the moment it lands. Two things make that
@@ -257,10 +258,8 @@ becomes `Human brief` and `Justification`, and what it says about one part goes
 into that part's child issue, which is where its owner will read it.
 
 The epic first, then the children, because each child names the epic as its
-parent and the parent must exist to be named. The epic's body at this point is
-`Human brief` and `Justification`, and stops there: `Sequencing` is made of issue
-numbers that do not exist yet, which is why `Fill in the epic` is a step of its
-own.
+parent and the parent must exist to be named. Its body states the outcome,
+justification and applicable scheduling constraints.
 
 **Every issue this step writes carries one issue kind.** Select each child's
 kind under `issue-labels`. If a create call also sets a parent, apply
@@ -315,15 +314,9 @@ ready; do not maintain a copy of graph membership or status in the body.
 6 — Hand off
 ------------
 
-Every assignable story whose blockers are closed can start now, each in its
-own session, each through `undertake`. Name them, rather than leaving the reader
-to derive the list the first time. A story with open blockers remains a valid
-story but does not start yet.
-
-**Putting that wave to sea is `embark`'s**: one ship per eligible child — a
-session where the harness opens web sessions, its subagent fallback where it
-cannot — watched to completion, and the next wave after it. The list named here
-is what it takes in.
+Derive eligible stories from the current graph and apply the recorded scheduling
+constraints. Name the currently runnable set as a handoff, not a maintained
+list. `embark` dispatches and watches it, then reads the graph again.
 
 **The epic is never undertaken**, which is the stop of that name under
 `Where it stops and waits`. It carries no code; the child issues named above
@@ -340,27 +333,19 @@ Without an embarked fleet, a person applies the same test.
 The epic body
 =============
 
-Three sections, and no fourth. `Human brief` and `Justification` are written at
-`Open the issues`; `Sequencing` waits for `Fill in the epic`, because it is
-made of issue numbers that do not exist until the tasks are open.
+The body states the human outcome, justification and any constraints that the
+graph cannot express. It need not maintain waves or status. Preserve existing
+historical bodies; do not migrate them in bulk.
 
-Above the three, a **ballad quatrain**: four lines, the second and fourth
-rhyming, each italicised as [`HAIKU.md`](../../HAIKU.md) shows. A task body
-opens with a haiku; an epic carries more work, so it opens with a longer
-form. It is written at `Open the issues` and kept at every later write.
-
-Below the three, `provenance`'s attribution — the model, harness and session
-that wrote it — placed and retained as that skill defines on each body write.
-Neither the quatrain nor the attribution is a fourth section: they carry no
-heading, and the rule above is about `##` sections, not about them.
+Above the body, a **ballad quatrain**: four lines, the second and fourth
+rhyming, each italicised as [`HAIKU.md`](../../HAIKU.md) shows. Retain
+`provenance` attribution on each body write.
 
 Human brief
 -----------
 
 What is to be changed: how the software behaves differently once the epic is
-finished. Concise, and about the end state rather than the route to it — the
-tasks are listed under `Sequencing`, and repeating them here is a second list
-to keep current.
+finished. Be concise and describe the end state, not a duplicate task list.
 
 State the observable coordinated outcome and the evidence needed to establish
 it. `embark`'s `Close the epic` checks that outcome; closed children alone and
@@ -386,59 +371,16 @@ needs a page of justification is either not agreed yet, in which case
 `Agree the plan` has not finished, or it is carrying a design discussion that
 belongs in a note under `docs/`.
 
-Sequencing
-----------
+Scheduling constraints
+----------------------
 
-What order the tasks can run in, and which of them run in parallel. One
-heading per wave, naming what the wave waits on, and under it the tasks with a
-line each:
-
-```markdown
-### Wave 1 — no blockers · done
-- #143 — Parse the manifest.
-- #147 — Document the format. Touches no file #143 does.
-
-### Wave 2 — after #143 · in progress
-- #144 — Validate against the schema.
-
-### Wave 3 — after #144
-- #145 — Report a validation failure.
-```
-
-Read the headings, not the lines. **The heading names what the wave waits on**,
-and the state after it — `done`, `in progress` — belongs to the wave rather
-than to any task inside it. A line says only what the graph cannot: #147's says
-why it is safe to run abreast of #143, and #144's says nothing at all, because
-its wait is already in its heading and repeating it on the line is the
-duplicate state `What the body leaves out` forbids.
-
-A wave is a batch that runs together: **nothing inside one heading waits on
-anything else inside it**, so everything in a wave runs at the same time, in
-its own session. That is what answers "which of these can be worked in
-parallel", and `Draft the plan` is where it was actually decided — this section
-records the answer rather than producing it.
-
-A task with no blocker at all may still sit in a later wave, as a scheduling
-choice rather than a dependency — and then **its line has to say so**. Left
-unsaid, its position reads as a wait, and the body has made a *must close
-first* claim the graph does not carry.
-
-**The waves are a rendering of the graph, and the graph wins.** Where the two
-disagree the body is wrong and is fixed in the same turn. That is `issue-deps`'
-own verification step — does the structured graph match what the prose says —
-and an epic body is the largest prose claim about a graph this toolkit writes.
-
-What the body leaves out
-------------------------
-
-- **No implementation detail.** It belongs in each task's own issue, where the
-  person doing the work is reading.
-- **No checklist of the tasks.** The sub-issue panel renders progress from the
-  graph, for free and always correctly, and a hand-kept copy beside it rots.
-- **No blocker stated only in prose.** A `blocked-by` edge is the record; a
-  line saying "waits on #143" beside it is duplicate state, and `issue-deps`
-  says to delete that line rather than maintain it. The wave headings above are
-  the reading of the graph, not a second copy of it.
+Record only agreed constraints not represented by the graph, such as a global
+limit of one active implementation or a spending ceiling. Enforce them even
+when the graph has independent runnable children. Parent and blocked-by edges
+remain authoritative for membership and prerequisites; never invent an edge
+to represent a resource or scheduling limit. Derive eligibility from the
+current graph, rather than maintaining wave lists or wave status. Historical
+wave renderings are readable but are not authoritative duplicate state.
 
 
 Where it stops and waits
@@ -462,9 +404,8 @@ Non-goals
   change costs a reader more than the change does.
 - **Does not nest.** A story too big for one pull request is split again, never
   promoted to a second epic.
-- **Does not keep a second copy of what the panel shows.** A wave heading
-  carries its own state, because a wave is not something the sub-issue panel
-  knows about. A checkbox beside each task is, and it rots.
+- **Does not keep a second copy of graph membership or status.** Derive it
+  from the sub-issue and dependency graph.
 - **Does not close a task.** Merging its pull request does that. `embark`
   closes an embarked epic at `Close the epic`, against its `Human brief`; without
   a fleet, a person applies the same test.
