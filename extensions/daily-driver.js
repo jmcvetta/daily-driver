@@ -2132,27 +2132,220 @@ function runsGitHubBodyWrite(command) {
 /** The dispatch tool `skills/embark/references/omp.md` opens its sessions with. */
 const DISPATCH_TOOL = "task";
 
+/**
+ * Commands that run one of their operands. Each option contract keeps option
+ * values out of executable positions, so an interpreter named as data is not
+ * mistaken for one that runs. An option the contract does not know leaves the
+ * command unreadable rather than guessed.
+ */
+const COMMAND_WRAPPERS = new Map([
+	["builtin", { flags: "", values: "" }],
+	["command", { flags: "p", values: "", reports: "vV" }],
+	["exec", { flags: "cl", values: "a" }],
+	["env", {
+		flags: "iv", values: "uCaS",
+		longFlags: ["ignore-environment", "debug", "null", "list-signal-handling"],
+		longValues: ["unset", "chdir", "argv0", "split-string", "env0-from"],
+	}],
+	["timeout", {
+		flags: "v", values: "sk", skip: 1,
+		longFlags: ["preserve-status", "foreground", "verbose"],
+		longValues: ["signal", "kill-after"],
+	}],
+	["nohup", { flags: "", values: "" }],
+	["nice", { flags: "", values: "n", longValues: ["adjustment"] }],
+	["setsid", { flags: "cfw", values: "", longFlags: ["ctty", "fork", "wait"] }],
+	["sudo", {
+		flags: "AbEHnPS", values: "CDghpRrtTuU", optionalLongValues: ["preserve-env"],
+		longFlags: ["askpass", "background", "set-home", "stdin", "non-interactive",
+			"preserve-groups"],
+		longValues: ["close-from", "chdir", "group", "host", "prompt", "chroot",
+			"role", "type", "command-timeout", "user", "other-user"],
+	}],
+	["xargs", {
+		flags: "0prtx", values: "adEILnPs", optionalValues: "eil",
+		longFlags: ["null", "interactive", "no-run-if-empty", "verbose", "exit"],
+		optionalLongValues: ["eof", "replace", "max-lines"],
+		longValues: ["arg-file", "delimiter",
+			"max-args", "max-procs", "max-chars", "process-slot-var"],
+	}],
+]);
+
+/**
+ * The command a shell segment runs after environment assignments and the
+ * supported wrappers, or null where it runs none this scan can name. An
+ * executable that expands is opaque rather than protected, but a wrapper
+ * option or interpreter operand the scan cannot read raises
+ * UnreadableCommandError: the command that runs may then hide behind it.
+ */
+function commandExecution(words, start = 0) {
+	let position = start;
+	let replacement = null;
+	const unreadable = (reason) => {
+		throw new UnreadableCommandError(reason);
+	};
+	while (position < words.length) {
+		// `--` at a command position ends no options: it is an executable the
+		// shell would reject, and skipping it reaches the command a wrapper
+		// option placed after its skipped operand.
+		while (
+			isEnvironmentAssignment(words[position] ?? { text: "" }) ||
+			words[position]?.text === "--"
+		) position++;
+		const executable = words[position];
+		if (executable === undefined) return null;
+		if (!executable.literal) return null;
+		const name = basename(executable.text);
+		if (STRING_INTERPRETERS.has(name)) {
+			const operands = words.slice(position + 1).map((word) =>
+				replacement !== null && word.text.includes(replacement)
+					? { ...word, literal: false }
+					: word,
+			);
+			return { name, index: position, operands };
+		}
+		const wrapper = COMMAND_WRAPPERS.get(name);
+		if (wrapper === undefined) return { name, index: position };
+		if (replacement !== null && executable.text.includes(replacement)) {
+			unreadable("a wrapper replacement token stands where its command does");
+		}
+		position++;
+		let skipLeft = wrapper.skip ?? 0;
+		while (position < words.length) {
+			const option = words[position];
+			if (!option.literal) unreadable("a wrapper option expands");
+			const text = option.text;
+			if (text === "--") {
+				position++;
+				if (skipLeft > 0) {
+					position += skipLeft;
+					skipLeft = 0;
+				}
+				break;
+			}
+			if (name === "env" && text === "-") {
+				position++;
+				continue;
+			}
+			if (!text.startsWith("-") || text === "-") {
+				// GNU getopt permutes options with a wrapper's skipped operand —
+				// `timeout 30 -k 5 command` still reads `-k` as timeout's.
+				if (skipLeft > 0) {
+					position += skipLeft;
+					skipLeft = 0;
+					continue;
+				}
+				break;
+			}
+			position++;
+			if (name === "nice" && /^-\d+$/u.test(text)) continue;
+			if (text === "--help" || text === "--version") return null;
+			const options = text.startsWith("--")
+				? [text.slice(2).split("=")[0]]
+				: [...text.slice(1)];
+			for (const flag of options) {
+				const long = text.startsWith("--");
+				if (!long && wrapper.reports?.includes(flag)) return null;
+				const optionalValue = long
+					? wrapper.optionalLongValues?.includes(flag)
+					: wrapper.optionalValues?.includes(flag);
+				const takesValue = optionalValue || (long
+					? wrapper.longValues?.includes(flag)
+					: wrapper.values.includes(flag));
+				if (!takesValue) {
+					if (long ? wrapper.longFlags?.includes(flag) : wrapper.flags.includes(flag)) continue;
+					unreadable("a wrapper uses an unclassified option");
+				}
+				const attached = long
+					? text.indexOf("=") + 1
+					: text.indexOf(flag) + 1;
+				const value = attached > (long ? 0 : 1) && (long || attached < text.length)
+					? { text: text.slice(attached), literal: option.literal }
+					: optionalValue
+						? { text: flag === "i" || flag === "replace" ? "{}" : "", literal: true }
+						: words[position++];
+				if (!value) unreadable("a wrapper option needs an argument");
+				if (name === "env" &&
+					(flag === "S" || flag === "split-string" || flag === "env0-from")) {
+					unreadable("a wrapper constructs its command from input");
+				}
+				if (name === "xargs" && ["I", "i", "replace"].includes(flag)) {
+					if (!value.literal || value.text === "") {
+						unreadable("a wrapper replacement token expands");
+					}
+					replacement = value.text;
+				}
+				break;
+			}
+		}
+		if (skipLeft > 0) return null;
+	}
+	return null;
+}
+
+/**
+ * Whether one command position runs dispatch or a provenance-wrapped claim
+ * write. An interpreter's literal command string is read in turn; one the
+ * scan cannot read is protected, because the workflow it may run is unknowable.
+ */
+function protectedExecution(words, execution) {
+	if (execution === null) return false;
+	if (execution.name === "task") return true;
+	if (execution.name === "daily_driver_gh_write") {
+		const option = words[execution.index + 1]?.text;
+		const value = words[execution.index + 2];
+		if (!["-j", "--json"].includes(option) || !value?.literal) return true;
+		try {
+			return isGitHubCommentWrite(JSON.parse(value.text)?.args);
+		} catch {
+			return true;
+		}
+	}
+	if (!STRING_INTERPRETERS.has(execution.name)) return false;
+	try {
+		const invocation = shellInvocation(
+			execution.name,
+			execution.operands ?? words.slice(execution.index + 1),
+		);
+		if (invocation.command && runsProtectedWorkflow(invocation.command.text)) {
+			return true;
+		}
+	} catch (err) {
+		if (!(err instanceof UnreadableCommandError)) throw err;
+		return true;
+	}
+	return false;
+}
+
 /** Recognize shell dispatch and provenance-wrapped claim calls. */
 function runsProtectedWorkflow(command) {
 	const { segments, unreadable } = shellSegments(command);
 	if (unreadable !== null) return true;
+	const arithmeticStack = [];
 	for (const segment of segments) {
+		if (segment.group === "open") {
+			arithmeticStack.push(segment.arithmetic === true);
+			continue;
+		}
+		if (segment.group === "close") {
+			arithmeticStack.pop();
+			continue;
+		}
+		if (arithmeticStack.at(-1) === true) continue;
 		const words = segment.words ?? [];
-		for (let index = 0; index < words.length; index++) {
-			const word = words[index];
-			if (!word.literal) continue;
-			const name = basename(word.text);
-			if (name === "task" && (index === 0 ||
-				["-exec", "-execdir", "command", "env", "exec"].includes(words[index - 1]?.text))) return true;
-			if (name !== "daily_driver_gh_write") continue;
-			const option = words[index + 1]?.text;
-			const value = words[index + 2];
-			if (!["-j", "--json"].includes(option) || !value?.literal) return true;
-			try {
-				if (isGitHubCommentWrite(JSON.parse(value.text)?.args)) return true;
-			} catch {
-				return true;
+		if (words.length === 0) continue;
+		try {
+			if (protectedExecution(words, commandExecution(words))) return true;
+			// `find -exec` and `-execdir` run the words after them as a command
+			// the segment head does not reach.
+			for (let index = 0; index < words.length; index++) {
+				const word = words[index];
+				if (!word.literal || !["-exec", "-execdir"].includes(word.text)) continue;
+				if (protectedExecution(words, commandExecution(words, index + 1))) return true;
 			}
+		} catch (err) {
+			if (!(err instanceof UnreadableCommandError)) throw err;
+			return true;
 		}
 	}
 	return runsGitHubComment(command);

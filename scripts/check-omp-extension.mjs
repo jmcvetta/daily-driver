@@ -1045,6 +1045,65 @@ check("title recovery admits diagnostics but rejects mutation-capable routes", (
 	}
 });
 
+/** Shell interpreters and wrappers must not hide protected workflow calls. */
+check("title recovery follows shell interpreters and command wrappers", () => {
+	const comment = `daily_driver_gh_write -j '${
+		JSON.stringify({ args: ["issue", "comment", "582", "-b", "claim"] })
+	}'`;
+	for (const status of ["awaiting", "required"]) {
+		const s = makeSession();
+		const ctx = startupCtx(s);
+		s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
+		if (status === "required") deliverEpicRead(s, ctx);
+		for (const command of [
+			"task '{}'",
+			"bash -c 'task {}'",
+			"sh -c 'task {}'",
+			"xargs task",
+			"xargs -0 task",
+			"nohup task",
+			"timeout 30 task",
+			"timeout 30 -k 5 task",
+			"FOO=1 task",
+			"env FOO=1 task",
+			"command task",
+			"exec task",
+			"bash -c 'xargs task'",
+			"timeout 30 bash -c 'task {}'",
+			"env FOO=1 bash -c 'task {}'",
+			"xargs -0 bash -c 'task {}'",
+			"bash -c 'env FOO=1 task'",
+			"find . -name '*.js' -exec task {} \\;",
+			"find . -name '*.js' -exec sh -c 'task {}' \\;",
+			`bash -c '${comment}'`,
+			`sh -c '${comment}'`,
+		]) {
+			const result = titleCall(s, "bash", { command }, ctx);
+			assert.equal(result?.block, true, `${status}: ${command}`);
+			assert.match(result.reason, /#582/u, `${status}: ${command}`);
+		}
+		for (const command of [
+			"cat task",
+			"printf task",
+			"bash -c 'printf diagnostic'",
+			"sh -c 'git status --short'",
+			"bash -c 'find . -name \"*.js\"'",
+			"env FOO=1 printf 'diagnostic\\n'",
+			"timeout 30 printf 'diagnostic\\n'",
+			"timeout 30 -k 5 printf 'diagnostic\\n'",
+			"nohup printf 'diagnostic\\n'",
+			"xargs -n1 echo task",
+			"command -v task",
+			"find . -name task",
+			"bash scripts/provision-disposable.sh status",
+			"echo $(( 1 + 1 ))",
+			"bash -c 'echo \"task is data\"'",
+		]) {
+			assert.equal(titleCall(s, "bash", { command }, ctx), undefined, `${status}: ${command}`);
+		}
+	}
+});
+
 /** This prevents a supplied GitHub URL from bypassing the canonical issue protocol. */
 check("GitHub URL requests require an issue URI result for identity", () => {
 	const s = makeSession();
