@@ -97,10 +97,10 @@ Ask the question in this order. The first answer that holds is the label.
    Where the answer is issues, writing them is `epic`'s, and they are the
    deliverable rather than a separate follow-up. Where it is code, that is a
    separate issue: the research closes, and a `task` opens.
-5. **Is the deliverable a collaboratively settled canonical specification?**
-   Use `specification` for interactive drafting through an approved, merged
-   document. It is not `human`: agents investigate and draft alongside the
-   operator. A `proposal` instead closes on a decision or handoff.
+5. **Is the deliverable a collaboratively settled executable specification?**
+   Use `specification` for interactive agreement on scenarios and their
+   implementation handoff. It is not `human`: agents investigate and draft
+   alongside the operator. A `proposal` instead closes on a decision or handoff.
 6. **Is the intent settled?** Where what "done" means is written down and
    needs no further decision, it is a `task`. Where it is not — a capability
    somebody wants, with the shape of it still open — it is a `proposal`.
@@ -174,10 +174,11 @@ Closing a child does not change its qualifying edge.
 
 For `epic`, implementation candidates must pass the assignable-story gate;
 closed specification and research lineage retained after promotion is valid.
-A discovery may contain its one active interactive `specification` child and,
-after specification merge, staged implementation tasks; neither is
-dispatchable research. Preserve markers on all confirmed children. Report
-genuine readiness defects without hiding edges or changing the child's kind.
+A discovery may contain an interactive `specification` child; behavioral
+implementation tasks are not dispatched unattended until their issue and
+scenario handoff are ready under the ordinary epic gates. Preserve markers on
+all confirmed children. Report genuine readiness defects without hiding edges
+or changing the child's kind.
 
 A swap between `epic` and `discovery` preserves the marker because both
 qualify. Any swap to another kind requires reading direct children and

@@ -1,19 +1,19 @@
-# An amendment must not silently change active implementation contracts.
+# Scenario amendments must not silently change active child contracts.
 task_id: epic-09-substantive-amendment
-description: Demote and reconcile a specification-backed epic for substantive amendment.
+description: Use ordinary epic gates and scoped scenario amendment.
 tags: [epic, discovery, behaviour, fire]
 initial_prompt: >-
-  Use epic: a promoted specification-backed epic has running implementation
-  for two independent requirements. The operator proposes changing only one
-  requirement. Describe the amendment lifecycle; explain only and do not
-  perform external actions.
+  Use epic: a promoted epic has two independent behavioral children underway.
+  An operator proposes changing one child's agreed scenario. Describe ordinary
+  promotion and how to handle the amendment both when it does and does not
+  alter agreed epic scope or decomposition. Explain only; no external actions.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
 run_limits: {max_turns: 8, turn_timeout: 180, task_timeout: 400}
 success_criteria:
   - type: agent_judge
-    description: Same-parent demotion and scoped reconciliation
+    description: Ordinary gates and scoped operator agreement replace automatic demotion
     include_agent_output: true
     include_tool_calls: true
     include_reference: false
@@ -22,9 +22,13 @@ success_criteria:
     turn_timeout: 120
     agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
     prompt: |
-      Score 1 only if the answer demotes the same parent to discovery, preserves
-      lineage, pauses affected work while allowing independent active work,
-      requires interactive amendment and renewed operator approval and merge,
-      reconciles allocations and contracts to the exact merged SHA with original
-      user authority for material amendments, verifies graph and readiness, then
-      atomically re-promotes. Score 0 for silent adoption; otherwise 0.5.
+      Score 1 only if the answer uses ordinary promotion gates: agreed scope
+      and decomposition, ready assignable children, and a truthful dependency
+      graph, without requiring merged scenario files or pinned scenario SHAs.
+      It pauses only affected behavior, obtains and records operator agreement,
+      continues independent work, and does not automatically demote the epic.
+      The affected child edits scenarios on its existing branch and PR after
+      agreement. A change to epic scope or decomposition goes through the
+      ordinary Agree the plan boundary; an amendment that does not change them
+      stays within the child. Score 0 for silent adoption, automatic demotion
+      or a scenario-SHA promotion gate; otherwise 0.5 for a material omission.

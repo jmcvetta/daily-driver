@@ -172,11 +172,10 @@ never defaulted. `proposal`, `specification`, `human` and `epic` issues fail the
 legitimate blocker delays dispatch, not linking.
 
 For a `discovery` parent, apply `epic`'s discovery contract instead: eligible
-research children pass their own readiness and class gate, and at most one
-active interactive `specification` child is linked without an implementation
-class. Implementation tasks may be staged only after the approved document
-merges, and must pass the spec-backed task readiness gate before linking.
-They remain undispatchable until promotion.
+research children pass their own readiness and class gate; interactive
+`specification` work is not dispatched as an unattended implementation task.
+Behavioral children become dispatchable only after their issue and scenario
+handoff are ready under the ordinary epic gates.
 
 Leave an already-ready story unchanged. Resolve repository-answerable gaps
 through `issue`, preserving valid requirements, evidence, and provenance under

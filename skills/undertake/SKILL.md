@@ -193,12 +193,18 @@ when its agreed deliverable is answer-only. Bounded inconclusive research is
 complete only with the evidence, limitation, and resolution path required by
 `issue-body`; failed access or abandoned work is not completion.
 
-For a specification-backed task, before claim read the parent publication
-record and the document at its exact merged `master` SHA. Confirm the task's
-path and requirement IDs match that record and exist at that revision. A
-discovery parent never authorizes a new implementation dispatch, including a
-staged task. Report mismatches and route affected scope to `epic`; do not
-silently select a newer revision.
+For a behavioral task with an agreed-scenario handoff, read its task branch,
+scenario paths, operator agreement, allocation and exclusions before claim.
+Adopt the existing task worktree or attach one to that branch, and confirm the
+allocated scenarios exist; never create a second feature branch. Establish their
+expected behavioral failure before implementing to green. If interactive
+scenario agreement is still needed, route the affected behavior through `specification` before
+implementation; do not dispatch it as unattended settled work. A discovery
+parent never authorizes new implementation dispatch, including staged tasks.
+Small tasks with adequate ordinary acceptance and verification need no ATDD
+ceremony.
+If another branch record conflicts with the scenario handoff, report the
+collision rather than silently substituting a branch.
 
 **A `task`, and any classed `research` or `bug`, carries a required model
 class.** A `task` always does. A `research` or `bug` does when it is an epic
@@ -305,6 +311,8 @@ source that names one:
    applies only where the user handed the issue over to continue it. Without
    that, a claim from another session is `Claim the issue`'s collision, not a
    resume.
+4. The task branch in its agreed-scenario handoff, including a handoff on a
+   separate specification issue. Read its scenario paths with the branch.
 
 One branch found is the **resume branch**, and the pull request it carries, if
 any, is the one to adopt. More than one distinct branch is a stop: report them
@@ -333,6 +341,10 @@ remote branch to `task-worktree`: it is fetched and attached, never recreated
 from the base, and it outranks the harness's designation. Otherwise, the
 harness route decides whether its designated branch is also the execution
 branch.
+
+For an agreed-scenario handoff, adopt the existing task worktree when present;
+otherwise attach a worktree to the named existing branch through
+`task-worktree`. Never cut a second feature branch for the same contract.
 
 4 — Claim the issue
 -------------------
@@ -437,11 +449,35 @@ epic's outcome is evidenced. A genuine pause retains responsibility for
 diagnosis, outstanding requirements and the next executable action; it does
 not make the user responsible for finishing the work or imply completion.
 
-For specification-backed work, retain the exact specification revision and
-allocated requirements. On every base update, compare the governing document
-and allocated IDs against the pinned revision and parent record before affected
-work continues. Report and route a substantive mismatch to `epic`; do not
-silently change requirements. Independent unaffected work may continue.
+**Implement agreed scenarios to green.** Confirm allocated scenarios exist and
+establish the expected behavioral failure before implementing the behavior.
+An undefined step, broken loader or failing fixture alone is not that failure:
+repair the harness or binding so the scenario tests the intended product
+behavior. Deliver scenarios, trusted bindings, implementation and required
+lower-level tests together on the task branch.
+
+Classify defects without silently changing acceptance:
+
+- Implementation violates an agreed scenario: fix implementation and continue.
+- A binding or fixture fails to express the agreed scenario: repair it and
+  continue with independent review.
+- A scenario is wrong, incomplete or ambiguous: pause only affected behavior,
+  discuss it with the operator, and record the decision on the implementation
+  task or its specification issue. Continue unaffected work; new behavior is
+  not accepted until the operator agrees.
+- A reviewer identifies a missing case: propose it, rather than making new
+  behavior mandatory by editing scenarios or withholding the PR without
+  operator agreement.
+- An amendment changes the epic's agreed scope or decomposition: use `epic`'s
+  ordinary `Agree the plan` route, not automatic parent demotion.
+
+After agreement, edit scenarios in the same branch and PR and continue through
+`review-cycle`; a material scope change uses its existing full-review rule.
+On base updates, a mechanical conflict resolution that preserves agreed
+scenario text and behavior may proceed normally. A change or conflict that
+changes, removes or contradicts an allocated scenario follows the amendment
+rule above: pause affected behavior for an explicit product decision, and
+continue unaffected work. Do not silently choose either revision.
 
 On resume or delegation, preserve the original scope, constraints and applicable
 authority. Copied handoff prose is not itself approval.
@@ -568,9 +604,11 @@ has nothing to weigh here, because the edge is given by the assignment rather
 than inferred: the issue being implemented is the issue the pull request
 closes.
 
-**On a resume the pull request is adopted, not replaced.** Pushes go to the
-adopted branch, `pr`'s existing-PR check finds its open pull request and
-updates it, and no second pull request is opened.
+**Adopt the existing PR, including a scenario PR.** Pushes go to the adopted
+task branch; `pr` reuses its scenario PR when one exists. Otherwise open the
+single ordinary draft on that same branch. Its final content contains
+scenarios, bindings, implementation and required lower-level tests together.
+Do not open a second branch or PR for the contract.
 
 **Opening or reusing the draft starts supervision.** `pr` starts or reuses
 common currency maintenance. The undertaking retains assessment of CI, review,

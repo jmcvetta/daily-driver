@@ -1,0 +1,43 @@
+# Framework-neutral advice cannot bootstrap a runnable TypeScript acceptance harness.
+task_id: atdd-01-bootstrap-guidance
+description: ATDD gives the supported Cucumber bootstrap and execution route.
+tags: [atdd, behaviour, fire]
+initial_prompt: >-
+  I have a clean TypeScript repository at /workspace/pilot with package.json
+  and package-lock.json, no acceptance harness, and Node 24. Help me establish
+  executable acceptance contracts and run my own first scenario. Explain the
+  concrete setup and execution without changing files or running commands.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 180, task_timeout: 400}
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: ATDD workflow is consulted
+    expected_skill: atdd
+    skill_name: atdd
+  - type: agent_judge
+    description: Concrete supported setup leads to operator-owned executable scenarios
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 4
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Score 1 only if the answer selects the TypeScript Cucumber ATDD skill,
+      resolves its bundled bootstrap using the active harness reference, and
+      gives `node <resolved-skill-path>/scripts/bootstrap-typescript.mjs
+      /workspace/pilot` or an equivalent concrete invocation. The target is
+      hypothetical: accept the stated manifest, lockfile and Node facts without
+      requiring filesystem inspection. It identifies npm from package-lock.json, Cucumber and tsx, the acceptance
+      configuration and directories, and explains that the operator supplies
+      product-specific Gherkin scenarios and TypeScript step bindings, then runs
+      `npm run acceptance`. It integrates acceptance into the repository's
+      established test, strict-typecheck and CI selection conventions rather than
+      generating generic CI. It does not claim to have run commands or supply a
+      toy product scenario as bootstrap output. Score 0 for framework-neutral
+      advice, invented actions, or a non-runnable loader/setup; otherwise 0.5
+      for a material omission.

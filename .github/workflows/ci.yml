@@ -113,6 +113,9 @@ jobs:
       - name: Test Omp branch maintenance
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-pr-keep-current')
         run: make check-pr-keep-current
+      - name: Test TypeScript acceptance bootstrap
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-atdd')
+        run: make check-atdd
       - name: Validate model telemetry
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-model-telemetry')
         run: make check-model-telemetry

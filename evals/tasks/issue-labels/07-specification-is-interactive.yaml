@@ -3,10 +3,11 @@ task_id: issue-labels-07-specification-is-interactive
 description: The specification kind admits interactive agent collaboration, not unattended dispatch.
 tags: [issue-labels, specification, behaviour, fire]
 initial_prompt: >-
-  Which issue kind fits collaborative drafting of a canonical document when
-  the operator must decide unresolved product choices and merge the approved
-  document? Compare task, proposal, research and human. Explain only; do not
-  create or label an issue.
+  Which issue kind fits collaborative authoring of executable offline editing
+  scenarios when the operator must decide unresolved product choices before
+  handing them to an implementation task? Compare task, proposal, research and
+  human; explain eligibility for unattended dispatch and what completes this
+  specification issue. Explain only; do not create or label an issue.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
@@ -30,6 +31,10 @@ success_criteria:
       Score 1 only if the answer selects specification, distinguishes it from
       unattended task, decision-or-handoff proposal, evidenced-answer research
       and person-only human, and permits agent collaboration but not unattended
-      undertake or embark dispatch. It must require an operator-approved merged
-      document and recorded handoff for completion. Score 0 for claimed writes
-      or unattended dispatch; otherwise score 0.5 for a material omission.
+      undertake or embark dispatch. Explain that a separate specification issue
+      completes on operator-agreed scenarios and a recorded handoff naming the
+      implementation task issue, task branch, scenario paths, and applicable
+      allocations or exclusions; it does not wait for implementation or merge.
+      The prompt asks for explanation only, not actual issue writes. Score 0 for claimed writes,
+      unattended dispatch or a merged-document prerequisite; otherwise 0.5 for
+      a material omission.

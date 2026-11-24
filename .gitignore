@@ -26,3 +26,6 @@ __pycache__/
 # Python environment uv syncs for the Python legs' dev dependencies
 # (pyproject.toml -- see the Makefile).
 .venv/
+
+# npm installs used by runtime checks.
+node_modules/

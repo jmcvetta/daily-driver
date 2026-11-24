@@ -1,80 +1,95 @@
 ---
 name: specification
 description: >-
-  Use when an operator wants to draft, review, and publish a canonical
-  specification collaboratively, or when an issue of kind `specification` is
-  handed over. Interactive work, not an unattended implementation assignment.
+  Use when an operator wants to agree executable acceptance scenarios
+  collaboratively, or when an issue of kind `specification` is handed over.
+  Interactive work, not an unattended implementation assignment.
 ---
 
 # Specification
 
-A specification is an agreed contract for intended behavior and acceptance,
-not a project plan. Work interactively with the operator; do not use
-`undertake` or `embark` to dispatch a specification issue unattended. A
-`proposal` closes on a decision or handoff; a specification completes only
-when the approved canonical document is merged and its handoff is recorded.
+A specification is an agreed executable contract for intended behavior and
+acceptance, not a project plan. Work interactively with the operator; do not
+use `undertake` or `embark` to dispatch a specification issue unattended.
+Small tasks with adequate observable acceptance and verification stay on the
+ordinary task path without specification or ATDD ceremony.
 
 ## Collaborate
 
-1. Read the issue, its references and relevant repository context. Apply
-   `issue-labels`, `issue-body` and `issue-deps` to its kind, body and edges.
-   Use `issue` to create or update the interactive `specification` issue when
-   needed. It carries no implementation model class. Keep questions, research
-   references, alternatives, decisions and draft revisions on that issue;
-   use research issues for bounded investigations where appropriate.
+1. Read the implementation task, its references and relevant repository
+   context. Apply `issue-labels`, `issue-body` and `issue-deps` to issue kind,
+   body and edges. A separate interactive `specification` issue is optional;
+   use `issue` when one is needed. It carries no implementation model class.
+   Keep questions, research references, alternatives and decisions on the
+   task or specification issue; use research issues for bounded investigations.
 2. Investigate and answer questions the repository can answer. Apply
    `judgement-call`: choose ordinary engineering details, explain genuine
    tradeoffs, and ask the operator only for unresolved intent or product
    decisions. An agent can research, explain, draft and edit; the issue is not
-   `human` merely because the operator must decide or approve.
-3. Draft the document in an isolated task worktree under the repository's
-   conventional `docs/specs/<feature>.md` path. Apply `task-worktree`,
-   `provenance` and the repository's normal change and PR workflows. Iterate
-   with the operator and record decisions on the issue. Do not pretend an
-   omission is settled: a missing decision or research result that prevents
-   implementation keeps the document unready.
-4. Open a specification PR under `pr` and obtain independent review through
-   `review-cycle`. Address findings and keep the PR current. Independent agent
-   review is not product approval. Ask for explicit operator approval of the
-   specification, and separately for approval of any proposed decomposition;
-   neither approval implies the other. Record the decisions and their scope on
-   the issue. Do not treat silence or a review as approval.
-5. The operator merges the specification PR; the agent never merges it.
-   Once approval and merge are observed, record the merged document path,
-   immutable commit, approval and any separately approved handoff on the issue.
-   Complete the issue only then. Rejection or abandonment follows the existing
-   issue disposition rules; neither is a completed specification.
+   `human` merely because the operator must decide or agree.
+3. Establish or adopt the implementation task branch through `task-worktree`,
+   and keep scenario authoring and implementation on that branch. Invoke
+   `atdd` when a supported TypeScript repository lacks its acceptance harness.
+   Write concise executable scenarios and iterate with the operator. Apply
+   `provenance` and the normal change workflow. An unresolved decision that
+   prevents implementation keeps the affected behavior unready.
+4. Obtain explicit operator agreement to the scenarios and record the
+   agreement, its scope and any exclusions on the issue. Independent review
+   is not product agreement, and silence is not agreement. Agreement to a
+   decomposition is separate; neither decision implies the other.
+5. When a separate specification issue is used, record its implementation
+   handoff: implementation task issue, task branch, scenario paths, and
+   explicit exclusions or allocated behavior where applicable. Complete the
+   specification issue once agreement and that handoff are recorded; do not
+   wait for implementation or merge. If specification and implementation
+   share one task issue, record agreement there without creating a second
+   issue or handoff comment. The implementation task remains open for delivery.
+   Rejection or abandonment follows the existing issue disposition rules.
 
-## Canonical document
+## Executable scenarios
 
-Write a concise human brief describing the purpose and intended outcome. Add a
-Mermaid diagram when it clarifies nontrivial structure. Textual requirements
-are authoritative; summaries and diagrams explain them and never replace or
-override them. When explaining the document contract, state that distinction.
-State settled behavior, architecture, interfaces, constraints, edge cases,
-acceptance criteria and product non-goals. Make requirements unambiguous and
-independently verifiable.
-Assign stable, meaningful IDs and anchors to requirements and acceptance
-criteria so later work can cite an exact requirement at an immutable commit.
-Preserve IDs across editorial changes; do not reuse an ID for different behavior.
+Scenarios own intended behavior and acceptance. Use observable outcomes,
+meaningful examples, constraints and edge cases; keep product non-goals and
+allocation or exclusions explicit on the issue. Bindings and fixtures must
+express the agreed behavior through real product interfaces and assertions,
+not silently replace it. `atdd` owns supported harness setup and execution;
+the feature supplies its own scenarios, bindings and fixtures.
 
-The document is authoritative for intended behavior and acceptance. It must
-not contain issue status, assignments, waves, progress checklists, unresolved
-alternatives, TBDs, research requests or operator questions. Implementation
-status and ordering stay outside it. Keep unresolved questions on the issue or
-in research issues, not hidden in explanatory diagrams or deferred requirements.
+Planning notes and diagrams may explain purpose, architecture or interfaces,
+but are non-authoritative. Keep unresolved questions and research on issues.
+There is no separately merged Markdown specification, approval manifest,
+requirement registry, traceability matrix or mandatory scenario-ID scheme.
 
-## Amendments
+The same ordinary PR carries scenarios, bindings, implementation and required
+lower-level tests. Reuse a scenario PR if one exists; otherwise `undertake`
+opens it on the same task branch. The implementation agent confirms the
+allocated scenarios exist, establishes the expected behavioral failure, and
+implements to green. Current-head CI supplies deterministic execution evidence
+under the existing review and readiness gates, not a second acceptance gate.
+An implementation task completes when its scenarios and required lower-level
+checks pass on the delivered head and those ordinary gates clear. The human
+merge decision remains the ordinary PR merge decision.
 
-Classify an amendment before applying it. An editorial correction clarifies
-wording without changing agreed behavior, scope or acceptance and needs no
-renewed scope agreement. A substantive amendment changes any of those and
-requires renewed operator scope agreement; do not infer it from prior approval.
-Use the same reviewed PR and operator approval and merge boundaries for the
-changed canonical document. Record the decision and resulting commit in the
-issue handoff.
-When the document governs an epic, `epic` first demotes that same parent to
-`discovery` and pauses affected implementation. After the operator approves
-and merges the substantive amendment, hand its exact merge SHA back to `epic`
-for allocation, contract and graph reconciliation before re-promotion. An
-implementation PR must not amend its governing specification silently.
+## Amendments and base updates
+
+- If implementation violates an agreed scenario, change implementation and
+  continue.
+- If a binding or fixture fails to express the agreed scenario, repair it and
+  continue with independent review.
+- If a scenario is wrong, incomplete or ambiguous, pause only the affected
+  behavior, discuss it with the operator, and record the decision on the
+  implementation task or its specification issue. Continue unaffected work.
+  New behavior is not accepted until the operator agrees.
+- A reviewer may propose a missing case, but cannot make new behavior
+  mandatory by editing scenarios or withholding the PR without operator
+  agreement.
+- If the change alters an epic's agreed scope or decomposition, use `epic`'s
+  ordinary `Agree the plan` boundary. Do not automatically demote the parent.
+
+After agreement, edit scenarios in the same branch and PR and continue through
+`review-cycle`; material scope changes use its existing full-review rule.
+A mechanical conflict resolution that preserves agreed scenario text and
+behavior may proceed normally. A base change or conflict that changes,
+removes or contradicts an allocated scenario follows the amendment rule:
+pause affected behavior for an explicit product decision, not a silent choice
+of either revision. There is no separate amendment or scenario-revision gate.
