@@ -131,16 +131,18 @@ Reading it does not start PR creation.
 Completion requires observed success from all remaining applicable project
 gates: tests, linters, formatters, and validation. Expected success is not evidence.
 
-Push and read CI. Local project checks require a specific failure being repaired
-or an isolated bounded experiment with disposable inputs and a stated concrete
-question. Whole-project checks and routine assurance are not experiments.
-Experiments grant no production access, dangerous operations, live third-party
-fixtures, paid model runs, broader triggers, or recurring checks.
+Prefer the narrowest relevant local check that answers the current engineering
+question. Use focused tests or checks during iteration, and avoid repeated
+full-project runs after small changes when focused evidence covers the change.
+Run broader local validation at meaningful checkpoints when its cost is
+justified. A failure reproduction or experiment is not required. Read
+[`docs/testing-standards.md`](../../docs/testing-standards.md) when writing,
+changing, or reviewing tests.
 
-Never bypass or remove validation for cost or effort. Only explicit owner
-direction may reduce CI scope or spending: disclose lost coverage; never claim
-removed or unrun checks passed, hide failures, weaken security, or skip required
-tests. The constitution owns the application-test and script-execution contract.
+Push and read CI. Never bypass or remove validation for cost or effort. Only
+explicit owner direction may reduce CI scope or spending: disclose lost
+coverage; never claim removed or unrun checks passed, hide failures, weaken
+security, or skip required tests.
 
 
 Recurring CI costs
