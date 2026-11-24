@@ -998,6 +998,7 @@ check("gh issue JSON advances identity without releasing dispatch or ordinary qu
 		for (const [tool, input] of [
 			["read", { path: "README.md" }], ["grep", { pattern: "title" }],
 			["glob", { pattern: "*.md" }], ["bash", { command: "gh issue view 583 --repo example/project" }],
+			["bash", { command: "git status --short" }], ["bash", { command: "cat README.md" }],
 		]) assert.equal(titleCall(s, tool, input, ctx), undefined);
 		assert.equal(titleCall(s, "task", {}, ctx).block, true);
 		assert.equal(titleCall(s, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, ctx).block, true);
@@ -1134,11 +1135,12 @@ check("pending title state survives setter failure and session resume", async ()
 	assert.equal(startupState(first).status, "required");
 	const resumed = makeSession({ entries: first.rec.entries });
 	const resumedCtx = startupCtx(resumed, "resumed-session");
-	assert.equal(titleCall(resumed, "read", { path: "README.md" }, resumedCtx).block, true);
+	assert.equal(titleCall(resumed, "read", { path: "README.md" }, resumedCtx), undefined);
+	assert.equal(titleCall(resumed, "task", {}, resumedCtx).block, true);
 });
 
-/** This prevents unrelated tools and another session from inheriting title-recovery access. */
-check("epic title recovery is session-scoped and respects exact routes", async () => {
+/** A resumed barrier protects dispatch without blocking unrelated reads in either session. */
+check("epic title recovery is session-scoped and permits unrelated reads", async () => {
 	const s = makeSession();
 	const ctx = startupCtx(s, "session-a");
 	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
@@ -1147,8 +1149,7 @@ check("epic title recovery is session-scoped and respects exact routes", async (
 		"xd://other/daily_driver_set_session_title",
 		"xd://daily_driver_set_session_title/extra",
 	]) {
-		const denied = titleCall(s, "read", { path }, ctx);
-		assert.equal(denied.block, true, path);
+		assert.equal(titleCall(s, "read", { path }, ctx), undefined, path);
 	}
 	for (const path of [
 		"skill://session-title",

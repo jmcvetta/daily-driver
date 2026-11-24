@@ -2145,6 +2145,23 @@ function needsTitle(event) {
 	);
 }
 
+/** Admit literal local inspection commands without granting shell execution. */
+function isReadOnlyLocalInspection(command) {
+	if (typeof command !== "string") return false;
+	const { segments, functions, unreadable } = shellSegments(command);
+	if (unreadable !== null || functions.length || segments.length !== 1 || segments[0].group) return false;
+	const words = segments[0].words ?? [];
+	if (!words.length || words.some((word) => !word.literal || /[;&|<>]/u.test(word.text))) return false;
+	const [executable, ...args] = words.map((word) => word.text);
+	if (["pwd", "ls", "cat", "head", "tail", "file", "stat", "wc", "rg"].includes(executable)) {
+		return !args.some((arg) => arg === "--" || arg.startsWith("--pre") || arg.startsWith("--files-without-match"));
+	}
+	return executable === "git" && ["status", "log", "show", "diff", "branch", "rev-parse"].includes(args[0]) &&
+		!args.some((arg) => arg.startsWith("--output") || arg === "--ext-diff" || arg === "--textconv" ||
+			arg === "--exec" || arg.startsWith("--exec=")) &&
+		(args[0] !== "branch" || args.slice(1).every((arg) => ["--list", "-a", "-r", "-v", "-vv", "--show-current"].includes(arg)));
+}
+
 /** Whether one plain `gh` invocation can only read GitHub data. */
 function isReadOnlyGitHubRead(command) {
 	const { segments, unreadable } = shellSegments(command);
@@ -2956,7 +2973,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 			if (["read", "grep", "glob", "web_search", "daily_driver_get_session"].includes(event.toolName) ||
 				(event.toolName === "bash" &&
 					typeof event.input?.command === "string" &&
-					isReadOnlyGitHubRead(event.input.command))) {
+					(isReadOnlyGitHubRead(event.input.command) || isReadOnlyLocalInspection(event.input.command)))) {
 				return undefined;
 			}
 			return { block: true, reason: embarkTitleReason(startup) };
@@ -2977,7 +2994,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 		if (startup?.status === "required" && !embarkTitleRecoveryRoute(event, startup) &&
 			!(["read", "grep", "glob", "web_search", "daily_driver_get_session"].includes(event.toolName) ||
 				(event.toolName === "bash" && typeof event.input?.command === "string" &&
-					isReadOnlyGitHubRead(event.input.command)))) {
+					(isReadOnlyGitHubRead(event.input.command) || isReadOnlyLocalInspection(event.input.command))))) {
 			return { block: true, reason: embarkTitleReason(startup) };
 		}
 		// After the worktree check: the session's first issue comment and first
