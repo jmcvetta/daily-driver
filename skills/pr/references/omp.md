@@ -4,6 +4,53 @@
 session running in Oh My Pi. Claude Code's routes are in
 [`claude.md`](claude.md), Codex's in [`codex.md`](codex.md).
 
+The [opt-in supervisor](../../../docs/pr-supervision.md) has a shadow ledger,
+fenced active controller and verified parent-mediated Omp child recovery.
+Without an explicitly configured `DAILY_DRIVER_PR_SUPERVISOR`, use the legacy
+service and owner continuation below. Configuration alone does not transfer
+ownership, and isolated proofs did not install maintenance on a real PR.
+
+Opt-in active supervision
+------------------------
+
+With that configuration, register **every created or adopted PR**, including
+drafts and direct PR work. `daily_driver_gh_write` registers its PR create/edit
+results automatically. For adoption or another creation route, call
+`daily_driver_pr_supervisor_register({url:<exact PR URL>,worktree:<task worktree>})`.
+Inspect its authority state; registration starts in read-only shadow.
+
+Retain existing maintenance and its one owner continuation until transfer
+succeeds. An authorized lifecycle manager must run the loaded plugin's
+`scripts/pr-active-supervisor.py --database <private absolute path> run`.
+Do not install a live watch or mutate a real PR merely as integration proof.
+Follow [the migration procedure](../../../docs/pr-supervision.md#transfer-rollback-and-stop):
+drain queued owner work, then call `daily_driver_pr_supervisor_control` with
+operation `transfer`, the registered identity, all owned legacy service names
+and any live legacy reminder IDs. The tool also snapshots and stops matching
+structured PR/review watches. Missing host/context or an incomplete transfer
+is not active supervision; inspect its durable diagnostic and recover that record.
+
+Once authority is `active`, **do not run the legacy currency service, structured
+PR fallback, owner reminder or independent CI watcher for this PR**. The
+supervisor owns observation and one coalesced actionable delivery. Its work
+tool takes a fresh authoritative read before acknowledging a generation.
+The agent still owns substantive fixes, review, conflict decisions and the
+complete current-head readiness gate. An event, receipt or acknowledgment is
+not green CI or completion.
+
+Use the control tool's `stop` before a stop-time push and `hold`/`release` for
+explicit holds. Stop fences queued deliveries and drains remote mutations;
+release cannot clear a stop. After an authorized conflict fix, reconcile the
+same identity. Do not create a replacement actor. On recovery, inspect persisted
+state and host health before any action; a held/unknown owner or parent is never
+taken over. Repair a failed host through its recorded lifecycle manager. If that
+route is unavailable, fenced `rollback` restores recorded old maintenance from
+fresh state and reports its cold-recovery limitation. Restored structured
+watches use a new incarnation; the old stop tombstones remain intact.
+
+The legacy service/continuation sections below apply only while that route
+remains authoritative. Do not install their wakes alongside an active supervisor.
+
 - **Checking whether a pull request already exists for the branch.**
   `gh pr view` (or `gh pr list --head <branch>`) finds it.
 - **Opening a new pull request.** `daily_driver_gh_write({ args: ["pr", "create", "--draft", "--title", <title>, "--body-file", <path>] })`, for the initial
