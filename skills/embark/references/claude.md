@@ -72,8 +72,8 @@ Addressing a session
 
 **The address is the session id.** Every send to an implementor is
 `mcp__Claude_Code_Remote__send_message`, with `session_id` set to the id
-`create_session` returned. That id is already in the muster roll's
-`Implementor` cell, so a send costs no lookup. Nothing on this route loads
+`create_session` returned. That id is already in the fleet mapping's
+`Worker` cell, so a send costs no lookup. Nothing on this route loads
 `ListAgents` or `SendMessage`: they are a different transport, addressed by
 name, and they do not reach a cloud session.
 
