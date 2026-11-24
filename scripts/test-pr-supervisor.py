@@ -327,6 +327,40 @@ class GitHubConsumerTests(unittest.TestCase):
         with self.assertRaisesRegex(SUPERVISOR.ObservationError, "inconsistent"):
             self.observe()
 
+    def test_currency_uses_pinned_commits_and_rejects_bad_evidence(self):
+        from unittest.mock import patch
+        source = SUPERVISOR.GitHub("enterprise.example", "example/project", 7, "owner")
+        endpoint = f"compare/{'b' * 40}...{'a' * 40}"
+        for comparison, expected in (
+            ({"merge_base_commit": {"sha": "b" * 40}, "behind_by": 0}, "current"),
+            ({"merge_base_commit": {"sha": "c" * 40}, "behind_by": 2}, "update_candidate"),
+        ):
+            with self.subTest(comparison=comparison), patch.object(source, "api", side_effect=[self.pr, comparison, self.pr]) as api:
+                self.assertEqual(source.observe_currency()["currency"], expected)
+                self.assertEqual(api.call_args_list[1].args[0], endpoint)
+        for comparison in ({}, {"merge_base_commit": {"sha": "b" * 40}, "behind_by": True},
+                           {"merge_base_commit": {"sha": "c" * 40}, "behind_by": 0}):
+            with self.subTest(comparison=comparison), patch.object(source, "api", side_effect=[self.pr, comparison]):
+                with self.assertRaises(SUPERVISOR.ObservationError):
+                    source.observe_currency()
+        with patch.object(source, "api", side_effect=[self.pr, SUPERVISOR.ObservationError("denied")]):
+            with self.assertRaisesRegex(SUPERVISOR.ObservationError, "denied"):
+                source.observe_currency()
+
+    def test_currency_detects_moving_base_and_identical_commits(self):
+        from unittest.mock import patch
+        source = SUPERVISOR.GitHub("enterprise.example", "example/project", 7, "owner")
+        comparison = {"merge_base_commit": {"sha": "b" * 40}, "behind_by": 0}
+        changed = copy.deepcopy(self.pr)
+        changed["base"]["sha"] = "c" * 40
+        with patch.object(source, "api", side_effect=[self.pr, comparison, changed]):
+            with self.assertRaisesRegex(SUPERVISOR.ObservationError, "changed"):
+                source.observe_currency()
+        identical = copy.deepcopy(self.pr)
+        identical["head"]["sha"] = identical["base"]["sha"]
+        with patch.object(source, "api", side_effect=[identical, comparison, identical]):
+            self.assertEqual(source.observe_currency()["currency"], "current")
+
     def test_cli_registers_and_observes_without_installation_or_wakes(self):
         self.fixture.write_text(json.dumps(self.state))
         context = self.base / "context.json"

@@ -170,10 +170,12 @@ Registration retains the original owner, actual task worktree, branch and task
 context; another session cannot take control by registering the same identity.
 It starts in shadow mode and does not replace existing maintenance.
 
-The controller reads complete authoritative current-head inventories. It
-defers updates for in-flight or unregistered CI, rereads immediately before
-and after GitHub's expected-head update-branch request, and discards old-head
-evidence. It never rebases, force-pushes, marks ready, closes issues or merges PRs.
+The controller reads pinned base/head ancestry separately from complete
+current-head inventories. It updates proven stale, nonconflicting branches
+without waiting for CI, revalidates both commits before GitHub's expected-head
+request, and discards old-head evidence. Unknown comparisons never authorize
+a write. Accepted asynchronous requests remain pending until observed settled.
+It never rebases, force-pushes, marks ready, closes issues or merges PRs.
 A per-PR drain lock serializes a remote mutation with stop/hold; SQLite
 transactions remain short so other records and heartbeats stay writable.
 

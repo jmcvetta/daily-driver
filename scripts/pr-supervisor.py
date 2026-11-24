@@ -353,6 +353,8 @@ class GitHub:
         try:
             pr = self.api(f"pulls/{self.number}")
             def fields(value):
+                if not isinstance(value["merged"], bool):
+                    raise ObservationError("invalid PR merged state")
                 state = "MERGED" if value["merged"] else value["state"].upper()
                 head, base = value["head"]["sha"], value["base"]
                 if (state not in ("OPEN", "CLOSED", "MERGED")
@@ -367,6 +369,8 @@ class GitHub:
             if state == "OPEN":
                 if pr["mergeable"] is False or pr["mergeable_state"] == "dirty":
                     currency = "conflict"
+                elif pr["mergeable"] is not True:
+                    raise ObservationError("PR conflict state is unavailable")
                 else:
                     comparison = self.api(f"compare/{base_sha}...{head}")
                     merge_base = comparison["merge_base_commit"]["sha"]
@@ -374,7 +378,8 @@ class GitHub:
                     if (not isinstance(merge_base, str)
                             or not re.fullmatch(r"[0-9a-fA-F]{40}", merge_base)
                             or not isinstance(behind, int) or isinstance(behind, bool) or behind < 0
-                            or (merge_base.lower() == base_sha.lower()) != (behind == 0)):
+                            or (merge_base.lower() == base_sha.lower()) != (behind == 0)
+                            or (head.lower() == base_sha.lower() and behind != 0)):
                         raise ObservationError("inconsistent ancestry comparison")
                     ancestry = {"merge_base_sha": merge_base, "behind_by": behind}
                     currency = "current" if behind == 0 else "update_candidate"
@@ -383,6 +388,8 @@ class GitHub:
                 raise ObservationError("PR changed during ancestry comparison")
             if state == "OPEN" and (final["mergeable"] is False or final["mergeable_state"] == "dirty"):
                 currency, ancestry = "conflict", None
+            elif state == "OPEN" and final["mergeable"] is not True:
+                raise ObservationError("PR conflict state is unavailable")
             return {"head": head, "base": base, "base_sha": base_sha, "state": state,
                     "currency": currency, "ancestry": ancestry}
         except (KeyError, TypeError, AttributeError, ValueError) as error:

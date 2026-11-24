@@ -21,7 +21,7 @@ set -u
 PR="${1:?usage: pr-keep-current.sh <pull-request-number>}"
 INTERVAL="${KEEP_CURRENT_INTERVAL:-120}"
 MAX_READ_FAILURES=30
-SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 pending_head=
 
 failures=0
