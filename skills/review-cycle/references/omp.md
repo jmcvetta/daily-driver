@@ -81,10 +81,11 @@ of the checked content and fixes, outcome, and any defects or coverage limits:
 daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>] })
 ```
 
-No fixed verification heading, field set, empty values, usage data, or wall
-token is needed. Preserve enough result history to enforce the three-defect-pass
-limit in `SKILL.md`. The author must not invent the reviewer's verdict.
-The wrapper adds ordinary provenance; do not add a new block to the body.
+No fixed verification heading, field set, empty values, usage data, or pass
+counter is needed. Preserve enough result history to recognize repeated
+unresolved defects and failed approaches. The author must not invent the
+reviewer's verdict. The wrapper adds ordinary provenance; do not add a new
+block to the body.
 
 The wait
 ========

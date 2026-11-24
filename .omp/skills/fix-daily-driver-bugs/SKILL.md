@@ -151,12 +151,13 @@ state and resume only under `undertake`'s branch-resume rules. A repeated
 invocation must not create another task, overwrite canonical work, or launch a
 second implementor for active work.
 
-Resolve the issue's required model class and eligible route through
-`issue-body`'s model-class contract and `embark`'s Omp dispatch policy. Do not
-infer capability from a model name, agent name, price or catalog entry. A route
-that is unavailable, unmeasured or unsuitable blocks only that task; preserve
-its required class, report the configuration gap, and launch other eligible
-work.
+Assess and record the issue's capability need through `issue-body` and attempt
+the preferred route under `embark`'s Omp dispatch policy. Preserve an explicit
+class; do not infer capability from a model name, agent name, price or catalog
+entry. If the preferred route is unavailable, report the class, attempted
+target, failure and actual route, then continue on an available route without
+changing shared roles or credentials. An unmeasured route is not itself a
+dispatch barrier; never claim it is measured or silently substitute it.
 
 Dispatch all eligible independent tasks in one Omp `task` batch. Use one
 implementation subagent per issue, set the class-appropriate agent according

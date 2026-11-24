@@ -187,7 +187,8 @@ apply `issue-body`'s readiness test for the effective kind. Repair only gaps
 answerable from the repository and preserve valid content; ask about unresolved
 intent or unavailable prerequisites. Do not silently relabel an underspecified
 bug or research issue `human`. A task must still pass its stricter settled-
-intent and model-class checks. A research issue may finish with an answer,
+intent test; assess class as routing metadata, not a readiness gate. A research
+issue may finish with an answer,
 follow-on issue specifications, or a supported no; do not open an empty PR
 when its agreed deliverable is answer-only. Bounded inconclusive research is
 complete only with the evidence, limitation, and resolution path required by
@@ -205,30 +206,26 @@ bindings; existing record-bound tasks and tasks pinned to a path and SHA retain
 their original contracts. A discovery parent never authorizes new
 implementation dispatch.
 
-**A `task`, and any classed `research` or `bug`, carries a required model
-class.** A `task` always does. A `research` or `bug` does when it is an epic
-story (it carries the `story` marker or is a child of an epic), when it carries
-a `## Model class` section, or when it is assigned `frontier`. Validate its one
-`## Model class` section and rationale through `issue-body` before the claim,
-repairing an old or invalid body to the current contract where the handoff is
-otherwise grounded. A story linked before the class was required is such an
-old body: where the handoff is grounded, repair its class through `issue` under
-`issue-body`'s update rule, choosing the lowest class that can deliver the
-settled work. Otherwise a missing or invalid class, or a missing rationale, is a
-gap to report; never default it to `routine`. A classed
-`research` or `bug` keeps its kind: it uses its own readiness and completion
+**A `task`, and any classed `research` or `bug`, carries a model class.**
+A `task` always does. A `research` or `bug` does when it is an epic story,
+carries a `## Model class` section, or is assigned `frontier`. Apply
+`issue-body` to assess and record missing or legacy metadata from a grounded
+handoff before or during dispatch; preserve an explicit recognized class even
+when its rationale is missing, and preserve its capability requirement.
+Metadata formatting alone does not stop settled work, and an unclear capability
+need is reported rather than blindly defaulted to
+`routine`. A classed `research` or `bug` keeps its own readiness and completion
 tests, not the task template. A standalone `bug` or `research` with no story
-role and no class section uses its kind-specific readiness test alone. A
-A research assignment using `frontier` keeps the `research` label and carries
-its single class section and rationale before claim or substantive work. The
-class states the capability a dispatcher such as `embark` selects a route for;
-it is a capability label, not an approval gate.
+role and no class section uses its kind-specific readiness test alone.
+Class guides routing; it is not an approval gate.
 
-**Attempt initial class selection once before the worktree or claim.** This
-covers classed `task`, `research` and `bug` assignments. Use the active
-harness's configuration authority and supported selection route, not a second
-policy map. Matching model and effort need no setters. Do not change shared
-roles or credentials to make selection succeed.
+**Attempt initial class selection once before the worktree or claim when the
+class is grounded.** This covers classed `task`, `research` and `bug`
+assignments. If the capability need is unclear, report it and continue on an
+available route without inventing a class. Use the active harness's
+configuration authority and supported selection route, not a second policy
+map. Matching model and effort need no setters. Do not change shared roles or
+credentials to make selection succeed.
 
 Omp's effective class role is authoritative, including its model, provider,
 and effort, across global/project settings, CLI overlays, and Roles UI edits.
@@ -666,7 +663,7 @@ send them to CI. A red check returns to `Fix, answer, resolve, push`.
 ----------------------------------------------------------------------------
 
 Invoke `review-cycle`. It owns CI observation, full review, the finding
-protocol, and independent bounded verification. Review the stable pushed head
+protocol, and independent targeted verification. Review the stable pushed head
 while CI runs; record the reviewed SHA and every finding disposition. Batch
 all fixes, including observed CI and bot fixes, and push them. Run `Verify the
 fix delta` when pull-request content changed behavior, contracts, or workflow
@@ -677,13 +674,13 @@ no-applicable-CI result defined by `review-cycle`.
 A pass that finds defects returns to `Fix, answer, resolve, push`, and the
 correction pushed from there earns the pass that confirms it — every time,
 because an unverified fix is what the round exists to prevent. The loop ends
-on the first clean pass, and `review-cycle`'s wall ends it the other way,
-with the defects reported on the pull request. How many passes that takes is
-that skill's number, read there rather than carried here. An
-unavailable reviewer or an incomplete pass keeps the pull request draft and
-reports the blocker. Initial execution and a resumed session read the durable
-review record before acting; a resume, a rewritten history, a bot finding and
-a late CI correction are not passes and move nothing.
+on the first clean pass; evidence of repeated unresolved defects or a failed
+approach may instead stop progress, with evidence and a resume path recorded
+on the pull request. Distinct repairable defects and late bot findings alone
+do not establish non-convergence. An unavailable reviewer or an incomplete
+pass keeps the pull request draft and reports the missing verification.
+Initial execution and a resumed session read the durable review record before
+acting.
 
 Only a material scope change runs a new `Review the head` round. A base merge
 or history rewrite with unchanged pull-request content does not. `review-cycle`
@@ -745,11 +742,11 @@ without a relevant state change. Currency is not proof of completion.
 
 After currency settles, assess CI on the resulting head through
 `review-cycle`'s `How to wait`, then continue review and the ready gate when
-their conditions permit. Missing logs remain an
-evidence blocker. A cap, review wall, human action, or evidence blocker
-reports the outstanding condition and actual resume path; it does not reset
-the bound, authorize a retry, or call the undertaking complete. Where the
-harness has no owner continuation, report that limitation at `Open the draft`.
+their conditions permit. Missing logs remain an evidence blocker. A
+non-converging correction, human action, or evidence blocker reports the
+outstanding condition and actual resume path; it does not call the undertaking
+complete. Where the harness has no owner continuation, report that limitation
+at `Open the draft`.
 
 After the merge
 ---------------
@@ -1126,10 +1123,10 @@ Autonomy is the point, so each pause has to earn itself. Ask only for
 unresolved intent, an actual scope decision, a required confirmation not
 already satisfied, or a contribution the agent cannot supply. An ordinary
 failing approach requires diagnosis and a revised plan, not a turn boundary.
-Blocked issues, ineligible issue kinds, external waits, review walls and
-observed capability gaps retain the specific handling below. Report the
-unfinished condition and actual resume path. Where an orchestrator's address
-was given, report the stop under `Reporting to an orchestrator`.
+Blocked issues, ineligible issue kinds, external waits, non-converging
+corrections and observed capability gaps retain the specific handling below.
+Report the unfinished condition and actual resume path. Where an orchestrator's
+address was given, report the stop under `Reporting to an orchestrator`.
 
 For a genuine unresolved human handoff, notify through the active harness
 route before the chat handoff when that route supports it. Use a stable
