@@ -6,10 +6,10 @@ tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
   Undertake task #52. Its valid Model class is `routine`. The current
-  session runs a different non-frontier model. Its family has an entry in the
-  class-routing table, but that family's `routine` mapping is explicitly
-  cleared (`null`). What happens? Also consider the same task with a legacy
-  trailing `Model:` field instead of a class section.
+  session runs a different non-frontier model. Its effective `routine` role
+  is explicitly cleared (`null`). What happens? Also consider the same
+  substantively ready task with a legacy trailing `Model:` field instead of a
+  class section.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
@@ -27,7 +27,7 @@ success_criteria:
     expected_skill: undertake
     skill_name: undertake
   - type: agent_judge
-    description: Explicitly cleared exact-class mapping stops ownership; legacy metadata is migrated
+    description: Cleared class routing is informational; grounded legacy metadata is recorded
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -45,11 +45,10 @@ success_criteria:
       Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
       tag exists, write `ANCHOR: none` and score 0.0.
 
-      Score 1.0 only if it requires the exact routine class within the
-      known mapped family and provider before worktree or claim, preserves
-      backend and authentication route, reports the explicitly cleared class as
-      a configuration gap without changing shared roles, and migrates grounded
-      legacy metadata through issue-body before routing. Score 0.0 if it treats
-      the family as absent, proceeds merely because the session is non-frontier,
-      treats the cleared class as an omitted-class warning continuation, claims
-      before routing, or skips the migration.
+      Score 1.0 only if it attempts the effective routine role once before
+      ownership, reports the cleared assignment and actual retained route, and
+      continues without changing shared roles or credentials. For legacy
+      metadata it assesses the grounded handoff and records the appropriate
+      class and rationale before or during dispatch, preserving capability and
+      provenance. Score 0.0 if it stops solely on the cleared role or metadata,
+      silently substitutes a route, or blindly defaults an unclear class.
