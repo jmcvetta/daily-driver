@@ -137,9 +137,18 @@ the exact sentence and labeled the command non-executable, but omitted the
 explicit case-outcome check. The runner's task-level status is `SUCCESS` for
 both variants; the separate judge records are authoritative for semantic
 scores.
-
-
-
+After the shared rule distinguished required record fields from explicit
+completeness checks, run
+[`21-15-49`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_21-15-49.json)
+still failed both variants: bare scored 0 because it retained the executable
+default command; with-plugin scored 0.5 because repository evidence followed
+the provenance block. The fixture put evidence after its closing provenance
+block, conflicting with the established trailing-provenance contract.
+Repository evidence now precedes the provenance block. In the corrected
+case-25 run
+[`21-19-16`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_21-19-16.json),
+with-plugin scored 1.0 and passed; the bare control scored 0 and failed, as
+expected because it retained the unauthorized default command.
 
 A separate two-turn Omp 18.14.1 smoke used `--plugin-dir` pointing at this
 checkout, `--model openai-codex/gpt-6.1-sol`, `--tools read`, and an isolated

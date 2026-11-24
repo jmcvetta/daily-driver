@@ -38,15 +38,15 @@ initial_prompt: >-
   compatible with this no-tools semantic criterion. Do not change scope,
   execution bounds, rerun restrictions, attribution, or authorization.
 
-  ---
-  Model: fixture-model
-  Harness: Omp 19.1.1
-  Session: fixture-session
-
   Repository evidence: `evals/experiments/omp-gpt-6-luna.yaml` selects only
   the subject; `Makefile` documents the unset-JUDGE behavior and separate
   `JUDGE=` selector; `evals/judges/omp-gpt-6.1-sol.yaml` marks that non-Claude
   judge validated. No Claude use is authorized for this task.
+
+  ---
+  Model: fixture-model
+  Harness: Omp 19.1.1
+  Session: fixture-session
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]

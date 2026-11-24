@@ -225,8 +225,10 @@ criteria, disable semantic grading, or treat the handoff itself as approval.
 Preserve a caller-supplied valid judge, subject selection, bounds,
 rerun restrictions, provenance, approval conditions and required record
 fields, including the run identifier, requested and observed identities, and
-case outcomes when assigned; carry these through recording and reruns. An
-authorized judge remains valid through its supported execution session. This
+case outcomes when assigned; carry these through recording and reruns. Keep
+explicit completeness checks as acceptance criteria: listing required record
+fields does not substitute for checking that each required outcome is present.
+An authorized judge remains valid through its supported execution session. This
 does not change the default judge or add an approval checkpoint.
 
 When a genuine gap remains, state it precisely and do not present or dispatch

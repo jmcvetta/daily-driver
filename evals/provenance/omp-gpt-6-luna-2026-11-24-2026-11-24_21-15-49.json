@@ -1,0 +1,244 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The revised handoff names a judge and preserves the valid requirements",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The revised handoff names a judge and preserves the valid requirements",
+            "duration_seconds": 6.06,
+            "findings": [
+              "Missing JUDGE=omp-gpt-6.1-sol in execution and recording/rerun instructions.",
+              "Operator-selection alternative lacks the exact required sentence and does not remove or label the command non-executable.",
+              "Case-outcome check, routine class, run bounds, identity reporting, and provenance are retained."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "460e8ccd0376089e5d135f60c2dc2a29fe45a17db793c1e2d26631a68c80ddd3",
+            "rationale": "ANCHOR: result The final body retains an executable command with no explicit authorized judge, leaving the prohibited Claude default selected. The external readiness warning does not satisfy the required operator-selection alternative.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1999,
+              "output": 116
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c53a1465f9a102a40d34b120860c9728e28d1872b6973f8a9afc4dbc0017c7d8"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-25-omp-judge-preserved-on-update",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The revised handoff names a judge and preserves the valid requirements",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The revised handoff names a judge and preserves the valid requirements",
+            "duration_seconds": 11.01,
+            "findings": [
+              "Command explicitly labeled non-executable; exact operator-readiness sentence appears inside the body.",
+              "Case-outcome completeness check and consistent judge selection for reruns and recording are included.",
+              "Original task, subject, routine class, run bounds, repair-only reruns, and identity reporting are preserved without an approval gate.",
+              "Move repository evidence before the provenance line to preserve trailing provenance."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "460e8ccd0376089e5d135f60c2dc2a29fe45a17db793c1e2d26631a68c80ddd3",
+            "rationale": "ANCHOR: result The body satisfies the operator-selected-judge alternative and preserves the execution constraints and reporting requirements. One minor condition is missing: the provenance line is retained but is no longer trailing because repository evidence follows it.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2160,
+              "output": 230
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c53a1465f9a102a40d34b120860c9728e28d1872b6973f8a9afc4dbc0017c7d8"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-25-omp-judge-preserved-on-update",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 19.074631929397583,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-25-omp-judge-preserved-on-update",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 867,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 3079
+      },
+      "tokens": 3946,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 50.28613305091858,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-25-omp-judge-preserved-on-update",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 9984,
+        "output_tokens": 2195,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 23761
+      },
+      "tokens": 35940,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-24T21:16:59.222444",
+  "experiment_id": "omp-gpt-6-luna",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "c53a1465f9a102a40d34b120860c9728e28d1872b6973f8a9afc4dbc0017c7d8",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v3",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 4159,
+      "output": 346
+    }
+  },
+  "plugin_revision": {
+    "commit": "c8b1afe4175e7f26cd90d47fc0b097aae45af02d",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-24T14:17:17.527372+00:00",
+  "run_id": "2026-11-24_21-15-49",
+  "schema_version": 5,
+  "started_at": "2026-11-24T21:15:49.857475",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-25-omp-judge-preserved-on-update": [
+          0.0
+        ]
+      },
+      "task_ids": [
+        "issue-25-omp-judge-preserved-on-update"
+      ],
+      "variant_id": "bare"
+    },
+    {
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-25-omp-judge-preserved-on-update": [
+          0.5
+        ]
+      },
+      "task_ids": [
+        "issue-25-omp-judge-preserved-on-update"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
