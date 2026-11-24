@@ -2,9 +2,13 @@
 """Exercise the embark title barrier and idle owner reminders in real Omp.
 
 The scripted local model drives the title gate and an idle-owner wake.
-A fake `gh` supplies fixtures; no live service is used. The idle scenario
-also checks that cancellation prevents another turn. The scripted provider
+A fake `gh` supplies fixtures and records attributed reports; no live service
+is used. The idle scenario also checks cancellation. The scripted provider
 does not establish how a live model chooses a title or resolves a conflict.
+
+Literal `report_issue` admission belongs to the offline extension fixture:
+no disposable override for the harness command is established here, so this
+probe must not invoke a potentially real harness report.
 """
 
 from __future__ import annotations
@@ -13,6 +17,7 @@ import json
 import os
 import queue
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -26,16 +31,26 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "evals" / "coder-eval-omp" / "src"))
 
 from coder_eval_omp.launch import OMP_CONFIG  # noqa: E402
-from coder_eval_omp.tools import select_tools  # noqa: E402
 
-TIMEOUT_SECONDS = 180.0
+TIMEOUT_SECONDS = 300.0
 PROVIDER = "embark-title-probe"
 MODEL = "embark-title-probe-model"
 TARGETS = {
     582: ("Epic title 582", "⛵ EPIC #582 Epic title 582"),
     583: ("Epic title 583", "⛵ EPIC #583 Epic title 583"),
 }
-RESULTS: dict[tuple[int, int], str] = {}
+SCENARIOS = [
+    (582, "bash-help"),
+    (583, "bash-help"),
+    (582, "eval-single"),
+    (583, "eval-double"),
+    (582, "bash-positional"),
+    (583, "bash-positional"),
+    (582, "bash-json-short"),
+    (583, "bash-json-long"),
+    (582, "direct"),
+]
+RESULTS: dict[tuple[str, str], str] = {}
 RPC_EVENTS: list[dict] = []
 REMINDER_QUEUED = threading.Event()
 
@@ -67,27 +82,123 @@ def target_from(messages) -> int:
     return int(matches[-1])
 
 
-def tool_call(number: int, index: int, repository_qualified: bool) -> tuple[str, dict]:
-    """Return the next guarded call in one scenario."""
-    if index == 0:
-        return "read", {"path": "prep.md"}
-    if index == 1:
-        path = f"issue://example/project/{number}" if repository_qualified else f"issue://{number}"
-        return "read", {"path": path}
-    if index == 2:
-        return "read", {"path": "prep.md"}
-    if index == 3:
-        return "daily_driver_set_session_title", {"title": TARGETS[number][1]}
-    if index == 4:
-        return "read", {"path": "prep.md"}
-    if index == 5:
-        return "daily_driver_get_session", {}
-    if index == 6 and number == 582:
-        return "daily_driver_schedule", {
+def scenario_calls(number: int, route: str, repository_qualified: bool) -> list[tuple]:
+    """Catch outer recovery routes that admit work without an actual rename."""
+    title = TARGETS[number][1]
+    setter = f"daily_driver_set_session_title {shlex.quote(title)}"
+    calls = []
+
+    def add(label, tool, arguments, expected="allowed"):
+        calls.append((label, tool, arguments, expected))
+
+    def pending(label):
+        add(label, "write", {"path": "forbidden-write.txt", "content": "must stay blocked"}, "blocked")
+
+    def reports(state):
+        for surface in ("direct", "bash"):
+            for failure in (False, True):
+                label = f"{state}-{surface}-report" + ("-failure" if failure else "")
+                arguments = {"args": [
+                    "issue", "create", "--repo", "jmcvetta/daily-driver",
+                    "--label", "bug", "--title", label,
+                    "--body", f"Offline title recovery report.\nEpic {number}; {label}.",
+                ]}
+                if surface == "direct":
+                    add(label, "daily_driver_gh_write", arguments, "report-failure" if failure else "report")
+                else:
+                    command = "daily_driver_gh_write -j " + shlex.quote(json.dumps(arguments))
+                    add(label, "bash", {"command": command}, "report-failure" if failure else "report")
+                pending(label + "-pending")
+        add(state + "-report-session", "daily_driver_get_session", {})
+
+    add("preparation", "read", {"path": "prep.md"})
+    add("initial-session", "daily_driver_get_session", {})
+    if route == "bash-help" and number == 582:
+        reports("awaiting")
+        pending("awaiting-write")
+        add("awaiting-title", "daily_driver_set_session_title", {"title": title}, "blocked")
+    path = f"issue://example/project/{number}" if repository_qualified else f"issue://{number}"
+    add("identity", "read", {"path": path})
+    add("required-read", "read", {"path": "prep.md"}, "blocked")
+    add("help", "bash", {"command": "daily_driver_set_session_title --help"})
+    pending("help-pending")
+    add("help-session", "daily_driver_get_session", {})
+    if route == "bash-help" and number == 582:
+        reports("required")
+        add("required-dispatch", "task", {
+            "tasks": [{"task": "Write forbidden-dispatch.txt in the sandbox."}],
+        }, "blocked")
+        add("ordinary-comment", "daily_driver_gh_write", {
+            "args": ["issue", "comment", "582", "--repo", "jmcvetta/daily-driver", "--body", "not a report"],
+        }, "blocked")
+        add("direct-gh", "bash", {
+            "command": "gh issue create --repo jmcvetta/daily-driver --label bug --title forbidden --body forbidden",
+        }, "blocked")
+        for index, command in enumerate((
+            f"printf '%s' {shlex.quote(setter)}",
+            setter + "; printf forbidden",
+            setter + " | cat",
+            setter + " > forbidden-redirection.txt",
+            "(" + setter + ")",
+            "TITLE=forbidden " + setter,
+            "daily_driver_set_session_title \"$(printf forbidden)\"",
+            "daily_driver_set_session_title \"$HOME\"",
+            "daily_driver_set_session_title --help && " + setter + " && printf forbidden",
+        )):
+            add(f"negative-shell-{index}", "bash", {"command": command}, "blocked")
+        for index, code in enumerate((
+            f"const title = {json.dumps(title)}; await tool.daily_driver_set_session_title({{title}});",
+            f"await tool.daily_driver_set_session_title({{['title']: {json.dumps(title)}}});",
+            f"await tool.daily_driver_set_session_title({{title: {json.dumps(title)}, extra: true}});",
+            f"await tool.daily_driver_set_session_title({{title: `{title}`}});",
+            f"await tool.daily_driver_set_session_title({{title: {json.dumps(title)}}}); await tool.read({{path:'prep.md'}});",
+        )):
+            add(f"negative-eval-{index}", "eval", {"language": "js", "code": code}, "blocked")
+        for index, invalid in enumerate((
+            TARGETS[583][1], f"⛵ EPIC #{number} ", json.dumps({"title": title}), json.dumps([title]),
+        )):
+            if index % 2:
+                add(f"invalid-title-{index}", "eval", {
+                    "language": "js",
+                    "code": f"await tool.daily_driver_set_session_title({{title: {json.dumps(invalid)}}});",
+                }, "invalid")
+            else:
+                add(f"invalid-title-{index}", "bash", {
+                    "command": "daily_driver_set_session_title " + shlex.quote(invalid),
+                }, "invalid")
+            pending(f"invalid-title-{index}-pending")
+            add(f"invalid-title-{index}-session", "daily_driver_get_session", {})
+    if route == "bash-help":
+        tool, arguments = "bash", {"command": "daily_driver_set_session_title --help && " + setter}
+    elif route == "bash-positional":
+        tool, arguments = "bash", {"command": setter}
+    elif route.startswith("bash-json-"):
+        flag = "-j" if route == "bash-json-short" else "--json"
+        tool, arguments = "bash", {
+            "command": f"daily_driver_set_session_title {flag} " + shlex.quote(json.dumps({"title": title})),
+        }
+    elif route.startswith("eval-"):
+        literal = "'" + title + "'" if route == "eval-single" else json.dumps(title)
+        tool, arguments = "eval", {
+            "language": "js", "code": f"await tool.daily_driver_set_session_title({{title: {literal}}});",
+        }
+    else:
+        tool, arguments = "daily_driver_set_session_title", {"title": title}
+    add("rename", tool, arguments)
+    add("resumed-read", "read", {"path": "prep.md"})
+    add("renamed-session", "daily_driver_get_session", {})
+    if route == "bash-help" and number == 582:
+        add("reminder", "daily_driver_schedule", {
             "delaySeconds": 1,
             "message": "Embark #582 watch backstop. Verify the completed gate survives.",
-        }
-    raise CheckFailed(f"unexpected scripted tool-call index {index}")
+        })
+    return calls
+
+
+def tool_call(number: int, index: int, route: str, repository_qualified: bool) -> tuple[str, dict]:
+    """Return the next real tool call, without altering startup fixture state."""
+    _label, name, arguments, _expected = scenario_calls(number, route, repository_qualified)[index]
+    return name, arguments
 
 
 class MockModel(BaseHTTPRequestHandler):
@@ -99,10 +210,27 @@ class MockModel(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))))
         messages = body.get("messages", [])
-        number = target_from(messages)
+        try:
+            number = target_from(messages)
+        except CheckFailed:
+            # Omp may make independent title-generation requests to the same
+            # local provider; they do not belong to a scripted scenario.
+            response = {"id": "auxiliary", "object": "chat.completion.chunk", "model": MODEL,
+                        "choices": [{"index": 0, "delta": {"content": "391"}, "finish_reason": "stop"}]}
+            encoded = (f"data: {json.dumps(response)}\n\ndata: [DONE]\n\n").encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Content-Length", str(len(encoded)))
+            self.end_headers()
+            self.wfile.write(encoded)
+            return
         latest_user = next((m for m in reversed(messages) if m.get("role") == "user"), {})
         user_text = text_of(latest_user.get("content"))
         reminder = "watch backstop" in user_text
+        route_match = re.search(r"\[probe:([a-z-]+)\]", user_text)
+        route = route_match.group(1) if route_match else "bash-help"
+        scenario = f"{number}-{route}"
+        calls = scenario_calls(number, route, repository_qualified=False)
         repository_qualified = bool(
             re.search(rf"\nUser:\s*issue://example/project/{number}\b", user_text)
         )
@@ -114,23 +242,23 @@ class MockModel(BaseHTTPRequestHandler):
         )
         last = messages[-1] if messages else {}
         if not reminder and last.get("role") == "tool":
-            RESULTS[(number, index - 1)] = text_of(last.get("content"))
-        if not reminder and number == 582 and index == 7:
+            RESULTS[(scenario, calls[index - 1][0])] = text_of(last.get("content"))
+        if not reminder and number == 582 and route == "bash-help" and index == len(calls):
             if not REMINDER_QUEUED.wait(timeout=15):
                 raise CheckFailed("scheduled reminder did not enter the live follow-up queue")
-        if (reminder and index >= 1) or (not reminder and index >= (7 if number == 582 else 6)):
+        if (reminder and index >= 1) or (not reminder and index >= len(calls)):
             delta = {"role": "assistant", "content": "Startup title verified."}
             finish = "stop"
         else:
             if reminder:
                 name, arguments = "write", {"path": "wake-proof.txt", "content": "gate preserved\n"}
             else:
-                name, arguments = tool_call(number, index, repository_qualified)
+                name, arguments = tool_call(number, index, route, repository_qualified)
             delta = {
                 "role": "assistant",
                 "tool_calls": [{
                     "index": 0,
-                    "id": f"{'wake' if reminder else 'embark'}-{number}-{index}",
+                    "id": f"{'wake' if reminder else 'embark'}-{scenario}-{index}",
                     "type": "function",
                     "function": {"name": name, "arguments": json.dumps(arguments)},
                 }],
@@ -324,35 +452,51 @@ def write_home(home: Path, port: int) -> None:
 
 
 def write_fake_gh(bin_dir: Path) -> None:
-    """Return deterministic epic fixtures for Omp's native issue:// protocol."""
+    """Record real attributed writes and return offline metadata or failures."""
     bin_dir.mkdir(parents=True, exist_ok=True)
-    fake = bin_dir / "gh"
-    rows = []
+    fixtures = {}
     for number, (title, _session_title) in TARGETS.items():
-        rows.append(
-            f"  *{number}*) printf '%s\\n' "
-            + "'"
-            + json.dumps({
-                "author": {"login": "fixture"},
-                "body": "Fixture epic body.",
-                "comments": [],
-                "createdAt": "2026-01-01T00:00:00Z",
-                "labels": [{"name": "epic"}],
-                "number": number,
-                "state": "OPEN",
-                "stateReason": "",
-                "title": title,
-                "updatedAt": "2026-01-01T00:00:00Z",
-                "url": f"https://github.com/example/project/issues/{number}",
-            })
-            + "' ; exit 0 ;;\n"
-        )
+        fixtures[str(number)] = {
+            "author": {"login": "fixture"},
+            "body": "Fixture epic body.",
+            "comments": [],
+            "createdAt": "2026-01-01T00:00:00Z",
+            "labels": [{"name": "epic"}],
+            "number": number,
+            "state": "OPEN",
+            "stateReason": "",
+            "title": title,
+            "updatedAt": "2026-01-01T00:00:00Z",
+            "url": f"https://github.com/example/project/issues/{number}",
+        }
+    fake = bin_dir / "gh"
     fake.write_text(
-        "#!/bin/sh\n"
-        "case \" $* \" in\n"
-        + "".join(rows)
-        + "  *) printf '%s\\n' 'unexpected fake gh invocation' >&2; exit 2 ;;\n"
-        "esac\n",
+        f"#!{sys.executable}\n"
+        "import json, sys\n"
+        "from pathlib import Path\n"
+        f"fixtures = {fixtures!r}\n"
+        f"recording = Path({str(bin_dir.parent / 'gh-records.jsonl')!r})\n"
+        + """
+args = sys.argv[1:]
+if args[:2] == ["issue", "create"]:
+    title = args[args.index("--title") + 1] if "--title" in args else ""
+    code = 17 if title.endswith("-failure") else 0
+    with recording.open("a", encoding="utf-8") as stream:
+        stream.write(json.dumps({"args": args, "code": code}) + "\\n")
+    if code:
+        print("offline gh refusal: " + title, file=sys.stderr)
+    else:
+        print("https://github.com/jmcvetta/daily-driver/issues/9001")
+    sys.exit(code)
+if args[:2] == ["issue", "view"]:
+    for argument in args[2:]:
+        number = argument.rsplit("/", 1)[-1]
+        if number in fixtures:
+            print(json.dumps(fixtures[number]))
+            sys.exit(0)
+print("unexpected fake gh invocation: " + repr(args), file=sys.stderr)
+sys.exit(2)
+""",
         encoding="utf-8",
     )
     fake.chmod(0o755)
@@ -376,7 +520,7 @@ def read_frames(stream, sink: queue.Queue) -> None:
 
 def run(omp: str, env: dict[str, str], cwd: Path, stderr_path: Path) -> None:
     """Drive plain and expanded-skill activation in one linked Omp session."""
-    argv = [omp, "--mode", "rpc", *select_tools(["Read", "Write"], None).argv]
+    argv = [omp, "--mode", "rpc", "--tools", "read,write,bash,eval,task"]
     with stderr_path.open("w", encoding="utf-8") as stderr_file:
         process = subprocess.Popen(
             argv, cwd=cwd, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -413,22 +557,25 @@ def run(omp: str, env: dict[str, str], cwd: Path, stderr_path: Path) -> None:
             model = wait_for(lambda frame: frame.get("type") == "response" and frame.get("id") == "model", "set_model")
             if not model.get("success"):
                 raise CheckFailed(f"set_model failed: {model.get('error')}", stderr_path.read_text(encoding="utf-8"))
-            for number, prompt in (
-                (582, "embark 582. Exercise the explicit startup barrier."),
-                (583, "/skill:embark issue://example/project/583"),
-            ):
-                send({"id": f"scenario-{number}", "type": "prompt", "message": prompt})
-                if number == 582:
+            for number, route in SCENARIOS:
+                scenario = f"{number}-{route}"
+                prompt = (
+                    f"/skill:embark issue://example/project/{number} [probe:{route}]"
+                    if number == 583 else
+                    f"embark {number}. Exercise the explicit startup barrier. [probe:{route}]"
+                )
+                send({"id": scenario, "type": "prompt", "message": prompt})
+                if number == 582 and route == "bash-help":
                     wake = wait_for(
                         lambda frame: frame.get("type") == "tool_execution_end"
-                        and frame.get("toolCallId") == "wake-582-0",
+                        and frame.get("toolCallId") == "wake-582-bash-help-0",
                         "the scheduled reminder's guarded write",
                     )
                     if wake.get("isError") or (cwd / "wake-proof.txt").read_text() != "gate preserved\n":
                         raise CheckFailed(f"the reminder reset the gate: {wake!r}", stderr_path.read_text())
                 wait_for(
                     lambda frame: frame.get("type") == "agent_end" and frame.get("isTerminal", True),
-                    f"scenario {number} to settle",
+                    f"scenario {scenario} to settle",
                 )
             process.stdin.close()
             process.wait(timeout=max(deadline - time.monotonic(), 1))
@@ -473,40 +620,74 @@ def main() -> None:
             stderr_path = root / "omp-stderr.log"
             run(omp, env, sandbox, stderr_path)
             stderr = stderr_path.read_text(encoding="utf-8")
-            for number in TARGETS:
-                issue_read = RESULTS.get((number, 1), "")
-                denial = RESULTS.get((number, 2), "")
-                session = RESULTS.get((number, 5), "")
-                event_results = {
-                    event.get("toolCallId"): event
-                    for event in RPC_EVENTS
-                    if event.get("type") == "tool_execution_end"
-                }
-                for index in (0, 4):
-                    call_id = f"embark-{number}-{index}"
-                    event = event_results.get(call_id, {})
-                    result = event.get("result", {})
-                    if prep_content.strip() not in text_of(result.get("content")):
-                        raise CheckFailed(
-                            f"issue {number}: read-only prep call {index} did not return fixture content: {event!r}",
-                            stderr,
-                        )
-                denied = event_results.get(f"embark-{number}-2", {})
-                if not denied.get("isError"):
-                    raise CheckFailed(f"issue {number}: unrelated read was not blocked after identity: {denied!r}", stderr)
-                if f"# Issue #{number}:" not in issue_read:
-                    raise CheckFailed(
-                        f"issue {number}: canonical issue read did not return metadata: {issue_read[:500]!r}",
-                        stderr,
-                    )
-                if "requested epic" not in denial.lower() and "⛵ epic" not in denial.lower():
-                    raise CheckFailed(
-                        f"issue {number}: unrelated read was not denied by the title barrier: {denial[:500]!r}; "
-                        f"issue-read result: {issue_read[:500]!r}",
-                        stderr,
-                    )
+            event_results = {
+                event.get("toolCallId"): event
+                for event in RPC_EVENTS
+                if event.get("type") == "tool_execution_end"
+            }
+            for number, route in SCENARIOS:
+                scenario = f"{number}-{route}"
+                initial = RESULTS.get((scenario, "initial-session"))
+                for index, (label, _tool, _arguments, expected) in enumerate(
+                    scenario_calls(number, route, repository_qualified=number == 583)
+                ):
+                    event = event_results.get(f"embark-{scenario}-{index}")
+                    if event is None:
+                        raise CheckFailed(f"{scenario}/{label}: no tool execution result", stderr)
+                    result = RESULTS.get((scenario, label), "")
+                    if expected == "blocked":
+                        if not event.get("isError") or not re.search(r"epic|embark|requested issue", result, re.IGNORECASE):
+                            raise CheckFailed(f"{scenario}/{label}: startup barrier did not deny the call: {event!r}", stderr)
+                    elif expected == "report-failure":
+                        if (not event.get("isError") or "offline gh refusal: " + label not in result
+                                or "issues/9001" in result):
+                            raise CheckFailed(f"{scenario}/{label}: report failure was hidden: {event!r}", stderr)
+                    elif expected == "report":
+                        if event.get("isError") or "issues/9001" not in result:
+                            raise CheckFailed(f"{scenario}/{label}: report did not reach fake gh: {event!r}", stderr)
+                    # Eval may return an inner setter error as an outer result.
+                    # The following pending write and name checks catch any
+                    # invalid title that changes the session or opens the gate.
+                    elif expected != "invalid" and event.get("isError"):
+                        raise CheckFailed(f"{scenario}/{label}: admitted call failed: {event!r}", stderr)
+                    if label in ("preparation", "resumed-read") and prep_content.strip() not in result:
+                        raise CheckFailed(f"{scenario}/{label}: fixture read did not execute: {event!r}", stderr)
+                    if label == "identity" and f"# Issue #{number}:" not in result:
+                        raise CheckFailed(f"{scenario}: canonical metadata was not read: {result[:500]!r}", stderr)
+                    if label.endswith("-session") and label != "renamed-session":
+                        if initial is None or result != initial:
+                            raise CheckFailed(f"{scenario}/{label}: pending recovery changed the session: {result!r}", stderr)
+                session = RESULTS.get((scenario, "renamed-session"), "")
                 if TARGETS[number][1] not in session:
-                    raise CheckFailed(f"issue {number}: session name does not carry the requested epic title: {session[:500]!r}", stderr)
+                    raise CheckFailed(f"{scenario}: actual session title does not match: {session[:500]!r}", stderr)
+            for filename in ("forbidden-write.txt", "forbidden-dispatch.txt", "forbidden-redirection.txt"):
+                if (sandbox / filename).exists():
+                    raise CheckFailed(f"pending recovery executed an unrelated mutation: {filename}", stderr)
+            records_path = root / "gh-records.jsonl"
+            records = [json.loads(line) for line in records_path.read_text().splitlines()] if records_path.exists() else []
+            reports = [
+                (label, arguments if tool == "daily_driver_gh_write" else json.loads(shlex.split(arguments["command"])[2]))
+                for label, tool, arguments, expected in scenario_calls(582, "bash-help", False)
+                if expected in ("report", "report-failure")
+            ]
+            if len(records) != len(reports):
+                raise CheckFailed(f"expected {len(reports)} attributed reports, recorded {records!r}", stderr)
+            for record, (label, arguments) in zip(records, reports):
+                args = record["args"]
+                intended = arguments["args"]
+                body_index = intended.index("--body") + 1
+                if args[:body_index] != intended[:body_index] or args[body_index + 1:] != intended[body_index + 1:]:
+                    raise CheckFailed(f"{label}: report operands changed: {args!r}", stderr)
+                body = args[body_index]
+                if not body.startswith(intended[body_index] + "\n"):
+                    raise CheckFailed(f"{label}: report body lost its literal message: {body!r}", stderr)
+                for field, value in (("Model", MODEL), ("Provider", PROVIDER)):
+                    if body.count(f"\n{field}: {value}\n") != 1:
+                        raise CheckFailed(f"{label}: missing or duplicate {field} provenance: {body!r}", stderr)
+                if len(re.findall(r"\nHarness: Omp [^\n]+\nSession: [^\n]+", body)) != 1:
+                    raise CheckFailed(f"{label}: missing harness/session provenance: {body!r}", stderr)
+                if record["code"] != (17 if label.endswith("-failure") else 0):
+                    raise CheckFailed(f"{label}: fake gh did not preserve its failure result", stderr)
             check_idle_owner(omp, root)
     finally:
         server.shutdown()
