@@ -39,7 +39,7 @@ limits; a shared skill does not imply identical capabilities on every harness.
 
 | Skill | When to use it |
 | ----- | -------------- |
-| [pr](pr/SKILL.md) | Open or update a PR; read its validation and CI policy before checks or enforcement changes, even without a PR. |
+| [pr](pr/SKILL.md) | Open or update a PR; read its policy for PR operations and CI-enforcement changes, not before each local check. |
 | [pr-title](pr-title/SKILL.md) | Write or revise a Conventional Commits PR title. |
 | [conventional-commits-type](conventional-commits-type/SKILL.md) | Choose the change type from its effect, including the resulting release significance. |
 | [pr-body](pr-body/SKILL.md) | Write a PR description with linked issues, a summary and relevant detail. |
