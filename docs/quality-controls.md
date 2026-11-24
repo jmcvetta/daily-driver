@@ -240,8 +240,8 @@ A test runs against fixtures, never against a live service.
 
 - `conftest.py` at the CA repository root fails a test that opens a network
   connection. Status: `gate` in CA.
-- Elsewhere the rule is the constitution's, and no tool enforces it. Status:
-  `none`.
+- Elsewhere the rule is in [`docs/testing-standards.md`](testing-standards.md),
+  and no tool enforces it. Status: `none`.
 
 
 ## Ecosystem controls
