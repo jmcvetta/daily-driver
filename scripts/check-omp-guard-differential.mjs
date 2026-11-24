@@ -27,10 +27,11 @@
  * Actual Omp usability and dirty-primary preservation are also exercised by
  * `check-omp-worktree-live.py`.
  *
- * Every shape below is a real construct, and six of them are the fail-open
+ * Every shape below is a real construct, and seven of them are the fail-open
  * holes four review rounds found one at a time: a here-document that never
- * ends, `cd` in a subshell, an arithmetic `<<`, a function body, a stale
- * function-body flag, and a command substitution nested in arithmetic.
+ * ends, `cd` in a subshell, an arithmetic `<<`, an arithmetic shift inside
+ * nested parentheses, a function body, a stale function-body flag, and a
+ * command substitution nested in arithmetic.
  *
  * Credential-free, network-free, deterministic. Run from the repository root:
  *
@@ -181,8 +182,11 @@ function shapes({ root, primary, task, detached }) {
 	add("relative git-dir after -C", task, `git --git-dir=.git -C ${primary} switch feature/y`);
 	add("last assignment wins", task, `GIT_DIR=/nonexistent/x.git GIT_DIR=${primary}/.git git switch feature/y`);
 
-	// The six fail-open holes four review rounds found, one at a time.
+	// The fail-open holes review rounds found, one at a time.
 	add("arithmetic left shift", primary, "echo $((1 << 2))\ngit switch feature/y");
+	add("arithmetic shift operand is not a here-document delimiter", primary, "echo $((1 << 4))\ngit switch feature/y\n4\n");
+	add("nested arithmetic shift", primary, "(( (1<<2) ))\ngit switch feature/y\n2\n");
+	add("nested arithmetic expansion shift", primary, "echo $(( (1<<2) ))\ngit reset --hard HEAD~1\n2\n");
 	add("substitution inside arithmetic", task, `echo $(( $(cd ${primary} && git switch feature/y) + 1 ))`);
 	add("cd in a subshell", primary, `(cd ${task}) ; git switch feature/y`);
 	add("function body cd", primary, `f() { cd ${task}; }\ngit switch feature/y`);
@@ -215,6 +219,20 @@ function shapes({ root, primary, task, detached }) {
 	add("timeout bash -c literal", task, `timeout 5 bash -c '${move(primary)}'`);
 	add("env bash -c literal", task, `env bash -c '${move(primary)}'`);
 	add("bash here-document", task, `bash <<'EOF'\n${move(primary)}\nEOF\n`, true);
+	add("shell without spaced input redirection", task, `sh<<<'${move(primary)}'`, true);
+	add("shell with leading redirection", task, `<<<'${move(primary)}' sh`, true);
+	add("wrapper chdir then literal shell", task, `env -C ${primary} sh -c 'git switch feature/y'`);
+	add("xargs optional replacement then literal shell", task, `printf unused | xargs --replace sh -c '${move(primary)}'`);
+	add("leading redirection before cd then shell", task, `>output cd ${primary}; sh -c 'git switch feature/y'`);
+
+	// These interpreter names are data. Admission alone is insufficient:
+	// execute each harmless command and require its real output as well.
+	add("printed interpreter argument in primary", primary, "printf '%s\\n' bash", false, "bash");
+	add("printed eval argument outside Git", root, "printf '%s\\n' eval", false, "eval");
+	add("interpreter as shell positional argument", primary, "sh -c 'printf \"%s\\n\" \"$0\"' bash", false, "bash");
+	add("wrapper interpreter option value", primary, "env -u bash printf '%s\\n' usable", false, "usable");
+	add("quoted redirection lookalike", primary, "printf '%s\\n' '<' sh", false, "sh");
+	add("opaque child wrapper leaves parent directory", task, "env -S 'printf child'; git status --porcelain; printf usable", false, "usable");
 
 	// Expansions standing where the guard reads a literal.
 	add("expanded cd target", task, `x=${primary}; cd $x; git switch feature/y`);

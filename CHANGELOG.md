@@ -4,6 +4,7 @@
 
 ### Changed
 
+* Inspect interpreter execution positions instead of ordinary arguments in the Omp worktree guard, while preserving nested-shell, input-redirection and primary-checkout protection ([#1084](https://github.com/jmcvetta/daily-driver/issues/1084)).
 * Scale naming-correction records to risk: bounded internal renames use the ordinary issue-to-PR path, while broad, public, stateful or coordinated audits retain durable evidence and compatibility review ([#1078](https://github.com/jmcvetta/daily-driver/issues/1078)).
 
 * Fetch Projected Releases commit history in batches of 25 using the shared release-please configuration ([#1071](https://github.com/jmcvetta/daily-driver/issues/1071)).

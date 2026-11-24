@@ -3608,9 +3608,8 @@ for (const [name, command, blocked] of [
 	);
 }
 
-// An interpreter is classified wherever it stands in a command, so a wrapper in
-// front of it does not hide it. Without these cases the guard reads only the
-// first word, and `exec bash -c '<move>'` passes because `exec` is not a shell.
+// Only interpreter execution positions are inspected. Wrapper operands still
+// expose nested shells, but printed words and option values remain data.
 for (const [name, command] of [
 	[
 		"the documented keep-current launch",
@@ -3618,7 +3617,7 @@ for (const [name, command] of [
 	],
 	["a wrapped script file with an argument", "timeout 5 bash scripts/provision-disposable.sh status"],
 	["a wrapped literal command string that moves nothing", "exec bash -c 'true'"],
-	// `grep -n sh file` reads `sh` as a script file `file`, so it must keep passing.
+	// A grep operand must not receive the interpreter's execution semantics.
 	["an interpreter name used as a grep operand", "grep -n sh file"],
 ]) {
 	checkGuard(
@@ -3650,6 +3649,85 @@ for (const [name, command] of [
 		worktrees.task,
 		UNREADABLE_COMMAND_BLOCK_REASON,
 	);
+}
+
+// The previous all-word scan refused harmless interpreter-valued data in the
+// primary and outside Git. Cover operands, script arguments, filenames,
+// quoted redirection lookalikes and wrapper option values in all three roots.
+for (const cwd of [worktrees.primary, worktrees.outside, worktrees.task]) {
+	for (const command of [
+		"printf '%s\\n' bash dash eval ksh sh zsh",
+		"grep -n sh",
+		"ls -- bash",
+		"bash script.sh sh eval",
+		"sh -c 'printf \"%s\\n\" bash' sh eval",
+		"printf '%s\\n' '<' bash",
+		"printf '%s\\n' \\< bash",
+		"printf '%s\\n' '>sh' bash",
+		"printf done > bash",
+		">bash printf done",
+		"printf done 2>&1",
+		"printf done &>bash",
+		"env -u bash printf done",
+		"exec -a sh printf done",
+		"timeout -s sh 5 printf done",
+		"sudo -u bash printf done",
+		"xargs -I sh printf done",
+		"command -v bash",
+		"command -pV sh",
+	]) {
+		checkGuard(`interpreter-valued data passes in ${cwd}: ${command}`, false, "bash", { command }, cwd);
+	}
+}
+
+// Removing data semantics must not hide real shell invocations. In particular,
+// redirections can precede the executable and need not have surrounding spaces.
+for (const cwd of [worktrees.primary, worktrees.outside, worktrees.task]) {
+	for (const command of [
+		"sh", "env sh", "sh -", "sh -s", "sh -s bash", "sh -- -", "sh -c \"$script\"",
+		"sh<script.sh", "<script.sh sh", "sh 0< script.sh",
+		"sh <<< 'true'", "sh <<'EOF'\ntrue\nEOF",
+		"sh >output", "sh 2>&1", "sh &>output",
+		"command sh -", "env -u bash sh -", "timeout 5 sh -",
+		"xargs -I{} sh -c '{}'",
+	]) {
+		checkGuard(`opaque shell placement in ${cwd}: ${command}`, cwd !== worktrees.task, "bash", { command }, cwd);
+	}
+}
+
+// Wrapper option parsing must find literal command strings, not confuse option
+// values with executables or allow an optional value to consume the program.
+for (const prefix of [
+	"command -p", "builtin", "exec -a bash", "env -u sh",
+	"timeout -k 2 5", "nohup", "nice -n 1", "setsid -f",
+	"sudo -u sh", "xargs -I{}", "xargs --replace", "xargs -i",
+	"env -u bash timeout 5",
+	`env -C "${worktrees.primary}"`,
+	`env --chdir="${worktrees.primary}"`,
+]) {
+	const command = `${prefix} sh -c 'git -C "${worktrees.primary}" switch master'`;
+	checkGuard(`wrapped shell still protects primary: ${prefix}`, true, "bash", { command }, worktrees.task);
+}
+
+// A wrapper's child directory controls its opaque-shell exemption, not its
+// parent's next command. In-process eval must still invalidate that directory.
+for (const [command, blocked] of [
+	[`env -C "${worktrees.primary}" sh -c "$script"`, true],
+	[`env -C "${worktrees.outside}" sh -c "$script"`, true],
+	[`env -C "${worktrees.task}" sh -c "$script"`, false],
+	// `sudo -C` is close-from: a value that names a directory is still data and
+	// must not move the child, so the task worktree keeps its exemption.
+	['sudo -C 3 sh -c "$script"', false],
+	['sudo -C .. sh -c "$script"', false],
+	[`sudo -D "${worktrees.primary}" sh -c "$script"`, true],
+	[`sudo --chdir="${worktrees.primary}" sh -c "$script"`, true],
+	[`sudo -D "${worktrees.task}" sh -c "$script"`, false],
+	['env -S "$script"; git switch feature/other', false],
+	['command "$program"; git switch feature/other', true],
+	['command eval "$script"; git switch feature/other', true],
+	[`>output cd "${worktrees.primary}"; sh -c 'git switch master'`, true],
+]) {
+	checkGuard(`wrapper directory scope: ${command}`, blocked, "bash", { command }, worktrees.task);
 }
 
 for (const [name, command] of [
@@ -4049,6 +4127,47 @@ checkGuard(
 	true,
 	"bash",
 	{ command: "echo $(( 1 << 4 ))\ngit switch master\n" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an arithmetic shift operand is not a here-document delimiter",
+	true,
+	"bash",
+	{ command: "echo $((1 << 2))\ngit switch master\n2\n" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a sparse arithmetic shift operand cannot swallow later commands",
+	true,
+	"bash",
+	{ command: "(( x = 1 << 2 ))\ngit switch master\n2\n" },
+	worktrees.primary,
+);
+
+// A `(` inside arithmetic groups the expression and does not open a command.
+// When it did, a nested `<<` became a here-document whose delimiter line
+// swallowed the command that followed the arithmetic.
+for (const [name, command] of [
+	["an evaluation", "(( (1<<2) ))\ngit switch master\n2\n"],
+	["an expansion", "echo $(( (1<<2) ))\ngit switch master\n2\n"],
+	["a reset behind an expansion", "echo $(( (1<<2) ))\ngit reset --hard\n2\n"],
+]) {
+	checkGuard(
+		`a nested arithmetic shift in ${name} does not unguard the commands after it`,
+		true,
+		"bash",
+		{ command },
+		worktrees.primary,
+	);
+}
+
+checkGuard(
+	"an expansion in nested arithmetic is not a command the guard must read",
+	false,
+	"bash",
+	{ command: "n=1; echo $(( ( $n + 1 ) * 2 ))" },
 	worktrees.primary,
 );
 
