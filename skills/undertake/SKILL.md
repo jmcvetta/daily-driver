@@ -192,6 +192,9 @@ follow-on issue specifications, or a supported no; do not open an empty PR
 when its agreed deliverable is answer-only. Bounded inconclusive research is
 complete only with the evidence, limitation, and resolution path required by
 `issue-body`; failed access or abandoned work is not completion.
+An existing parent edge or `story` marker does not establish readiness or
+override an open blocker. Report the precise defect without claiming or
+starting the unready child; leave its truthful relationship intact.
 
 For a specification-backed task, resolve its specific parent publication
 record before claim and read the document at that record's exact merged

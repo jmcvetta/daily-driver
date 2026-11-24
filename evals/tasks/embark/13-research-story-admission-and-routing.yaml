@@ -18,9 +18,11 @@ initial_prompt: >-
   #53, labelled `bug`, with a clear incorrect behavior, expected contract and
   bounded scope, and one `## Model class` section holding `routine`
   with a rationale; #54, labelled `proposal`. Child #55, labelled `task` and
-  fully ready, is blocked by the open #51. Assume a route for each ordinary
-  class is available on the invoking family and provider. Report what you do
-  for each child. This is a dry run: do not call any tracker or session tool.
+  fully ready, is blocked by the open #51. Child #56 is a linked task with a
+  valid class but an unsettled product decision. Assume a route for each
+  ordinary class is available on the invoking family and provider. Report what
+  you do for each child. This is a dry run: do not call any tracker or session
+  tool.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -61,8 +63,9 @@ success_criteria:
       its kind as a defect; (b) does the same for #53 as a bug on
       `routine`; (c) does not dispatch #52, reporting its missing model
       class as a planning defect and not defaulting it to `routine`;
-      (d) does not dispatch #54 (a proposal); and (e) does not dispatch #55
-      early, because #51 is an open blocker, while not calling #55 invalid.
-      Score 0.5 if exactly one of those five is wrong. Score 0.0 if it
-      rejects #51 or #53 merely for not being a `task`, or dispatches #52,
-      #54 or #55.
+      (d) does not dispatch #54 (a proposal); (e) does not dispatch #55
+      early, because #51 is an open blocker, while not calling #55 invalid;
+      and (f) reports #56's unresolved product decision and keeps its link,
+      without dispatching it or stopping the ready siblings. Score 0.5 if
+      exactly one is wrong. Score 0.0 if it rejects #51 or #53 merely for
+      their kind, or dispatches #52, #54, #55 or #56.
