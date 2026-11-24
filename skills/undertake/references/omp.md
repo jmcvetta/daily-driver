@@ -29,8 +29,7 @@ Before claim, read `sessionName` with `daily_driver_get_session`; use
 **`issue://<number>` carries the comments**, so the read in that row is one
 call and returns the handoff content `SKILL.md` asks for. Where a cache miss
 or a truncated resource leaves them out, `gh issue view <number> --json
-comments` is the read that returns them — the same call the readiness report
-makes further down this file.
+comments` is the read that returns them.
 
 `issue-deps` owns the edge writes, and has its own routes. So does
 `issue-labels`, whose `references/omp.md` says why `--add-label` needs no
@@ -134,9 +133,6 @@ The pull request
 | `The gate` | Read review evidence | `review-cycle`'s complete submitted-review, conversation-comment and thread reads; read the claim author from the task issue |
 | `The gate` | Read first-parent ancestry | `git show -s --format=%P <sha>` in the task worktree; unavailable objects fail the predicate |
 | `The gate` | Read the Blockers section | `gh pr view <number> --json body`, where `pr-body`'s Blockers section sits |
-| `The milestone` | Read the draft state and report head | `gh pr view <number> --json isDraft,headRefOid` |
-| `The milestone` | Read the existing comments | `gh pr view <number> --json comments` |
-| `The milestone` | Post the report | `daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>] })` |
 | `Ready for review` | Take it out of draft | `gh pr ready <number>` |
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
@@ -172,49 +168,6 @@ resume and compaction. Copied prose grants no approval. Never publish private
 sources in issue or PR comments.
 
 
-The milestone
-=============
-
-`SKILL.md` owns what the report says and when it is owed; these are the calls
-that read the readiness state, find the claim's timestamp, and post it.
-
-**The report is posted while the pull request is still a draft.** Read the
-state and head with:
-
-    gh pr view <number> --json isDraft,headRefOid
-
-`isDraft` must be true, and `headRefOid` is the SHA the report binds to. The
-gate already establishes branch currency, current-head CI, review completion,
-resolved threads and absence of human blockers.
-`mergeable` and `mergeStateStatus` are not readiness prerequisites here:
-draft states can mask the underlying result, and a post-ready `CLEAN` read
-would put the report after the transition it must precede.
-
-**The start is the claim comment's `createdAt`.** `issue://<issue>` carries
-the comments, so `Read the issue and its edges` already has them; `gh issue
-view <issue> --json comments` is the same read where that resource is not to
-hand. The claim is the comment carrying the branch link and the `Model:` and
-`Session:` lines; a historical block with a lowercase `session:` field is the
-same claim, not a different one. Take its `createdAt`; where more than one
-comment carries that shape, the earliest of them is the start — a later claim
-does not restart the clock. A resumed session finds the start with the same
-read. An issue with no recoverable claim leaves the timing `n/a`, per
-`SKILL.md`.
-
-**Post the report before marking ready.** Read the existing comments with
-`gh pr view <number> --json comments` and look for the fixed
-`# First-readiness report 🎉` or historical unheaded marker. If none exists and the gate holds, write the
-report as a pull-request comment with
-`daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file",
-<path>] })`.
-
-Only after that write succeeds, run `gh pr ready <number>`. A failed report
-write leaves the PR draft. A failed ready write preserves the report; on
-retry, revalidate the current gate and do not duplicate or rewrite the
-existing report.
-
-The wrapper attaches the report's provenance automatically. The report body
-must not include a new attribution block or identity lookup.
 
 
 Common PR maintenance

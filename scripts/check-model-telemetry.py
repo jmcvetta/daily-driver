@@ -33,6 +33,7 @@ from __future__ import annotations
 import importlib.util
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = Path(__file__).resolve().parent / "model-telemetry.py"
@@ -107,6 +108,15 @@ def main() -> int:
         ]
     )
     check("find_claim_comment: picks the comment carrying Branch: and a provenance pair", found is not None)
+
+    # Without a report, the claim still attributes the PR instead of losing its model.
+    with patch.object(mt, "get_pr_files", return_value=[]), \
+         patch.object(mt, "get_issue_comments", side_effect=[[], [{"body": new_claim}]]), \
+         patch.object(mt, "get_check_runs", return_value=[]):
+        record = mt.build_record("owner", "repo", "token", {"number": 25}, {"number": 24})
+    check("record without report retains claim model", record["model"] == parsed["model"])
+    check("record without report retains claim session", record["session"] == parsed["session"])
+    check("record without report has no invented elapsed time", record["elapsed_minutes"] is None)
 
     # -- readiness report ----------------------------------------------------
     good_report = read_fixture("model-telemetry-readiness-good.txt")
