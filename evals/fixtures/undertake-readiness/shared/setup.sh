@@ -33,7 +33,7 @@ git add README.md
 git commit -qm 'docs: readme'
 git switch -q issue-24-uploader-retry
 case "${scenario}" in
-  missing-review-record | covered-ancestor | rejected-only | ancestry-unavailable | ci-wrong-head)
+  missing-review-record | covered-ancestor | ready-write-fails-covered-ancestor | rejected-only | ancestry-unavailable | ci-wrong-head)
     git merge -q --no-ff master -m 'Merge master into issue-24-uploader-retry'
     ;;
   stale-review-record | verified-fix | superseded-defective | superseded-incomplete | wrong-scope | wrong-verification-author | self-verification)
