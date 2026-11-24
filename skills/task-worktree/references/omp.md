@@ -16,7 +16,6 @@ git config --get remote.pushDefault
 git symbolic-ref --short refs/remotes/<remote>/HEAD
 git worktree list --porcelain -z
 git fetch <remote> +refs/heads/<base-branch>:refs/remotes/<remote>/<base-branch>
-git -C <primary-worktree> status --short
 # Fresh task branch; select an unused, non-overlapping task path.
 git worktree add -b <task-branch> <task-path> <resolved-base>
 # Resume a recorded remote-only task branch.
@@ -69,5 +68,5 @@ extension code can reach other paths. These limitations do not require a
 universal-containment integration before ordinary feature work can proceed.
 
 Coordinate concurrent writers, including shared refs. Do not make ordinary
-commits to `master`. Compare the primary status with its setup baseline
-before delivery; report external changes without undoing them.
+commits to `master`. Preserve the primary worktree; keep pre-existing and
+unrelated user changes outside the task commit.

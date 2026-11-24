@@ -52,8 +52,10 @@ in advance is what makes most of these questions answerable without asking:
 > maintainable, sane way.
 
 Where that rule picks a winner, there is nothing to ask. It applies
-the constitution's coding discipline at the moment of choosing: correctness, simple
-code, and discussion before unavoidable workarounds. Those rules are not menu items.
+the constitution's coding discipline at the moment of choosing: correctness
+and simple code. Discuss a workaround first only when it materially changes
+scope, behavior, security, maintenance burden, or owner cost; disclose
+significant limitations.
 
 
 The tell
@@ -90,8 +92,7 @@ genuinely does not settle it:
   interface others depend on. Then ask, with the trade-off named and a
   recommendation attached; a bare menu is still not the way to ask.
 - **Scope.** Doing materially more, less, or other than what was asked.
-- **A confirmation another rule requires.** `provenance` discusses an
-  unavoidable workaround before writing it, and `review` — where it is live
+- **A confirmation another rule requires.** `review` — where it is live
   rather than in `attic/skills/` — offers its walkthrough before applying
   anything. This skill overrides none of them.
 
