@@ -50,6 +50,8 @@ import {
 } from "./github-write.mjs";
 import { installNotificationPolicy } from "./notification-policy.mjs";
 import { installUndertakingRouting } from "./undertaking-routing.mjs";
+import installPrSupervisionInbox from "./pr-supervision-inbox.mjs";
+import { installPrSupervisorTools } from "./pr-supervisor-tools.mjs";
 import { installWatchContinuations } from "./watch-continuation.mjs";
 
 /**
@@ -2633,6 +2635,136 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 		return true;
 	}
 
+	const legacyRetries = new Map();
+	let legacyLifecycle = 0;
+
+	function cancelLegacyRetry(identity, token) {
+		const entry = legacyRetries.get(identity);
+		if (!entry || token && entry.token !== token) return;
+		entry.ctx.clearTimer(entry.handle);
+		legacyRetries.delete(identity);
+	}
+
+	function dispatchLegacyWake(ctx, delivery) {
+		if (delivery.authorized || delivery.pending) {
+			const identity = delivery.identity;
+			const existing = legacyRetries.get(identity);
+			if (!existing || existing.token !== delivery.token) {
+				cancelLegacyRetry(identity);
+				const lifecycle = legacyLifecycle;
+				const session = ctx.sessionManager.getSessionId();
+				const handle = ctx.setTimeout(async () => {
+					if (legacyRetries.get(identity)?.handle !== handle) return;
+					legacyRetries.delete(identity);
+					if (lifecycle !== legacyLifecycle || ctx.sessionManager.getSessionId() !== session) return;
+					const retry = await prSupervisor.legacyWake(identity,"retry",delivery.token,delivery.epoch);
+					if (lifecycle !== legacyLifecycle || ctx.sessionManager.getSessionId() !== session) return;
+					dispatchLegacyWake(ctx,retry);
+				}, Math.max(1,Math.ceil(delivery.deadline*1000-Date.now())));
+				legacyRetries.set(identity,{ctx,handle,token:delivery.token});
+			}
+		}
+		if (delivery.authorized) {
+			pi.sendUserMessage(`DAILY_DRIVER_PR_LEGACY ${delivery.identity} ${delivery.epoch} ${delivery.token}\n${delivery.context.message}`,
+				{deliverAs:"followUp",attribution:"agent"});
+		} else if (delivery.error) {
+			console.error("daily-driver: legacy PR wake retry limit reached; owner recovery required");
+		}
+	}
+
+	function scheduleReminder(ctx, params) {
+		const triggerId = newTriggerId();
+		const dueAt = Date.now() + params.delaySeconds * 1000;
+		const lifecycle = legacyLifecycle;
+		const handle = ctx.setTimeout(async () => {
+			TRIGGERS.delete(triggerId);
+			if (params.identity && prSupervisor) {
+				const session = ctx.sessionManager.getSessionId();
+				const admitted = await prSupervisor.legacyWake(params.identity,"admit",undefined,undefined,
+					{message:params.message,delaySeconds:params.delaySeconds});
+				if (lifecycle === legacyLifecycle && ctx.sessionManager.getSessionId() === session) dispatchLegacyWake(ctx,admitted);
+				return;
+			}
+			pi.sendMessage({customType: REMINDER_CUSTOM_TYPE, content:params.message,
+				display:true, attribution:"user"}, {deliverAs:"followUp",triggerTurn:true});
+		}, params.delaySeconds * 1000);
+		TRIGGERS.set(triggerId, {ctx,handle,params,dueAt,message:params.message,delaySeconds:params.delaySeconds,identity:params.identity});
+		return triggerId;
+	}
+	const prSupervisor = installPrSupervisorTools(pi, {
+		takeWatches: (ctx,identity) => watchContinuations.snapshotPr(ctx,identity),
+		stopWatches: (ctx,identity) => {
+			cancelLegacyRetry(identity);
+			return watchContinuations.stopPr(ctx,identity);
+		},
+		restoreWatches: (ctx,watches) => watchContinuations.restorePr(ctx,watches),
+		takeTimers(ids, ctx, {cancel = true, identity} = {}) {
+			const entries = ids.map(id => {
+				const entry = TRIGGERS.get(id);
+				if (!entry || entry.ctx.sessionManager.getSessionId() !== ctx.sessionManager.getSessionId()) {
+					throw new Error("A legacy reminder is unknown or queued; drain it before transfer");
+				}
+				if (identity) entry.params.identity = identity;
+				return {id,message:entry.message,delaySeconds:entry.delaySeconds,dueAt:entry.dueAt};
+			});
+			if (cancel) for (const entry of entries) cancelTrigger(entry.id);
+			return entries;
+		},
+		restoreTimers(timers, ctx) {
+			return timers.map(params => {
+				const existing = [...TRIGGERS].find(([,entry]) =>
+					entry.ctx.sessionManager.getSessionId() === ctx.sessionManager.getSessionId() &&
+					entry.params.identity === params.identity && entry.params.message === params.message &&
+					entry.params.dueAt === params.dueAt);
+				return existing?.[0] ?? scheduleReminder(ctx, {...params,
+					delaySeconds:params.dueAt ? Math.max(1,Math.ceil((params.dueAt-Date.now())/1000)) : params.delaySeconds});
+			});
+		},
+	});
+	if (prSupervisor) installPrSupervisionInbox(pi, prSupervisor);
+	let legacyWakeToken;
+	function clearLegacyRetries() {
+		legacyLifecycle++;
+		for (const identity of legacyRetries.keys()) cancelLegacyRetry(identity);
+		legacyWakeToken = undefined;
+	}
+	for (const event of ["session_start","session_switch","session_branch","session_tree"]) {
+		pi.on(event, (_event,ctx) => {
+			clearLegacyRetries();
+			if (!prSupervisor) return;
+			const lifecycle = legacyLifecycle;
+			const session = ctx.sessionManager.getSessionId();
+			return prSupervisor.recoverLegacy(session).then(deliveries => {
+				if (lifecycle !== legacyLifecycle || ctx.sessionManager.getSessionId() !== session) return;
+				for (const delivery of deliveries) dispatchLegacyWake(ctx,{...delivery,pending:true,authorized:false});
+			});
+		});
+	}
+	pi.on("session_shutdown",clearLegacyRetries);
+	pi.on("before_agent_start", (event, ctx) => {
+		const match = event.prompt?.match(/DAILY_DRIVER_PR_LEGACY (\S+) (\d+) (\S+)/);
+		legacyWakeToken = match ? {identity:match[1],epoch:Number(match[2]),token:match[3]} : undefined;
+		if (!legacyWakeToken || !prSupervisor) return;
+		const {identity,token,epoch} = legacyWakeToken;
+		return prSupervisor.legacyWake(identity,"start",token,epoch).then(result => {
+			if (result.authorized) cancelLegacyRetry(identity,token);
+			if (!result.authorized) return ctx.abort();
+		});
+	});
+	pi.on("tool_call", () => {
+		if (!legacyWakeToken || !prSupervisor) return;
+		const {identity,token,epoch} = legacyWakeToken;
+		return prSupervisor.legacyWake(identity,"check",token,epoch).then(result => {
+			if (!result.authorized) return {block:true,reason:"Legacy PR wake was stopped or transferred; do no work"};
+		});
+	});
+	pi.on("agent_end", event => {
+		if (event.willContinue || !legacyWakeToken || !prSupervisor) return;
+		const {identity,token,epoch} = legacyWakeToken;
+		legacyWakeToken = undefined;
+		return prSupervisor.legacyWake(identity,"finish",token,epoch);
+	});
+
 	// Extension state is read from the active branch for each event. This keeps
 	// a resumed session recoverable without sharing a process-global target.
 	const pendingIssueReads = new Map();
@@ -2833,9 +2965,15 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 					model: params.reviewerModel, provider: params.reviewerProvider, session: params.reviewerSession,
 				};
 				const result = await runGitHubWrite(params.args, params.stdin, ctx, signal, reviewer);
+				let supervisionError;
+				if (result.code === 0 && prSupervisor) {
+					try { await prSupervisor.afterWrite(params.args, result.stdout, ctx, signal); }
+					catch { supervisionError = "PR write succeeded, but supervision registration failed; use daily_driver_pr_supervisor_register before claiming supervision."; }
+				}
 				const content = [];
 				if (result.stdout) content.push({ type: "text", text: result.stdout });
 				if (result.stderr) content.push({ type: "text", text: result.stderr });
+				if (supervisionError) content.push({type:"text",text:supervisionError});
 				return {
 					content,
 					details: {
@@ -2844,7 +2982,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 						stdout: result.stdout,
 						stderr: result.stderr,
 					},
-					...(result.code === 0 ? {} : { isError: true }),
+					...(result.code === 0 && !supervisionError ? {} : { isError: true }),
 				};
 			} catch (error) {
 				return {
@@ -2985,27 +3123,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 			message: z.string().describe("The reminder text to deliver"),
 		}),
 		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => {
-			const triggerId = newTriggerId();
-			const handle = ctx.setTimeout(
-				() => {
-					// Firing removes the trigger first so a cancel racing the
-					// expiry is a clean false, never a double-send.
-					TRIGGERS.delete(triggerId);
-					pi.sendMessage(
-						{
-							customType: REMINDER_CUSTOM_TYPE,
-							content: params.message,
-							display: true,
-							// User-attributed, the way the operator would have
-							// typed it, rather than a tool the model ran.
-							attribution: "user",
-						},
-						{ deliverAs: "followUp", triggerTurn: true },
-					);
-				},
-				params.delaySeconds * 1000,
-			);
-			TRIGGERS.set(triggerId, { ctx, handle });
+			const triggerId = scheduleReminder(ctx, params);
 			return {
 				content: [
 					{
