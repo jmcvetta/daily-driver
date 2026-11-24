@@ -55,14 +55,15 @@ read manuals before source or web. Reuse the catalog.
 glob into a directory of executables. Never skip, disable, silence or delete a
 test to reach green. Report its failure and plan its repair.
 
-Prefer obvious code and existing FOSS libraries; do not reinvent them. Discuss
-unavoidable workarounds before writing them. Correctness outranks speed.
-Use professional specification vocabulary for every name, including files,
-symbols, commits and branches. No slang, casual shorthand or cleverness.
-New exported symbols in any language need concise GoDoc-style behavioral
-comments, not obvious restatements. Do not sweep old symbols. Use package
-managers to add, upgrade or pin dependencies; never hand-edit manifests or
-lockfiles.
+Prefer obvious code and existing FOSS libraries; do not reinvent them.
+Discuss a workaround first only when it materially changes scope, behavior,
+security, maintenance burden, or owner cost. Disclose significant limitations.
+Correctness outranks speed. Use professional specification vocabulary for every
+name, including files, symbols, commits and branches. No slang, casual shorthand
+or cleverness. New exported symbols in any language need concise GoDoc-style
+behavioral comments, not obvious restatements. Do not sweep old symbols. Use
+package managers to add, upgrade or pin dependencies; never hand-edit manifests
+or lockfiles.
 
 
 ## When blocked
@@ -83,12 +84,12 @@ normal rules.
 ## Commits
 
 Make frequent, focused commits: one logical task per commit, spanning the
-files it needs. Commit as you work without asking permission, plan commit
-boundaries and leave no uncommitted changes when a task is finished. Commit
-messages are not Conventional Commits; PR titles follow `pr-title`. Stage named
-files, never `git add -A` or `git add .`. Keep logs, archives, scratch files and
-other disposable artifacts out of Git; check that every staged file has a
-lasting purpose. Follow `provenance` for commit attribution.
+files it needs. Commit all of your own completed task changes; preserve
+pre-existing and unrelated user changes without staging or committing them.
+Commit messages are not Conventional Commits; PR titles follow `pr-title`.
+Stage named files, never `git add -A` or `git add .`. Keep logs, archives,
+scratch files and other disposable artifacts out of Git; check that every
+staged file has a lasting purpose. Follow `provenance` for commit attribution.
 
 ## Validation and CI
 
@@ -103,9 +104,9 @@ is justified; no failure reproduction or experiment is required. Report local
 checks that failed or remain unrun honestly. Safety, authorization, test and
 CI requirements remain in force.
 
-New CI checks recur in execution, review, triage and maintenance. Read `pr`
-before validation or any CI-enforcement change: it gives concise cost and
-value guidance, including when material recurring spending needs owner
+Read `pr` for PR operations and CI-enforcement changes, not before each local
+test, linter or formatter. Its policy gives concise cost and value guidance
+for new CI checks, including when material recurring spending needs owner
 approval. A policy-only read starts no PR and no issue work.
 
 Never bypass established validation to save effort; disclose coverage lost when

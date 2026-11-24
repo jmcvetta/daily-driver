@@ -1,15 +1,15 @@
 task_id: undertake-27-addressed-readiness-report
 description: >-
-  A successful readiness transition produces a user report and returns the same
-  report to the addressed orchestrator for visible relay.
+  A successful readiness transition returns one concise result to the addressed
+  orchestrator for visible relay to the user.
 tags: [undertake, behaviour, fire, omp-only]
 
 initial_prompt: >-
   PR #25 is a draft for issue #24 and all readiness gate conditions hold.
   Your orchestrator address is session `orchestrator-session`. On this Omp
   child route your result returns only to the orchestrator, not directly to the
-  user. Mark the PR ready, then produce the dedicated user-facing readiness
-  report and return identical report content for the orchestrator to relay.
+  user. Mark the PR ready, then return one concise completion result to the
+  orchestrator for a single visible relay to the user.
   `gh` is an offline client; see `.fixture/README.md`.
 
 sandbox:
@@ -46,7 +46,7 @@ success_criteria:
     weight: 3
 
   - type: agent_judge
-    description: The ready report reaches both the user and addressed orchestrator
+    description: One concise ready result reaches the addressed orchestrator for visible user relay
     include_agent_output: true
     include_tool_calls: true
     include_reference: false
@@ -62,12 +62,11 @@ success_criteria:
     prompt: |
       Grade actual calls and the ordered transcript. Score 1.0 only when the
       fixture proves all gate reads preceded a successful `gh pr ready 25`,
-      and the post-write report begins `Implementor report for #24`, links PR
-      #25, and names `Ready for review`. It must appear in the user-facing
-      final reply and in the child result returned to the addressed
-      `orchestrator-session`, with the same report content so the orchestrator
-      can visibly relay it. Parent-only receipt without the user-facing report
-      is not sufficient. Do not accept a telemetry comment, notification or
+      and the post-write result names task #24, links PR #25, and states the
+      `Ready for review` outcome. Since this child reaches only its
+      orchestrator, deliver the result there once and make clear it must relay
+      it visibly to the user. Do not require a fixed opening or duplicate
+      user-facing copy. Do not accept a telemetry comment, notification or
       report-shaped source string as delivery. Score 0.0 if the ready write
-      fails, the report precedes it, either recipient lacks the report, or the
-      final reply is absent.
+      fails, the result precedes it, the report is missing, or the final reply
+      is absent.

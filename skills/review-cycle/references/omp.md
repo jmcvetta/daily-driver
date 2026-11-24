@@ -93,8 +93,10 @@ The wait
 For a PR transferred to the [opt-in active supervisor](../../pr/references/omp.md#opt-in-active-supervision),
 that actor owns the single durable observation/delivery route. Do not start the
 legacy CI service or owner fallback below alongside it. Handle a supervisor
-delivery, acknowledge only through its fresh-read work tool, and retain the
-same three-source current-head verdict and independent-review requirements.
+delivery, acknowledge only through its fresh-read work tool, use that result's
+`observed` evidence as the work input without a prerequisite GitHub inventory,
+and retain the same three-source current-head verdict and independent-review
+requirements.
 These transport operations do not establish readiness.
 
 **A bounded service observes CI; a live owner handles its result.** Use named
@@ -263,9 +265,10 @@ owner retains its continuation. If registration or checkpoint fails, diagnose
 and keep supervising through service completion while possible; report the
 exact continuation gap.
 
-On an owner turn, inspect the maintenance service and take `pr`'s currency
-checkpoint before assessing readiness. Attempt base updates even when
-current-head CI is in flight; assess CI on the resulting head after an update.
+On an owner turn, inspect the maintenance service and take `pr`'s pinned
+base/head currency checkpoint before assessing readiness. Only proven stale
+ancestry admits an update; unknown evidence and merge-state labels do not.
+Do not wait for current-head CI; assess the resulting head after an update.
 Resolve mechanical conflicts and service failures under the existing
 undertaking rules; ask only for a genuine semantic decision or missing external
 prerequisite. Merge, close, completion, a genuine human-only stopping point and

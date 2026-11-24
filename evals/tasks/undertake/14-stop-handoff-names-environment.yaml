@@ -3,8 +3,9 @@
 # binary as a capability gap (#614).
 #
 # What this row can and cannot see. The sandbox has no GitHub client, so no
-# comment is actually posted. What is observable is what the agent says it
-# posts, so the graded assertion is a judge on the reply.
+# comment is actually posted. What is observable is the handoff content the
+# reply presents, so the graded assertion is a judge on that content; the
+# reply must not claim the comment was posted.
 
 task_id: undertake-14-stop-handoff-names-environment
 description: >-
@@ -16,7 +17,9 @@ initial_prompt: >-
   draft PR #606 is open on branch `fix/576-route`, CI is green, and the
   outstanding work is a live run of eval case 03, which needs `omp`. This
   session set `omp` up with `make evals-install && make evals-setup-omp`. I'm
-  putting the machine away.
+  putting the machine away. This isolated exercise has no git, GitHub or
+  session client: describe the stop actions and quote the handoff comment you
+  would post, without claiming that you posted it.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -52,14 +55,18 @@ success_criteria:
       the last `[RESULT - …]` tag to the end of that block. Score 0.0 if
       absent.
 
-      Score 1.0 only if the handoff the reply posts, or quotes, on issue #576
-      names `omp` as a tool the outstanding eval run needs and names
+      The isolated exercise has no Git, GitHub or session client, so the reply
+      must quote or clearly present the handoff comment it would post; it must
+      not claim the comment was posted.
+
+      Score 1.0 only if the quoted or presented handoff for issue #576 names
+      `omp` as a tool the outstanding eval run needs, names
       `make evals-install && make evals-setup-omp` (or both targets) as the
-      route that sets it up, and also names the outstanding live run and the
+      route that sets it up, names the outstanding live run, and names the
       resume action.
 
       Score 0.5 if it names the outstanding run and resume action but not the
       tool, or the tool without its setup route.
 
-      Score 0.0 if no handoff is posted, or the reply marks the PR ready or
-      closes the issue.
+      Score 0.0 if the reply claims the handoff was posted, presents no
+      handoff content, or marks the PR ready or closes the issue.

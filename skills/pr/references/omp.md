@@ -32,11 +32,14 @@ is not active supervision; inspect its durable diagnostic and recover that recor
 
 Once authority is `active`, **do not run the legacy currency service, structured
 PR fallback, owner reminder or independent CI watcher for this PR**. The
-supervisor owns observation and one coalesced actionable delivery. Its work
-tool takes a fresh authoritative read before acknowledging a generation.
-The agent still owns substantive fixes, review, conflict decisions and the
-complete current-head readiness gate. An event, receipt or acknowledgment is
-not green CI or completion.
+supervisor owns observation and one coalesced actionable delivery. Its
+acknowledgment tool makes the fresh authoritative read and returns the
+normalized `observed` evidence. Use that result as the work input; do not
+inventory GitHub before the call or act first and acknowledge afterward. A
+rejected acknowledgment grants no authority, and an accepted read is not
+completion, green CI or readiness. The agent still owns substantive fixes,
+review, conflict decisions and the complete current-head readiness gate. An
+event, receipt or acknowledgment is not green CI or completion.
 
 Use the control tool's `stop` before a stop-time push and `hold`/`release` for
 explicit holds. Stop fences queued deliveries and drains remote mutations;
@@ -55,40 +58,35 @@ remains authoritative. Do not install their wakes alongside an active supervisor
   `gh pr view` (or `gh pr list --head <branch>`) finds it.
 - **Opening a new pull request.** `daily_driver_gh_write({ args: ["pr", "create", "--draft", "--title", <title>, "--body-file", <path>] })`, for the initial
   state this skill requires.
-- **Updating an existing pull request as a whole** — title and body
-  together. `daily_driver_gh_write`, called once both are decided (`pr-title`,
-  `pr-body`).
+- **Updating existing metadata.** Inspect the title and body; make no
+  metadata write when both are accurate. If only the title is stale, use
+  `gh pr edit <number> --title "…"`. If only the body is stale, use
+  `daily_driver_gh_write({ args: ["pr", "edit", <number>, "--body-file",
+  <path>] })`. If both are stale, one body-bearing wrapper call may carry
+  both `--title` and `--body-file`. Keep any necessary PR label update separate.
 
 
 Base currency checkpoint
 ========================
 
-After `gh pr create` or `gh pr edit`, read the resulting pull request:
+Resolve the exact PR URL in its repository and invoke the loaded plugin's
+`scripts/pr-supervisor.py currency --url <exact-PR-URL>`. It reads the actual
+base ref and SHA and remote head SHA, compares pinned commits, and brackets
+the comparison with PR reads. Terminal and conflict states stop updates;
+unavailable or inconsistent evidence is unknown, not permission to write.
+Draft, blocked and unknown merge-state labels are not ancestry evidence.
 
-```sh
-gh pr view <number> --json state,baseRefName,headRefName,mergeStateStatus,headRefOid
-```
+For a proven stale nonconflicting open PR, revalidate authority and repeat the
+currency observation immediately before a server-side update. Only the same
+head, base ref and base SHA with a still-stale comparison permits the
+expected-head update-branch request. Do not wait for CI, rebase, force-push,
+or locally merge. A 202 is accepted, not completed: retain its head identity
+and observe without replay until settled. GitHub has no expected-base
+precondition, so compare again after a later base advance.
 
-The PR's `baseRefName` is authoritative; do not assume `master`. Merged or
-closed PRs need no update. `DIRTY` is a conflict stop. `CLEAN` and `UNSTABLE`
-need no currency write. `BEHIND`, `DRAFT`, `BLOCKED`, and `UNKNOWN` require a
-currency attempt even when current-head CI is in flight. `DRAFT`, `BLOCKED`,
-and `UNKNOWN` can mask branch currency, so the update call itself tests and
-settles them.
-
-Run `gh pr update-branch <number>`. Do not replace this with a local merge,
-rebase, force-push, or prose about a future check. GitHub authors the
-update-branch merge commit and its API does not accept a custom message. Do not
-claim an agent-supplied trailer on that server-authored commit; keep this
-server-side route.
-
-
-After the call, read `state,baseRefName,headRefName,mergeStateStatus,headRefOid`
-again. If `headRefOid` changed, read the check-run inventory, commit statuses,
-and matching workflow runs for that new SHA before assessing the PR further.
-Old-head checks and readiness evidence do not apply to it. Report a failed
-update or conflict as unfinished work. An already-up-to-date response is a
-valid no-op; it does not mark the PR ready or complete.
+After a head change, read check runs, commit statuses and matching workflow
+runs for the resulting SHA before assessing the PR. Old-head CI is not current
+evidence. Report a failed update or conflict as unfinished work.
 
 For an open PR without a conflict, after the checkpoint start or reuse the
 detached watch below, including when CI is in flight. Merged, closed, or
@@ -114,8 +112,8 @@ write `detached` to `proc://<name>/mode` and read it back to confirm
 `detached=true`. On mode failure or missing confirmation, kill the service
 and report the failure. Never claim durability without confirmation.
 
-The script ticks every two minutes and uses `gh pr update-branch` for behind or
-draft-masked currency, including while CI is in flight. It never judges CI,
+The script ticks every two minutes and requests an expected-head update only
+for proven stale ancestry, including while CI is in flight. It never judges CI,
 reviews, or readiness. Exit 0 means merged or closed; exit 3 means a conflict
 needs the owner. After resolving and pushing it, restart the watch. Thirty
 consecutive failed reads exit 2 and require investigating access before a

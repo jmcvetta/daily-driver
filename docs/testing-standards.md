@@ -10,8 +10,13 @@ Read this document when writing, changing, or reviewing tests.
 - Tests run offline against fixtures, not live third parties. Manual checks are
   not tests.
 - Cover silent errors and plausible consumer-visible regressions.
-- Test documentation must name the wrong behavior that would otherwise pass;
-  delete tests that cannot.
+- A test communicates the wrong behavior it catches through its name,
+  arrangement, assertions, or a comment where the structure alone is unclear.
+  No prescribed statement is required, and a behaviorally clear test without
+  dedicated prose remains valid.
+- Delete tests that provide no useful consumer-visible protection, are
+  tautological, or otherwise fail this standard. Missing explanatory prose
+  alone is never grounds for deletion.
 - OpenTofu-like declarations use offline `validate`. Test production
   infrastructure with infrastructure tools, not ad hoc scripts.
 
