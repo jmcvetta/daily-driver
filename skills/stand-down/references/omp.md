@@ -35,9 +35,10 @@ Record failed cancellation, staging, commit, or push as residuals under
 `SKILL.md`; the handoff names the worktree and branch.
 
 Read `git -C <worktree> rev-parse HEAD` for the local tip and
-`git ls-remote origin <branch>` for the observed remote tip. Record failures
-as unknown, and preserve any local-only commit and worktree path in the task
-handoff. A failed or unconfirmed cancellation remains a fleet residual.
+`git ls-remote origin <branch>` for the observed remote tip. Include local-only
+commits and their worktree paths when they affect recovery. Record a failed
+remote read only when that uncertainty affects safe recovery; never infer the
+remote tip locally. A failed or unconfirmed cancellation remains a residual.
 
 
 The watches

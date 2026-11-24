@@ -134,9 +134,9 @@ The pull request
 | `The gate` | Read review evidence | Read the current `gh pr diff <number>`, submitted reviews, and conversation comments through `review-cycle`'s paginated routes; select current-scope independent evidence and compare it with the diff |
 | `The gate` | Read the Blockers section | `gh pr view <number> --json body`, where `pr-body`'s Blockers section sits |
 | `Ready for review` | Take it out of draft | Only after all current gate evidence above succeeds: `gh pr ready <number>` |
-| `Ready for review` | Deliver the user-facing report | A dedicated final conversation message after observing `gh pr ready <number>` succeed; include the fixed report opening and task/PR/moment fields |
-| `Ready for review` | Copy to an addressed orchestrator | Omp has no remote session-messaging client: include the report in the child result returned to its orchestrator. The orchestrator must visibly relay it in the user-facing conversation; parent-only receipt does not satisfy user delivery |
-| `Ready for review` | Report delivery failure | State the failed delivery once in the available conversation; leave the PR ready and continue |
+| `Ready for review` | Report the result | After the successful ready write, give one concise completion report through the available user-facing route. Name the task, linked PR, `Ready for review` outcome, and material limitations. A normal final response is sufficient; no fixed opening or telemetry write is required |
+| `Ready for review` | Relay a child result | A child result reaches only its orchestrator; the orchestrator must visibly relay the report once to the user |
+| `Ready for review` | Report delivery failure | State the failure once through the available route; leave the PR ready and do not retry |
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
 
