@@ -142,3 +142,4 @@ unrelated user changes stay outside the task commit.
 
 The task worktree persists through the pull request and review cycle. Cleanup
 is not part of this skill. Later manual cleanup may use Git or the user's
+chosen tool; never force removal of existing work.
