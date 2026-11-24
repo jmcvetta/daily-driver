@@ -35,6 +35,10 @@ workflow runs. If any source shows a current-head run in flight, leave the
 branch alone and state that condition; do not call an old green result current.
 Otherwise run `gh pr update-branch <number>`. Do not replace this with a local
 merge, rebase, force-push, or prose about a future check.
+GitHub authors the update-branch merge commit and its API does not accept a
+custom message. Do not claim an agent-supplied trailer on that server-authored
+commit; keep this server-side route.
+
 
 After the call, read `state,baseRefName,headRefName,mergeStateStatus,headRefOid`
 again. If `headRefOid` changed, read the check-run inventory, commit statuses,
@@ -132,10 +136,15 @@ path explicitly with `git add -- <path>` — never use `git add .`, `git add -A`
 or `git commit -a`. Before committing, confirm no unmerged paths remain and
 the index contains only the conflict resolutions. If unrelated staged work
 appeared, preserve it and coordinate rather than committing or resetting it.
-Once all conflict paths are resolved and staged, use plain `git commit` to
-conclude the in-progress merge. This is the narrow exception to Omp's
-selective-commit helper, which refuses commits during an in-progress merge.
-Do not skip hooks or signing. Push the task branch normally, restart the
+Once all conflict paths are resolved and staged, prepare the intended merge
+message with `daily_driver_commit_message` as described by
+[`provenance`](../../provenance/references/omp.md#commits). Pass the
+substantive merge body as `body`, read `result.details.body`, and write a
+private message file containing the merge subject, a blank line, and that
+prepared body. Run `git commit --file <message-file>` to conclude the
+in-progress merge, then remove the temporary file. This is the narrow exception
+to Omp's selective-commit helper, which refuses commits during an in-progress
+merge. Do not skip hooks or signing. Push the task branch normally, restart the
 maintenance watch, and send the changed content through `review-cycle`.
 A resolved merge is a content change: it still requires current-head CI and
 review.
