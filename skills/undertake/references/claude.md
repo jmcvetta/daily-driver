@@ -224,9 +224,9 @@ The cadence
 owns the common watch; this undertaking invokes it and does not start another.
 
 Undertaking-specific continuation stays here. Use `review-cycle` for review
-and fix-delta work, then apply `Ready for review`. A capped wait, review wall,
-or human action reports unfinished work and its resume path; it never becomes
-completion.
+and fix-delta work, then apply `Ready for review`. A non-converging correction,
+evidence gap, or human action reports unfinished work and its resume path; it
+never becomes completion.
 
 `review-cycle` borrows the cadence slot for its CI wait and hands it back as
 `pr`'s reference directs. It does not own the standing watch.

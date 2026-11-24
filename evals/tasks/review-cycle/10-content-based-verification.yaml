@@ -1,14 +1,14 @@
 task_id: review-cycle-10-content-based-verification
 description: >-
   Verification follows content effect: formatting and unchanged base merges do
-  not consume a pass, while mixed or rewritten behavioral content does.
+  not need a pass, while mixed or rewritten behavioral content does.
 tags: [review-cycle, behaviour, fire]
 initial_prompt: >-
-  PR #25 already used its first fix-verification pass. A clean base merge and
-  formatting-only commit followed. Then history was rewritten into one commit
-  containing formatting and a Markdown workflow rule change. Explain whether a
-  pass is consumed, whether the full-review scope changes, and how the record
-  prevents a resumed session from bypassing the two-pass limit.
+  PR #25 had a fix-verification pass. A clean base merge and formatting-only
+  commit followed. Then history was rewritten into one commit containing
+  formatting and a Markdown workflow rule change. Explain which changes need
+  independent verification, whether the full-review scope changes, and what
+  evidence a resumed session needs to recognize non-convergence.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Task]
@@ -27,7 +27,7 @@ success_criteria:
     skill_name: review-cycle
 
   - type: agent_judge
-    description: The reply preserves content-based coverage and the pass cap
+    description: The reply preserves content-based coverage and convergence evidence
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -46,17 +46,17 @@ success_criteria:
       `ANCHOR: result`, or `ANCHOR: none` and score 0.0 when absent.
 
       The rule: clean base merges with unchanged PR content and pure formatting
-      consume no pass. A mixed commit with a Markdown workflow behavior change
+      need no pass. A mixed commit with a Markdown workflow behavior change
       requires independent delta verification even after a history rewrite.
-      A missing ancestor is not no change: compare content. The rewrite and a
-      resume do not reset the two-pass allowance. The durable record must carry
-      reviewed and verified SHAs, pass count, findings/dispositions, outcome,
-      defects, cap state, and unavailable usage. A material scope change earns
-      a new full review, not a disguised fix-budget reset; a rejected finding
-      remains closed absent new evidence.
+      A missing ancestor is not no change: compare content. Preserve enough
+      durable prior results and dispositions to recognize repeated unresolved
+      defects or a failed correction approach on resume, without a fixed
+      template or pass counter. A material scope change earns a new full review;
+      a rejected finding remains closed absent new evidence. A rewrite or resume
+      alone is not evidence of non-convergence.
 
-      Score 1.0 only if the REPLY states every effect and bound. Score 0.5 if it
-      gets content-based verification and the no-reset rule but misses record,
-      scope, or rejected-finding handling. Score 0.0 if it counts formatting or
-      an unchanged merge, treats rewritten history as no change, resets the cap,
-      or calls the mixed change formatting-only.
+      Score 1.0 only if the REPLY states each effect and the evidence rule.
+      Score 0.5 if it gets content-based verification but misses material
+      evidence, scope, or rejected-finding handling. Score 0.0 if it treats
+      rewritten history as no change, calls the mixed change formatting-only,
+      or imposes a fixed pass cap.
