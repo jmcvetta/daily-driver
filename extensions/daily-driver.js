@@ -50,6 +50,8 @@ import {
 } from "./github-write.mjs";
 import { installNotificationPolicy } from "./notification-policy.mjs";
 import { installUndertakingRouting } from "./undertaking-routing.mjs";
+import installPrSupervisionInbox from "./pr-supervision-inbox.mjs";
+import { installPrSupervisorTools } from "./pr-supervisor-tools.mjs";
 
 /**
  * What the model is told when it calls Omp's `ask` tool. Mirrors the wording
@@ -2628,6 +2630,33 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 		return true;
 	}
 
+	function scheduleReminder(ctx, params) {
+		const triggerId = newTriggerId();
+		const handle = ctx.setTimeout(async () => {
+			TRIGGERS.delete(triggerId);
+			if (params.identity && prSupervisor && !await prSupervisor.allowsLegacy(params.identity)) return;
+			pi.sendMessage({customType: REMINDER_CUSTOM_TYPE, content:params.message,
+				display:true, attribution:"user"}, {deliverAs:"followUp",triggerTurn:true});
+		}, params.delaySeconds * 1000);
+		TRIGGERS.set(triggerId, {ctx,handle,message:params.message,delaySeconds:params.delaySeconds,identity:params.identity});
+		return triggerId;
+	}
+	const prSupervisor = installPrSupervisorTools(pi, {
+		takeTimers(ids, ctx) {
+			const entries = ids.map(id => {
+				const entry = TRIGGERS.get(id);
+				if (!entry || entry.ctx.sessionManager.getSessionId() !== ctx.sessionManager.getSessionId()) {
+					throw new Error("A legacy reminder is unknown or queued; drain it before transfer");
+				}
+				return {id,message:entry.message,delaySeconds:entry.delaySeconds};
+			});
+			for (const entry of entries) cancelTrigger(entry.id);
+			return entries;
+		},
+		restoreTimers(timers, ctx) { return timers.map(params => scheduleReminder(ctx, params)); },
+	});
+	if (prSupervisor) installPrSupervisionInbox(pi, prSupervisor);
+
 	// Extension state is read from the active branch for each event. This keeps
 	// a resumed session recoverable without sharing a process-global target.
 	const pendingIssueReads = new Map();
@@ -2828,9 +2857,15 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 					model: params.reviewerModel, provider: params.reviewerProvider, session: params.reviewerSession,
 				};
 				const result = await runGitHubWrite(params.args, params.stdin, ctx, signal, reviewer);
+				let supervisionError;
+				if (result.code === 0 && prSupervisor) {
+					try { await prSupervisor.afterWrite(params.args, result.stdout, ctx, signal); }
+					catch { supervisionError = "PR write succeeded, but supervision registration failed; use daily_driver_pr_supervisor_register before claiming supervision."; }
+				}
 				const content = [];
 				if (result.stdout) content.push({ type: "text", text: result.stdout });
 				if (result.stderr) content.push({ type: "text", text: result.stderr });
+				if (supervisionError) content.push({type:"text",text:supervisionError});
 				return {
 					content,
 					details: {
@@ -2839,7 +2874,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 						stdout: result.stdout,
 						stderr: result.stderr,
 					},
-					...(result.code === 0 ? {} : { isError: true }),
+					...(result.code === 0 && !supervisionError ? {} : { isError: true }),
 				};
 			} catch (error) {
 				return {
@@ -2980,27 +3015,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 			message: z.string().describe("The reminder text to deliver"),
 		}),
 		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => {
-			const triggerId = newTriggerId();
-			const handle = ctx.setTimeout(
-				() => {
-					// Firing removes the trigger first so a cancel racing the
-					// expiry is a clean false, never a double-send.
-					TRIGGERS.delete(triggerId);
-					pi.sendMessage(
-						{
-							customType: REMINDER_CUSTOM_TYPE,
-							content: params.message,
-							display: true,
-							// User-attributed, the way the operator would have
-							// typed it, rather than a tool the model ran.
-							attribution: "user",
-						},
-						{ deliverAs: "followUp", triggerTurn: true },
-					);
-				},
-				params.delaySeconds * 1000,
-			);
-			TRIGGERS.set(triggerId, { ctx, handle });
+			const triggerId = scheduleReminder(ctx, params);
 			return {
 				content: [
 					{

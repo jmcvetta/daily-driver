@@ -26,19 +26,45 @@ INBOX = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(INBOX)
 
 
+class ActivationError(RuntimeError):
+    """Report a fixed nonsecret activation failure category."""
+
+    def __init__(self, code):
+        self.code = code
+        super().__init__(code)
+
+
 def activate(inbox, owner, omp, timeout=90):
     """Resume only a provably free owner and verify its recorded route and ID."""
+    if not inbox.db.execute("""SELECT 1 FROM deliveries WHERE session=?
+            AND status IN ('pending','admitted') AND held IS NULL LIMIT 1""", (owner["session"],)).fetchone():
+        return "stopped-or-idle"
     lease = subprocess.run([omp, "session", "lease", "--json", "--", owner["session"]],
         capture_output=True, text=True, check=True, timeout=15)
     state = json.loads(lease.stdout)
     if state.get("unknown") or owner["session"] in state.get("held", []):
         return "owner-held-or-unknown"
     if state != {"held": [], "unknown": []}:
-        raise RuntimeError("malformed session lease response")
+        raise ActivationError("lease-response-invalid")
     if not Path(owner["file"]).is_file() or not Path(owner["cwd"]).is_dir():
-        raise RuntimeError("recorded owner transcript or worktree is unavailable")
-    env = dict(os.environ, DAILY_DRIVER_PR_INBOX=str(inbox.path),
-               DAILY_DRIVER_PR_INBOX_EXPECTED_OWNER=owner["session"])
+        raise ActivationError("owner-context-unavailable")
+    with open(owner["file"]) as saved:
+        header = next((entry for _ in range(3)
+                       if (line := saved.readline())
+                       and (entry := json.loads(line)).get("type") == "session"), None)
+    if not header or header.get("id") != owner["session"]:
+        raise ActivationError("owner-session-header-invalid")
+    if header.get("parentSession"):
+        raise ActivationError("child-or-fork-recovery-requires-owner-adapter")
+    if owner.get("authentication", "unknown") == "unknown" or owner.get("authentication", "").startswith("env:"):
+        raise ActivationError("authentication-route-unavailable; environment credentials are not forwarded")
+    allowed = ("HOME", "PATH", "LANG", "TERM", "TMPDIR", "OMP_PROFILE",
+               "PI_CODING_AGENT_DIR", "XDG_CONFIG_HOME", "XDG_DATA_HOME",
+               "XDG_STATE_HOME", "XDG_CACHE_HOME", "XDG_RUNTIME_DIR", "DBUS_SESSION_BUS_ADDRESS")
+    env = {key: os.environ[key] for key in allowed if key in os.environ}
+    env.update(DAILY_DRIVER_PR_INBOX=str(inbox.path),
+               DAILY_DRIVER_PR_INBOX_EXPECTED_OWNER=owner["session"],
+               DAILY_DRIVER_PR_INBOX_EXPECTED_AUTH=owner["authentication"])
     command = [omp, "--mode", "rpc", "--resume", owner["file"], "--cwd", owner["cwd"],
                "--extension", str(ROOT / "extensions/pr-supervision-inbox.mjs"),
                "--model", f'{owner["provider"]}/{owner["model"]}', "--thinking", owner["effort"]]
@@ -59,16 +85,19 @@ def activate(inbox, owner, omp, timeout=90):
         deadline = time.monotonic() + timeout
         checked = False
         terminal = False
+        running = False
         try:
-            while time.monotonic() < deadline:
+            while running or time.monotonic() < deadline:
                 try:
-                    frame = frames.get(timeout=max(0.01, deadline - time.monotonic()))
+                    frame = frames.get(timeout=1 if running else max(0.01, deadline - time.monotonic()))
                 except queue.Empty:
+                    if running:
+                        continue
                     break
                 if frame is None:
-                    raise RuntimeError("owner RPC ended before receipt")
+                    raise ActivationError("owner-rpc-ended-before-receipt")
                 if frame.get("type") in ("extension_error", "invalid_frame", "rpc_frame_error"):
-                    raise RuntimeError("owner RPC extension or framing failed")
+                    raise ActivationError("owner-rpc-extension-or-framing")
                 if frame.get("type") == "ready":
                     process.stdin.write('{"id":"owner-identity","type":"get_state"}\n')
                     process.stdin.flush()
@@ -77,10 +106,14 @@ def activate(inbox, owner, omp, timeout=90):
                     model = actual.get("model", {})
                     if (not frame.get("success") or actual.get("sessionId") != owner["session"]
                             or model.get("provider") != owner["provider"] or model.get("id") != owner["model"]):
-                        raise RuntimeError("owner identity or route changed; refusing delivery")
+                        raise ActivationError("owner-identity-or-route-changed")
                     checked = True
+                if frame.get("type") == "agent_start":
+                    running = True
+                    terminal = False
                 if frame.get("type") == "agent_end" and frame.get("isTerminal") is not False:
                     terminal = True
+                    running = False
                 if checked and terminal:
                     remaining = inbox.db.execute("""SELECT count(*) FROM deliveries WHERE session=?
                         AND status IN ('pending','admitted') AND held IS NULL""", (owner["session"],)).fetchone()[0]
@@ -116,10 +149,10 @@ def pass_once(inbox, omp):
             try:
                 outcome = activate(inbox, dict(owner), omp)
             except (OSError, ValueError, RuntimeError, subprocess.SubprocessError, TimeoutError) as error:
-                outcome = f"degraded:{type(error).__name__}"
-        if outcome != "received":
-            inbox.db.execute("""UPDATE deliveries SET last_error=? WHERE session=?
-                AND status IN ('pending','admitted')""", (outcome, session))
+                outcome = f"degraded:{getattr(error, 'code', type(error).__name__)}"
+        if outcome not in ("received", "live-extension-owner"):
+            inbox.db.execute("""UPDATE deliveries SET last_error=?,next_attempt=MAX(next_attempt,?) WHERE session=?
+                AND status IN ('pending','admitted')""", (outcome, time.time() + 120, session))
         results.append({"session": session, "outcome": outcome})
     return results
 

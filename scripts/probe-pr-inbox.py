@@ -77,14 +77,16 @@ class Provider(BaseHTTPRequestHandler):
 class Rpc:
     """Control only an owned isolated RPC subprocess with bounded frame reads."""
 
-    def __init__(self, base, env):
+    def __init__(self, base, env, extensions=None, extra_args=(), tools="read"):
         self.errors = (base / "seed.stderr").open("w+")
-        self.process = subprocess.Popen([shutil.which("omp"), "--mode", "rpc", "--no-extensions",
-            "--no-skills", "--no-rules", "--no-context-files", "--no-title", "--tools", "read",
-            "--extension", str(ROOT / "extensions/pr-supervision-inbox.mjs"),
-            "--session-dir", str(base / "sessions"), "--model", "cold-proof/proof"],
-            cwd=base / "sandbox", env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=self.errors, text=True, bufsize=1)
+        argv = [shutil.which("omp"), "--mode", "rpc", "--no-extensions",
+                "--no-skills", "--no-rules", "--no-context-files", "--no-title", "--tools", tools,
+                "--session-dir", str(base / "sessions"), "--model", "cold-proof/proof"]
+        for extension in extensions if extensions is not None else [ROOT / "extensions/pr-supervision-inbox.mjs"]:
+            argv += ["--extension", str(extension)]
+        argv += list(extra_args)
+        self.process = subprocess.Popen(argv, cwd=base / "sandbox", env=env, stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE, stderr=self.errors, text=True, bufsize=1)
         self.frames = queue.Queue()
 
         def collect():

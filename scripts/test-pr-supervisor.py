@@ -214,10 +214,19 @@ FAKE_GH = '''#!/usr/bin/env python3
 import json, os, sys
 from pathlib import Path
 args = sys.argv[1:]
-assert args[:5] == ["api", "--hostname", "enterprise.example", "--method", "GET"], args
+assert args[:3] == ["api", "--hostname", "enterprise.example"], args
 state_path = Path(os.environ["SHADOW_FIXTURE"])
 state = json.loads(state_path.read_text())
 state["calls"].append(args)
+if args[3] == "graphql":
+    assert "--paginate" in args and "--slurp" in args
+    assert "mutation" not in args[args.index("-f") + 1]
+    empty = {"data":{"repository":{"pullRequest":{"reviewThreads":{"nodes":[],"pageInfo":{"hasNextPage":False,"endCursor":None}}}}}}
+    value = state.get("threads", [empty])
+    state_path.write_text(json.dumps(state))
+    print(json.dumps(value))
+    raise SystemExit(0)
+assert args[3:5] == ["--method", "GET"], args
 endpoint = args[-1]
 if endpoint.endswith("/pulls/7"):
     sequence = state["pr"]
@@ -263,7 +272,7 @@ class GitHubConsumerTests(unittest.TestCase):
         self.assertEqual(result["base"], "release")
         self.assertEqual(len(result["inventory"]["checks"]), 2)
         calls = json.loads(self.fixture.read_text())["calls"]
-        self.assertEqual(len(calls), 8)
+        self.assertEqual(len(calls), 9)
         self.assertTrue(all("--paginate" in call and "--slurp" in call for call in calls[1:-1]))
         self.assertFalse(any("update-branch" in call for call in calls))
 
@@ -319,9 +328,39 @@ class GitHubConsumerTests(unittest.TestCase):
         rows = json.loads(run.stdout)
         self.assertEqual(rows[0]["mode"], "shadow")
         self.assertEqual(json.loads(rows[0]["observed"])["ci"], "success")
-        self.assertEqual(len(json.loads(self.fixture.read_text())["calls"]), 8)
+        self.assertEqual(len(json.loads(self.fixture.read_text())["calls"]), 9)
         repeated = subprocess.run(prefix + ["reconcile"], check=True, capture_output=True, env=self.environment, text=True)
         self.assertEqual(json.loads(repeated.stdout), [])
+
+    def test_review_thread_state_is_read_through_all_pages(self):
+        def page(identifier, resolved, more):
+            return {"data":{"repository":{"pullRequest":{"reviewThreads":{
+                "nodes":[{"id":identifier,"isResolved":resolved,"isOutdated":False}],
+                "pageInfo":{"hasNextPage":more,"endCursor":"cursor" if more else None}}}}}}
+        self.state["threads"] = [page("thread-a", False, True), page("thread-b", True, False)]
+        observed = self.observe()
+        self.assertIn(["threads", "thread-a", False, False], observed["feedback"])
+        self.assertIn(["threads", "thread-b", True, False], observed["feedback"])
+        self.state["threads"] = [page("thread-a", False, True)]
+        with self.assertRaisesRegex(SUPERVISOR.ObservationError, "pagination"):
+            self.observe()
+
+    def test_new_failure_wakes_owner_while_other_workflow_stays_in_flight(self):
+        self.state["responses"][f"commits/{'a' * 40}/check-runs?per_page=100"] = [
+            {"total_count":1,"check_runs":[check(conclusion="failure")]}]
+        self.state["responses"][f"actions/runs?head_sha={'a' * 40}&per_page=100"] = [
+            {"total_count":1,"workflow_runs":[workflow(status="in_progress",conclusion=None)]}]
+        observed = self.observe()
+        self.assertEqual(observed["ci"], "in_flight")
+        proposal = SUPERVISOR.plan(snapshot(ci="in_flight", failures=[]), observed)
+        self.assertIn("ci_failure", proposal["reasons"])
+        self.assertEqual(proposal["next_action"], "diagnose_ci")
+
+    def test_boolean_inventory_count_is_not_passing_evidence(self):
+        self.state["responses"][f"commits/{'a' * 40}/check-runs?per_page=100"] = [
+            {"total_count":True,"check_runs":[check()]}]
+        with self.assertRaises(SUPERVISOR.ObservationError):
+            self.observe()
 
 
 if __name__ == "__main__":

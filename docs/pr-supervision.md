@@ -4,7 +4,7 @@ Issue [#1038](https://github.com/jmcvetta/daily-driver/issues/1038) is unfinishe
 The accepted design is the [research report](https://github.com/jmcvetta/daily-driver/issues/1022#issuecomment-7128430156)
 and its [correction](https://github.com/jmcvetta/daily-driver/issues/1022#issuecomment-7128609718).
 The existing [Omp maintenance route](../skills/pr/references/omp.md) remains
-authoritative. This implementation does not transfer any PR's ownership.
+authoritative. No real PR's ownership has been transferred.
 
 ## Bounded capability evidence
 
@@ -150,6 +150,49 @@ evidence, fence the writer and leave the due set. These controls do not cancel
 the existing authoritative maintenance route; use that route's stop procedure
 before a stop-time push. Never use a shadow stop as evidence that live actors
 were stopped.
+
+## Unfinished active integration checkpoint
+
+`scripts/pr-active-supervisor.py` and `extensions/pr-supervisor-tools.mjs`
+are an opt-in implementation checkpoint, not an approved cutover. The active
+controller shares the durable inbox transaction with observation/control,
+conditionally requests GitHub's expected-head server update, and requires a
+fresh authoritative inventory before work acknowledgment. Registration and
+control are exposed only with `DAILY_DRIVER_PR_SUPERVISOR` configured. Do not
+set it for live work until the remaining isolated proofs and review pass.
+
+Offline coverage now includes the active controller and runtime registration
+consumer in the existing `check-pr-keep-current` target. The latest checkpoint
+passed 8 legacy, 27 shadow and 11 inbox tests; the active suite passed 22 of
+23. Its unchanged-observation/duplicate-hint regression fails: advancing
+`next_due` for hints also advances outage detection, creating a false changed
+generation. The Node registration/control consumer and all 407 extension
+checks passed separately. This failure is retained, not bypassed.
+
+The additional bounded command is:
+
+```sh
+python3 scripts/probe-omp-child-resumption.py
+```
+
+It creates one actual child in a disposable profile with the local provider.
+Direct CLI `--resume` preserves the child's session ID but binds it as
+`main/Main`, not its original `sub/ChildProof` identity. RPC `--restore` is
+rejected because it requires an interactive terminal. The host therefore
+refuses direct cold activation of saved sessions with `parentSession` rather
+than silently changing the agent. This conservative guard also refuses forks.
+The probe's registry query returned an empty visible registry; this does not
+prove the native parent `write agent://ChildProof` revival route unavailable.
+The next capability step is to exercise that route after resuming the parent
+and verify the actual child's binding and acknowledgment. No general missing
+SDK primitive is established by these results.
+
+Still unproved: integrated fresh-work acknowledgment through the real host,
+safe child cold recovery, queued-stop delivery races, restart during active
+reconciliation, and identical-trace wake/latency comparison. Transfer/rollback
+and stop-time legacy timer recovery need further review, including retry after
+rollback. The receipt-only host restart proof above is not evidence for these
+active behaviors. No live service or real-PR proof was installed or run.
 
 ## Verification and remaining acceptance
 

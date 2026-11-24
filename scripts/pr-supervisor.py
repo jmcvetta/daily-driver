@@ -111,7 +111,7 @@ class Ledger:
                 (key, host.lower(), repository.lower(), number, owner, canonical(context), now, now))
             return self.get(key)
 
-    def control(self, key, operation, reason, now):
+    def control(self, key, operation, reason, now, persist=None):
         """Fence shadow work before recording an explicit stop, hold, or release."""
         if operation not in ("stop", "hold", "release") or not reason.strip():
             raise ValueError("control requires stop, hold, or release and a reason")
@@ -124,6 +124,8 @@ class Ledger:
             self.db.execute("""UPDATE records SET stopped=?,held=?,epoch=epoch+1,
                 lease_owner=NULL,lease_until=0,proposal=NULL,next_due=? WHERE identity=?""",
                 (stopped, held, now, key))
+            if persist is not None:
+                persist(self.get(key))
             return self.get(key)
 
     def acquire(self, key, writer, now):
@@ -142,7 +144,7 @@ class Ledger:
         return [row[0] for row in self.db.execute("""SELECT identity FROM records
             WHERE stopped IS NULL AND held IS NULL AND next_due<=? ORDER BY identity""", (now,))]
 
-    def finish(self, key, writer, epoch, now, snapshot=None, error=None):
+    def finish(self, key, writer, epoch, now, snapshot=None, error=None, persist=None):
         """Commit one fenced observation, coalescing a proposal without delivery."""
         with self.transaction():
             record = self.get(key)
@@ -151,7 +153,8 @@ class Ledger:
                 raise Fenced("shadow observation lost its lease or was stopped/held")
             previous = json.loads(record["observed"]) if record["observed"] else None
             gap_start, gap_end = record["gap_start"], record["gap_end"]
-            if record["last_observed"] is not None and now > record["next_due"]:
+            started = record["lease_until"] - LEASE_SECONDS
+            if record["last_observed"] is not None and started > record["next_due"]:
                 if gap_start is None or gap_end is not None:
                     gap_start, gap_end = record["next_due"], None
             if error:
@@ -168,6 +171,9 @@ class Ledger:
                 observed = canonical(snapshot)
                 degraded = None
                 changed = observed != record["observed"] or record["degraded"] is not None
+                if record["last_observed"] is not None and started > record["next_due"]:
+                    changed = True
+                    proposal["reasons"] = sorted(set(proposal["reasons"] + ["supervision_gap"]))
                 if record["degraded"]:
                     proposal["reasons"] = sorted(set(proposal["reasons"] + ["observation_recovered"]))
                 if gap_start is not None and gap_end is None:
@@ -184,14 +190,14 @@ class Ledger:
                 degraded=?,gap_start=?,gap_end=?,last_observed=?,next_due=?,
                 stopped=?,epoch=epoch+?,lease_owner=NULL,lease_until=0 WHERE identity=?""",
                 (observed, canonical(proposal) if proposal else None, generation, degraded,
-                 gap_start, gap_end, now, now + INTERVAL, stopped, int(stopped is not None), key))
+                 gap_start, gap_end, now, started + INTERVAL, stopped, int(stopped is not None), key))
+            if persist is not None:
+                persist(self.get(key))
             return self.get(key)
 
 
-def ci_state(checks, statuses, workflows):
-    """Classify complete current-head inventories without using a rollup verdict."""
-    # Commit status history is newest-first; a newer success replaces an older
-    # pending state for the same context. Workflow reruns retain their latest attempt.
+def _current_ci(checks, statuses, workflows):
+    """Normalize latest status contexts and workflow attempts consistently."""
     current_statuses = {}
     for status in statuses:
         context = status["context"]
@@ -202,8 +208,13 @@ def ci_state(checks, statuses, workflows):
         existing = current_workflows.get(run["id"])
         if existing is None or run["run_attempt"] > existing["run_attempt"]:
             current_workflows[run["id"]] = run
-    runs = checks + list(current_workflows.values())
-    states = [s["state"] for s in current_statuses.values()]
+    return checks + list(current_workflows.values()), list(current_statuses.values())
+
+
+def ci_state(checks, statuses, workflows):
+    """Classify complete current-head inventories without using a rollup verdict."""
+    runs, statuses = _current_ci(checks, statuses, workflows)
+    states = [s["state"] for s in statuses]
     if not runs and not states:
         return "unregistered"
     if any(r["status"] != "completed" or r["conclusion"] is None for r in runs):
@@ -213,6 +224,17 @@ def ci_state(checks, statuses, workflows):
     if any(r["conclusion"] not in SUCCESS for r in runs) or any(s != "success" for s in states):
         return "failure"
     return "success"
+
+
+def _ci_failures(checks, statuses, workflows):
+    """Identify new failures even while other current-head work remains in flight."""
+    runs, statuses = _current_ci(checks, statuses, workflows)
+    failed = [f'run:{run["id"]}:{run.get("run_attempt", 0)}:{run["conclusion"]}'
+              for run in runs if run["status"] == "completed" and run["conclusion"] is not None
+              and run["conclusion"] not in SUCCESS]
+    failed += [f'status:{status["context"]}:{status["id"]}:{status["state"]}'
+               for status in statuses if status["state"] in ("failure", "error")]
+    return sorted(failed)
 
 
 def plan(previous, current):
@@ -225,6 +247,8 @@ def plan(previous, current):
     if previous is None or previous["ci"] != current["ci"]:
         if current["ci"] in ("success", "failure"):
             reasons.append("ci_terminal")
+    if current.get("failures") and (previous is None or current["failures"] != previous.get("failures")):
+        reasons.append("ci_failure")
     if current["currency"] == "conflict" and (previous is None or previous["currency"] != "conflict"):
         reasons.append("conflict")
     if previous is not None and previous["currency"] == "conflict" and current["currency"] != "conflict":
@@ -234,17 +258,19 @@ def plan(previous, current):
         reasons.append("ci_evidence_changed")
     if previous is not None and current["feedback"] != previous["feedback"]:
         reasons.append("feedback_changed")
+    if previous is not None and current.get("metadata") != previous.get("metadata"):
+        reasons.append("metadata_changed")
     if current["state"] != "OPEN":
         reasons.append("pr_terminal")
         action = "stop"
     elif current["currency"] == "conflict":
         action = "resolve_conflict"
+    elif current.get("failures") or current["ci"] == "failure":
+        action = "diagnose_ci"
     elif current["ci"] in ("in_flight", "unregistered"):
         action = "observe_current_head"
     elif current["currency"] == "update_candidate":
         action = "reread_before_update"
-    elif current["ci"] == "failure":
-        action = "diagnose_ci"
     else:
         action = "owner_gate"
     return {"reasons": sorted(reasons), "head": current["head"], "next_action": action}
@@ -284,9 +310,42 @@ class GitHub:
             records.extend(values)
         if field:
             counts = [page.get("total_count") for page in pages]
-            if any(not isinstance(count, int) or count < 0 for count in counts) or len(records) < max(counts):
+            if any(not isinstance(count, int) or isinstance(count, bool) or count < 0 for count in counts) or len(records) < max(counts):
                 raise ObservationError("incomplete paginated inventory")
         return records
+
+    def threads(self):
+        """Read every review-thread state without fetching or persisting bodies."""
+        query = """query($owner:String!,$name:String!,$number:Int!,$endCursor:String) {
+          repository(owner:$owner,name:$name) { pullRequest(number:$number) {
+            reviewThreads(first:100,after:$endCursor) {
+              nodes { id isResolved isOutdated } pageInfo { hasNextPage endCursor }
+            }
+          } }
+        }"""
+        owner, name = self.repository.split("/")
+        command = ["gh", "api", "--hostname", self.host, "graphql", "--paginate", "--slurp",
+                   "-f", "query=" + query, "-F", "owner=" + owner, "-F", "name=" + name,
+                   "-F", "number=" + str(self.number)]
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, check=True, timeout=20)
+            pages = json.loads(result.stdout)
+            if not isinstance(pages, list) or not pages:
+                raise ObservationError("missing review-thread inventory")
+            threads = []
+            for index, page in enumerate(pages):
+                if page.get("errors"):
+                    raise ObservationError("review-thread read returned errors")
+                collection = page["data"]["repository"]["pullRequest"]["reviewThreads"]
+                if bool(collection["pageInfo"]["hasNextPage"]) != (index < len(pages) - 1):
+                    raise ObservationError("incomplete review-thread pagination")
+                for thread in collection["nodes"]:
+                    if not isinstance(thread["isResolved"], bool) or not isinstance(thread["isOutdated"], bool):
+                        raise ObservationError("invalid review-thread state")
+                    threads.append(["threads", thread["id"], thread["isResolved"], thread["isOutdated"]])
+            return threads
+        except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError) as error:
+            raise ObservationError("review-thread inventory unavailable") from error
 
     def observe(self):
         """Collect a stable-head snapshot; a concurrent head/base move is unknown."""
@@ -318,6 +377,7 @@ class GitHub:
                             feedback.append([endpoint.split("?")[0], item["id"],
                                 item.get("updated_at", item.get("submitted_at")), item.get("state"),
                                 hashlib.sha256(item.get("body", "").encode()).hexdigest()])
+                feedback.extend(self.threads())
             final = self.api(f"pulls/{self.number}")
             if (final["head"]["sha"] != head or final["base"] != base
                     or final["state"] != pr["state"] or final["merged"] != pr["merged"]):
@@ -334,6 +394,10 @@ class GitHub:
             return {"head": head, "base": base["ref"], "base_sha": base["sha"], "state": state,
                     "currency": currency, "ci": ci_state(checks, statuses, workflows),
                     "inventory": inventory,
+                    "failures": _ci_failures(checks, statuses, workflows),
+                    "metadata": {"draft": final.get("draft", False),
+                                 "labels": sorted(item["name"] for item in final.get("labels", [])),
+                                 "reviewers": sorted(item["login"] for item in final.get("requested_reviewers", []))},
                     "feedback": sorted(feedback, key=lambda value: (value[0], value[1]))}
         except (KeyError, TypeError, AttributeError) as error:
             raise ObservationError("malformed authoritative GitHub evidence") from error

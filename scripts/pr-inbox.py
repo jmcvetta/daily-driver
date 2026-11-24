@@ -18,14 +18,15 @@ import time
 class Inbox:
     """Serialize generation delivery and stop fences across Omp/host processes."""
 
-    def __init__(self, path):
+    def __init__(self, path, connection=None):
         self.path = Path(path).expanduser().absolute()
         self.path.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
         descriptor = os.open(self.path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
         os.close(descriptor)
         if self.path.stat().st_mode & 0o077:
             raise ValueError("inbox database must be owner-only")
-        self.db = sqlite3.connect(self.path, timeout=10, isolation_level=None)
+        self.owns_connection = connection is None
+        self.db = connection or sqlite3.connect(self.path, timeout=10, isolation_level=None)
         self.db.row_factory = sqlite3.Row
         with self.transaction():
             version = self.db.execute("PRAGMA user_version").fetchone()[0]
@@ -35,6 +36,9 @@ class Inbox:
                 session TEXT PRIMARY KEY, file TEXT NOT NULL, cwd TEXT NOT NULL,
                 provider TEXT NOT NULL, model TEXT NOT NULL, effort TEXT NOT NULL,
                 process TEXT NOT NULL, heartbeat REAL NOT NULL)""")
+            columns = {row[1] for row in self.db.execute("PRAGMA table_info(owners)")}
+            if "authentication" not in columns:
+                self.db.execute("ALTER TABLE owners ADD COLUMN authentication TEXT NOT NULL DEFAULT 'unknown'")
             self.db.execute("""CREATE TABLE IF NOT EXISTS deliveries (
                 identity TEXT PRIMARY KEY, session TEXT NOT NULL, generation INTEGER NOT NULL,
                 fence INTEGER NOT NULL DEFAULT 1, payload TEXT NOT NULL,
@@ -46,17 +50,23 @@ class Inbox:
     @contextmanager
     def transaction(self):
         """Acquire atomic cross-process ownership without holding network work."""
-        self.db.execute("BEGIN IMMEDIATE")
+        nested = self.db.in_transaction
+        self.db.execute("SAVEPOINT inbox_operation" if nested else "BEGIN IMMEDIATE")
         try:
             yield
-            self.db.execute("COMMIT")
+            self.db.execute("RELEASE inbox_operation" if nested else "COMMIT")
         except BaseException:
-            self.db.execute("ROLLBACK")
+            if nested:
+                self.db.execute("ROLLBACK TO inbox_operation")
+                self.db.execute("RELEASE inbox_operation")
+            else:
+                self.db.execute("ROLLBACK")
             raise
 
     def close(self):
         """Close this handle without changing durable deliveries."""
-        self.db.close()
+        if self.owns_connection:
+            self.db.close()
 
     def enqueue(self, identity, session, generation, payload, now=None):
         """Coalesce newer generations; duplicate/older hints cannot replay receipt."""

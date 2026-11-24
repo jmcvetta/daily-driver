@@ -59,6 +59,8 @@ check-omp-extension:
   - 'extensions/commit-message.mjs'
   - 'extensions/role-default-helper.mjs'
   - 'extensions/undertaking-routing.mjs'
+  - 'extensions/pr-supervisor-tools.mjs'
+  - 'extensions/pr-supervision-inbox.mjs'
   - 'scripts/undertaking-routing-cases.mjs'
   - 'package.json'
 check-model-class-roles:
@@ -90,6 +92,11 @@ check-pr-keep-current:
   - 'scripts/pr-inbox-host.py'
   - 'scripts/test-pr-inbox.py'
   - 'extensions/pr-supervision-inbox.mjs'
+  - 'scripts/pr-active-supervisor.py'
+  - 'scripts/test-pr-active-supervisor.py'
+  - 'scripts/test-pr-supervisor-tools.mjs'
+  - 'extensions/pr-supervisor-tools.mjs'
+  - 'extensions/daily-driver.js'
 check-model-telemetry:
   - 'scripts/check-model-telemetry.py'
   - 'scripts/model-telemetry.py'
