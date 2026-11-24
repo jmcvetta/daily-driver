@@ -12,7 +12,7 @@ SHELL := /bin/bash
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean check-omp-embark-title-live check-step-names \
 	check-worktrunk-install check-labels check-infra check-plugin-validity check-runtime check-pr-keep-current \
-	check-issue-infra check-model-telemetry model-telemetry check-checkov check-zizmor \
+	check-issue-infra check-model-telemetry model-telemetry check-checkov check-zizmor check-atdd \
 	evals-install evals-setup-claude evals-setup-omp evals-plan evals-judge-preflight evals-judge-calibrate \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-leaks check-evals-leaks evals-run evals-run-omp \
 	evals-campaign-preflight \
@@ -108,7 +108,11 @@ check-plugin-validity: check-plugin check-skills check-agents \
 
 check-runtime: check-constitution check-ask-in-chat check-title-gate check-omp-extension check-model-class-roles \
 	check-omp-guard-differential check-omp-cache-clean check-git-sync \
-	check-worktrunk-install check-scripts check-pr-keep-current
+	check-worktrunk-install check-scripts check-pr-keep-current check-atdd
+
+# Exercise the bundled acceptance bootstrap against disposable repositories.
+check-atdd:
+	node --test skills/atdd/scripts/test-bootstrap-typescript.mjs
 
 # Exercise the shell-integrated alias in isolated Git repositories only.
 check-git-sync:

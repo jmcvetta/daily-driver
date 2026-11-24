@@ -9,7 +9,9 @@
     ]
   },
   "devDependencies": {
+    "@cucumber/cucumber": "13.3.0",
     "js-yaml": "^5.5.0",
-    "picomatch": "^4.0.7"
+    "picomatch": "^4.0.7",
+    "tsx": "4.23.15"
   }
 }
