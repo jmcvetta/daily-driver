@@ -21,22 +21,17 @@ The required class
 Task bodies, assignable epic stories of any eligible kind, and the narrow
 frontier research exception use the provider-neutral `Model class` section defined in [`model-classes.md`](model-classes.md).
 An Omp task issue does not carry a Claude identifier or an Omp agent/model
-selector. For mapped undertaking families, select the required class within the
-invoking family and provider. A model name, catalog entry, effort setting, or
-price does not prove class suitability or working credentials.
+selector. The effective class role selects the configured model/provider and
+effort as a unit. No family map or benchmark condition overrides that role.
 
-For classed undertaking, call `daily_driver_route_undertaking` alone in its
-assistant tool batch before worktree or claim. This makes the initial selection
-within the invoking family and provider. Report the selected route as progress,
-without claiming class suitability or observed execution identity from the
-selector. Matching model and effort need no switch. If the known family is
-absent from the class table, warn prominently and continue immediately on the
-invoking model, provider, and effort; suitability remains unverified. A class
-omitted from a mapped family follows the same warning-and-continue with
-suitability unverified; an explicitly cleared class or unavailable target is a
-configuration gap. Do not rewrite shared roles or credentials. Independently
-configured host helpers are not issue implementation workers for class
-selection; this does not define their cancellation ownership.
+Call `daily_driver_route_undertaking` alone before worktree or claim for one
+initial attempt. Matching model and effort need no switch. Missing, cleared,
+invalid or unavailable assignments and failed controls, credentials, setters or
+persistence produce a brief informational result with the class, attempted
+target, failure and actual route. Continue work immediately, without repair,
+confirmation or replacement dispatch. Explicit abort/cancellation stays stopped.
+Do not rewrite shared roles or credentials. Independently configured helpers
+retain their own roles and cancellation ownership.
 
 After initial selection, operator and agent-initiated model, provider, effort,
 worker, and fallback choices are permitted and are not restricted by the
@@ -52,9 +47,9 @@ permission check.
 The plugin provides runtime defaults only for roles without an effective
 assignment. A global/project setting or CLI overlay present before plugin
 startup wins; explicit role assignments remain authoritative. Operators may
-change a role for later dispatch through Omp's `/model` Roles UI. A cleared
-assignment remains unassigned, so report a gap instead of restoring a default
-in the same session. Existing `omp_configs/` overlays remain supported. A
+change a role for the next undertaking through Omp's `/model` Roles UI. A cleared
+assignment remains unassigned; explain and continue without restoring a default.
+Existing `omp_configs/` overlays remain supported. A
 YAML or overlay edit after startup may stay shadowed until Omp restarts because
 disk reload preserves runtime overrides. The plugin writes no Omp
 configuration files; disabling it leaves no plugin-written assignments or

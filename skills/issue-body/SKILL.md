@@ -337,10 +337,10 @@ adapter pattern.
 
 `undertake` validates and, where grounded, migrates the section before routing
 a classed `task`, `research` or `bug` assignment.
-For a mapped family it selects the exact class within the invoking family and
-provider before worktree creation or claim. If the known family is absent from
-the class table, it warns prominently and continues on the invoking model,
-provider, and effort without confirmation; class suitability remains
-unverified. Classes omitted from a mapped family follow that warning with
-unverified suitability; an explicitly cleared class and unknown identity
-remain gaps. Claim comments and execution records retain the observed model.
+It attempts the initial class selection once through the active harness's
+configuration authority before worktree creation or claim. Omp uses its
+effective class role, including model/provider and effort; Claude Code retains
+its supported class-appropriate route. Failure is informational: name the
+attempted target, failure and actual route, then continue ordinary work without
+confirmation or repair. Later operator choices and resume never reselect.
+Claim comments and execution records retain the observed model.

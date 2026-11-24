@@ -181,13 +181,13 @@ migrate a legacy or invalid task only on that issue and only when its grounded
 handoff is otherwise ready. A missing or invalid class on a research or bug
 story is a planning defect, never defaulted. A bare `story` marker does not
 pass this gate. `proposal`, `specification`, `human` and `epic` issues are not dispatch
-candidates. A story with an open blocker is not dispatched early, and an
-unavailable route stops only that story.
+candidates. A story with an open blocker is not dispatched early.
 
-Then resolve the exact required class within the current family, provider,
-backend, and authentication route. Assess tools, context, modalities, and
-availability. A cheap but unsuitable route is excluded; do not replace the
-class mapping or change shared roles to make a task dispatchable.
+Use the active harness's configuration authority for one initial attempt.
+Omp's effective class role governs the model/provider and effort together;
+do not substitute a family mapping or second-guess unusual assignments.
+Claude Code retains its supported automatic class-appropriate selection.
+Do not edit shared roles or credentials to make selection succeed.
 
 On Omp, select the class-specific agent that fits the assessed work and resolve
 its effective route under
@@ -200,11 +200,12 @@ route.
 
 After the initial selection, worker, provider, effort, and fallback choices are
 not restricted by the undertaking router. The selected route and actual model
-are distinct; record `unreported` when actual identity is unavailable. If the
-initial class selection cannot be established for an issue, report the
-configuration gap and continue other eligible tasks in the wave. An
-underspecified body is a planning defect, not an excuse to dispatch a stronger
-model.
+are distinct; record `unreported` when actual identity is unavailable. If
+initial selection fails, explain the requested class, attempted target,
+failure and actual route, then continue on the invoking route without repair,
+confirmation or replacement dispatch as prerequisites. An explicitly cancelled
+operation stays stopped. An underspecified body remains a planning defect,
+not an excuse to dispatch a stronger model.
 
 Each harness reference owns concrete dispatch. It resolves the applicable
 route before session creation and records the actual model separately from the
