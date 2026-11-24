@@ -7,7 +7,9 @@ initial_prompt: >-
   offline editing scenarios, bindings and implementation. The issue allocates
   saving edits but excludes conflict resolution. The implementation violates an
   agreed scenario, a binding misstates another, and a reviewer proposes a
-  missing case that changes behavior. Explain only; do not submit a review.
+  missing case that changes behavior. Explain how CI provides evidence and how
+  an ambiguous scenario and material scope change are handled. Explain only;
+  do not perform or submit a review.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
@@ -23,11 +25,12 @@ success_criteria:
     turn_timeout: 120
     agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
     prompt: |
-      Score 1 only if review checks the agreed scenarios, their trusted
-      bindings, implementation, allocated saving behavior and excluded conflict
-      resolution together, using ordinary current-head CI as deterministic
-      evidence without an extra acceptance-evidence gate. An implementation
-      violation requires an implementation fix; a faulty binding or fixture is
+      Score 1 only if the answer explains reviewing the agreed scenarios,
+      their trusted bindings, implementation, allocated saving behavior and
+      excluded conflict resolution together, using ordinary current-head CI as
+      deterministic evidence without an extra acceptance-evidence gate.
+      Do not require the agent to perform a review; the prompt forbids it.
+      An implementation violation requires an implementation fix; a faulty binding or fixture is
       repaired without pausing for a product decision. A missing case is
       proposed to the operator, not made mandatory by reviewer edits or
       withholding the PR without agreement. A wrong or ambiguous scenario
