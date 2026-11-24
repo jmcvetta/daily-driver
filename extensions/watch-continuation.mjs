@@ -161,7 +161,11 @@ export function installWatchContinuations(pi, { now = Date.now } = {}) {
 			if (Number.isSafeInteger(record.revision)) revisions.set(record.registrationId, Math.max(revisions.get(record.registrationId) ?? 0, record.revision));
 			if (record.lifecycle === "stopped" && typeof record.registrationId === "string") {
 				// Even a damaged stop must not revive the registration on rewind.
-				stops.set(record.registrationId, record);
+				const prior = stops.get(record.registrationId);
+				try {
+					if (prior) validateRecord(prior);
+					else stops.set(record.registrationId, record);
+				} catch { stops.set(record.registrationId, record); }
 			}
 		}
 		for (const entry of branch) {
@@ -375,7 +379,7 @@ export function installWatchContinuations(pi, { now = Date.now } = {}) {
 				}
 				const existing = facts.records.get(key);
 				if (params.action === "get") return response(existing ? `Watch ${key}: ${existing.lifecycle}.` : `Watch ${key} not found.`, existing ? { found: true, record: structuredClone(existing) } : { found: false });
-				if (replacement && existing && replacement.ownerIssue !== existing.state.ownerIssue) throw new Error("Watch owner identity cannot change");
+				if (replacement && existing?.state && replacement.ownerIssue !== existing.state.ownerIssue) throw new Error("Watch owner identity cannot change");
 				if (params.action === "stop") {
 					if (!existing || existing.lifecycle === "stopped") return response("No active watch to stop.", { stopped: false, found: !!existing });
 					epoch++;

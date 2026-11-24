@@ -56,7 +56,15 @@ class ActiveTests(unittest.TestCase):
         self.now = 0
         self.actor = ACTIVE.ActiveSupervisor(self.path, clock=lambda: self.now)
         self.addCleanup(self.actor.close)
-        self.context = {"session": "owner", "worktree": self.temporary.name, "branch": "task", "task": "issue://7"}
+        primary = Path(self.temporary.name) / "repository"
+        self.worktree = Path(self.temporary.name) / "task"
+        subprocess.run(["git", "init", "--initial-branch=master", str(primary)], check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(primary), "-c", "user.name=Fixture", "-c",
+                        "user.email=fixture@example.invalid", "commit", "--allow-empty", "-m", "Fixture"],
+                       check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(primary), "worktree", "add", "-b", "task", str(self.worktree)],
+                       check=True, capture_output=True)
+        self.context = {"session": "owner", "worktree": str(self.worktree), "branch": "task", "task": "issue://7"}
         self.key = self.actor.register("github.com", "example/project", 7, "author", self.context)["identity"]
         self.host_lock = open(str(self.path) + ".actor-lock", "r+")
         fcntl.flock(self.host_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -73,6 +81,83 @@ class ActiveTests(unittest.TestCase):
     def admit(self):
         self.actor.db.execute("UPDATE deliveries SET status='admitted',admission='delivery-token'")
         return self.actor.inbox.get(self.key)
+
+    def owner_request(self, session="owner", parent=None):
+        """Persist real session headers so rebind cannot pass with a substituted owner."""
+        agent = {"kind": "sub", "id": "Child", "name": "Child", "parentId": "Main"} if parent else {
+            "kind": "main", "id": "Main", "name": "Main"}
+        session_file = Path(self.temporary.name) / f"{session}.jsonl"
+        session_file.write_text(json.dumps({"type": "session", "id": session,
+                                           **({"parentSession": parent} if parent else {})}) + "\n")
+        values = (session, str(session_file), str(self.worktree), "old-provider", "old-model", "low",
+                  f"process-{session}", 0, "oauth", json.dumps(agent))
+        self.actor.db.execute("INSERT INTO owners VALUES (?,?,?,?,?,?,?,?,?,?)", values)
+        return {"session": session, "target": "owner", "file": str(session_file), "agent": agent,
+                "process": f"process-{session}", "cwd": str(self.worktree), "provider": "new-provider",
+                "model": "new-model", "effort": "high", "authentication": "api-key"}
+
+    def test_rebind_updates_only_execution_metadata_and_preserves_hold(self):
+        request = self.owner_request()
+        self.actor.control(self.key, "hold", "owner hold")
+        before = self.actor.status(self.key)
+        result = self.actor.rebind(self.key, request, "deliberate route change")
+        self.assertEqual(result["held"], "owner hold")
+        self.assertEqual(result["authority"], before["authority"])
+        self.assertEqual(result["delivery"], before["delivery"])
+        context = json.loads(result["context"])
+        self.assertEqual(context["session"], "owner")
+        self.assertEqual(context["task"], "issue://7")
+        owner = dict(self.actor.db.execute("SELECT * FROM owners").fetchone())
+        for field in ("provider", "model", "effort", "authentication", "cwd"):
+            self.assertEqual(owner[field], request[field])
+        self.assertEqual(self.actor.db.execute("SELECT reason FROM owner_rebindings").fetchone()[0],
+                         "deliberate route change")
+
+    def test_rebind_rejects_owner_agent_process_session_and_worktree_substitution(self):
+        request = self.owner_request()
+        other = Path(self.temporary.name) / "other-task"
+        subprocess.run(["git", "-C", str(self.worktree), "worktree", "add", "-b", "other", str(other)],
+                       check=True, capture_output=True)
+        original = self.actor.status(self.key)
+        for changes in ({"target": "other"}, {"session": "other"}, {"process": "another-process"},
+                        {"agent": {**request["agent"], "id": "Other"}}, {"cwd": str(other)},
+                        {"authentication": ""}, {"file": str(other / "session.jsonl")}):
+            with self.subTest(changes=changes), self.assertRaises((ValueError, subprocess.CalledProcessError)):
+                self.actor.rebind(self.key, {**request, **changes}, "invalid replacement")
+            self.assertEqual(self.actor.status(self.key), original)
+        Path(request["file"]).write_text('{"type":"session","id":"substituted"}\n')
+        with self.assertRaisesRegex(ValueError, "persisted session identity"):
+            self.actor.rebind(self.key, request, "invalid header")
+
+    def test_rebind_accepts_only_the_same_explicitly_moved_registered_worktree(self):
+        request = self.owner_request()
+        moved = self.worktree.with_name("moved task")
+        subprocess.run(["git", "-C", str(self.worktree), "worktree", "move", str(self.worktree), str(moved)],
+                       check=True, capture_output=True)
+        result = self.actor.rebind(self.key, {**request, "cwd": str(moved)}, "task worktree moved")
+        self.assertEqual(json.loads(result["context"])["worktree"], str(moved))
+        self.assertEqual(self.actor.db.execute("SELECT cwd FROM owners").fetchone()[0], str(moved))
+
+    def test_parent_carrier_rebind_verifies_chain_without_changing_child_route(self):
+        parent = self.owner_request("parent")
+        child = self.owner_request(parent=parent["file"])
+        before_child = dict(self.actor.db.execute("SELECT * FROM owners WHERE session='owner'").fetchone())
+        self.actor.rebind(self.key, parent, "parent route changed")
+        self.assertEqual(dict(self.actor.db.execute("SELECT * FROM owners WHERE session='owner'").fetchone()), before_child)
+        wrong = {**child["agent"], "parentId": "Other"}
+        self.actor.db.execute("UPDATE owners SET agent=? WHERE session='owner'", (json.dumps(wrong),))
+        with self.assertRaisesRegex(ValueError, "parent/child binding"):
+            self.actor.rebind(self.key, parent, "wrong parent")
+
+    def test_rebind_cannot_clear_a_stop_and_requires_a_reason(self):
+        request = self.owner_request()
+        with self.assertRaisesRegex(ValueError, "nonempty rebind reason"):
+            self.actor.rebind(self.key, request, " ")
+        self.actor.control(self.key, "stop", "owner stop")
+        before = self.actor.status(self.key)
+        with self.assertRaisesRegex(ValueError, "stopped PR"):
+            self.actor.rebind(self.key, request, "route changed after stop")
+        self.assertEqual(self.actor.status(self.key), before)
 
     def test_transfer_without_a_running_lifecycle_host_keeps_old_authority(self):
         fcntl.flock(self.host_lock, fcntl.LOCK_UN)

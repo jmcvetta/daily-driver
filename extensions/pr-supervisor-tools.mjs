@@ -45,6 +45,7 @@ export function installPrSupervisorTools(pi, { takeTimers, restoreTimers, takeWa
 	}
 
 	async function register(url, ctx, worktree, signal) {
+		if (recovery.state !== "ready") throw new Error("PR recovery requires explicit rebind before supervisor registration");
 		const match = /^https:\/\/([^/]+)\/([^/]+\/[^/]+)\/pull\/(\d+)\/?$/.exec(url.trim());
 		if (!match) throw new Error("Registration requires an exact GitHub PR URL");
 		const [, host, repository, numberText] = match;
@@ -83,7 +84,7 @@ export function installPrSupervisorTools(pi, { takeTimers, restoreTimers, takeWa
 		execute: async (_id, params, signal, _onUpdate, ctx) => {
 			let result;
 			const state = await backend("status", [params.identity], undefined, signal);
-			if (recovery.state === "rebind-required" && !["status", "rebind"].includes(params.operation)) {
+			if (recovery.state !== "ready" && !["status", "rebind"].includes(params.operation)) {
 				throw new Error("PR recovery requires explicit rebind before supervisor mutations");
 			}
 			if (params.operation === "rebind") {
@@ -121,7 +122,7 @@ export function installPrSupervisorTools(pi, { takeTimers, restoreTimers, takeWa
 					args.push("--reason", params.reason);
 				}
 				result = await backend(params.operation, args, undefined, signal);
-				if (params.operation === "stop") stopWatches(ctx,params.identity);
+				if (params.operation === "stop") stopWatches?.(ctx,params.identity);
 			}
 			const details = publicResult(result);
 			details.recovery = recovery.state;

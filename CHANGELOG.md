@@ -46,6 +46,8 @@
 
 ### Fixed
 
+* Keep same-owner PR recovery operable through explicit route rebinding without changing holds, stops or task authority, and allow damaged watches to be inspected and stopped safely ([#1076](https://github.com/jmcvetta/daily-driver/issues/1076)).
+
 * Preserve Omp commit provenance through selective commits, local conflict-resolution merges, and explicitly prepared squash landing messages; keep GitHub-authored update-branch messages distinct ([#1029](https://github.com/jmcvetta/daily-driver/issues/1029)).
 
 * Distinguish delegated reviewer identity from publisher provenance in Omp reviews and verification records ([#973](https://github.com/jmcvetta/daily-driver/issues/973)).

@@ -71,13 +71,21 @@ def worker(base):
 
 def run(base, env, inbox, owner):
     """Run only against the disposable sessions seeded by the child proof."""
+    primary = base / "active-repository"
+    task = base / "active-task"
+    subprocess.run(["git", "init", "--initial-branch=master", str(primary)], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(primary), "-c", "user.name=Fixture", "-c",
+                    "user.email=fixture@example.invalid", "commit", "--allow-empty", "-m", "Fixture"],
+                   check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(primary), "worktree", "add", "-b", "isolated-proof", str(task)],
+                   check=True, capture_output=True)
     actor = ACTIVE.ActiveSupervisor(base / "active.sqlite")
     try:
         columns = "session,file,cwd,provider,model,effort,process,heartbeat,authentication,agent"
         for row in inbox.db.execute("SELECT " + columns + " FROM owners"):
             actor.db.execute("INSERT INTO owners (" + columns + ") VALUES (?,?,?,?,?,?,?,?,?,?)", tuple(row))
         actor.register("isolated.example", "fixture/active", 8, "fixture-author", {
-            "session":owner["session"],"worktree":str(base / "sandbox"),"branch":"isolated-proof",
+            "session":owner["session"],"worktree":str(task),"branch":"isolated-proof",
             "task":"isolated active lifecycle proof"})
     finally:
         actor.close()

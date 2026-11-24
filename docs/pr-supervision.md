@@ -199,12 +199,12 @@ requires an interactive terminal and is not this adapter's route.
 The host checks both child and parent leases and refuses a held or unknown
 parent. It resumes the recorded parent as a restricted dispatch carrier:
 only native write to the exact recorded child and wait are admitted.
-Parent and child identity, provider, model, effort, authentication route and
-working context are checked before delivery. Native dispatch reads current
-generation/stop/hold state, and the child rechecks admission before tools.
-Credentials are used in place, never copied or forwarded from arbitrary
-environment variables. Missing identity or route evidence is degraded, not
-permission to use another agent.
+Parent and child identity stay exact. A changed model, provider, effort,
+authentication route or directory enters `rebind-required` before delivery;
+only supervisor `status` and `rebind` are admitted until recovery succeeds.
+Native dispatch reads current generation/stop/hold state, and the child
+rechecks admission before tools. Credentials are used in place, never copied
+or forwarded from arbitrary environment variables.
 
 The same command runs `scripts/probe-pr-active-supervisor.py` under an actual,
 bounded transient systemd user unit with `Restart=on-failure`. The active
@@ -214,6 +214,30 @@ parent's queued/in-flight turn prevents native child dispatch, a child
 provider request and acknowledgment of the stopped generation. This is not
 proof that an arbitrary already-running provider request can be undone.
 The probe uses isolated `gh` response fixtures, not a real PR.
+
+### Deliberate recovery rebinding
+
+The recorded live owner uses `daily_driver_pr_supervisor_control` with
+operation `rebind`, the exact PR identity and a nonempty reason. The control
+verifies the saved session header, agent binding and live process before
+updating execution metadata. A parent carrier must also prove the full saved
+parent/child chain; it updates its own route, not the child's identity or route.
+While degraded, the inbox retains its process heartbeat but admits no work.
+
+A directory change requires the same repository, branch and registered
+non-primary worktree Git directory recorded at registration. An explicit
+`git worktree move` retains that identity; another checkout, even of the same
+repository, cannot replace it. A historical record without this evidence
+cannot authorize a directory move. A failed rebind leaves recorded context
+unchanged. Rebinding does not infer or renew task approval, copy credentials,
+clear a hold or release a stop. Stopped actors cannot recover.
+
+Session-journaled fallback watches also fail closed on damaged state.
+`daily_driver_watch` action `get` returns the suspension diagnostic and known
+registration identity without restoring the payload. Action `stop` writes an
+idempotent stopped tombstone for that registration, without rewriting the
+damaged entry. Later valid entries, damaged entries and history rewinds cannot
+revive it. A new authorized run needs its own registration.
 
 ### Transfer, rollback and stop
 

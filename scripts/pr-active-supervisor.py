@@ -82,8 +82,9 @@ class ActiveSupervisor:
         root = Path(git("rev-parse", "--show-toplevel")).resolve()
         if root != Path(path).resolve() or git("symbolic-ref", "--short", "HEAD") != branch:
             raise ValueError("current task worktree or branch differs")
-        entries = git("worktree", "list", "--porcelain", "-z").split("\0")
-        if f"worktree {root}" not in entries or f"branch refs/heads/{branch}" not in entries:
+        entries = git("worktree", "list", "--porcelain", "-z").split("\0\0")
+        if not any({f"worktree {root}", f"branch refs/heads/{branch}"}.issubset(entry.split("\0"))
+                   for entry in entries):
             raise ValueError("task worktree is not registered")
         common = str(Path(git("rev-parse", "--path-format=absolute", "--git-common-dir")).resolve())
         directory = str(Path(git("rev-parse", "--absolute-git-dir")).resolve())
@@ -113,6 +114,8 @@ class ActiveSupervisor:
                     raise ValueError("recorded agent binding differs")
             if Path(live["file"]).resolve() != Path(request["file"]).resolve():
                 raise ValueError("persisted session file differs")
+            if context.get("sessionFile") and Path(context["sessionFile"]).resolve() != Path(child["file"]).resolve():
+                raise ValueError("recorded task session file differs")
             def header(owner):
                 with open(owner["file"]) as saved:
                     value = next((entry for _ in range(3) if (line := saved.readline())
