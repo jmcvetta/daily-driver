@@ -75,6 +75,30 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.77.0](https://github.com/jmcvetta/daily-driver/compare/v0.76.0...v0.77.0) (2026-11-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* `dailyDriver.modelClassRoutes` no longer controls undertaking selection. Configure desired routes through Omp class roles; configuration files are not rewritten.
+
+### Features
+
+* coalesce structured watch continuations ([#1067](https://github.com/jmcvetta/daily-driver/issues/1067)) ([c919174](https://github.com/jmcvetta/daily-driver/commit/c919174927b69809848d1b8e1a63649ab1850d89))
+* derive scheduling and bind specification publications ([#1054](https://github.com/jmcvetta/daily-driver/issues/1054)) ([e7fe7d1](https://github.com/jmcvetta/daily-driver/commit/e7fe7d19eb9e53ab54aa05099a17f0d582f39934))
+* honor configured Omp classes without routing barriers ([#1060](https://github.com/jmcvetta/daily-driver/issues/1060)) ([4020928](https://github.com/jmcvetta/daily-driver/commit/4020928f91b45b5b5e0ce77e9448d727b92a0f9f))
+* **ocr:** add model switching Make targets ([#1064](https://github.com/jmcvetta/daily-driver/issues/1064)) ([96d0aac](https://github.com/jmcvetta/daily-driver/commit/96d0aac3c50bcf9ca80306772e2a8f5854c7e5cd))
+* report readiness to users ([#1069](https://github.com/jmcvetta/daily-driver/issues/1069)) ([077fd9a](https://github.com/jmcvetta/daily-driver/commit/077fd9af5659f3bd71209754b515de879495add7))
+* simplify dedicated worktree setup without weakening primary guards ([#1058](https://github.com/jmcvetta/daily-driver/issues/1058)) ([5480ce1](https://github.com/jmcvetta/daily-driver/commit/5480ce1634ed6865fefe735b1ce7e7044cc71607))
+* simplify fleet ownership and recovery handoffs ([#1055](https://github.com/jmcvetta/daily-driver/issues/1055)) ([fd60d20](https://github.com/jmcvetta/daily-driver/commit/fd60d200d270a9725cfa1bd1da769e7d369b3fdd))
+* simplify independent review evidence ([#1051](https://github.com/jmcvetta/daily-driver/issues/1051)) ([d41d275](https://github.com/jmcvetta/daily-driver/commit/d41d275c785bc3798ba1e06f080d986196a5aa5a))
+* simplify issue readiness and relationship records ([#1057](https://github.com/jmcvetta/daily-driver/issues/1057)) ([dc5825f](https://github.com/jmcvetta/daily-driver/commit/dc5825f6a2038af682c69ed94691e032a360336a))
+
+
+### Bug Fixes
+
+* **pr:** update currency while CI runs ([#1056](https://github.com/jmcvetta/daily-driver/issues/1056)) ([f3cd50d](https://github.com/jmcvetta/daily-driver/commit/f3cd50de14c8b4cddeb73a7c6249c55b7e8662e7))
+
 ## [0.76.0](https://github.com/jmcvetta/daily-driver/compare/v0.75.0...v0.76.0) (2026-11-24)
 
 
