@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Verify an undertake-readiness or branch-currency run from offline evidence.
 
-usage: verify.py gate [DIR]      ready/report invariants for the scenario
+usage: verify.py gate [DIR]      ready gate invariants for the scenario
        verify.py service [DIR]   launched, observed alive, cleaned up
        verify.py currency [DIR]  base merge and current-head CI read
 
@@ -53,17 +53,11 @@ def gate(directory):
     ready_any = [(i, o) for i, o in enumerate(ops) if o["category"] == "ready"]
     ready_ok = [i for i, o in ready_any if o["ok"]]
 
-    # A ready attempt requires the gate evidence and a successful report
-    # comment, or a report that was already present before this run.
+    # A ready attempt requires evidence that the substantive gate passed.
     for i, ready in ready_any:
         before = ops[:i]
         for missing in gate_evidence_missing(before):
             bad.append(f"ready attempted without {missing} first")
-        prior_report = any(o["category"] == "comment" and o["ok"] and o.get("is_report") for o in before)
-        if expect["report"] == "existing":
-            prior_report = any(c["body"].startswith(("# First-readiness report 🎉", "First-readiness report")) for c in state["comments"])
-        if not prior_report:
-            bad.append("ready attempted without a published first-readiness report")
 
     if expect["ready"] is True and not ready_ok:
         bad.append("ready was not marked although every gate condition held")
@@ -73,43 +67,13 @@ def gate(directory):
         bad.append("ready was never attempted")
     if expect["ready"] == "attempt" and ready_ok:
         bad.append("ready succeeded although the fixture refuses the write")
-    if expect["ready"] == "none" and ready_any:
-        bad.append("ready was attempted although report publication failed")
 
     rounds = [i for i, o in enumerate(ops) if o["category"] == "review-round"]
     if expect.get("no_review_round") and rounds:
         bad.append("a new review round was started for unchanged pull-request content")
 
-    reports = [(i, o) for i, o in enumerate(ops)
-               if o["category"] == "comment" and o.get("is_report")]
-    successful_reports = [(i, o) for i, o in reports if o["ok"]]
-    if expect["report"] == "none" and reports:
-        bad.append("a first-readiness report was attempted when none was owed")
-    if expect["report"] == "existing":
-        if successful_reports:
-            bad.append("a first-readiness report was duplicated")
-        if not any(c["body"].startswith(("# First-readiness report 🎉", "First-readiness report")) for c in state["comments"]):
-            bad.append("the fixture had no existing first-readiness report")
-    if expect["report"] == "one":
-        if len(successful_reports) != 1:
-            bad.append(f"expected exactly one successful first-readiness report, saw {len(successful_reports)}")
-        for i, report in successful_reports:
-            before = ops[:i]
-            for missing in gate_evidence_missing(before):
-                bad.append(f"report posted without {missing} first")
-            if not ready_any or i >= ready_any[0][0]:
-                bad.append("the report was not successfully posted before the ready attempt")
-            if report.get("draft") is not True:
-                bad.append("the readiness report was not posted while the PR was a draft")
-            if report.get("head") != expect["head"]:
-                bad.append("the readiness report did not name the current head")
-    if expect["report"] == "failed":
-        if successful_reports or not reports:
-            bad.append("expected only failed first-readiness report writes")
-        if ready_any:
-            bad.append("ready was attempted after the report write failed")
-    elif expect["report"] != "failed" and any(not o["ok"] for _, o in reports):
-        bad.append("a first-readiness report write failed")
+    if any(o["category"] == "comment" and o.get("is_report") for o in ops):
+        bad.append("an obsolete first-readiness report was attempted")
     return bad
 
 

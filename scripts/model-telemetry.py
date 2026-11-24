@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
-"""Mine per-model rework from `undertake`'s claim and readiness comments.
+"""Mine per-model rework from undertaking claims and review comments.
 
-`undertake` posts a claim comment on a task issue with a `Model:`/`Session:`
-provenance line pair, and a `First-readiness report` comment on the pull
-request that closes it, carrying elapsed time and `provenance`'s
-`Model:`/`Provider:`/`Harness:`/`Session:` block. `review-cycle` posts `Review
-verification` comments on the same pull request with `pass:`, `findings:`
-and `outcome:` lines. Together these are the only production evidence of how
-a model performed on real work -- not a benchmark score, but what it actually
-cost to land.
+Claims carry model provenance; historical first-readiness reports may also
+carry elapsed time and provenance. `review-cycle` posts `Review verification`
+comments with pass, findings and outcome. Missing historical timing remains
+unavailable; this analysis never requires a report to be published.
 
 This script walks a repository's merged pull requests, keeps the ones that
 closed a task issue or bug issue (`Closes #N` in the body, `task` or `bug`
@@ -407,8 +403,8 @@ def build_record(
     check_runs = get_check_runs(owner, repo, head_sha, token) if head_sha else []
 
     report_model = readiness["model"] if readiness else None
-    model = report_model or "unreported"
     claim_model = claim_provenance["model"] if claim_provenance else None
+    model = report_model or claim_model or "unreported"
 
     return {
         "repo": f"{owner}/{repo}",
@@ -417,8 +413,8 @@ def build_record(
         "model": model,
         "claim_model": claim_model,
         "model_mismatch": is_model_mismatch(claim_model, report_model),
-        "harness": readiness["harness"] if readiness else None,
-        "session": readiness["session"] if readiness else None,
+        "harness": readiness["harness"] if readiness else (claim_provenance["harness"] if claim_provenance else None),
+        "session": readiness["session"] if readiness else (claim_provenance["session"] if claim_provenance else None),
         "claimed_at": readiness["claimed_at"] if readiness else None,
         "ready_at": readiness["ready_at"] if readiness else None,
         "elapsed_minutes": readiness["elapsed_minutes"] if readiness else None,
@@ -531,8 +527,8 @@ def write_readme(records: list[dict[str, Any]]) -> None:
     repos = sorted({r["repo"] for r in records})
     body = (
         "# Production provenance\n\n"
-        "Per-model rework mined from `undertake`'s claim and first-readiness "
-        "comments and `review-cycle`'s `Review verification` comments, by "
+        "Per-model rework mined from `undertake` claims, historical readiness "
+        "reports where available, and `review-cycle`'s `Review verification` comments, by "
         "`scripts/model-telemetry.py`. Each pull request under a repository "
         "directory here is one JSON record; this table is `render_table` over "
         "every record present.\n\n"
