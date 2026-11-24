@@ -7,9 +7,9 @@ session running in Oh My Pi. Claude Code's routes are in
 An opt-in [read-only shadow ledger](../../../docs/pr-supervision.md) can record
 observations without taking this route's ownership. It is not a replacement
 supervisor: no update, agent wake, subscription, or cutover is enabled. Keep the
-existing service and owner continuation authoritative. Cold CLI resumption is
-proved in isolation; automatic lifecycle recovery and live-owner delivery are
-not yet established end to end.
+existing service and owner continuation authoritative. Isolated proofs cover
+cold CLI resumption, live-owner inbox receipt and transient controller restart;
+they do not establish integrated active PR supervision or ownership transfer.
 
 - **Checking whether a pull request already exists for the branch.**
   `gh pr view` (or `gh pr list --head <branch>`) finds it.

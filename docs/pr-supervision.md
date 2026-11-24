@@ -45,25 +45,52 @@ service file:
   provides `pi.sendMessage` for the bound live session. Managed timers are
   unreferenced and cleared on `session_shutdown`. They are not a restart host.
 
-The remaining unproved operation is to recover durable PR records after the
-controller/host disappears and deliver exactly one fenced generation to the
-right owner, including an owner already running in another process. A new RPC
-process and its private stdio do not reattach to an arbitrary existing TUI or
-RPC owner. The inspected public APIs do not document a session-ID-to-live-input
-endpoint. The local user service inventory had no Omp or Daily Driver unit;
-that is installation evidence only, not proof that systemd or hosting cannot
-work. No blanket claim that Omp lacks cold resumption is justified.
+These APIs support a real bridge; they do not need a preinstalled adapter.
+`extensions/pr-supervision-inbox.mjs` now binds an opt-in SQLite inbox to the
+actual live Omp owner. `scripts/pr-inbox-host.py` uses the native lease probe
+before exclusively cold-resuming an owner with its recorded session and route.
+A held or unknown session is not opened by the host. An expected-session guard
+rejects a fork or replacement before delivery. The extension checks admission
+fences again at delivery and before tool calls.
 
-A viable resolution is a supported lifecycle host for a durable controller,
-plus a verified live-owner inbox/extension bridge (or a host-owned RPC channel)
-and cold activation using the proved CLI primitive. That integration must
-preserve the owner session, model/authentication route and task context, refuse
-unknown/held ownership instead of creating a second writer, acknowledge only
-after a fresh owner read, and prove restart, stop, duplicate delivery and
-credential failure in isolation. The existing APIs are useful building blocks;
-this implementation does not claim that integration exists. Do not install a
-live watch to test it. Any separate host integration must respect the accepted
-design's authorization boundary.
+The bounded `python3 scripts/probe-pr-inbox.py` proof uses an actual transient
+systemd user service with `Restart=on-failure`, not an installed watch. It
+delivered generation 1 to the already-live owner, then automatically restarted
+the controller and resumed the same saved owner for generations 2 and 3.
+Duplicate/older generations retained their receipt; generation 4 was stopped
+before delivery and caused no provider request. Only the localhost scripted
+model ran. The probe also exercises dropped-receipt redelivery.
+
+This resolves the basic host/live-owner delivery primitive, not active PR
+supervision. `daily_driver_pr_inbox_receipt` records transport receipt only;
+it is not the accepted fresh-GitHub work acknowledgment, readiness, or CI.
+The bridge must still be integrated with authoritative PR reconciliation,
+atomic transfer and stop-time actor cancellation. No live service is installed
+or enabled; no real PR is changed by either capability proof.
+
+### Explicit receipt transport
+
+Initialize an owner-only inbox with `scripts/pr-inbox.py --database <path>
+enqueue <identity> --session <id> --generation <n> --context <nonsecret-json>`.
+Opt a session into that inbox with `DAILY_DRIVER_PR_INBOX=<path>` and the
+explicit `--extension <plugin>/extensions/pr-supervision-inbox.mjs` option.
+This is separate from the shadow ledger; do not enqueue real work without its
+task authority or use it as a second wake owner beside existing maintenance.
+
+The host command is `scripts/pr-inbox-host.py --database <path>`; `--once`
+performs one bounded pass. It holds an exclusive file lock across host work.
+The extension registers owner metadata, refreshes its route/heartbeat, admits
+one generation, and retries an unreceived delivery at most five times with
+bounded exponential backoff. Duplicate and older generations do not reset
+that budget. A newer generation fences the old admission. `stop`, `hold` and
+`release` are explicit inbox controls; stops cannot be cleared by release.
+On graceful shutdown the owner metadata remains for cold recovery. The host
+reuses configured credentials in place and never copies them.
+
+Neither transport receipt nor a heartbeat proves a continuous healthy agent.
+Exhausted retries, missing owner context or an unavailable lease/activation
+route retain a durable diagnostic. The isolated proof demonstrates process
+restart, not machine-reboot availability or deployed continuous coverage.
 
 ## Opt-in read-only ledger
 
@@ -127,22 +154,24 @@ were stopped.
 ## Verification and remaining acceptance
 
 The existing `make check-pr-keep-current` gate also runs
-`scripts/test-pr-supervisor.py`. Offline consumer tests cover concurrent
+`scripts/test-pr-supervisor.py` and `scripts/test-pr-inbox.py`. Offline consumer tests cover concurrent
 registration, identity isolation, lease exclusion/expiry, stale observations,
 restart gaps, failed reads, hold/stop races, duplicate observations, terminal
 cleanup, paginated inventories, workflow-only pending CI, changed heads,
-masked currency, feedback and conflict-recovery proposals. The manual cold
-probe is not added as a recurring CI check.
+masked currency, feedback and conflict-recovery proposals. Inbox tests cover
+coalescing, stale/duplicate generations, holds, stops, receipt retry bounds,
+missing context and refusal to open held or unknown owners. The existing CI
+filter includes these product sources/tests. The manual capability probes do
+not become recurring CI checks.
 
-Still unfinished: active registration of every created/adopted PR, a supported
-restarting host, live-owner reattachment, generation delivery/acknowledgment
-and bounded redelivery, event validation/coalescing, fenced GitHub mutation,
-stop-time cancellation of queued owner work, active conflict resumption, and
-ownership transfer/rollback. Full dropped/duplicate/out-of-order event and
-acknowledgment coverage and identical-trace active wake/latency comparisons
-must exercise that real adapter. Shadow's zero agent deliveries are a safety
-property, not measured savings against an active fleet. No baseline fleet
-metrics or continuous-operation claim are made.
+Still unfinished: active registration of every created/adopted PR, integration
+of the proved restart/delivery primitives with the PR supervisor, fresh-read
+work acknowledgment, event validation/coalescing, fenced GitHub mutation,
+stop-time cancellation of all queued owner work, active conflict resumption,
+and ownership transfer/rollback. Full delivery race coverage and identical-trace
+active wake/latency comparisons must exercise that integrated actor. Shadow's
+zero agent deliveries are a safety property, not measured fleet savings.
+No baseline fleet metrics or continuous-operation claim are made.
 
 Keep both the issue and PR unfinished. Do not weaken the acceptance criteria,
 mark the PR ready, or enable an active mode based on this shadow evidence.

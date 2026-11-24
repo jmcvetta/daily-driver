@@ -263,6 +263,7 @@ check-scripts:
 check-pr-keep-current:
 	python3 scripts/test-pr-keep-current.py
 	python3 scripts/test-pr-supervisor.py
+	python3 scripts/test-pr-inbox.py
 
 # Exercise the live Omp title barrier with a local provider.
 # The title barrier needs native issue:// access rather than the eval guard.
