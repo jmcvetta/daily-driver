@@ -4221,6 +4221,184 @@ check("get_session tolerates an unnamed session and no model", async () => {
 	assert.deepEqual(result.details, { sessionId: "s1", sessionName: null, model: null, provider: null, authenticationRoute: null, undertaking: null });
 });
 
+// --- prepared commit messages ----------------------------------------------
+/** Missing or repeated attribution must not survive ordinary commits or amendments. */
+check("commit preparation stores live attribution and preserves existing contributors and trailers", async () => {
+	const root = mkdtempSync(join(tmpdir(), "daily-driver-commit-message-"));
+	try {
+		runGit(root, "init", "-q");
+		runGit(root, "config", "user.name", "Offline Fixture");
+		runGit(root, "config", "user.email", "fixture@example.invalid");
+		runGit(root, "config", "commit.gpgsign", "false");
+		const tool = makeSession().tools.get("daily_driver_commit_message");
+		let sessionId = "ordinary-session";
+		const ctx = { cwd: root, sessionManager: { getSessionId: () => sessionId } };
+		const prepare = params => tool.execute("prepare", params, undefined, undefined, ctx);
+		const body = "- Preserve the substantive message.\n\nExample (not attribution):\n```\nOmp-Session: quoted-example\n```\n";
+		const prepared = await prepare({ body });
+		assert.deepEqual(prepared.details.trailers, [{ key: "Omp-Session", value: "ordinary-session" }]);
+		assert.equal(prepared.details.body, `${body}\nOmp-Session: ordinary-session\n`);
+		assert.equal(prepared.content[0].text, prepared.details.body);
+		assert.equal(runGit(root, "status", "--porcelain"), "", "preparation does not create or stage files");
+		execFileSync("git", ["-C", root, "commit", "--allow-empty", "-q", "-F", "-"], {
+			input: `Ordinary fixture commit\n\n${prepared.details.body}`, encoding: "utf8",
+		});
+		assert.equal(runGit(root, "log", "-1", "--format=%B"), `Ordinary fixture commit\n\n${prepared.details.body}\n`);
+		const repeated = await prepare({ body: prepared.details.body });
+		assert.equal(repeated.details.body, prepared.details.body, "repeated preparation is byte-for-byte stable");
+
+		sessionId = "amendment-session";
+		const identity = "Configured Model <configured@example.invalid>";
+		const amendment = await prepare({
+			body: `${repeated.details.body.trimEnd()}\nco-authored-by: Earlier Model <earlier@example.invalid>\n` +
+				"Co-Authored-By: Earlier Model <earlier@example.invalid>\n" +
+				"oMP-sESSION: ordinary-session\nSigned-off-by: Maintainer <maintainer@example.invalid>\nRelease-As: 2.0.0\n",
+			coAuthor: identity,
+		});
+		assert.deepEqual(amendment.details.trailers, [
+			{ key: "Omp-Session", value: "ordinary-session" },
+			{ key: "Co-Authored-By", value: "Earlier Model <earlier@example.invalid>" },
+			{ key: "Co-Authored-By", value: identity },
+			{ key: "Omp-Session", value: "amendment-session" },
+		]);
+		assert.equal(amendment.details.body,
+			`${body}\nOmp-Session: ordinary-session\nco-authored-by: Earlier Model <earlier@example.invalid>\n` +
+			"Signed-off-by: Maintainer <maintainer@example.invalid>\nRelease-As: 2.0.0\n" +
+			`Co-Authored-By: ${identity}\nOmp-Session: amendment-session\n`);
+		const stable = await prepare({ body: amendment.details.body, coAuthor: identity });
+		assert.equal(stable.details.body, amendment.details.body);
+		execFileSync("git", ["-C", root, "commit", "--amend", "--allow-empty", "-q", "-F", "-"], {
+			input: `Ordinary fixture commit\n\n${stable.details.body}`, encoding: "utf8",
+		});
+		const stored = runGit(root, "log", "-1", "--format=%B");
+		assert.equal(stored, `Ordinary fixture commit\n\n${stable.details.body}\n`);
+		assert.equal((stored.match(/^Omp-Session: ordinary-session$/gmu) ?? []).length, 1);
+		assert.equal((stored.match(/^Omp-Session: amendment-session$/gmu) ?? []).length, 1);
+	} finally {
+		rmSync(root, { recursive: true, force: true });
+	}
+});
+
+/** Adding attribution must not rewrite unrelated trailer formatting or collapse distinct exact values. */
+check("commit preparation preserves unrelated trailer text and exact source record values", async () => {
+	const tool = makeSession().tools.get("daily_driver_commit_message");
+	const body = "Preserve release metadata.\n\nSigned-off-by: Maintainer <maintainer@example.invalid>\nRelease-As :  3.0.0\n";
+	const prepared = await tool.execute("trailers", {
+		body,
+		sourceMessages: [
+			"One source\n\nOmp-Session: source\nomp-session: source\n",
+			"Another source\n\nOmp-Session: Source\nCodex-Session: n/a\n",
+		],
+	}, undefined, undefined, { sessionManager: { getSessionId: () => "source" } });
+	assert.equal(prepared.details.body, body + "Omp-Session: source\nOmp-Session: Source\nCodex-Session: n/a\n");
+	assert.deepEqual(prepared.details.trailers, [
+		{ key: "Omp-Session", value: "source" },
+		{ key: "Omp-Session", value: "Source" },
+		{ key: "Codex-Session", value: "n/a" },
+	]);
+});
+
+/** Squash landing must keep source sessions rather than replacing them with Markdown or the landing session. */
+check("commit preparation passes source attribution in the explicit squash body and stored commit", async () => {
+	const root = mkdtempSync(join(tmpdir(), "daily-driver-squash-message-"));
+	try {
+		runGit(root, "init", "-q");
+		runGit(root, "config", "user.name", "Offline Fixture");
+		runGit(root, "config", "user.email", "fixture@example.invalid");
+		runGit(root, "config", "commit.gpgsign", "false");
+		const tool = makeSession().tools.get("daily_driver_commit_message");
+		const body = "Fix commit provenance\n\nCloses #1029\n\n---\nModel: source-model\nProvider: source-provider\nHarness: Omp 19.1.1\nSession: markdown-only\n";
+		const sourceMessages = [
+			"First source commit\n\nCo-Authored-By: First Model <first@example.invalid>\nOmp-Session: source-one\n",
+			"Second source commit\n\nOmp-Session: source-two\nClaude-Session: claude-source\nCodex-Session: codex-source\n" +
+				"co-authored-by: First Model <first@example.invalid>\nomp-session: source-one\n" +
+				"Co-Authored-By: Second Model <second@example.invalid>\n",
+			"Unattributed source commit\n\nA quoted example:\n```\nOmp-Session: not-a-source-session\n```\n",
+			"Another unattributed source\n\nNo identity was supplied.\n",
+		];
+		const params = { body, sourceMessages, coAuthor: "Landing Model <landing@example.invalid>" };
+		const prepared = await tool.execute("squash", params, undefined, undefined, {
+			cwd: root, sessionManager: { getSessionId: () => "landing-session" },
+		});
+		const expectedTrailers = [
+			{ key: "Co-Authored-By", value: "First Model <first@example.invalid>" },
+			{ key: "Omp-Session", value: "source-one" },
+			{ key: "Omp-Session", value: "source-two" },
+			{ key: "Claude-Session", value: "claude-source" },
+			{ key: "Codex-Session", value: "codex-source" },
+			{ key: "Co-Authored-By", value: "Second Model <second@example.invalid>" },
+			{ key: "Co-Authored-By", value: "Landing Model <landing@example.invalid>" },
+			{ key: "Omp-Session", value: "landing-session" },
+		];
+		assert.deepEqual(prepared.details.trailers, expectedTrailers);
+		assert.equal(prepared.details.body, body + "\n" + expectedTrailers.map(({ key, value }) => `${key}: ${value}\n`).join(""));
+		assert.deepEqual(params, { body, sourceMessages, coAuthor: "Landing Model <landing@example.invalid>" });
+		const bodyPath = join(root, "squash-body.txt");
+		const capturePath = join(root, "outgoing.json");
+		const fakeGh = join(root, "gh.mjs");
+		writeFileSync(bodyPath, prepared.details.body);
+		writeFileSync(fakeGh, `import { readFileSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+const args = process.argv.slice(2);
+const body = readFileSync(args[args.indexOf("--body-file") + 1], "utf8");
+writeFileSync(${JSON.stringify(capturePath)}, JSON.stringify({ args, body }));
+execFileSync("git", ["commit", "--allow-empty", "-q", "-F", "-"], {
+  input: ${JSON.stringify("Fix commit provenance\n\n")} + body,
+  encoding: "utf8",
+});
+`);
+		const args = ["pr", "merge", "1029", "--squash", "--body-file", bodyPath, "--match-head-commit", "fixture-gated-head"];
+		execFileSync(process.execPath, [fakeGh, ...args], { cwd: root });
+		const outgoing = JSON.parse(readFileSync(capturePath, "utf8"));
+		assert.deepEqual(outgoing.args, args);
+		assert.equal(outgoing.body, prepared.details.body);
+		const stored = runGit(root, "log", "-1", "--format=%B");
+		assert.equal(stored, `Fix commit provenance\n\n${prepared.details.body}\n`);
+		const actualTrailers = execFileSync("git", ["interpret-trailers", "--parse", "--no-divider"], {
+			cwd: root, input: stored, encoding: "utf8",
+		});
+		for (const { key, value } of expectedTrailers) {
+			assert.equal(actualTrailers.split("\n").filter(line => line === `${key}: ${value}`).length, 1);
+		}
+		assert.ok(!actualTrailers.includes("not-a-source-session"));
+		assert.ok(!actualTrailers.includes("Omp-Session: markdown-only"));
+	} finally {
+		rmSync(root, { recursive: true, force: true });
+	}
+});
+
+/** Invalid identities must fail, not inject trailers or silently become a fabricated fallback. */
+check("commit preparation rejects invalid input and uses n/a only for missing live sessions", async () => {
+	const tool = makeSession().tools.get("daily_driver_commit_message");
+	const prepare = (params, ctx = {}) => tool.execute("validate", params, undefined, undefined, ctx);
+	for (const coAuthor of [
+		"", "Configured Model", "Configured Model <missing-address>", " Model <a@example.invalid>",
+		"Model <a@example.invalid>\nOmp-Session: injected", "Model <a@example.invalid>\r",
+		"Model\tName <a@example.invalid>", "Model <a@example.invalid>\u2028Injected",
+	]) {
+		await assert.rejects(prepare({ body: "Substantive body", coAuthor }), /coAuthor/u);
+	}
+	for (const params of [
+		{ body: "" }, { body: " \n" }, { body: null }, { body: "body\0" },
+		{ body: "body", sourceMessages: "not-an-array" },
+		{ body: "body", sourceMessages: [null] },
+		{ body: "body", sourceMessages: ["bad\0source"] },
+	]) {
+		await assert.rejects(prepare(params), /body|sourceMessages/u);
+	}
+	for (const ctx of [{}, { sessionManager: {} }, { sessionManager: { getSessionId: () => null } }]) {
+		const result = await prepare({ body: "Substantive body" }, ctx);
+		assert.equal(result.details.body, "Substantive body\n\nOmp-Session: n/a\n");
+		assert.deepEqual(result.details.trailers, [{ key: "Omp-Session", value: "n/a" }]);
+	}
+	await assert.rejects(prepare({ body: "body" }, {
+		sessionManager: { getSessionId: () => "session\nInjected: value" },
+	}), /Omp session/u);
+	await assert.rejects(prepare({ body: "body" }, {
+		sessionManager: { getSessionId: () => { throw new Error("session read failed"); } },
+	}), /session read failed/u);
+});
+
 // --- legacy task worktree entries do not restore a separate status ----------
 check("legacy worktree entries do not change cwd or create a task status", async () => {
 	const s = makeSession(

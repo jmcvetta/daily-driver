@@ -162,16 +162,66 @@ The watch
 | `Land the pull request` | Read submitted reviews, recorded review identifiers and SHAs, and dispositions | `review-cycle`'s `references/omp.md` review history read |
 | `Land the pull request` | Read verification records | `gh api --paginate /repos/{owner}/{repo}/issues/{number}/comments` |
 | `Land the pull request` | Read first-parent ancestry | `git show -s --format=%P <sha>` in a checkout containing the head and its ancestors; unavailable objects fail the predicate |
-| `Land the pull request` | Squash merge the gated head | `gh pr merge <number> --squash --match-head-commit <headRefOid>` |
+| `Land the pull request` | Squash merge the gated head | Prepare the paginated source messages and call `gh pr merge <number> --squash --body-file <path> --match-head-commit <headRefOid>` as below |
 | `Close the epic` | Comment with the landed pull requests or missing claim | `daily_driver_gh_write({ args: ["issue", "comment", <number>, "--body-file", <path>] })` |
 | `Close the epic` | Close as completed | `gh issue close <number> --reason completed` |
 
 Apply `undertake`'s `Review evidence` predicate to the complete review,
 conversation and thread histories and the gated `headRefOid`.
 
-The merge is one conditional `gh pr merge` call for a task pull request after
-the gate holds. `--match-head-commit <headRefOid>` makes it fail closed if the
-task session pushes after the read.
+When the gate holds and landing is authorized, prepare the squash body from
+the PR body read with that gate and **all** PR commit messages, not GitHub's
+default squash body. The following JavaScript Eval route uses GraphQL cursor
+pagination (the REST pull-request commit list is limited to 250 commits).
+Run it in the PR repository with `owner`, `repo`, `number`, `gatedHead`,
+and `gatedBody` set from the gated reads. Do not run it for by-hand landing.
+
+```js
+const query = `query($owner: String!, $repo: String!, $number: Int!, $endCursor: String) {
+  repository(owner: $owner, name: $repo) {
+    pullRequest(number: $number) {
+      commits(first: 100, after: $endCursor) {
+        totalCount
+        pageInfo { hasNextPage endCursor }
+        nodes { commit { oid message } }
+      }
+    }
+  }
+}`;
+const pages = JSON.parse(await sh`gh api graphql --paginate --slurp -f query=${query} -f owner=${owner} -f repo=${repo} -F number=${number}`);
+const connections = pages.map(p => p.data.repository.pullRequest.commits);
+const nodes = connections.flatMap(c => c.nodes);
+if (!nodes.length || connections.some(c => c.totalCount !== nodes.length) ||
+    connections.at(-1).pageInfo.hasNextPage ||
+    new Set(nodes.map(n => n.commit.oid)).size !== nodes.length ||
+    nodes.at(-1).commit.oid !== gatedHead) {
+  throw new Error("Incomplete or changed PR commit list; repeat the gate");
+}
+const result = await tool.daily_driver_commit_message({
+  body: gatedBody,
+  sourceMessages: nodes.map(n => n.commit.message),
+});
+const current = JSON.parse(await sh`gh pr view ${number} --json headRefOid,body`);
+if (current.headRefOid !== gatedHead || current.body !== gatedBody) {
+  throw new Error("PR changed; repeat the gate and prepare again");
+}
+const path = (await sh`mktemp`).trim();
+try {
+  await Bun.write(path, result.details.body);
+  await sh`gh pr merge ${number} --squash --body-file ${path} --match-head-commit ${gatedHead}`;
+} finally {
+  await sh`rm -- ${path}`;
+}
+```
+
+If a verified configured Omp co-author exists, supply it as `coAuthor` under
+[`provenance`](../../provenance/references/omp.md#commits); never invent one.
+Fail closed on unavailable pages, GraphQL errors, inconsistent counts, or a
+changed head or body. Repeat the entire gate and preparation for a changed
+head, never reuse a stale body. The conditional merge protects the remaining
+head race; it leaves GitHub's PR-title-based squash subject unchanged. Keep
+the merge authorization, CI and review gates; do not use the GitHub body-write
+wrapper for this commit message.
 `Close the epic` posts its evidence comment before `gh issue close`, and never
 calls the latter when a child outcome is unsupported or landing is by hand.
 Read the delivered outcome against the story's own completion contract: a
