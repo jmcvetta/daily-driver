@@ -232,6 +232,10 @@ Already-running admitted legacy work must drain before transfer. Rollback
 first fences new deliveries and drains mutations, then reads fresh state and
 restores only the recorded prior services and original reminder message/deadline.
 Successful timer restoration is persisted so retries do not duplicate it.
+Matching structured PR/review watches are saved and stopped as part of the
+same transfer. Rollback restores their state and deadline under a new watch
+incarnation without clearing prior stop tombstones. A second transfer fences
+that restored fallback as well.
 Retransfer creates a new fenced transport incarnation from fresh evidence.
 Stops and holds are never cleared by rollback or re-registration.
 

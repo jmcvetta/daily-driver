@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const script = resolve(dirname(fileURLToPath(import.meta.url)), "../scripts/pr-active-supervisor.py");
 
 /** Install opt-in PR authority controls and return the attributed-write hook. */
-export function installPrSupervisorTools(pi, { takeTimers, restoreTimers }) {
+export function installPrSupervisorTools(pi, { takeTimers, restoreTimers, takeWatches, stopWatches, restoreWatches }) {
 	const databasePath = process.env.DAILY_DRIVER_PR_SUPERVISOR;
 	if (!databasePath) return undefined;
 	if (!isAbsolute(databasePath)) throw new Error("PR supervisor database must be an absolute owner-only path");
@@ -89,17 +89,21 @@ export function installPrSupervisorTools(pi, { takeTimers, restoreTimers }) {
 				if (ctx.hasPendingMessages()) throw new Error("Drain queued owner work before transferring supervision");
 				if (!state.host_running) throw new Error("No active lifecycle controller holds this ledger; prior maintenance stays authoritative");
 				const timers = takeTimers(params.timerIds ?? [], ctx, {cancel:false,identity:params.identity});
-				const request = {services:params.services ?? [],cancelled_timers:timers};
+				const request = {services:params.services ?? [],cancelled_timers:timers,watches:takeWatches(ctx,params.identity)};
 				await backend("prepare-transfer", [params.identity], request, signal);
+				stopWatches(ctx,params.identity);
+				if (ctx.hasPendingMessages()) throw new Error("Legacy watch work queued during transfer; drain it before activation");
 				takeTimers(params.timerIds ?? [], ctx);
 				result = await backend("transfer", [params.identity], request, signal);
 			} else if (params.operation === "rollback") {
 				result = await backend("rollback", [params.identity], undefined, signal);
-				if (result.restored && result.timers.length) {
-					result.timerIds = restoreTimers(result.timers.map(timer => ({...timer,identity:params.identity})), ctx);
-					await backend("complete-rollback", [params.identity], {timer_ids:result.timerIds}, signal);
+				if (result.restored && (result.timers.length || result.watches.length)) {
+					if (result.timers.length) result.timerIds = restoreTimers(result.timers.map(timer => ({...timer,identity:params.identity})), ctx);
+					if (result.watches.length) result.watchKeys = restoreWatches(ctx,result.watches);
+					await backend("complete-rollback", [params.identity], {timer_ids:result.timerIds,watch_keys:result.watchKeys}, signal);
 				}
 				delete result.timers;
+				delete result.watches;
 			} else {
 				const args = [params.identity];
 				if (params.operation !== "status") {
@@ -107,6 +111,7 @@ export function installPrSupervisorTools(pi, { takeTimers, restoreTimers }) {
 					args.push("--reason", params.reason);
 				}
 				result = await backend(params.operation, args, undefined, signal);
+				if (params.operation === "stop") stopWatches(ctx,params.identity);
 			}
 			return {content: [{type: "text", text: `Supervisor ${params.operation} recorded; no readiness or merge decision was made`}], details: publicResult(result)};
 		},

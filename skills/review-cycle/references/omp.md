@@ -89,6 +89,13 @@ The wrapper adds ordinary provenance; do not add a new block to the body.
 The wait
 ========
 
+For a PR transferred to the [opt-in active supervisor](../../pr/references/omp.md#opt-in-active-supervision),
+that actor owns the single durable observation/delivery route. Do not start the
+legacy CI service or owner fallback below alongside it. Handle a supervisor
+delivery, acknowledge only through its fresh-read work tool, and retain the
+same three-source current-head verdict and independent-review requirements.
+These transport operations do not establish readiness.
+
 **A bounded service observes CI; a live owner handles its result.** Use named
 Bash services for `gh pr checks --watch` and, where needed, `gh run watch`.
 Keep the owner continuation from [`pr`'s route](../../pr/references/omp.md#the-owner-continuation)

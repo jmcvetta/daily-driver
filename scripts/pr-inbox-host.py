@@ -66,6 +66,10 @@ def activate(inbox, owner, omp, timeout=90):
             parent = inbox.db.execute("SELECT * FROM owners WHERE file=?", (parent_file,)).fetchone()
             if parent is None or parent["session"] in visited:
                 raise ActivationError("parent-owner-context-unavailable")
+            parent_lease = subprocess.run([omp, "session", "lease", "--json", "--", parent["session"]],
+                capture_output=True, text=True, check=True, timeout=15)
+            if json.loads(parent_lease.stdout) != {"held": [], "unknown": []}:
+                return "parent-held-or-unknown"
             activation_owner = dict(parent)
             visited.add(parent["session"])
             if json.loads(parent["agent"]).get("kind") == "main":
@@ -76,10 +80,6 @@ def activate(inbox, owner, omp, timeout=90):
             if not parent_header or not parent_header.get("parentSession"):
                 raise ActivationError("parent-chain-invalid")
             parent_file = parent_header["parentSession"]
-        parent_lease = subprocess.run([omp, "session", "lease", "--json", "--", activation_owner["session"]],
-            capture_output=True, text=True, check=True, timeout=15)
-        if json.loads(parent_lease.stdout) != {"held": [], "unknown": []}:
-            return "parent-held-or-unknown"
         if activation_owner.get("authentication", "unknown") == "unknown" or activation_owner["authentication"].startswith("env:"):
             raise ActivationError("parent-authentication-route-unavailable")
     if owner.get("authentication", "unknown") == "unknown" or owner.get("authentication", "").startswith("env:"):

@@ -2654,6 +2654,9 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 		return triggerId;
 	}
 	const prSupervisor = installPrSupervisorTools(pi, {
+		takeWatches: (ctx,identity) => watchContinuations.snapshotPr(ctx,identity),
+		stopWatches: (ctx,identity) => watchContinuations.stopPr(ctx,identity),
+		restoreWatches: (ctx,watches) => watchContinuations.restorePr(ctx,watches),
 		takeTimers(ids, ctx, {cancel = true, identity} = {}) {
 			const entries = ids.map(id => {
 				const entry = TRIGGERS.get(id);
@@ -2667,31 +2670,39 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 			return entries;
 		},
 		restoreTimers(timers, ctx) {
-			return timers.map(params => scheduleReminder(ctx, {...params,
-				delaySeconds:params.dueAt ? Math.max(1,Math.ceil((params.dueAt-Date.now())/1000)) : params.delaySeconds}));
+			return timers.map(params => {
+				const existing = [...TRIGGERS].find(([,entry]) =>
+					entry.ctx.sessionManager.getSessionId() === ctx.sessionManager.getSessionId() &&
+					entry.params.identity === params.identity && entry.params.message === params.message &&
+					entry.params.dueAt === params.dueAt);
+				return existing?.[0] ?? scheduleReminder(ctx, {...params,
+					delaySeconds:params.dueAt ? Math.max(1,Math.ceil((params.dueAt-Date.now())/1000)) : params.delaySeconds});
+			});
 		},
 	});
 	if (prSupervisor) installPrSupervisionInbox(pi, prSupervisor);
 	let legacyWakeToken;
-	pi.on("before_agent_start", async (event, ctx) => {
+	pi.on("before_agent_start", (event, ctx) => {
 		const match = event.prompt?.match(/DAILY_DRIVER_PR_LEGACY (\S+) (\d+) (\S+)/);
 		legacyWakeToken = match ? {identity:match[1],epoch:Number(match[2]),token:match[3]} : undefined;
 		if (!legacyWakeToken || !prSupervisor) return;
 		const {identity,token,epoch} = legacyWakeToken;
-		if (!(await prSupervisor.legacyWake(identity,"start",token,epoch)).authorized) await ctx.abort();
+		return prSupervisor.legacyWake(identity,"start",token,epoch).then(result => {
+			if (!result.authorized) return ctx.abort();
+		});
 	});
-	pi.on("tool_call", async () => {
+	pi.on("tool_call", () => {
 		if (!legacyWakeToken || !prSupervisor) return;
 		const {identity,token,epoch} = legacyWakeToken;
-		if (!(await prSupervisor.legacyWake(identity,"check",token,epoch)).authorized) {
-			return {block:true,reason:"Legacy PR wake was stopped or transferred; do no work"};
-		}
+		return prSupervisor.legacyWake(identity,"check",token,epoch).then(result => {
+			if (!result.authorized) return {block:true,reason:"Legacy PR wake was stopped or transferred; do no work"};
+		});
 	});
-	pi.on("agent_end", async event => {
+	pi.on("agent_end", event => {
 		if (event.willContinue || !legacyWakeToken || !prSupervisor) return;
 		const {identity,token,epoch} = legacyWakeToken;
 		legacyWakeToken = undefined;
-		await prSupervisor.legacyWake(identity,"finish",token,epoch);
+		return prSupervisor.legacyWake(identity,"finish",token,epoch);
 	});
 
 	// Extension state is read from the active branch for each event. This keeps

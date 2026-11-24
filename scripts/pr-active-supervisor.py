@@ -213,7 +213,10 @@ class ActiveSupervisor:
 
     def acknowledge(self, key, generation, fence, admission, source=None):
         """Acknowledge work only after this owner action makes a fresh GitHub read."""
-        record = self.ledger.get(key)
+        row = self.db.execute("SELECT * FROM records WHERE identity=?", (key,)).fetchone()
+        if row is None:
+            return {"acknowledged":False,"reason":"no registered active PR"}
+        record = dict(row)
         actor = self.db.execute("SELECT * FROM authorities WHERE identity=?", (key,)).fetchone()
         row = self.db.execute("SELECT * FROM deliveries WHERE identity=?", (key,)).fetchone()
         if not actor or actor["state"] != "active" or row is None:
@@ -266,7 +269,7 @@ class ActiveSupervisor:
                 self.db.execute("UPDATE authorities SET legacy_running=1 WHERE identity=?", (key,))
             return {"authorized":bool(allowed)}
 
-    def prepare_transfer(self, key, services, cancelled_timers):
+    def prepare_transfer(self, key, services, cancelled_timers, watches=None):
         """Persist rollback identity before the live owner cancels any timer."""
         if not self.db.execute("SELECT 1 FROM authorities WHERE identity=?", (key,)).fetchone():
             return {"refused":"PR has no active-controller registration"}
@@ -283,13 +286,13 @@ class ActiveSupervisor:
                 raise ValueError("legacy owner work is running; drain it before transfer")
             self.db.execute("""UPDATE authorities SET state='transferring',epoch=epoch+1,legacy=?,error=NULL,
                 legacy_delivery=NULL,legacy_running=0 WHERE identity=?""",
-                (json.dumps({"services": services, "timers": cancelled_timers}), key))
+                (json.dumps({"services": services, "timers": cancelled_timers, "watches":watches or []}), key))
             self.db.execute("UPDATE records SET epoch=epoch+1,lease_owner=NULL,lease_until=0 WHERE identity=?", (key,))
         return self.status(key)
 
-    def transfer(self, key, services, cancelled_timers, process_control=None):
+    def transfer(self, key, services, cancelled_timers, process_control=None, watches=None):
         """Fence handoff, stop verified legacy actors, then activate one authority."""
-        prepared = self.prepare_transfer(key, services, cancelled_timers)
+        prepared = self.prepare_transfer(key, services, cancelled_timers, watches)
         if "refused" in prepared or prepared["authority"]["state"] == "active":
             return prepared
         transfer_epoch = prepared["authority"]["epoch"]
@@ -354,16 +357,19 @@ class ActiveSupervisor:
                 self.db.execute("UPDATE authorities SET state='shadow',error=NULL WHERE identity=?", (key,))
             return {"restored": True, "timers": [] if legacy.get("timers_restored") else legacy.get("timers", []),
                     "timerIds":legacy.get("restored_timer_ids",[]),
+                    "watches":[] if legacy.get("watches_restored") else legacy.get("watches",[]),
+                    "watchKeys":legacy.get("restored_watch_keys",[]),
                     "limitation": "old Omp route cannot cold-resume an owner after shutdown"}
 
-    def complete_rollback(self, key, timer_ids):
+    def complete_rollback(self, key, timer_ids, watch_keys=None):
         """Persist successful live-timer restoration without duplicating later retries."""
         with self.ledger.transaction():
             actor = self.db.execute("SELECT * FROM authorities WHERE identity=?", (key,)).fetchone()
             if actor is None or actor["state"] != "shadow":
                 raise SHADOW.Fenced("rollback authority changed before timer restoration")
             legacy = json.loads(actor["legacy"])
-            legacy.update(timers_restored=True,restored_timer_ids=timer_ids)
+            legacy.update(timers_restored=True,restored_timer_ids=timer_ids,
+                          watches_restored=True,restored_watch_keys=watch_keys or [])
             self.db.execute("UPDATE authorities SET legacy=? WHERE identity=?", (json.dumps(legacy),key))
         return {"restored":True}
 
@@ -505,13 +511,13 @@ def main():
         elif args.command in ("prepare-transfer", "transfer"):
             request = json.loads(sys.stdin.read() if str(args.request) == "-" else args.request.read_text())
             operation = actor.prepare_transfer if args.command == "prepare-transfer" else actor.transfer
-            output = operation(args.identity, request["services"], request["cancelled_timers"])
+            output = operation(args.identity, request["services"], request["cancelled_timers"], watches=request.get("watches",[]))
         elif args.command == "legacy-wake":
             request = json.loads(sys.stdin.read() if str(args.request) == "-" else args.request.read_text())
             output = actor.legacy_wake(args.identity, **request)
         elif args.command == "complete-rollback":
             request = json.loads(sys.stdin.read() if str(args.request) == "-" else args.request.read_text())
-            output = actor.complete_rollback(args.identity, request["timer_ids"])
+            output = actor.complete_rollback(args.identity, request["timer_ids"], request.get("watch_keys",[]))
         elif args.command == "rollback":
             output = actor.rollback(args.identity)
         elif args.command == "reconcile":

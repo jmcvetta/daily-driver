@@ -38,8 +38,12 @@ class Provider(BaseHTTPRequestHandler):
 
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-        latest = next((m for m in reversed(body.get("messages", [])) if m.get("role") == "user"), {})
-        prompt = text(latest.get("content", ""))
+        markers = ("SPAWN_CHILD_PROOF","ROOT_RELAY_CHILD","Recovery carrier only:",
+                   "DAILY_DRIVER_PR_DELIVERY","CHILD_RELAY","CHILD_PROOF_TARGET","CHILD_COLD_DIRECT")
+        latest_index = max((i for i,m in enumerate(body.get("messages",[]))
+                            if m.get("role") == "user" and any(marker in text(m.get("content","")) for marker in markers)),
+                           default=-1)
+        prompt = text(body["messages"][latest_index].get("content","")) if latest_index>=0 else ""
         phase = ("spawn" if "SPAWN_CHILD_PROOF" in prompt else "relay"
                  if "ROOT_RELAY_CHILD" in prompt or "Recovery carrier only:" in prompt
                  else "receipt" if "DAILY_DRIVER_PR_DELIVERY" in prompt
@@ -47,7 +51,6 @@ class Provider(BaseHTTPRequestHandler):
         index = COUNTS.get(phase, 0)
         COUNTS[phase] = index + 1
         if phase == "receipt" or "Recovery carrier only:" in prompt:
-            latest_index = max(i for i,m in enumerate(body["messages"]) if m.get("role") == "user")
             index = sum(m.get("role") == "tool" for m in body["messages"][latest_index+1:])
         call = None
         if phase == "spawn" and index == 0:

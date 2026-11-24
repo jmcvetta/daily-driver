@@ -48,10 +48,11 @@ else:
 	const node = {optional() { return this; },int() { return this; },min() { return this; },
 		max() { return this; },describe() { return this; }};
 	const tools = new Map();
-	const pi = {zod:{object:value=>value,string:()=>node,number:()=>node,array:()=>node,enum:()=>node},
+	const pi = {zod:{object:value=>({...value,optional() {return this;}}),string:()=>node,number:()=>node,array:()=>node,enum:()=>node},
 		registerTool:tool=>tools.set(tool.name,tool)};
 	let timersTaken = 0;
-	const service = installPrSupervisorTools(pi, {takeTimers() { timersTaken++; return []; },restoreTimers() { return []; }});
+	const service = installPrSupervisorTools(pi, {takeTimers() { timersTaken++; return []; },restoreTimers() { return []; },
+		takeWatches:()=>[],stopWatches() {},restoreWatches:()=>[]});
 	await service.initialize();
 	const ctx = {cwd:primary,hasPendingMessages:()=>false,
 		sessionManager:{getSessionId:()=>"fixture-owner",getSessionFile:()=>join(root,"owner.jsonl")}};
@@ -86,19 +87,27 @@ else:
 			host.once("error",reject);
 			host.once("exit",code=>{clearTimeout(deadline);reject(new Error(`fixture controller exited ${code}`));});
 		});
-		const events = new Map(), runtimeTools = new Map(), timers = new Map(), sent = [];
+		const events = new Map(), runtimeTools = new Map(), timers = new Map(), sent = [], entries = [];
 		let nextTimer = 0, aborted = 0;
 		const runtime = {zod:pi.zod,on(name,handler) {events.set(name,[...(events.get(name)??[]),handler]);},
 			registerTool:tool=>runtimeTools.set(tool.name,tool),registerCommand() {},
 			getActiveTools:()=>["read","write"],getAllTools:()=>[...runtimeTools.values()],
-			sendUserMessage:(content,options)=>sent.push({content,options}),sendMessage() {},appendEntry() {}};
+			sendUserMessage:(content,options)=>sent.push({content,options}),sendMessage() {},
+			appendEntry(customType,data) {entries.push({type:"custom",customType,data});}};
 		dailyDriverExtension(runtime,{notificationDependencies:{lookup:()=>({override(){}})}});
 		const timerContext = {...ctx,cwd:worktree,agent:{kind:"main",id:"Main"},
-			sessionManager:{...ctx.sessionManager,getSessionName:()=>"#7 Fixture",getBranch:()=>[]},
+			sessionManager:{...ctx.sessionManager,getSessionName:()=>"#7 Fixture",getBranch:()=>entries,getEntries:()=>entries},
 			setTimeout(fn,delay) {timers.set(++nextTimer,{fn,delay});return nextTimer;},
 			clearTimer:id=>timers.delete(id),abort:async()=>{aborted++;}};
 		const schedule = runtimeTools.get("daily_driver_schedule");
 		const original = (await schedule.execute("timer",{delaySeconds:60,message:"Original owner continuation"},undefined,undefined,timerContext)).details.triggerId;
+		const watchState = {workflow:"pr",host:"isolated.example",repository:"fixture/project",number:7,
+			ownerIssue:7,branch:"task",worktree,nextAction:"Read current fixture evidence",authorityRefs:["issue://7"],
+			holds:[],workers:[],services:[],observations:[]};
+		const watch = runtimeTools.get("daily_driver_watch");
+		const watched = await watch.execute("watch",{action:"register",key:"pr:isolated.example/fixture/project#7",
+			delaySeconds:60,state:watchState},undefined,undefined,timerContext);
+		assert.equal(watched.details.registered,true);
 		const runtimeControl = runtimeTools.get("daily_driver_pr_supervisor_control");
 		const invoke = (operation,timerIds=[]) => runtimeControl.execute(operation,
 			{operation,identity:result.details.identity,timerIds,services:[]},undefined,undefined,timerContext);
@@ -106,11 +115,14 @@ else:
 		assert.equal(timers.size,0,"transfer cancels the original timer");
 		const rollback = await invoke("rollback");
 		assert.equal(rollback.details.timerIds.length,1);
-		assert.equal(timers.size,1,"rollback restores exactly one continuation");
+		assert.equal(rollback.details.watchKeys.length,1);
+		assert.equal(timers.size,2,"rollback restores the generic timer and structured PR watch");
+		const restoredWatch = entries.find(entry=>entry.data.key===rollback.details.watchKeys[0]);
+		assert.deepEqual(restoredWatch.data.state,watchState,"structured context survives rollback unchanged");
 		await invoke("rollback");
-		assert.equal(timers.size,1,"repeated rollback cannot duplicate timers");
-		const restored = [...timers.values()][0];
-		timers.clear();
+		assert.equal(timers.size,2,"repeated rollback cannot duplicate either wake owner");
+		const [restoredId,restored] = [...timers.entries()][0];
+		timers.delete(restoredId);
 		await restored.fn();
 		assert.equal(sent.length,1);
 		assert.match(sent[0].content,/Original owner continuation/);
@@ -121,6 +133,7 @@ else:
 			await handler({prompt:sent[0].content},timerContext);
 		}
 		assert.equal(aborted,1,"an already-queued old timer cannot start work after retransfer");
+		assert.equal(timers.size,0,"retransfer also fences the restored structured fallback");
 	} finally {
 		host.kill("SIGTERM");
 		await new Promise(resolveExit=>host.once("exit",resolveExit));

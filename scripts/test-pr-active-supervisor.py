@@ -6,6 +6,8 @@ import fcntl
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import threading
 import unittest
@@ -396,6 +398,22 @@ class ActiveTests(unittest.TestCase):
             self.assertFalse(self.actor.acknowledge(self.key,1,1,"missing")["acknowledged"])
             self.assertIn("refused",self.actor.transfer(self.key,[],[]))
             self.assertFalse(self.actor.rollback(self.key)["restored"])
+
+    def test_shadow_only_cli_requests_return_structured_refusals(self):
+        self.actor.db.execute("DELETE FROM authorities WHERE identity=?", (self.key,))
+        before = self.actor.ledger.get(self.key)
+        prefix = [sys.executable,str(ROOT / "scripts/pr-active-supervisor.py"),"--database",str(self.path)]
+        for key in (self.key,"isolated.example/missing/project/999"):
+            result = subprocess.run(prefix+["acknowledge",key,"--generation","1","--fence","1","--admission","missing"],
+                                    capture_output=True,text=True,check=True)
+            self.assertFalse(json.loads(result.stdout)["acknowledged"])
+            self.assertEqual(result.stderr,"")
+            result = subprocess.run(prefix+["transfer",key,"--request","-"],
+                                    input=json.dumps({"services":[],"cancelled_timers":[]}),
+                                    capture_output=True,text=True,check=True)
+            self.assertIn("refused",json.loads(result.stdout))
+            self.assertEqual(result.stderr,"")
+        self.assertEqual(self.actor.ledger.get(self.key),before)
 
     def test_identical_trace_compares_wakes_reconciliation_and_action_latency(self):
         self.activate()
