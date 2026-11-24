@@ -60,8 +60,11 @@ success_criteria:
       Grade the final reply. Begin rationale with `ANCHOR: result` or
       `ANCHOR: none`; score 0 if no final result exists. The epic must retain
       the supplied four-line ballad quatrain verbatim, an outcome and
-      justification, relevant scheduling constraints, and a concise end-state
-      brief; it must not copy
+      justification, and a concise end-state brief. Include only supplied or
+      agreed non-graph scheduling constraints; none are supplied here, so
+      omission or "none specified" is valid. Never invent dependencies or
+      approval prerequisites, or duplicate ordinary human-action inputs as
+      epic scheduling constraints. The epic must not copy
       child progress checklists. Where the epic has nontrivial components,
       flow, state, or data movement, the Human brief
       should include one Mermaid diagram revealing that structure, but the
