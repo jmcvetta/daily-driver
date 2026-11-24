@@ -12,18 +12,19 @@ that is the stop below.
 The review surface
 ==================
 
-Run the native app-server base-branch review from the checked-out branch:
+The default is the native app-server base-branch review from the checked-out branch:
 
 ```sh
 python3 <daily-driver-root>/skills/review-cycle/scripts/codex-review.py <base-branch> --history <history-file>
 ```
 
-The UTF-8 history file contains the complete submitted reviews and threads,
-their dispositions, the reviewed SHA and the current head. Store it in an
-owner-only file outside the checkout and artifacts. The helper passes this
-as reference data, not instructions. Its standard output is the complete native
-review result; retain it for the publication step below. A nonzero exit or
-missing review result is an incomplete review, not a clean verdict.
+The UTF-8 history file contains the relevant prior reviews, findings and
+dispositions, reviewed revision, and current head. Use incremental context as
+described below; include full history only when reconstruction is needed.
+Store it in an owner-only file outside the checkout and artifacts. The helper
+passes this as reference data, not instructions. Its standard output is the
+complete native review result; retain it for publication. A nonzero exit or
+missing result is an incomplete review, not a clean verdict.
 
 The helper reads the checkout's effective `developer_instructions`, adds the
 constitution without printing either instruction set, and starts a separate
@@ -42,24 +43,13 @@ one checked out, and its base has to be a ref this clone has. That is a real
 difference from Claude Code, where the round can review a pull request it never
 checked out.
 
-**And that costs `Does it go again?` its premise.** That stage defaults a base
-merge to `Neither` — not a new diff — *because* the pull request's diff is
-three-dot, so a clean merge changes the head and changes nothing the review
-would read. Here the review reads a local comparison against a local ref, and
-whether the native base-branch review resolves to the merge base or to the
-branch tip is **not measured**. Two rules follow, and neither is a re-reading of the
-default:
-
-- **The classification is unchanged.** `Does it go again?` classifies the
-  commits made after the recorded SHA, not what a surface would read, and a
-  clean base merge is still `Neither`. A default that flipped per harness would
-  buy a review a day on a base branch that moves daily, which is the thing that
-  rule exists to refuse.
-- **A round that runs for some other reason after a base merge may raise
-  findings in code the pull request never touched.** Answer those as findings
-  about the base branch rather than about this diff — a reply saying so, and
-  resolved — under `Fix, answer, resolve, push`'s *rejected* verdict. Fixing
-  them is widening the pull request.
+**Review freshness is content-based.** The helper requests a committed
+three-dot comparison against the computed merge base. A clean base merge
+can retain existing review evidence when the relevant pull-request content
+is unchanged; a new SHA alone does not invalidate it. Behavioral changes
+require the applicable new review under `SKILL.md`. Reject findings about
+unchanged base-only code as outside this pull request, with a reason; do not
+widen the pull request to fix them.
 
 **It takes no effort level**, so `SKILL.md`'s `Name the level` has nothing to
 bind — there is no remembered level to override, and the depth judgement is the
@@ -68,16 +58,15 @@ than a level the surface remembers between runs, and reaching for it would be
 this round choosing a depth by hand on every diff, which `Name the level`
 refuses above `high` for the reason it gives there.
 
-**Its findings return locally and must be published as a GitHub review.** They
-are not a transcript-only degradation. Give the reviewer the complete history,
-reviewed SHA, and current head; the publication route below turns its findings
-into the submitted threads that `Fix, answer, resolve, push` answers.
+**Record returned findings durably on the pull request.** Give the reviewer
+the relevant history, reviewed revision, and current head. Use the publication
+routes below, with ordinary `provenance`. Neither a particular account nor a
+GitHub review event type is required.
 
-**It is a second agent run, and it is billed as one.** The app-server review
-starts a fresh thread with its own model. That is what makes it a named
-surface carrying its own rubric and publication route, rather than an ad-hoc
-dispatch with neither, and it is also why the round runs it once per diff
-rather than once per push.
+The app-server starts a separate agent review thread and is billed as one.
+Honor an operator-selected independent method under `SKILL.md`. Existing
+credible independent human or agent review can supply evidence for the
+relevant content without another invocation.
 
 
 
@@ -87,40 +76,30 @@ Fix-delta verification
 **Unavailable on `codex exec review`, not on the harness.** It accepts a base
 branch or one commit, not a reviewed-SHA/current-SHA range plus findings and
 dispositions; `--commit <SHA>` would verify one commit, not a batch, and
-neither substitutes for the required delta pass. The route is the delegation
-namespace's `multi_agent_v1` dispatch instead — the same one
+neither substitutes for the required delta pass. When a new pass is needed,
+use the delegation namespace's `multi_agent_v1` dispatch — the same route
 [`skills/undertake/references/codex.md`](../../undertake/references/codex.md)
-uses for `Implement` — carrying the bounded brief `SKILL.md`'s `Verify the fix
-delta` requires: the pull request, base branch, full-review SHA, current SHA,
-original findings, dispositions, and pass number. Require it to compare the
-pull request's three-dot content at the reviewed SHA with its three-dot
-content at the current SHA, exclude changes attributable only to the base
-branch, and inspect affected callers. It reports only whether each
-implemented finding is solved and any concrete regressions in that delta. It
-must not perform a full-PR audit, solicit style work, or supply the verdict —
-the session records the result from the delegate's report, never in place of
-it.
+uses for `Implement` — unless an operator-selected independent method applies.
+Existing independent human or agent review covering the delta can also
+satisfy the pass.
 
-Publish any findings it raises through this file's `Review history,
-publication, and threads` route below, then record the pass with
-`gh pr comment <number> --body-file <path>`:
+Give the reviewer the pull request, base branch, prior reviewed revision,
+current revision, relevant findings and dispositions. Require comparison of
+the relevant pull-request content at those revisions, excluding base-only
+changes, and inspection of affected callers. Comparing the three-dot diffs
+is one way to establish the delta; commit ancestry alone is not. The reviewer
+reports whether implemented findings are solved and any concrete regressions
+in the delta. It must not perform a full-PR audit or solicit style work. The
+author records the independent result, never substitutes a verdict.
 
-```text
-Review verification
-scope reviewed: <sha>
-pass: <n>
-verified: <sha>
-findings: <finding ids and dispositions>
-outcome: <clear|defects|incomplete|unavailable>
-defects: <none|concise list>
-wall: <open|reached>
-usage: <exact value if exposed|unavailable>
-```
-
-`outcome: unavailable` stays reachable for a dispatch that genuinely fails —
-the delegate returns nothing usable, or does not return at all — recorded as
-such rather than guessed at; a working dispatch is not unavailable by design.
-Never estimate usage when the invocation does not expose it.
+Publish any new findings through the routes below. Link the result or use
+`gh pr comment <number> --body-file <path>` for a concise account of the
+checked content and fixes, outcome, and any remaining defects or coverage
+limits. Preserve enough prior results to enforce `SKILL.md`'s
+three-defect-pass limit. No fixed verification fields, empty values, wall-state
+token, usage data, or reviewer-transcript inspection are required. A failed or
+incomplete dispatch is not a clean result. Published records use ordinary
+`provenance`.
 
 The wait
 ========
@@ -181,17 +160,21 @@ catch-up obligation starts at `Open the draft` and continues before and after
 Review history, publication, and threads
 ========================================
 
-Before reviewing, read every submitted review with `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews`. Read the complete thread graph with a
-paginated GraphQL `PullRequest.reviewThreads` query, including `id`,
-`isResolved`, `isOutdated`, review/comment IDs, replies, SHAs, paths, lines,
-and bodies. A REST comments page alone is not complete history and does not
-contain the `PRRT_…` ID needed to resolve a thread.
+Read relevant new reviews and replies, open findings, and prior decisions
+using the previous checkpoint or links. The calls below support reconstruction
+when reliable state is missing, including after a resume, or when a dispute
+requires it. Paginate needed results to completion; do not reread all history
+on every round.
 
-After the review command returns, re-read the head and its diff anchors.
-Compare the returned findings with the review history and recorded review
-identifier before posting; a resumed run must not duplicate a review already
-submitted for that SHA. Put line-specific findings in `review.json` and create
-one submitted review:
+A GraphQL `PullRequest.reviewThreads` query provides `id`, `isResolved`,
+`isOutdated`, comments, replies, revisions, paths, lines, and bodies. A REST
+comments page does not supply the `PRRT_…` node ID needed to resolve a thread.
+
+After review, check freshness and any inline anchors. Preserve the reviewed
+revision if the head moved; compare relevant content and obtain applicable
+new review for behavioral changes. Check the existing record before posting
+to avoid duplicate findings. Use native publication when available, or put
+line-specific findings in `review.json` and submit a review, for example:
 
 ```json
 {
@@ -210,23 +193,27 @@ one submitted review:
 ```
 
 Run `gh api --method POST /repos/{owner}/{repo}/pulls/{n}/reviews --input
-review.json`. Use `start_side` and `start_line` for a valid range. A clean or
-unanchorable review has no `comments` entry and uses the submitted summary.
-Never invent an anchor. On changed head, invalid anchor, absent `gh`, or GitHub
-failure, retain the findings and report publication as incomplete.
+review.json`. `COMMENT` is an example, not an evidence gate. Use
+`start_side` and `start_line` for a valid range. Clean or cross-cutting results
+can use the summary without `comments`. If inline publication is unavailable,
+record findings with clear file and code references through
+`gh pr comment <number> --body-file <path>`. Never invent an anchor. If no
+durable route works, retain the findings and report publication as incomplete.
+Apply ordinary `provenance` to every published artifact.
 
 | Operation | Call |
 | --------- | ---- |
 | Read reviews | `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews` |
 | Read threads | paginated `gh api graphql` query of `PullRequest.reviewThreads` |
 | Publish review | `gh api --method POST /repos/{owner}/{repo}/pulls/{n}/reviews --input review.json` |
+| Publish result or summary | `gh pr comment <number> --body-file <path>` |
 | Reply on a thread | `gh api -X POST /repos/{owner}/{repo}/pulls/{n}/comments/{comment_id}/replies` |
 | Resolve a thread | `gh api graphql` with the `resolveReviewThread` mutation |
 
 The identifier trap `SKILL.md` states applies to the last two: the mutation
 takes the thread's `PRRT_…` node ID, while reply takes the comment's numeric
-ID. The review REST endpoint returns a review ID; record it with the reviewed
-SHA and dispositions so later rounds have a stable duplicate check.
+ID. Keep returned review or comment links with the covered revision and
+dispositions so later rounds can find the evidence without republishing it.
 
 
 Provenance
