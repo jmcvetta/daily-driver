@@ -127,23 +127,19 @@ and staged implementation tasks are valid children but never dispatch
 candidates. Do not silently relabel or change edges or markers to conceal a
 defect; repair grounded gaps through `issue` and continue eligible work.
 
-**Already at sea is read from the record, never assumed.** A child is at sea
-when a muster roll on the epic names a session for it, or when its own issue
-carries an `undertake` claim comment. Either is enough, and the second is what
-covers a child somebody started by hand. Open one session per child, not once
-per invocation of this skill — re-entry after the watching session died is the
-case this rule exists for, and launching a second session on a claimed issue
-risks two agents writing one branch.
+**Determine ownership before dispatch.** Read the latest epic mapping and the
+task's current claim and handoff, then consult the harness lifecycle for the
+named worker. A historical claim or mapping alone is not liveness. A live
+owner keeps the task; an unknown or inaccessible lifecycle is not proof it
+has stopped, so do not launch a competing writer. A confirmed ended owner may
+be recovered under `Recover a session`, subject to cancellation and recovery
+limits. A newer claim outside this fleet is a collision to resolve, not a
+reason to assume the mapped worker still owns the task.
 
-**The latest entry wins.** `Recover a session` posts a replacement entry when
-it retires a session, so a task named twice on the epic is read at its most
-recent one. The earlier entry names a session that is gone, and reading it is
-how a resumed watcher loses the live one. The latest roll also carries the
-landing mode, so a resumed watcher reads it rather than choosing again.
-
-**A claim from a session this skill did not open is worth a line to the user**,
-and is still not a reason to launch a second one. That collision is the thing
-`undertake`'s claim exists to make visible.
+The latest ownership transition for each task wins; the latest recorded
+landing preference remains in force until the user changes it. Consult task
+issues and PRs for branch, claim, handoff and current state rather than
+repeating those details in the fleet record.
 
 **An empty batch is four different things.**
 This step is the router, and the wave that comes in at `Watch the wave` returns
@@ -241,20 +237,27 @@ No permission is asked here. `Waves launch without confirmation` below is why.
 One comment on the epic as the wave launches, and it goes up **after** the
 sessions are open, because it records their identifiers.
 
-It is what this skill does instead of asking, so it has to be readable by
-somebody who did not ask for it. Name the dispatch batch, then one row per task:
+Record a compact durable mapping on the epic, after dispatch returns the
+worker addresses. Name the dispatch batch, link each task and identify its
+worker; record the landing preference once. Record later ownership,
+replacement and retirement transitions when they occur. A resumed coordinator
+reads the latest transition per task, then the task claim and harness lifecycle
+before acting.
 
 ```markdown
 ### Dispatch batch
 
 Landing: orchestrator
 
-| Task | Implementor | Required class | Selected route | Actual model |
-| ---- | ----------- | -------------- | -------------- | ------------ |
-| #144 — Validate against the schema. | session `session_01AbC` | `routine` | `route-standard` | `model-standard` |
-| #145 — Add the retry loop. | session `session_01DeF` | `routine` | `route-standard` | `model-standard` |
-| #147 — Document the format. | subagent `agent://abc` | `mechanical` | `sonic` | `unreported` |
+| Task | Worker |
+| ---- | ------ |
+| #144 | session `session_01AbC` |
+| #145 | subagent `agent://abc` |
 ```
+
+Class belongs to the task, execution identity to its claim, and PR/check
+state and branch details to the linked task and PR. Do not copy these into
+each roll.
 
 **Landing defaults to the orchestrator.** Record `Landing: orchestrator`
 without asking for permission to land gated pull requests or archive finished
@@ -262,9 +265,9 @@ sessions. If the user says they will handle landing by hand, record
 `Landing: by hand`; that opt-out disables automatic landing and archiving.
 Later invocations keep the latest recorded mode unless the user changes it.
 
-A fallback roll names the subagent and shared advisor; a web-session row links
-to the session and records its address. Record planning defects separately,
-not as ships in a wave.
+A fallback mapping names the subagent and shared advisor; a web-session row
+links to the session and records its address. Record planning defects
+separately, not as ships in a wave.
 
 
 
@@ -489,9 +492,9 @@ pull request.
 5. **No human action is owed.** The pull request carries neither the `human`
    label nor `pr-body`'s human-action blocker.
 
-A failed read produces one line in the task's muster-roll record and no merge.
-A later wake that finds the same state stays silent. A change in state earns
-the reads again.
+A failed read stops the merge. Record a material decision or exception where
+it is recoverable; do not duplicate current PR gate state on the epic. A later
+wake that finds the same state stays silent.
 This stops the merge only. Return to `Watch the wave` to assess unfinished
 work and steer permitted continuation; do not treat the failed read as a
 whole-task pause.
@@ -543,10 +546,12 @@ Reached from `Watch the wave`, and it returns there.
   replacement picks the work up where it was left: `pr`'s existing-PR check
   finds the open pull request rather than opening a second one, and the commits
   already pushed are on the branch it is handed.
-  Do not replace an owner after cancellation or exhausted recovery, or reset
-  a bound by changing workers. Report the execution failure and actual resume
-  requirement instead. An unchanged external prerequisite is not a reason to
-  reopen a session.
+  Do not automatically replace an owner after cancellation or exhausted
+  recovery, or reset a bound by changing workers. An explicit user resumption
+  may start recovery after reading the stop handoffs and confirming no writer
+  remains live; it preserves the original authority and narrower limits. A wake
+  alone is not resumption. An unchanged external prerequisite is not a reason
+  to reopen a session.
 - **A fallback implementor is recovered the same way, through the messaging it
   asks for help with.** A correction goes to the subagent's identifier. After
   the harness confirms that it ended, recover an implementor whose open draft
@@ -658,8 +663,8 @@ those two actions; it never asks whether to open sessions or launch a wave.
 The prompt asks for the decision in the user's own words because the
 classifier weighs user text over skill instructions. Once the mode is stated
 or confirmed, the first wave and every wave after it launch unasked. `Post the
-muster roll` records the confirmed landing mode and each task's implementor,
-required class, selected route, and actual model (or `unreported`).
+muster roll` records the landing preference and task-to-worker mapping;
+class and execution identity remain on the task and claim.
 
 This does not relax anything else. The stops below still stop, and nothing here
 touches the constitution's own gates.

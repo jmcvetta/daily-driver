@@ -34,6 +34,11 @@ cancellation. A job no longer listed by `proc://` is retired, not cancelled.
 Record failed cancellation, staging, commit, or push as residuals under
 `SKILL.md`; the handoff names the worktree and branch.
 
+Read `git -C <worktree> rev-parse HEAD` for the local tip and
+`git ls-remote origin <branch>` for the observed remote tip. Record failures
+as unknown, and preserve any local-only commit and worktree path in the task
+handoff. A failed or unconfirmed cancellation remains a fleet residual.
+
 
 The watches
 ===========
@@ -44,6 +49,6 @@ the reminder cannot fire into the last turn. A CI service started through
 named `bash` with `persist` continues after the last Omp client exits. Stop
 that service by its name with `write proc://<name>/kill`; it can otherwise
 keep watching a pull request nobody is working. Omp has no pull-request
-subscription primitive; the subscriptions row of the epic's stand-down
-record is empty on this harness. A durable process does not resume the
+subscription primitive. Record an exceptional live watcher, not successful
+timer identifiers, in the epic handoff. A durable process does not resume the
 orchestrator or perform agent work.

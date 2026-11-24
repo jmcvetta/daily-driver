@@ -1,0 +1,348 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`stand-down` fires on a fleet being stood down",
+          "details": "observed='yes', expected='yes' (skill_name='stand-down')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "`session_01Gone` is named as a residual rather than waited on, and the stand-down still completes \u2014 handoff, stops, cancelled watches, and a printed banner",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "`session_01Gone` is named as a residual rather than waited on, and the stand-down still completes \u2014 handoff, stops, cancelled watches, and a printed banner",
+            "duration_seconds": 11.91,
+            "findings": [
+              "Distinguishes local abc123 in /work/task-511 from remote def456 and preserves the push failure.",
+              "Reports unavailable stop/archive controls and failed handoff posting without claiming success.",
+              "Requires preserving local work before replacement, but does not explicitly require reconciling the local commit before another writer."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "6d88bba5c6794ea4d617687ec881e9d692d165b061e536ed8509d5b83b10d81b",
+            "rationale": "ANCHOR: result. The reply retains the failed session as an unresolved residual and ends stand-down without waiting for it, but does not state that session_01Alive still receives its wrap-up or that the failed watch cancellation is recorded as an epic residual.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 3788,
+              "output": 171
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "3168f6f812e71c176ff4366445385bf1477f5af3b43760a0b00935171bfc72b8"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "stand-down-02-neg-residual-does-not-block-stops",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "An unconfirmed handoff is not transfer and exhaustion prevents replacement retries.",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "An unconfirmed handoff is not transfer and exhaustion prevents replacement retries.",
+            "duration_seconds": 9.35,
+            "findings": [
+              "Newer claimant\u2019s lifecycle remains unknown, not presumed stopped.",
+              "Unconfirmed handoff does not transfer ownership.",
+              "Timer wake is not user resumption or authorization.",
+              "No competing writer, reset bound, or completed-work claim is introduced.",
+              "Concrete resume requirements include checking current claims, lifecycle evidence, authority, and recovery counts."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "a6f0484e740939abb67f284e0a94c5d877de35132c61e384ebce40dfd6e8d452",
+            "rationale": "The final reply distinguishes the newer unresolved claim from the ended former owner, prevents concurrent writing, and leaves the epic unfinished. It reports exhausted recovery and requires explicit user resumption with ownership verification and a bounded recovery path while preserving authority limits and recovery counts.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1644,
+              "output": 157
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "3168f6f812e71c176ff4366445385bf1477f5af3b43760a0b00935171bfc72b8"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "embark-25-unconfirmed-handoff-exhausted-recovery",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`stand-down` fires on a fleet being stood down",
+          "details": "observed='yes', expected='yes' (skill_name='stand-down')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Watches are cancelled before the wrap-up, and the CI event gets no work",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Watches are cancelled before the wrap-up, and the CI event gets no work",
+            "duration_seconds": 6.21,
+            "findings": [
+              "Watches and backstop canceled before wrap-up.",
+              "CI event dropped with a one-line note; no repair, implementor nudge, or landing.",
+              "Clean stop reports no residuals.",
+              "Explicit resumption requires ownership, handoff, lifecycle, and authorization checks."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "fc7bbb7916defc36d5a33ee1d85ec1ad3ef003d532cc2306fd73e5a2c6612a58",
+            "rationale": "ANCHOR: result The reply cancels subscriptions and the timer before securing work, drops the CI event without follow-up, and reports no residuals. It reserves recovery for explicit user resumption and checks handoffs, current claims, worker lifecycle, and original authority limits.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2041,
+              "output": 125
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "3168f6f812e71c176ff4366445385bf1477f5af3b43760a0b00935171bfc72b8"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "stand-down-05-event-mid-stand-down-does-no-embark-work",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 92.49907660484314,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "stand-down-02-neg-residual-does-not-block-stops",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 146048,
+        "output_tokens": 2850,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 33342
+      },
+      "tokens": 182240,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 21.957459449768066,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "embark-25-unconfirmed-handoff-exhausted-recovery",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 24960,
+        "output_tokens": 484,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 23704
+      },
+      "tokens": 49148,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 30.7961745262146,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "stand-down-05-event-mid-stand-down-does-no-embark-work",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 27520,
+        "output_tokens": 887,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 21953
+      },
+      "tokens": 50360,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-24T18:42:33.436327",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "3168f6f812e71c176ff4366445385bf1477f5af3b43760a0b00935171bfc72b8",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v3",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 7473,
+      "output": 453
+    }
+  },
+  "plugin_revision": {
+    "commit": "f4756ab22e6a5a4b174494391adba6322a8252c6",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-24T11:43:03.906232+00:00",
+  "run_id": "2026-11-24_18-40-08",
+  "schema_version": 5,
+  "started_at": "2026-11-24T18:40:08.169110",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "embark-25-unconfirmed-handoff-exhausted-recovery": [
+          1.0
+        ],
+        "stand-down-02-neg-residual-does-not-block-stops": [
+          0.5
+        ],
+        "stand-down-05-event-mid-stand-down-does-no-embark-work": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "stand-down-02-neg-residual-does-not-block-stops",
+        "embark-25-unconfirmed-handoff-exhausted-recovery",
+        "stand-down-05-event-mid-stand-down-does-no-embark-work"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
