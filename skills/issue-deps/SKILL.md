@@ -181,9 +181,11 @@ valid.
 **The parent kind and the edge are distinct statements.** Both `epic` and
 `discovery` coordinate children and stop ordinary `undertake`; the edge says
 which children. `story` is derived for a confirmed direct child of either.
-After creating, changing, removing, or reading a parent relationship, verify
-the direct parent and invoke `issue-labels` to reconcile the marker. Preserve
-it on a failed graph read. Promotion or demotion does not remove lineage.
+Parent-relationship reads are read-only: they never invoke reconciliation, and
+a failed graph read is not evidence for a label change. After a confirmed
+membership change or parent-kind change, verify the relationship from the
+opposite end, read the direct parent, and invoke `issue-labels` to reconcile
+the marker. Promotion or demotion does not remove lineage.
 
 
 Which PR closes an issue

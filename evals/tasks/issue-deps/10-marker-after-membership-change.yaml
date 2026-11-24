@@ -1,0 +1,38 @@
+# Reconcile the visual marker only after a confirmed relationship change.
+task_id: issue-deps-10-marker-after-membership-change
+description: Confirmed parent membership changes reconcile story after opposite-end verification.
+tags: [issue-deps, issue-labels, behaviour, fire]
+initial_prompt: >-
+  In a dry run, remove child #770 from parent #662 and attach it to parent
+  #663. The parent-edge client reports success, and an opposite-end read
+  confirms #662 no longer contains #770 while #663 now contains it. #663 is
+  labelled `discovery`. Explain what happens to the child's `story` label and
+  what you would do if either graph read failed. Do not call tools or change
+  anything.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 180, task_timeout: 400}
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`issue-deps` fires on a confirmed parent-membership change"
+    expected_skill: issue-deps
+    skill_name: issue-deps
+  - type: agent_judge
+    description: Reconcile marker after verified membership change only
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 4
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Score 1 if the response says to verify the edge from the opposite end,
+      confirm #663 as the child's direct parent, and then ensure `story` is
+      present because #663 is a discovery. It must say not to reconcile merely
+      because a relationship was read, and to preserve the current marker and
+      report the limitation if either graph read fails. Score 0 if it proposes
+      mutation before confirmation or treats a failed read as proof that the
+      edge or parent is absent; otherwise score 0.5.
