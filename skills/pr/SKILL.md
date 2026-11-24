@@ -166,16 +166,9 @@ proposal's cost.
 Use existing project patterns and appropriate timeouts and change selection.
 Do not create redundant enforcement when existing checks cover the need. Keep
 established project gates and required coverage intact: never disable or
-weaken checks to save cost, hide failures, or treat unrun checks as passed.
+weaken checks or security, hide failures, or treat unrun checks as passed.
 Tests of testing machinery remain prohibited unless that machinery is the
 shipped product.
-
-**CI is the gate** means use established project gates. It does not instruct
-you to invent a new gate for each task.
-
-This policy does not permit skipping required tests, weakening security,
-hiding failures or disabling established gates to save cost. Tests of testing
-machinery remain prohibited unless that machinery is the shipped product.
 
 **CI is the gate** means use established project gates. It does not instruct
 you to invent a new gate for each task.
