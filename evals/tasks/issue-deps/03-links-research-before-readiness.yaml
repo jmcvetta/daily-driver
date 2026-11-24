@@ -1,10 +1,10 @@
-# Membership is truthful before dispatch readiness. Both research issues can
-# be linked; missing class metadata prevents dispatch, not membership.
+# Membership is truthful independently of class metadata. Missing formatting
+# does not make a substantively ready story undispatchable.
 # The prompt supplies the facts and the run writes no edge.
 task_id: issue-deps-03-links-research-before-readiness
 description: >-
-  A classed and a classless research issue can both be linked; the latter
-  remains undispatchable until its required model class is supplied.
+  A classed and a classless research issue can both be linked; grounded class
+  assessment and recording accompany dispatch without blocking on formatting.
 tags: [issue-deps, behaviour, fire]
 
 initial_prompt: >-
@@ -32,7 +32,7 @@ success_criteria:
     expected_skill: issue-deps
     skill_name: issue-deps
   - type: agent_judge
-    description: Membership follows evidence while dispatch requires a class
+    description: Membership follows evidence and class metadata does not block readiness
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -51,8 +51,9 @@ success_criteria:
       tag exists, write `ANCHOR: none` and score 0.0.
 
       Score 1.0 only if the reply links both #769 and #770 as sub-issues of
-      #662 while keeping their `research` kind, and names #770's missing
-      model class as a dispatch-readiness defect without defaulting it to
-      `routine`, relabelling, inventing scope, or dispatching either issue.
-      Score 0.5 if it links both but omits the dispatch defect. Score 0.0 if
-      it refuses either truthful link, invents a class, or dispatches work.
+      #662 while keeping their `research` kind, and says #770's missing
+      class heading alone does not make it unready. Assess and record its
+      class from the grounded handoff before or during dispatch; do not invent
+      a class from the prompt or default to `routine`. Do not dispatch either
+      issue in this dry run. Score 0.0 if it refuses either truthful link,
+      treats missing formatting as a readiness defect, or dispatches work.
