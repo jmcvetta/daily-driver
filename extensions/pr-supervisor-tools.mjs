@@ -5,11 +5,12 @@ import { fileURLToPath } from "node:url";
 const script = resolve(dirname(fileURLToPath(import.meta.url)), "../scripts/pr-active-supervisor.py");
 
 /** Install opt-in PR authority controls and return the attributed-write hook. */
-export function installPrSupervisorTools(pi, { takeTimers, restoreTimers, takeWatches, stopWatches, restoreWatches }) {
-	const databasePath = process.env.DAILY_DRIVER_PR_SUPERVISOR;
+export function installPrSupervisorTools(pi, { takeTimers, restoreTimers, takeWatches, stopWatches, restoreWatches,
+	databasePath = process.env.DAILY_DRIVER_PR_SUPERVISOR } = {}) {
 	if (!databasePath) return undefined;
 	if (!isAbsolute(databasePath)) throw new Error("PR supervisor database must be an absolute owner-only path");
 	const z = pi.zod;
+	const recovery = { state: "ready" };
 
 	function run(command, args, input, signal) {
 		return new Promise((resolveResult, reject) => {
@@ -76,16 +77,25 @@ export function installPrSupervisorTools(pi, { takeTimers, restoreTimers, takeWa
 	pi.registerTool({
 		name: "daily_driver_pr_supervisor_control",
 		label: "Control PR supervision",
-		description: "Read, hold, release, stop, transfer or roll back one registered PR. Stop fences the actor and delivery before a stop-time push. Transfer cancels the supplied live owner timer IDs and verified owned Omp services; it never installs a host.",
-		parameters: z.object({identity: z.string(), operation: z.enum(["status", "stop", "hold", "release", "transfer", "rollback"]),
+		description: "Read, rebind, hold, release, stop, transfer or roll back one registered PR. Rebind updates execution metadata for the same recorded owner, never approval or control fences. Transfer never installs a host.",
+		parameters: z.object({identity: z.string(), operation: z.enum(["status", "rebind", "stop", "hold", "release", "transfer", "rollback"]),
 			reason: z.string().optional(), services: z.array(z.string()).optional(), timerIds: z.array(z.string()).optional()}),
 		execute: async (_id, params, signal, _onUpdate, ctx) => {
 			let result;
 			const state = await backend("status", [params.identity], undefined, signal);
-			if (params.operation !== "status" && JSON.parse(state.context).session !== ctx.sessionManager.getSessionId()) {
+			if (recovery.state === "rebind-required" && !["status", "rebind"].includes(params.operation)) {
+				throw new Error("PR recovery requires explicit rebind before supervisor mutations");
+			}
+			if (params.operation === "rebind") {
+				if (!params.reason?.trim()) throw new Error("A nonempty control reason is required");
+				if (!recovery.request) throw new Error("Rebind requires the bound live inbox owner");
+				result = await backend("rebind", [params.identity, "--reason", params.reason], recovery.request(ctx), signal);
+				recovery.accept(ctx);
+			} else if (params.operation !== "status" && JSON.parse(state.context).session !== ctx.sessionManager.getSessionId()) {
 				throw new Error("Only the recorded live owner can control its PR");
 			}
 			if (params.operation === "transfer") {
+				if (!takeTimers) throw new Error("Transfer requires the full owner runtime");
 				if (ctx.hasPendingMessages()) throw new Error("Drain queued owner work before transferring supervision");
 				if (!state.host_running) throw new Error("No active lifecycle controller holds this ledger; prior maintenance stays authoritative");
 				const timers = takeTimers(params.timerIds ?? [], ctx, {cancel:false,identity:params.identity});
@@ -104,7 +114,7 @@ export function installPrSupervisorTools(pi, { takeTimers, restoreTimers, takeWa
 				}
 				delete result.timers;
 				delete result.watches;
-			} else {
+			} else if (params.operation !== "rebind") {
 				const args = [params.identity];
 				if (params.operation !== "status") {
 					if (!params.reason?.trim()) throw new Error("A nonempty control reason is required");
@@ -113,12 +123,14 @@ export function installPrSupervisorTools(pi, { takeTimers, restoreTimers, takeWa
 				result = await backend(params.operation, args, undefined, signal);
 				if (params.operation === "stop") stopWatches(ctx,params.identity);
 			}
-			return {content: [{type: "text", text: `Supervisor ${params.operation} recorded; no readiness or merge decision was made`}], details: publicResult(result)};
+			const details = publicResult(result);
+			details.recovery = recovery.state;
+			return {content: [{type: "text", text: `Supervisor ${params.operation} recorded; no readiness or merge decision was made`}], details};
 		},
 	});
 
 	return {
-		databasePath, initialize,
+		databasePath, initialize, recovery,
 		legacyWake(identity, operation, token, epoch, context) {
 			return backend("legacy-wake", [identity], {operation,token,epoch,context});
 		},

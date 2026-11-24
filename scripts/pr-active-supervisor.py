@@ -75,10 +75,99 @@ class ActiveSupervisor:
             except BlockingIOError:
                 return True
 
+    def worktree_evidence(self, path, branch):
+        """Identify one registered task worktree by repository and per-worktree Git storage."""
+        def git(*args):
+            return subprocess.check_output(["git", "-C", str(path), *args], text=True, timeout=15).strip()
+        root = Path(git("rev-parse", "--show-toplevel")).resolve()
+        if root != Path(path).resolve() or git("symbolic-ref", "--short", "HEAD") != branch:
+            raise ValueError("current task worktree or branch differs")
+        entries = git("worktree", "list", "--porcelain", "-z").split("\0")
+        if f"worktree {root}" not in entries or f"branch refs/heads/{branch}" not in entries:
+            raise ValueError("task worktree is not registered")
+        common = str(Path(git("rev-parse", "--path-format=absolute", "--git-common-dir")).resolve())
+        directory = str(Path(git("rev-parse", "--absolute-git-dir")).resolve())
+        if common == directory:
+            raise ValueError("PR recovery requires a non-primary task worktree")
+        return {"repositoryGitDir": common, "worktreeGitDir": directory}
+
+    def rebind(self, key, request, reason):
+        """Rebind a live recorded owner route without changing ownership or control fences."""
+        if not isinstance(reason, str) or not reason.strip():
+            raise ValueError("a nonempty rebind reason is required")
+        with self.mutation_guard(key), self.ledger.transaction():
+            record = self.ledger.get(key)
+            context = json.loads(record["context"])
+            if record["stopped"]:
+                raise ValueError("stopped PR cannot recover")
+            target = request["target"]
+            if target != context["session"]:
+                raise ValueError("recorded owner session differs")
+            live = self.db.execute("SELECT * FROM owners WHERE session=?", (request["session"],)).fetchone()
+            child = self.db.execute("SELECT * FROM owners WHERE session=?", (target,)).fetchone()
+            if not live or not child or live["process"] != request["process"]:
+                raise ValueError("recorded live owner process differs")
+            if live["agent"] != json.dumps(request["agent"], separators=(",", ":")):
+                # JSON whitespace is not agent identity.
+                if json.loads(live["agent"]) != request["agent"]:
+                    raise ValueError("recorded agent binding differs")
+            if Path(live["file"]).resolve() != Path(request["file"]).resolve():
+                raise ValueError("persisted session file differs")
+            def header(owner):
+                with open(owner["file"]) as saved:
+                    value = next((entry for _ in range(3) if (line := saved.readline())
+                                  and (entry := json.loads(line)).get("type") == "session"), None)
+                if not value or value.get("id") != owner["session"]:
+                    raise ValueError("persisted session identity differs")
+                return value
+            header(live)
+            current = child
+            visited = set()
+            while current["session"] != live["session"]:
+                if current["session"] in visited:
+                    raise ValueError("parent recovery cycle")
+                visited.add(current["session"])
+                binding = json.loads(current["agent"])
+                parent_file = header(current).get("parentSession")
+                if binding.get("kind") != "sub" or not parent_file:
+                    raise ValueError("recorded parent/child identity differs")
+                parent = self.db.execute("SELECT * FROM owners WHERE file=?", (parent_file,)).fetchone()
+                if not parent or binding.get("parentId") != json.loads(parent["agent"]).get("id"):
+                    raise ValueError("recorded parent/child binding differs")
+                current = parent
+            if request["session"] != target and request["agent"].get("kind") != "main":
+                raise ValueError("recovery carrier must be the recorded main parent")
+            if not all(isinstance(request.get(field), str) and request[field].strip()
+                       for field in ("cwd", "provider", "model", "effort", "authentication")):
+                raise ValueError("complete execution route is required")
+            worktree = context["worktree"]
+            if Path(request["cwd"]).resolve() != Path(live["cwd"]).resolve():
+                worktree = request["cwd"]
+            evidence = self.worktree_evidence(worktree, context["branch"])
+            recorded = {field: context.get(field) for field in evidence}
+            if worktree != context["worktree"] and (recorded != evidence or
+                    Path(request["cwd"]).resolve() != Path(worktree).resolve()):
+                raise ValueError("changed directory is not the same registered task worktree")
+            if all(recorded.values()) and recorded != evidence:
+                raise ValueError("repository or task worktree was substituted")
+            context.update(evidence, worktree=str(Path(worktree).resolve()))
+            self.db.execute("UPDATE records SET context=? WHERE identity=?", (json.dumps(context), key))
+            self.db.execute("""UPDATE owners SET cwd=?,provider=?,model=?,effort=?,authentication=?
+                WHERE session=? AND process=?""",
+                tuple(request[field] for field in ("cwd", "provider", "model", "effort", "authentication"))
+                + (request["session"], request["process"]))
+            self.db.execute("""CREATE TABLE IF NOT EXISTS owner_rebindings (
+                identity TEXT NOT NULL, session TEXT NOT NULL, reason TEXT NOT NULL, recorded REAL NOT NULL)""")
+            self.db.execute("INSERT INTO owner_rebindings VALUES (?,?,?,?)",
+                            (key, request["session"], reason.strip(), self.clock()))
+        return self.status(key)
+
     def register(self, host, repository, number, login, context):
         """Register created/adopted PRs in shadow without stealing another owner."""
         if not all(context.get(field) for field in ("session", "worktree", "branch", "task")):
             raise ValueError("persisted session, worktree, branch and task context are required")
+        context = dict(context)
+        context.update(self.worktree_evidence(context["worktree"], context["branch"]))
         record = self.ledger.register(host, repository, number, login, context, self.clock())
         with self.ledger.transaction():
             self.db.execute("INSERT OR IGNORE INTO authorities(identity,state) VALUES (?,'shadow')", (record["identity"],))
@@ -504,6 +593,10 @@ def main():
         control = sub.add_parser(name)
         control.add_argument("identity")
         control.add_argument("--reason", required=True)
+    rebind = sub.add_parser("rebind")
+    rebind.add_argument("identity")
+    rebind.add_argument("--reason", required=True)
+    rebind.add_argument("--request", type=Path, required=True)
     for name in ("prepare-transfer", "transfer"):
         transfer = sub.add_parser(name)
         transfer.add_argument("identity")
@@ -550,6 +643,9 @@ def main():
                     threading.Event().wait(1)
         elif args.command == "acknowledge":
             output = actor.acknowledge(args.identity, args.generation, args.fence, args.admission)
+        elif args.command == "rebind":
+            request = json.loads(sys.stdin.read() if str(args.request) == "-" else args.request.read_text())
+            output = actor.rebind(args.identity, request, args.reason)
         elif args.command in ("prepare-transfer", "transfer"):
             request = json.loads(sys.stdin.read() if str(args.request) == "-" else args.request.read_text())
             operation = actor.prepare_transfer if args.command == "prepare-transfer" else actor.transfer
