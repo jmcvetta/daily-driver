@@ -632,8 +632,8 @@ const CONTROL_KEYWORDS = new Set([
  * subcommand; anything else is opaque. Primary/unknown-directory invocations
  * stay conservative, while verified feature worktrees may run opaque programs.
  */
-function shellWord(text, literal) {
-	return { text, literal };
+function shellWord(text, literal, redirection = false) {
+	return { text, literal, redirection };
 }
 
 /**
@@ -661,6 +661,7 @@ function shellSegments(command) {
 	let word = "";
 	let wordStarted = false;
 	let wordLiteral = true;
+	let wordRedirection = false;
 	let quote = null;
 	let backtick = false;
 	let heredocWord = false;
@@ -703,10 +704,11 @@ function shellSegments(command) {
 			}
 		}
 		heredocWord = false;
-		words.push(shellWord(word, wordLiteral));
+		words.push(shellWord(word, wordLiteral, wordRedirection));
 		word = "";
 		wordStarted = false;
 		wordLiteral = true;
+		wordRedirection = false;
 	};
 	const openGroup = (kind, separator, inWord = wordStarted) => {
 		// A substitution is a word of the command carrying it — `git -C "$(…)"
@@ -717,11 +719,12 @@ function shellSegments(command) {
 		// a command starts is a subshell, and that one does end the command
 		// before it.
 		if (inWord) {
-			wordStateStack.push({ words, word, wordLiteral });
+			wordStateStack.push({ words, word, wordLiteral, wordRedirection });
 			words = [];
 			word = "";
 			wordStarted = false;
 			wordLiteral = true;
+			wordRedirection = false;
 		} else {
 			finishSegment(separator);
 			wordStateStack.push(null);
@@ -747,6 +750,7 @@ function shellSegments(command) {
 		if (enclosing) {
 			words = enclosing.words;
 			word = enclosing.word;
+			wordRedirection = enclosing.wordRedirection;
 			wordStarted = true;
 			// Whatever the substitution produced, the word is no longer the
 			// guard's to read.
@@ -908,6 +912,9 @@ function shellSegments(command) {
 			finishSegment(doubled ? char + char : char);
 			if (doubled) index++;
 			continue;
+		}
+		if ((char === "<" || char === ">") && /^\d*$/u.test(word)) {
+			wordRedirection = true;
 		}
 		if (char === "$" || char === "*" || char === "?") wordLiteral = false;
 		if (char === "~" && !wordStarted) wordLiteral = false;
@@ -1728,7 +1735,7 @@ function rewritesPrimaryWorkingTree(event, cwd) {
 const SHELL_FLAGS_WITHOUT_ARGUMENTS = new Set("BCEHPTefhiklmnptuvxs".split(""));
 
 /** Classify shell options and locate the script or command-string operand. */
-function shellInvocation(name, operands) {
+function shellInvocation(name, operands, redirectedInput = false) {
 	if (name === "eval") {
 		if (operands.length !== 1 || !operands[0].literal) {
 			throw new UnreadableCommandError("eval needs one literal command string");
@@ -1786,18 +1793,150 @@ function shellInvocation(name, operands) {
 		return { command };
 	}
 	const file = operands[position];
-	// A redirection where the script would stand — `<<EOF`, `<<<`, `< file`,
-	// `0<file` — feeds the interpreter commands from input the guard did not
-	// read. It is no script file.
-	if (file?.literal && /^\d*<+/u.test(file.text)) {
-		throw new UnreadableCommandError("a shell reads commands from redirected input");
-	}
 	if (!file?.literal) {
 		throw new UnreadableCommandError(
-			file ? "a shell script operand expands" : "a shell reads commands from stdin",
+			file ? "a shell script operand expands" : redirectedInput
+				? "a shell reads commands from redirected input"
+				: "a shell reads commands from stdin",
 		);
 	}
 	return { file };
+}
+
+/** Remove redirection operators and targets, not quoted lookalikes or commands. */
+function executionWords(words) {
+	const result = [];
+	for (let index = 0; index < words.length; index++) {
+		const word = words[index];
+		if (!word.redirection) {
+			result.push(word);
+		} else if (/^\d*(?:[<>]{1,3}|[<>]&|<>|>\|)$/u.test(word.text)) {
+			index++;
+		}
+	}
+	return result;
+}
+
+// These wrappers execute one operand. Each option contract keeps option values
+// (including interpreter names) out of executable positions. Unknown forms stay
+// opaque rather than guessing which later word is the program.
+const EXECUTION_WRAPPERS = new Map([
+	["builtin", { flags: "", values: "" }],
+	["command", { flags: "p", values: "", reports: "vV" }],
+	["exec", { flags: "cl", values: "a" }],
+	["env", {
+		flags: "iv", values: "uCaS",
+		longFlags: ["ignore-environment", "debug", "null", "list-signal-handling"],
+		longValues: ["unset", "chdir", "argv0", "split-string", "env0-from"],
+	}],
+	["timeout", {
+		flags: "v", values: "sk", skip: 1,
+		longFlags: ["preserve-status", "foreground", "verbose"],
+		longValues: ["signal", "kill-after"],
+	}],
+	["nohup", { flags: "", values: "" }],
+	["nice", { flags: "", values: "n", longValues: ["adjustment"] }],
+	["setsid", { flags: "cfw", values: "", longFlags: ["ctty", "fork", "wait"] }],
+	["sudo", {
+		flags: "AbEHnPS", values: "CDghpRrtTuU",
+		longFlags: ["askpass", "background", "set-home", "stdin", "non-interactive",
+			"preserve-groups", "preserve-env"],
+		longValues: ["close-from", "chdir", "group", "host", "prompt", "chroot",
+			"role", "type", "command-timeout", "user", "other-user"],
+	}],
+	["xargs", {
+		flags: "0prtx", values: "adEILnPs",
+		longFlags: ["null", "interactive", "no-run-if-empty", "verbose", "exit"],
+		longValues: ["arg-file", "delimiter", "eof", "replace", "max-lines",
+			"max-args", "max-procs", "max-chars", "process-slot-var"],
+	}],
+]);
+
+/** Locate an interpreter only at the command or a supported wrapper's operand. */
+function shellExecution(words, cwd) {
+	words = executionWords(words);
+	let position = 0;
+	let replacement = null;
+	const unreadable = (reason) => {
+		const error = new UnreadableCommandError(reason);
+		error.executionCwd = cwd;
+		throw error;
+	};
+	while (position < words.length) {
+		while (isEnvironmentAssignment(words[position] ?? { text: "" })) position++;
+		const executable = words[position++];
+		if (executable === undefined) return null;
+		if (!executable.literal || (replacement !== null && executable.text.includes(replacement))) {
+			unreadable("a command names an executable that expands");
+		}
+		const name = basename(executable.text);
+		if (STRING_INTERPRETERS.has(name)) {
+			const operands = words.slice(position).map((word) =>
+				replacement !== null && word.text.includes(replacement)
+					? { ...word, literal: false }
+					: word,
+			);
+			return { name, operands, cwd };
+		}
+		const wrapper = EXECUTION_WRAPPERS.get(name);
+		if (wrapper === undefined) return null;
+		while (position < words.length) {
+			const option = words[position];
+			if (!option.literal || (replacement !== null && option.text.includes(replacement))) {
+				unreadable("a wrapper option or executable expands");
+			}
+			const text = option.text;
+			if (text === "--") {
+				position++;
+				break;
+			}
+			if (name === "env" && text === "-") {
+				position++;
+				continue;
+			}
+			if (!text.startsWith("-") || text === "-") break;
+			position++;
+			if (name === "nice" && /^-\d+$/u.test(text)) continue;
+			if (text === "--help" || text === "--version") return null;
+			const options = text.startsWith("--")
+				? [text.slice(2).split("=")[0]]
+				: [...text.slice(1)];
+			for (const flag of options) {
+				const long = text.startsWith("--");
+				if (!long && wrapper.reports?.includes(flag)) return null;
+				const takesValue = long
+					? wrapper.longValues?.includes(flag)
+					: wrapper.values.includes(flag);
+				if (!takesValue) {
+					if (long ? wrapper.longFlags?.includes(flag) : wrapper.flags.includes(flag)) continue;
+					unreadable("a wrapper uses an unclassified option");
+				}
+				const attached = long
+					? text.indexOf("=") + 1
+					: text.indexOf(flag) + 1;
+				const value = attached > (long ? 0 : 1) && (long || attached < text.length)
+					? { text: text.slice(attached), literal: true }
+					: words[position++];
+				if (!value) unreadable("a wrapper option needs an argument");
+				if (name === "env" && (flag === "S" || flag === "split-string" || flag === "env0-from")) {
+					unreadable("a wrapper constructs its command from input");
+				}
+				if (["env", "sudo"].includes(name) && ["C", "D", "chdir"].includes(flag)) {
+					cwd = value.literal ? resolveAgainst(cwd, value.text) : null;
+				}
+				if (name === "sudo" && ["R", "chroot"].includes(flag)) cwd = null;
+				if (name === "xargs" && (flag === "I" || flag === "replace")) {
+					if (!value.literal || value.text === "") {
+						unreadable("a wrapper replacement token expands");
+					}
+					replacement = value.text;
+				}
+				break;
+			}
+		}
+		position += wrapper.skip ?? 0;
+	}
+	return null;
 }
 
 /** Permit opaque programs only from a verified non-primary worktree. */
@@ -1905,21 +2044,26 @@ function walkShellCommand(command, toolCwd) {
 			}
 		}
 
-		// Inspect literal command strings behind wrappers as well. Opaque shell
-		// input is permitted only from a verified non-primary worktree.
-		for (let index = position; index < segment.words.length; index++) {
-			const word = segment.words[index];
-			if (!word.literal) continue;
-			const interpreter = basename(word.text);
-			if (!STRING_INTERPRETERS.has(interpreter)) continue;
+		// Only execution positions carry shell semantics. Script arguments,
+		// wrapper option values and ordinary command operands are data.
+		let execution;
+		try {
+			execution = shellExecution(segment.words.slice(position), shellCwd);
+		} catch (err) {
+			if (!(err instanceof UnreadableCommandError) || !permitsOpaqueShell(err.executionCwd)) throw err;
+			shellCwd = null;
+		}
+		if (execution !== null && execution !== undefined) {
+			const interpreter = execution.name;
 			let invocation;
 			try {
 				invocation = shellInvocation(
 					interpreter,
-					segment.words.slice(index + 1),
+					execution.operands,
+					segment.words.some((word) => word.redirection && /^\d*</u.test(word.text)),
 				);
 			} catch (err) {
-				if (!(err instanceof UnreadableCommandError) || !permitsOpaqueShell(shellCwd)) {
+				if (!(err instanceof UnreadableCommandError) || !permitsOpaqueShell(execution.cwd)) {
 					throw err;
 				}
 				// An opaque eval can change this shell's directory. A child shell
@@ -1928,7 +2072,7 @@ function walkShellCommand(command, toolCwd) {
 				continue;
 			}
 			if (invocation.file !== undefined) continue;
-			if (walkShellCommand(invocation.command.text, shellCwd)) return true;
+			if (walkShellCommand(invocation.command.text, execution.cwd)) return true;
 			if (interpreter === "eval") shellCwd = null;
 		}
 		// An expanded executable may name a shell function or eval. Do not
