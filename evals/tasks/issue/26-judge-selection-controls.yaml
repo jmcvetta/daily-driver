@@ -15,11 +15,11 @@ initial_prompt: >-
   Task A: The user authorizes one Omp Luna run and its recording, forbids
   Claude use, and supplies this exact command:
   `make evals-run-omp-gpt-6-luna TASKS='tasks/issue/01-open-a-task-issue.yaml' JUDGE=omp-gpt-6.1-sol REPEATS=1 JOBS=1`.
-  The task reports the run identifier and requested/observed subject and judge
-  identities. `omp-gpt-6.1-sol` is a committed validated Omp judge compatible
-  with the task's semantic criterion. The Makefile accepts the separate
-  `JUDGE=` selector. A revision requests an additional per-case outcome in the
-  recorded report.
+  The task body must require the run record to include the run identifier,
+  requested and observed subject and judge identities, and each case outcome.
+  `omp-gpt-6.1-sol` is a committed validated Omp judge compatible with the
+  task's semantic criterion. The Makefile accepts the separate `JUDGE=`
+  selector. A revision requests an additional per-case outcome in the report.
 
   Task B: The user explicitly authorizes Claude judging for one Omp Luna run
   of `tasks/issue/01-open-a-task-issue.yaml` from an available Claude Code
@@ -54,7 +54,8 @@ success_criteria:
       `evals-record` invocation; do not require or add a second recording
       command. Task A's command must retain `JUDGE=omp-gpt-6.1-sol`,
       `TASKS='tasks/issue/01-open-a-task-issue.yaml'`, one repeat and one job.
-      Add the per-case outcome acceptance and run-identity recording. Do not
+      Require the run record to include the identifier and requested/observed
+      subject and judge identities, plus each case outcome. Do not
       replace the explicit judge with Claude, add approval, or leave it
       implicit. Task B may keep `JUDGE=claude-code-sonnet-5`: Claude is
       explicitly authorized and the assignment names a supported Claude Code
