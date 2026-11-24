@@ -166,11 +166,12 @@ bites instead: see `Where the standard is declared`.
 Maintaining the story marker
 ============================
 
-`issue-deps` owns parent edges. After it creates, changes, removes, or reads a
-parent edge, it invokes this policy. Read the child's direct parent and read
-that parent's labels. Add `story` only when the confirmed parent carries
-`epic` or `discovery`; remove it when the parent is absent or neither kind.
-Closing a child does not change its qualifying edge.
+`issue-deps` owns parent edges. A parent-relationship read never invokes this
+policy and never writes a label. After a confirmed membership change, read the
+child's direct parent and that parent's labels, then reconcile: add `story`
+only when the confirmed parent carries `epic` or `discovery`; remove it when
+the parent is absent or neither kind. Closing a child does not change its
+qualifying edge.
 
 Check implementation candidates at dispatch, not when maintaining the marker.
 Unready children and closed specification or research lineage remain visible.
@@ -179,9 +180,10 @@ after specification merge, staged implementation tasks; neither is
 dispatchable research. Preserve markers on all confirmed children and report
 readiness defects without hiding edges or changing the child's kind.
 
-A swap between `epic` and `discovery` preserves the marker because both
-qualify. Any swap to another kind requires reading direct children and
-reconciling their markers. A failed child read preserves labels and is reported.
+A confirmed change to a parent's kind requires reading its direct children and
+reconciling their markers. A swap between `epic` and `discovery` preserves the
+marker because both qualify. A failed child read preserves labels and is
+reported.
 
 A failed or unavailable graph read is not evidence that a parent is absent.
 Preserve the marker and report the limitation. Never create, change, or remove
