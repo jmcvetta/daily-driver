@@ -71,15 +71,15 @@ as a fresh event.
 
 ## Sensitive handoff examples
 
-The [constitution](../rules/constitution.md) owns the headless
-default and protected-file handoff contract. These are example user notices
+The [constitution](../rules/constitution.md) owns the protected-file handoff
+contract. These are example user notices
 after creating an owner-only file with POSIX mode `0600` outside the repository,
 build contexts and published artifacts. Paths are illustrative, not deliveries.
 
 - **Workstation, existing local access confirmed:** “On your workstation
   `atlas`, read `/home/alex/.local/state/daily-driver/github-login.txt` in your
   existing local session. Use its GitHub device-login instructions to approve
-  the pending login. I have not opened a terminal window.”
+  the pending login.”
 - **Cloud, existing SSH access confirmed:** “On remote host `builder-7`,
   read `/home/alex/.local/state/daily-driver/openai-login.txt` through your
   existing authorized SSH connection as `alex`. Use its OpenAI device-login

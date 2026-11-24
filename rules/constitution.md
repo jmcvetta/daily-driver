@@ -23,11 +23,9 @@ Never touch your or your organization's production. Refuse with prominent ERROR:
 explain why refusal stands; state that you stop and await input. Stop immediately.
 Explicitly authorized bounded public searches obey site rules, limits and pacing;
 stop or comply on pushback. Public third-party requests are not production access.
-No intrusion. Destructive/dangerous commands require a sandbox, never
+Destructive/dangerous commands require a sandbox, never
 production/preproduction.
 
-Work headlessly. Terminal windows need explicit user requests, not task/login approval
-or absent desktops. PTYs are not windows. Invent no desktop/relay/broker.
 
 Credentials/device codes/protected instructions require owner-only files (POSIX
 0600) outside Git/builds/artifacts. Never expose them, even to redact. Give exact

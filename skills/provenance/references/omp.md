@@ -46,15 +46,46 @@ these writes.
 Commits
 =======
 
-Omp does not append a commit trailer of its own, so the agent adds
-`Co-Authored-By: <model id> <address>` and, beside it, a session trailer,
-`Omp-Session: <id, or n/a>`.
+Omp does not append commit trailers itself. Prepare each agent-authored commit
+with `daily_driver_commit_message` before using Omp's native selective commit:
 
-**No fixed address is documented.** Omp's own commit documentation ties a
-co-author trailer to a configured session identity rather than to a built-in
-default, and names no address for an unconfigured one. Inventing a domain to
-complete the trailer would misattribute the commit to an address nobody
-answers for, so where the session carries no configured identity of its own,
-omit `Co-Authored-By` entirely and keep the session trailer alone. Where the
-user has configured a commit identity through Omp's own settings, use it
-verbatim rather than a value read from anywhere else.
+```js
+const result = await tool.daily_driver_commit_message({ body: substantiveBody });
+const preparedBody = result.details.body;
+const draft = await commit.draft({ repo: taskWorktree });
+await draft.commit(subject, { body: preparedBody });
+```
+
+The tool prepares text only; it does not stage, commit, push, merge, or change
+configuration. Its structured `details` contains `body` and `trailers` (an
+array of `{ key, value }` records). It reads the live session on every call and
+adds `Omp-Session: <id>` or `Omp-Session: n/a` when unavailable. It preserves
+unrelated trailers and deduplicates attribution records by case-insensitive
+key and exact value. Only actual trailing Git trailers count, not quoted
+examples or Markdown provenance blocks.
+
+**No fixed address is documented.** Pass `coAuthor` only when an Omp
+configured commit identity is positively verified from a documented readable
+harness surface; pass its value verbatim. The installed harness may expose no
+such surface. In that case omit `coAuthor`, report the limitation, and retain
+the session trailer alone. Never infer an address from Git author settings,
+model or provider names, or historical commits, and never change configuration
+to obtain one. Invalid or multiline values fail preparation.
+
+For an amendment, prepare the existing commit body again, preserving its
+substantive content and trailers; the tool does not accumulate duplicate
+attribution. Use native `draft.commit` with `amend: true` only when its
+documented amendment conditions hold. For an in-progress mechanical
+conflict-resolution merge, native selective commits refuse the operation: use
+the narrow plain-Git completion route in
+[`pr`'s Omp reference](../../pr/references/omp.md#the-owner-continuation),
+passing the prepared message and retaining hooks and signing.
+
+For a squash, pass source commit messages in `sourceMessages`; distinct
+`Co-Authored-By`, `Omp-Session`, `Claude-Session`, and `Codex-Session` trailers
+are retained in source order alongside the landing session. Missing attribution
+is not fabricated. [`embark`'s Omp reference](../../embark/references/omp.md#the-watch)
+defines the gated, paginated landing route. GitHub's server-authored
+update-branch commits do not accept a custom message; this route cannot add
+trailers to them. Claude Code and Codex retain their own best-effort contracts
+and must not duplicate trailers their harness supplies.

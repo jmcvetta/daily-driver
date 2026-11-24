@@ -5,6 +5,7 @@
 ### Changed
 
 * Reject serialized JSON argument objects and arrays as Omp session titles, show the direct-call, quoted shell, and `-j` command forms in the title instructions and gate messages, and keep ordinary prose containing braces or brackets ([#978](https://github.com/jmcvetta/daily-driver/issues/978)).
+* Remove the undefined intrusion clause and universal terminal-window prohibition from the constitution while preserving adjacent safety and authorization rules ([#1027](https://github.com/jmcvetta/daily-driver/issues/1027)).
 
 * Limit undertaking routing to the initial same-family, same-provider model and effort selection; remove route-authorization, frontier-approval, worker-route admission, and continuing route-verification gates while preserving cancellation, completion, credential and switch failures ([#971](https://github.com/jmcvetta/daily-driver/issues/971)).
 
@@ -31,6 +32,8 @@
 * Require assignable task issues for all new and reused epic stories, with task readiness checked before linking and dispatch ([#723](https://github.com/jmcvetta/daily-driver/issues/723)).
 
 ### Fixed
+
+* Preserve Omp commit provenance through selective commits, local conflict-resolution merges, and explicitly prepared squash landing messages; keep GitHub-authored update-branch messages distinct ([#1029](https://github.com/jmcvetta/daily-driver/issues/1029)).
 
 * Distinguish delegated reviewer identity from publisher provenance in Omp reviews and verification records ([#973](https://github.com/jmcvetta/daily-driver/issues/973)).
 
