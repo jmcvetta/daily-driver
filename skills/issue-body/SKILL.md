@@ -297,9 +297,10 @@ Updating a body
 
 An update preserves valid content. The user's content and requirements that
 still hold stay; the affected specification changes; and readiness runs again.
-Unrelated text is not reflowed and existing issues are not swept. The trailing
-provenance block also stays below the body's closing rule; a revision never
-moves those fields into the task sections.
+Unrelated text is not reflowed and existing issues are not swept. Preserve the
+entire original provenance block, including all fields and values, exactly
+below the body's closing rule. A `Model:` inside that block is provenance, not
+task metadata; never move its fields into the task sections.
 
 A deliberately revised task emits the new section and removes its trailing
 task `Model:` field — the legacy class-metadata field below `## Human brief`, never

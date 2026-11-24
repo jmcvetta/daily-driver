@@ -2,8 +2,11 @@ task_id: issue-26-judge-selection-controls
 description: Task authors preserve an explicit valid judge and retain authorized Claude judging.
 tags: [issue, behaviour, fire]
 initial_prompt: >-
-  Review two proposed evaluation task bodies for readiness. Do not post or run
-  commands. For each, show any necessary correction and say whether it is ready.
+  Produce a complete revised task body for each scenario. Do not post or run
+  commands. Each body must contain a ready-to-run exact command with its run
+  bounds, followed by the recording command; say whether each is ready.
+  Include Task A's added case-outcome acceptance and Task B's added judge
+  session and identity reporting in the respective bodies.
 
   Task A: The user authorizes one Omp Luna run and its recording, forbids
   Claude use, and supplies this exact command:
@@ -15,11 +18,12 @@ initial_prompt: >-
   recorded report.
 
   Task B: The user explicitly authorizes Claude judging for one Omp Luna run
-  from an available Claude Code execution session and supplies the supported
-  pinned route `JUDGE=claude-code-sonnet-5`. The assignment specifies one
-  repeat and one job and requires the run record. The task pins the same
-  Claude Code / `claude-sonnet-5` judge. Revise its acceptance wording to
-  require the session and identity used for the judge to be recorded.
+  of `tasks/issue/01-open-a-task-issue.yaml` from an available Claude Code
+  execution session and supplies the supported pinned route
+  `JUDGE=claude-code-sonnet-5`. The assignment specifies one repeat and one
+  job and requires the run record. The task pins the same Claude Code /
+  `claude-sonnet-5` judge. Revise its acceptance wording to require the session
+  and identity used for the judge to be recorded.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
@@ -40,17 +44,20 @@ success_criteria:
       permission_mode: default
     prompt: |
       Grade only the final reply. Begin rationale with `ANCHOR: result` or
-      `ANCHOR: none`; score 0 if no final result exists. Task A's revised
-      executable command and any recording/rerun command must retain the
-      supplied `JUDGE=omp-gpt-6.1-sol`, subject/task, one repeat, one job and
-      authorized run. Add the case-outcome requirement. Do not replace the
-      explicit judge with Claude, add approval, or leave it implicit. Task B
-      may keep `JUDGE=claude-code-sonnet-5`: Claude is explicitly authorized
-      and the assignment names a supported Claude Code execution session.
-      Its revision must preserve the route and run bounds, add the required
-      recorded judge session/identity, and must not demand a non-Claude judge
-      or invent a further approval condition. Score 1 only if both outputs
-      retain their distinct boundaries and are executable as described; 0.5
-      if one has a minor reporting omission; 0 if Task A's judge is overwritten,
-      Task B's authorized Claude route is banned, or either command is described
-      as ready with an incompatible or unauthorized route.
+      `ANCHOR: none`; score 0 if no final result exists. Each output must
+      include a complete revised task body, an exact executable Omp Luna
+      command, and the corresponding recording command.
+      Task A's command must retain `JUDGE=omp-gpt-6.1-sol`,
+      `TASKS='tasks/issue/01-open-a-task-issue.yaml'`, one repeat and one job.
+      Add the per-case outcome acceptance and run-identity recording. Do not
+      replace the explicit judge with Claude, add approval, or leave it
+      implicit. Task B may keep `JUDGE=claude-code-sonnet-5`: Claude is
+      explicitly authorized and the assignment names a supported Claude Code
+      execution session. Its command must retain the same task list, one repeat
+      and one job. Its body must require the recorded judge session and
+      identity, and must not demand a non-Claude judge or invent another
+      approval condition. Score 1 only if both complete bodies and commands
+      retain their distinct boundaries and are executable; 0.5 if one has a
+      minor reporting omission; 0 if either body is incomplete, Task A's judge
+      is overwritten, Task B's authorized Claude route is banned, or either
+      command is described as ready with an incompatible or unauthorized route.
