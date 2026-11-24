@@ -27,6 +27,19 @@ is recorded in `.fixture/ops.log`
 with its outcome. Read each reply before you decide what it means: a refused
 write or a failed read is the observed limit, not a success.
 
+Review coverage in `.fixture/state.json` is declared simulation input, not
+proof of an actual review. `review_evidence` states whether independent review
+is available and complete, whether relevant content changed, and whether the
+latest follow-up is independent, relevant, complete, and free of defects.
+The verifier uses these values, not account names, review events, comment
+field tokens, or commit ancestry. The readable records use ordinary prose;
+`gh pr review` fails because this fixture cannot perform independent review.
+The `wrong-review-author` and `wrong-verification-author` scenarios permit
+independent reviewers on other accounts. `ancestry-unavailable` permits
+readiness when content comparison establishes unchanged scope despite a
+failed commit API read. `self-review` and `self-verification` leave the PR
+draft because the required independent review is absent.
+
 Use `bash .fixture/setup.sh currency-stale` for the Omp PR regression: the open
 draft's old head is green, but the branch's base has advanced. `python3
 .fixture/verify.py currency` proves the update changed the Git head, included

@@ -53,30 +53,18 @@ def merge_state(state):
 
 
 def review_covers_head(state):
-    """Select claim-author evidence and check first-parent merge-only coverage."""
-    reviews = [r for r in state["reviews"] if r["state"] == "COMMENTED" and r["user"]["login"] == state["claim_author"]]
-    if not reviews:
+    """Report declared simulation coverage, without inferring a real review."""
+    evidence = state["review_evidence"]
+    if not all(evidence[key] for key in ("available", "independent", "complete")):
         return False
-    scope = reviews[-1]["commit_id"]
-    evidence = scope
-    if state["behavior_changed"]:
-        records = []
-        for comment in state["comments"]:
-            fields = dict(re.findall(r"(?m)^(scope reviewed|verified|outcome|defects|wall):\s*(\S+)", comment["body"]))
-            if comment["author"] == state["claim_author"] and comment["body"].startswith("Review verification") and fields.get("scope reviewed") == scope:
-                records.append(fields)
-        if not records or any(records[-1].get(k) != v for k, v in (("outcome", "clear"), ("defects", "none"), ("wall", "open"))):
-            return False
-        evidence = records[-1].get("verified")
-    sha = state["pr"]["head"]
-    while sha != evidence:
-        if "commits" in state["fail_reads"]:
-            return False
-        parents = state["commits"].get(sha, {}).get("parents", [])
-        if len(parents) < 2:
-            return False
-        sha = parents[0]
-    return True
+    if not evidence["relevant_content_changed"]:
+        return True
+    verification = evidence["verification"]
+    return bool(
+        verification
+        and all(verification[key] for key in ("independent", "relevant", "complete"))
+        and not verification["defects"]
+    )
 
 
 def ci_green(state):
@@ -344,9 +332,7 @@ def main(argv):
         return
 
     if group == "pr" and verb == "review":
-        record(args, "review-round", True, **seen(state))
-        print("fixture gh: review recorded")
-        return
+        fail(args, "review-round", "the offline fixture cannot perform an independent review")
 
     if group == "pr" and verb == "update-branch":
         do_update_branch(args, state)
