@@ -1628,15 +1628,17 @@ The readiness rows `undertake/08-cadence-stops-at-ready-omp.yaml`,
 `10-ready-is-marked-not-asked.yaml`, `13-gate-reads-the-review-record.yaml`,
 and `21-ready-failure-is-reported.yaml`, `27-addressed-readiness-report.yaml`,
 and `27-readiness-report-delivery-failure.yaml` measure actions, not narration.
-post-ready user report in the transcript while its fixture verifier proves
-that gate reads preceded the ready write; neither a GitHub telemetry write nor
-a report-shaped string in source substitutes for that evidence. The addressed
-case requires the same report in the child result for orchestrator relay; the
-delivery-failure case starts with the fixture PR ready and verifies it stays
-ready without a second transition or GitHub report comment; its judge requires
-one honest failure statement without retry. `fixtures/undertake-readiness/shared`
-supplies a stateful offline `gh` for pull request #25, a temporary Git
-repository with a local bare remote, and a harmless `pr-keep-current.sh` stub.
+The positive row requires a user report in the transcript after the ready
+write succeeds, while the fixture verifier proves that gate reads preceded
+the write. The refused-ready row requires no success report. Neither a GitHub
+telemetry write nor a report-shaped string in source substitutes for that
+evidence. The addressed case requires the same report in the child result for
+orchestrator relay; the delivery-failure case starts with the fixture PR ready
+and verifies it stays ready without a second transition or GitHub report
+comment; its judge requires one honest failure statement without retry. The
+shared `fixtures/undertake-readiness/shared` fixture supplies a stateful offline
+`gh` for pull request #25, a temporary Git repository with a local bare remote,
+and a harmless `pr-keep-current.sh` stub.
 Each call is logged to `.fixture/ops.log`; `verify.py gate`, `verify.py delivery`,
 and `verify.py service` read that record after the run. The gate verifier
 requires current-head gate reads before a ready write. Separate
