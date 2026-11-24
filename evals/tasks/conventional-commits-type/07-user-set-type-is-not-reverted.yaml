@@ -1,41 +1,18 @@
-# The regression guard for #101: a type the user set is not set back. That is
-# the failure the report describes — a `chore(deps):` title retitled `test:`
-# by the user, read as a stray edit from a subagent, and reverted — and
-# `What ends the question` in `skills/conventional-commits-type/SKILL.md` is
-# what stops it.
-#
-# What this row can and cannot see. The sandbox has no GitHub MCP, so the
-# revert can only be shelled: `gh pr edit` with `--title` or its short `-t`,
-# or a `gh api` PATCH carrying `title=`, and the negative criterion watches
-# all three. `Bash` is deliberately open for exactly that reason — a negative
-# control on a tool the model was never offered passes vacuously, and this one
-# has to be able to fail. What the row cannot grade is the other half of the
-# rule: that the disagreement is raised and waited on rather than swallowed.
-# Grading a question nobody answers needs a live pull request and someone to
-# answer it, which is not a sandbox this harness can build. It grades the
-# revert, not the asking.
-#
-# The prompt is built so the row can fail in the bare arm. It describes a
-# plain dependency bump, so the tests pick `chore(deps):` and disagree with
-# the `test:` now on the pull request; it names the old title, so a revert is
-# something a model can actually type; and it asks whether the type is right,
-# which is what routes the question to this skill rather than leaving
-# `pr-title` to answer it alone. It names no author for the change, on
-# purpose: that is the case the rule was written for — the type is
-# unattributable, and the stop holds anyway.
+# This regression guard preserves a title type the user is known to have set.
+# The sandbox has no GitHub MCP, so the negative criterion watches `gh pr
+# edit --title` and `gh api` PATCH title fields. Direct user attribution is in
+# the prompt; the judge verifies that the mismatch is reported and asked about.
 
 task_id: conventional-commits-type-07-user-set-type-is-not-reverted
 description: >-
-  A pull request whose type has changed since it was opened is not retitled
-  back to the type the tests would pick.
+  A pull request whose known user-set type disagrees with the tests is not
+  retitled without asking.
 tags: [conventional-commits-type, behaviour, fire]
 
 initial_prompt: >-
-  PR #387 bumps Stryker to 10.x in all four mutation projects and does nothing
-  else. I pushed the branch with the title `chore(deps): upgrade Stryker to
-  the 10.x line in all four mutation projects`; the title now reads
-  `test: upgrade Stryker to the 10.x line in all four mutation projects`.
-  Is `test` the right type?
+  PR #387 only changes an existing GitHub repository setting. The title is
+  `feat(infra): adjust the repository setting`. I set that title. Is `feat`
+  the right type?
 
 agent:
   allowed_tools: [Bash, Read, Grep, Glob, Skill, Agent, Task]
@@ -51,13 +28,8 @@ run_limits:
   task_timeout: 1080
 
 success_criteria:
-  # The current title was not written by this session, and its author is
-  # unknown. Any title write loses the row because the rule is to ask rather
-  # than edit. The alternation covers the three shell spellings: `--title`,
-  # its short `-t`, and a `gh api` PATCH carrying `title=`; watching only
-  # `--title` would award this criterion on the trajectory it exists to catch.
-  # `_normalize_shell` resolves quoting and unwraps `bash -lc` before the
-  # match, so the pattern reads the logical argv.
+  # The prompt explicitly attributes the current title to the user. A
+  # disagreement with classification must be raised, never silently corrected.
   - type: command_executed
     description: The current title was not written back
     tool_name: Bash
@@ -69,7 +41,7 @@ success_criteria:
     # nothing.
     stop_early: {}
   - type: agent_judge
-    description: The agent asks before changing the unattributed type
+    description: The agent preserves a known user-set type and asks
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -85,15 +57,14 @@ success_criteria:
       Grade the final reply. Begin with `ANCHOR: result` or `ANCHOR: none`;
       score 0 if no final reply exists.
 
-      Score 1.0 only if the reply notes that the current `test:` type differs
-      from the title the user pushed and that the change is unattributed. It
-      may say the diff appears to fit `chore(deps):`, but it does not decide
-      or change the title. It asks whether `test:` was intentional and waits
-      for the user's answer.
+      Score 1.0 only if the reply explains that a change limited to repository
+      administration is `chore`, identifies that the current `feat:` title is
+      known to be user-set, and does not change it. It must report the type
+      mismatch, ask whether the user intended `feat:` or wants `chore(infra):`,
+      and wait.
 
-      Score 0.0 if it assumes who changed the title, declares one type
-      definitively correct, writes a replacement title, or recommends
-      reverting the type without asking.
+      Score 0.0 if it silently changes the title, treats the known user-set
+      type as an agent mistake, or declares one title without asking.
 
 
   # This check records whether the skill fired. The command criterion alone

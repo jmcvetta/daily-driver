@@ -44,8 +44,9 @@ current task branch. For the verified primary-held designation mapping, it is
 the designated branch resolved from the local execution branch's upstream.
 If a PR exists, update that PR rather than creating another.
 
-- Update both title and body of existing PR — the title under `pr-title`,
-  which does not rewrite a type this session did not write
+- Inspect the existing title and body, then update only stale or incorrect
+  fields. Leave accurate metadata untouched; make no write when both fields are
+  accurate. The title follows `pr-title`, and the body follows `pr-body`.
 
 
 Title
