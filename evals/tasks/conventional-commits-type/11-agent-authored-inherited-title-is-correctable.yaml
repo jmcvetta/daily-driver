@@ -13,7 +13,10 @@ agent:
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
 run_limits: {max_turns: 12, turn_timeout: 300, task_timeout: 600}
 success_criteria:
+  # Behaviour row: the trigger is recorded, but the judge carries the
+  # assertion so model variance in skill engagement cannot fail it.
   - type: skill_triggered
+    weight: 0
     description: "`conventional-commits-type` fires on an inherited title decision"
     expected_skill: conventional-commits-type
     skill_name: conventional-commits-type

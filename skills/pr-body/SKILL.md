@@ -45,7 +45,8 @@ The body of a pull request, whether it is being opened or rewritten. In order:
   not repeated here.
   Keep the change, its verification evidence, material risk or uncertainty, and
   outstanding human approvals visible. Do not duplicate live check or review
-  state; read it from GitHub instead.
+  state; read it from GitHub instead. Do not publish private source quotes or
+  sensitive local details.
   For a specification-backed task, identify the document path, exact delivered
   specification commit and requirement IDs, and distinguish evidence of
   delivery from unverified allocation.

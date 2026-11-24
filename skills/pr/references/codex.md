@@ -15,6 +15,7 @@ half of the Omp routes that carries over unchanged.
 - **Updating an existing pull request.** Inspect title and body first, then
   run `gh pr edit` with only stale or incorrect fields (`--title` and/or
   `--body`). Make no update when both are accurate.
+
 Keep it current
 ===============
 

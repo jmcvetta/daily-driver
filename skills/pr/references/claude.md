@@ -17,7 +17,8 @@ Codex's in [`codex.md`](codex.md).
   repository. Never let GitHub infer the head from the local execution name.
 - **Updating an existing pull request.** Inspect title and body first, then
   call `mcp__github__update_pull_request` only with stale or incorrect fields
-  set. Make no update when both are accurate; do not create a second PR.
+  set. Make no update when both are accurate; keep the identified remote push
+  head and do not create a second PR for the execution branch.
  
 Keep it current
 ===============
