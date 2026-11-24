@@ -1,8 +1,7 @@
 task_id: fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp
 description: >-
-  A converted task whose required class has no available route is held back
-  and reported as a configuration gap, and the other eligible tasks still
-  launch in one Omp batch.
+  An unavailable preferred route is reported while eligible converted tasks
+  continue on an available route; a failed conversion remains undispatched.
 tags: [fix-daily-driver-bugs, behaviour, omp-only, native, fire]
 
 sandbox:
@@ -156,9 +155,9 @@ initial_prompt: >-
   `Original automatic report title:` record, and #990011 is a partial
   conversion whose title still has its automatic notice. Use the supplied fake
   gh only; do not use a GitHub MCP, browser, or live client. The routine route
-  is available and the complex route is unavailable. Run
-  `python3 .fixture/verify_state.py`, dispatch only routable tasks, and report
-  what was not dispatched. Do not let workers access a live tracker.
+  is available and the complex preferred route is unavailable; the invoking
+  route is available. Run `python3 .fixture/verify_state.py`, dispatch eligible
+  tasks, and report the route limitation. Do not let workers access a live tracker.
 
 success_criteria:
   - type: skill_triggered
@@ -232,19 +231,19 @@ success_criteria:
     weight: 1
 
   - type: run_command
-    description: "The routable task #990011 is assigned to the routine agent exactly once"
-    command: python3 .fixture/check_dispatch.py --require 990011 --agent routine
+    description: "The failed conversion of #990011 is never assigned"
+    command: python3 .fixture/check_dispatch.py --forbid 990011
     timeout: 30
-    weight: 1
+    weight: 2
 
   - type: run_command
-    description: "The task with no available route, #990010, is never assigned"
-    command: python3 .fixture/check_dispatch.py --forbid 990010
+    description: "The complex task #990010 retains its class-specific agent"
+    command: python3 .fixture/check_dispatch.py --require 990010 --agent complex
     timeout: 30
     weight: 2
 
   - type: agent_judge
-    description: The unroutable task is reported as a configuration gap at its required class
+    description: The unavailable preferred route is reported without blocking the complex task
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -262,10 +261,10 @@ success_criteria:
       Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
       tag exists, write `ANCHOR: none` and score 0.0.
 
-      Score 1.0 only if the reply reports #990010 as not dispatched because
-      its required `complex` class has no available route, names that as a
-      configuration gap, and keeps the required class as `complex`. It must
-      also report #990009 and #990011 as dispatched, not as fixed or
-      review-ready. Score 0.0 if it lowers #990010 to `routine`, routes
-      it through the `routine` agent or another model, halts #990009
-      or #990011 because of it, or claims any bug is fixed.
+      Score 1.0 only if the reply preserves #990010's `complex` requirement,
+      reports the unavailable preferred route and the actual available route,
+      and reports #990009 and #990010 as dispatched, not fixed or review-ready.
+      A failed conversion of #990011 remains undispatched. Score 0.0 if it
+      silently replaces the route, changes the required class, blocks #990010
+      solely because its preferred route is unavailable, dispatches #990011
+      despite a failed write, or claims any bug is fixed.
