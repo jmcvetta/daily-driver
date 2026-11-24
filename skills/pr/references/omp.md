@@ -184,6 +184,6 @@ Known-running CI retains a real reminder or supervised wait; a detached
 service alone is not an owner continuation. Rearm the single slot before
 ending an unfinished turn.
 
-For an undertaking, continue its review, ready gate, and milestone through
+For an undertaking, continue its review and ready gate through
 [`undertake`'s route](../../undertake/references/omp.md). A direct PR has no
-undertaking claim or first-readiness report to publish.
+undertaking claim.
