@@ -25,14 +25,12 @@ subscription; do not claim autonomous maintenance.
 
 Read:
 
-    gh pr view <number> --json state,mergeStateStatus,mergeable,headRefOid,statusCheckRollup
+    gh pr view <number> --json state,mergeStateStatus,mergeable,headRefOid
 
 If the PR is merged or closed, or the user has stopped the watch, exit before
-any update. Before a currency update, read both check and status endpoints via
-`review-cycle`; defer the update if either reports a run in flight. For
-`BEHIND`, `DRAFT`, `BLOCKED`, or an indeterminate merge state, run `gh pr
-update-branch <number>`. `DIRTY` is a conflict stop; `CLEAN` and `UNSTABLE`
-need no update.
+any update. For `BEHIND`, `DRAFT`, `BLOCKED`, or an indeterminate merge state,
+run `gh pr update-branch <number>` even when CI is queued, pending, or running.
+`DIRTY` is a conflict stop; `CLEAN` and `UNSTABLE` need no update.
 
 After an update that can move the head, read `gh pr view <number> --json
 headRefOid,statusCheckRollup` and both check and status endpoints again.
