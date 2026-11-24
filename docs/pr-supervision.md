@@ -178,12 +178,16 @@ A per-PR drain lock serializes a remote mutation with stop/hold; SQLite
 transactions remain short so other records and heartbeats stay writable.
 
 Changed actionable observations coalesce into one generation. The owner tool
-`daily_driver_pr_supervisor_acknowledge` makes another complete authoritative
-read before accepting a current, admitted generation. A receipt alone cannot
-acknowledge active work. Changed heads, stopped/held actors and superseded
-admissions reject stale work. Delivery attempts and failures before admission
-share a bounded retry budget; missing context or activation failures cannot
-spawn a new process forever.
+`daily_driver_pr_supervisor_acknowledge` makes a complete authoritative GitHub
+read and rechecks admission transactionally before it accepts the current
+generation. Its returned `observed` evidence is the work input: the owner must
+not inventory GitHub first, or act and acknowledge afterward. Rejection grants
+no authority. An accepted read is not completion, independent review, green CI
+or readiness; a later decision or mutation boundary still needs applicable
+fresh evidence. Changed heads, stopped/held actors and superseded admissions
+reject stale work. Delivery attempts and failures before admission share a
+bounded retry budget; missing context or activation failures cannot spawn a new
+process forever.
 
 ### Cold child recovery
 
@@ -214,6 +218,12 @@ parent's queued/in-flight turn prevents native child dispatch, a child
 provider request and acknowledgment of the stopped generation. This is not
 proof that an arbitrary already-running provider request can be undone.
 The probe uses isolated `gh` response fixtures, not a real PR.
+The bounded `scripts/probe-omp-child-resumption.py` proof also exercises
+legacy authorization on the inbox's real SQLite connection. A current queued
+or running token allows its next tool; a separate connection that stops or
+holds the record, transfers the authority, removes its row, or changes its
+token or epoch denies the next tool boundary. A tool call in a session without
+a supervised legacy token receives no guard.
 
 ### Transfer, rollback and stop
 
@@ -234,6 +244,12 @@ an owner restart/rebind rebuilds that retry from the private database. Old
 tokens cannot start or finish replacement work. Once owner work has started,
 its token does not expire by age: only completion or an explicit control fence
 can release it. This does not give the old route autonomous cold activation.
+
+The legacy wake adapter checks each supervised tool boundary with one fresh
+prepared SQLite read on the inbox's existing owner connection. It verifies the
+record, shadow authority, delivery token and epoch, and either a running wake
+or an unexpired queued lease. Start, finish, retry, recovery and control remain
+durable supervisor operations; the boundary read is not cached permission.
 Already-running admitted legacy work must drain before transfer. Rollback
 first fences new deliveries and drains mutations, then reads fresh state and
 restores only the recorded prior services and original reminder message/deadline.
