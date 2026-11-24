@@ -9,8 +9,7 @@
  * For each command shape it takes the guard's verdict on a pristine fixture,
  * then runs the same command under real bash in a fresh copy of that fixture
  * and looks at whether the primary checkout actually moved — its HEAD ref, its
- * commit, or its tracked files. The property is one-directional and is the
- * whole point of the guard:
+ * commit, or its tracked files. For recognizable Git rewrites:
  *
  *     the guard allowed it  =>  the primary checkout did not change
  *
@@ -18,18 +17,15 @@
  * `git checkout` and `git switch`; #289 widened the claim to every subcommand
  * that rewrites tracked files in the working tree, and the shapes below cover
  * `reset --hard`, `restore`, `merge`, `rebase`, `cherry-pick` and `revert`
- * alongside them. What the guard still does not claim gets no shape here: `git
- * reset --soft` moves HEAD and stages the difference without touching a
- * working-tree file, so it is allowed, and it would fail the property below —
- * which reads the primary's HEAD as well as its files. A check that claimed
- * the whole surface while the recognizer covered part of it would be the
- * overstatement this guard was rewritten to stop making.
+ * alongside them. Opaque executable, eval and stdin cases remain explicit
+ * limitation cases: they must be admitted from the feature worktree and
+ * demonstrate the primary mutation the recognizer cannot audit. They are not
+ * counted as successful prevention. `git reset --soft`, arbitrary programs
+ * and shared-ref operations also remain outside this working-tree claim.
  *
- * A guard that denies something harmless fails no assertion here. That
- * asymmetry is the inversion #269 asks for: a false positive costs the model
- * one rewritten command, and a false negative costs the user their checkout.
- * Over-blocking is held in check by `check-omp-extension.mjs` instead, which
- * names the commands that must stay available.
+ * Positive cases assert successful execution and output as well as admission.
+ * Actual Omp usability and dirty-primary preservation are also exercised by
+ * `check-omp-worktree-live.py`.
  *
  * Every shape below is a real construct, and six of them are the fail-open
  * holes four review rounds found one at a time: a here-document that never
@@ -175,7 +171,7 @@ function blocked(command, cwd) {
 function shapes({ root, primary, task, detached }) {
 	const move = (cwd) => `git -C ${cwd} switch feature/y`;
 	const cases = [];
-	const add = (label, from, command) => cases.push({ label, from, command });
+	const add = (label, from, command, opaque = false, output = null) => cases.push({ label, from, command, opaque, output });
 
 	// The four ways to name the primary checkout from elsewhere.
 	add("bare -C switch", task, move(primary));
@@ -208,18 +204,17 @@ function shapes({ root, primary, task, detached }) {
 	add("eval then switch", task, `eval 'cd ${primary}'\ngit switch feature/y`);
 	add("bash -c literal", task, `bash -c '${move(primary)}'`);
 	add("sh -c literal", task, `sh -c '${move(primary)}'`);
-	add("eval expanded", task, `x='${move(primary)}'; eval "$x"`);
-	add("expanded executable from a task worktree", task, `g=git; $g -C ${primary} switch feature/y`);
+	add("eval expanded", task, `x='${move(primary)}'; eval "$x"`, true);
+	add("expanded executable from a task worktree", task, `g=git; $g -C ${primary} switch feature/y`, true);
 	add("ordinary arithmetic", task, "n=1; echo $(( $n + 1 ))");
-	add("bash -c expanded", task, `x='${move(primary)}'; bash -c "$x"`);
+	add("bash -c expanded", task, `x='${move(primary)}'; bash -c "$x"`, true);
 
-	// An interpreter behind a wrapper, or reading a here-document. Each moves
-	// the primary under real bash, so each must be refused rather than read as
-	// a wrapper command or a script file.
+	// Literal command strings retain their Git checks. Opaque stdin is an
+	// explicit best-effort limitation, like programs loaded from script files.
 	add("exec bash -c literal", task, `exec bash -c '${move(primary)}'`);
 	add("timeout bash -c literal", task, `timeout 5 bash -c '${move(primary)}'`);
 	add("env bash -c literal", task, `env bash -c '${move(primary)}'`);
-	add("bash here-document", task, `bash <<'EOF'\n${move(primary)}\nEOF\n`);
+	add("bash here-document", task, `bash <<'EOF'\n${move(primary)}\nEOF\n`, true);
 
 	// Expansions standing where the guard reads a literal.
 	add("expanded cd target", task, `x=${primary}; cd $x; git switch feature/y`);
@@ -324,7 +319,10 @@ function shapes({ root, primary, task, detached }) {
 	// The detached worktree, and mutations that should run untouched.
 	add("switch in a detached worktree", detached, "git switch feature/y");
 	add("work in the task worktree", task, "git status --porcelain");
+	add("expanded harmless executable", task, 'PROGRAM=printf; "$PROGRAM" "%s\\n" usable', false, "usable");
+	add("opaque harmless eval", task, 'script="printf usable"; eval "$script"', false, "usable");
 	add("ordinary substitution", task, "echo $(echo hello)");
+	add("later literal primary rewrite after opaque command", task, `PROGRAM=printf; "$PROGRAM" usable; ${move(primary)}`);
 
 	return cases;
 }
@@ -333,6 +331,7 @@ const results = [];
 let failures = 0;
 let allowed = 0;
 let denied = 0;
+let opaqueLimitations = 0;
 
 for (const probe of shapes(makeFixture())) {
 	// One fresh fixture per case: a command that creates a branch or a
@@ -343,7 +342,7 @@ for (const probe of shapes(makeFixture())) {
 	const rebuilt = shapes(fixture).find((one) => one.label === probe.label);
 	const before = primaryState(fixture.primary);
 	const verdict = blocked(rebuilt.command, rebuilt.from);
-	spawnSync("bash", ["-c", rebuilt.command], {
+	const execution = spawnSync("bash", ["-c", rebuilt.command], {
 		cwd: rebuilt.from,
 		encoding: "utf8",
 		timeout: 20000,
@@ -353,16 +352,22 @@ for (const probe of shapes(makeFixture())) {
 
 	if (verdict) denied++;
 	else allowed++;
-	if (!verdict && mutated) {
+	// Keep the dynamic-program cases visible and executable. They assert the
+	// chosen usability policy and demonstrate its limitation, not prevention.
+	const failed = rebuilt.opaque
+		? verdict || !mutated
+		: (!verdict && mutated) || (rebuilt.output !== null && (verdict || execution.status !== 0 || !execution.stdout.includes(rebuilt.output)));
+	if (rebuilt.opaque) opaqueLimitations++;
+	if (failed) {
 		failures++;
 		results.push(
-			`FAIL ${probe.label}: allowed, and the primary checkout changed\n` +
+			`FAIL ${probe.label}: ${rebuilt.opaque ? "opaque-program policy or limitation changed" : "allowed, and the primary checkout changed"}\n` +
 				`       from ${rebuilt.from === fixture.task ? "task worktree" : rebuilt.from === fixture.primary ? "primary" : "detached worktree"}\n` +
 				`       ${rebuilt.command.replaceAll("\n", "\n       ")}`,
 		);
 	} else {
 		results.push(
-			`ok   ${probe.label} (${verdict ? "denied" : "allowed"}${mutated ? ", mutates" : ""})`,
+			`${rebuilt.opaque ? "limit" : "ok"} ${probe.label} (${verdict ? "denied" : "allowed"}${mutated ? ", mutates" : ""})`,
 		);
 	}
 	rmSync(fixture.root, { recursive: true, force: true });
@@ -372,10 +377,10 @@ for (const line of results) console.log(line);
 console.log("");
 if (failures > 0) {
 	console.error(
-		`${failures} shape(s) were allowed by the guard and changed the primary checkout`,
+		`${failures} shape(s) violated their targeted-protection or explicit opaque-program expectation`,
 	);
 	process.exit(1);
 }
 console.log(
-	`all ${results.length} shapes agree with bash; ${denied} denied, ${allowed} allowed, none allowed a primary mutation`,
+	`all ${results.length} shapes checked; ${denied} denied, ${allowed} allowed; ${opaqueLimitations} opaque-program limitations observed; no recognized rewrite allowed a primary mutation`,
 );

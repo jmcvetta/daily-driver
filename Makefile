@@ -206,7 +206,7 @@ check-title-gate:
 
 # The acceptance test for the Omp runtime adapter: import extensions/
 # daily-driver.js with a fake ExtensionAPI and assert the `ask` deny, the
-# primary/detached-worktree mutation guard, the four tools, and package wiring.
+# primary-worktree mutation guard, the four tools, and package wiring.
 # Credential-free like the other script legs, so it runs on a laptop and CI.
 # Node ships with the harness; no package install is involved.
 check-omp-extension:
@@ -238,8 +238,10 @@ check-omp-guard-differential:
 # target nobody runs by accident should fail loudly when its toolchain is
 # absent; a target inside `check` would have needed the guard, and the guard is
 # what would have let it silently check nothing.
+# The actual-tool worktree fixture uses the locked pytest dev dependency.
 check-omp-plugin:
 	python3 scripts/check-omp-plugin.py
+	uv run --frozen python scripts/check-omp-worktree-live.py
 
 # The cache refresh target changes user state in a real run. This check puts a
 # fake `omp` first on PATH and asserts the command order and fail-fast behavior.

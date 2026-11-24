@@ -45,12 +45,12 @@ limits.
 
 Claude Code's marketplace installation also enables the official Worktrunk
 plugin as `worktrunk@daily-driver`; it does not install the separate `wt` CLI.
-On desktop, `task-worktree` installs `wt` on demand when repository changes
-need isolation. It downloads Worktrunk's prebuilt release archive for your
-platform, verifies its SHA-256 checksum, and installs `wt` into
-`~/.local/bin` (or `$WORKTRUNK_INSTALL_DIR`). It never compiles Worktrunk. An
-existing `wt` is used as-is. You can install it ahead of time by following
-Worktrunk's [installation instructions][worktrunk-install].
+Task isolation does not require Worktrunk installation: `task-worktree`
+accepts a registered dedicated non-primary worktree created with Git or your
+chosen tool, including an external path. An existing `wt` remains usable.
+Optional installation follows Worktrunk's
+[installation instructions][worktrunk-install]; task startup does not install
+or upgrade it.
 
 [worktrunk-install]: https://worktrunk.dev/#install
 

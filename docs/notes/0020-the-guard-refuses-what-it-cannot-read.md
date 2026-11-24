@@ -2,6 +2,14 @@
 
 **Status:** decided, 2026-09-18.
 
+**Superseded in part, 2026-11-24 (#1036).** The user rejected universal
+containment as a prerequisite for worktree usability. Opaque executables,
+nonliteral eval and shell input now pass from verified non-primary task
+worktrees. Primary/unknown-directory refusals and recognizable Git rewrite
+checks remain. The historical decision and results below are retained as
+evidence, not the current feature-worktree policy. Differential fixtures now
+distinguish targeted prevention from explicit opaque-program limitations.
+
 **Observed.** The Omp worktree guard's shell recognizer was reviewed four
 times. Each round found fail-open holes, and each round's fix opened more:
 
