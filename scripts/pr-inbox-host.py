@@ -19,6 +19,7 @@ import subprocess
 import tempfile
 import threading
 import time
+import uuid
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location("pr_inbox", ROOT / "scripts/pr-inbox.py")
@@ -40,6 +41,8 @@ def activate(inbox, owner, omp, timeout=90):
             AND status IN ('pending','admitted') AND held IS NULL""", (owner["session"],))]
     if not targets:
         return "stopped-or-idle"
+    if inbox.db.execute("SELECT 1 FROM activations WHERE session=?", (owner["session"],)).fetchone():
+        raise ActivationError("owned-activation-termination-unresolved")
     lease = subprocess.run([omp, "session", "lease", "--json", "--", owner["session"]],
         capture_output=True, text=True, check=True, timeout=15)
     state = json.loads(lease.stdout)
@@ -105,8 +108,20 @@ def activate(inbox, owner, omp, timeout=90):
                "--extension", str(ROOT / "extensions/pr-supervision-inbox.mjs"),
                "--model", f'{activation_owner["provider"]}/{activation_owner["model"]}', "--thinking", activation_owner["effort"]]
     with tempfile.TemporaryFile(mode="w+t") as errors:
-        process = subprocess.Popen(command, cwd=activation_owner["cwd"], env=env, stdin=subprocess.PIPE,
-                                   stdout=subprocess.PIPE, stderr=errors, text=True, bufsize=1)
+        token = str(uuid.uuid4())
+        # Commit before spawn. A host crash must not make an orphan look drained.
+        with inbox.transaction():
+            targets = [key for key in targets if (row := inbox.get(key))["status"] in ("pending", "admitted") and not row["held"]]
+            if not targets:
+                return "stopped-or-idle"
+            inbox.db.execute("INSERT INTO activations(session,token,targets) VALUES (?,?,?)",
+                             (owner["session"], token, json.dumps(targets)))
+        try:
+            process = subprocess.Popen(command, cwd=activation_owner["cwd"], env=env, stdin=subprocess.PIPE,
+                                       stdout=subprocess.PIPE, stderr=errors, text=True, bufsize=1)
+        except BaseException:
+            inbox.db.execute("DELETE FROM activations WHERE session=? AND token=?", (owner["session"], token))
+            raise
         frames = queue.Queue()
 
         def collect():
@@ -182,7 +197,8 @@ def activate(inbox, owner, omp, timeout=90):
                     process.wait(timeout=5)
                 except subprocess.TimeoutExpired:
                     process.kill()
-                    process.wait()
+                    process.wait(timeout=5)
+            inbox.db.execute("DELETE FROM activations WHERE session=? AND token=?", (owner["session"], token))
 
 
 def deliver(inbox, owner, omp, clock=None):
@@ -191,7 +207,8 @@ def deliver(inbox, owner, omp, clock=None):
     before = [dict(row) for row in inbox.db.execute("""SELECT identity,generation,fence,attempts FROM deliveries
         WHERE session=? AND status IN ('pending','admitted') AND held IS NULL AND attempts<5""", (owner["session"],))]
     try:
-        outcome = activate(inbox, owner, omp)
+        with inbox.activation_guard(owner["session"]):
+            outcome = activate(inbox, owner, omp)
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError, TimeoutError) as error:
         outcome = f"degraded:{getattr(error, 'code', type(error).__name__)}"
     if outcome != "received":

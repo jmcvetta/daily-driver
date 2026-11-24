@@ -57,7 +57,10 @@ class ActiveSupervisor:
             columns = {row[1] for row in self.db.execute("PRAGMA table_info(authorities)")}
             for name, declaration in (("legacy_delivery","TEXT"),("legacy_running","INTEGER NOT NULL DEFAULT 0"),
                                       ("legacy_deadline","REAL"),("legacy_context","TEXT"),
-                                      ("legacy_attempts","INTEGER NOT NULL DEFAULT 0")):
+                                      ("legacy_attempts","INTEGER NOT NULL DEFAULT 0"),("legacy_active","TEXT"),
+                                      ("control_operation","TEXT"),("control_epoch","INTEGER"),
+                                      ("control_drain","TEXT"),("control_diagnostic","TEXT"),
+                                      ("update_evidence","TEXT"),("control_next","REAL NOT NULL DEFAULT 0")):
                 if name not in columns:
                     self.db.execute(f"ALTER TABLE authorities ADD COLUMN {name} {declaration}")
 
@@ -92,6 +95,10 @@ class ActiveSupervisor:
         delivery = self.db.execute("SELECT * FROM deliveries WHERE identity=?", (key,)).fetchone()
         record["delivery"] = dict(delivery) if delivery else None
         record["host_running"] = self.host_running()
+        record["control"] = ({"operation": row["control_operation"], "fence": row["control_epoch"],
+                              "drain": row["control_drain"],
+                              **({"diagnostic": row["control_diagnostic"]} if row["control_diagnostic"] else {})}
+                             if row and row["control_operation"] else None)
         return record
 
     def source(self, key):
@@ -107,7 +114,7 @@ class ActiveSupervisor:
         if record["stopped"]:
             if delivery:
                 self.inbox.stop(key)
-            self.db.execute("""UPDATE authorities SET epoch=epoch+1,update_head=NULL,
+            self.db.execute("""UPDATE authorities SET epoch=epoch+1,
                 legacy_delivery=NULL,legacy_running=0,legacy_deadline=NULL,legacy_context=NULL,legacy_attempts=0
                 WHERE identity=?""", (key,))
             return
@@ -130,30 +137,129 @@ class ActiveSupervisor:
         self.inbox.enqueue(key, context["session"], record["generation"], payload, self.clock())
 
     @contextmanager
-    def mutation_guard(self, key):
-        """Drain one PR's remote mutation before committing a stop or hold."""
+    def mutation_guard(self, key, timeout=None):
+        """Serialize admitted remote mutation and drain without a database lock."""
         suffix = hashlib.sha256(key.encode()).hexdigest()
         descriptor = os.open(str(self.ledger.path) + "." + suffix + ".mutation",
                              os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
         with os.fdopen(descriptor, "r+") as lock:
-            fcntl.flock(lock, fcntl.LOCK_EX)
+            deadline = None if timeout is None else time.monotonic() + timeout
+            while True:
+                try:
+                    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    break
+                except BlockingIOError:
+                    if deadline is not None and time.monotonic() >= deadline:
+                        raise TimeoutError("remote mutation is still running")
+                    time.sleep(0.01)
             yield
 
-    def control(self, key, operation, reason):
-        """Atomically fence PR observation and pending delivery before returning."""
-        with self.mutation_guard(key):
-            result = self.ledger.control(key, operation, reason, self.clock(), persist=self._persist)
-            if operation == "release":
-                with self.ledger.transaction():
-                    delivery = self.db.execute("SELECT * FROM deliveries WHERE identity=?", (key,)).fetchone()
-                    if delivery and delivery["held"]:
-                        self.inbox.release(key)
-        if operation == "stop":
-            authority = self.db.execute("SELECT legacy FROM authorities WHERE identity=?", (key,)).fetchone()
-            context = json.loads(result["context"])
-            for service in json.loads(authority["legacy"]).get("services", []) if authority else []:
-                service_control("stop", service, context)
-        return result
+    def control(self, key, operation, reason, source=None, timeout=30):
+        """Publish control intent first, then drain only that fenced authority."""
+        if operation == "release":
+            state = self.status(key)
+            if state["stopped"]:
+                raise ValueError("a stopped record cannot be released by a hold release")
+            if state["control"] and state["control"]["drain"] != "complete":
+                state = self.drain_control(key, source, timeout)
+                if state["control"]["drain"] != "complete":
+                    return state
+            # Serialize release with a concurrent new control transaction.
+            def release(record):
+                actor = self.db.execute("SELECT control_drain FROM authorities WHERE identity=?", (key,)).fetchone()
+                if actor and actor["control_drain"] not in (None, "complete"):
+                    raise SHADOW.Fenced("control drain must complete before release")
+                delivery = self.db.execute("SELECT held FROM deliveries WHERE identity=?", (key,)).fetchone()
+                if delivery and delivery["held"]:
+                    self.inbox.release(key)
+            self.ledger.control(key, operation, reason, self.clock(), persist=release)
+            return self.status(key)
+        if operation not in ("stop", "hold") or not reason.strip():
+            raise ValueError("control requires stop, hold, or release and a reason")
+        def fence(record):
+            self._persist(record)
+            self.db.execute("""UPDATE authorities SET control_operation=?,control_epoch=epoch,
+                control_drain='pending',control_diagnostic=NULL,control_next=? WHERE identity=?""",
+                ("stop" if record["stopped"] else operation, self.clock(), key))
+        state = self.status(key)
+        # Retry the same intent without rotating tokens or losing drain evidence.
+        if not (state["control"] and state[{"stop":"stopped","hold":"held"}[operation]] == reason
+                and state["control"]["operation"] == operation):
+            self.ledger.control(key, operation, reason, self.clock(), persist=fence)
+        return self.drain_control(key, source, timeout)
+
+    def _account_update(self, key, snapshot):
+        """Retain request evidence independently of the fenced observation writer."""
+        with self.ledger.transaction():
+            actor = self.db.execute("SELECT * FROM authorities WHERE identity=?", (key,)).fetchone()
+            if not actor["update_head"]:
+                return
+            evidence = json.loads(actor["update_evidence"] or "{}")
+            settled = (snapshot["state"] != "OPEN" or snapshot["head"] != actor["update_head"]
+                       or snapshot["currency"] == "current")
+            evidence.update(observed=snapshot, settled=settled)
+            self.db.execute("""UPDATE authorities SET update_evidence=?,update_head=?,update_started=?
+                WHERE identity=?""", (SHADOW.canonical(evidence),
+                None if settled else actor["update_head"], None if settled else actor["update_started"], key))
+
+    def drain_control(self, key, source=None, timeout=30):
+        """Account for prior requests and owned work; never reactivate fenced work."""
+        state = self.status(key)
+        control = state["control"]
+        if not control or control["drain"] == "complete":
+            return state
+        fence = control["fence"]
+        deadline = time.monotonic() + timeout
+        diagnostic, phase, remaining = None, "complete", "remote mutation"
+        try:
+            with self.mutation_guard(key, timeout=max(0, deadline - time.monotonic())):
+                # No old writer may publish evidence, but its issued request still
+                # needs accounting. A 202 or unchanged head is not quiescence.
+                actor = self.db.execute("SELECT * FROM authorities WHERE identity=?", (key,)).fetchone()
+                remaining = "expected-head request accounting"
+                if actor["update_head"]:
+                    self._account_update(key, (source or self.source(key)).observe())
+                actor = self.db.execute("SELECT * FROM authorities WHERE identity=?", (key,)).fetchone()
+                if actor["update_head"]:
+                    phase, diagnostic = "pending", "expected-head request remains unresolved; observe before stop-time push"
+            context = json.loads(state["context"])
+            activation = self.db.execute("SELECT targets FROM activations WHERE session=?", (context["session"],)).fetchone()
+            if activation and key in json.loads(activation["targets"]):
+                remaining = "owned RPC activation"
+                with self.inbox.activation_guard(context["session"], timeout=max(0, deadline - time.monotonic())):
+                    if self.db.execute("SELECT 1 FROM activations WHERE session=?", (context["session"],)).fetchone():
+                        phase, diagnostic = "failed", "owned RPC activation has unresolved termination evidence"
+            # Started live/legacy turns retain evidence until their real end.
+            remaining = "owned live or legacy turn"
+            while self.db.execute("""SELECT 1 FROM deliveries WHERE identity=? AND running IS NOT NULL
+                    UNION ALL SELECT 1 FROM authorities WHERE identity=? AND legacy_active IS NOT NULL""",
+                    (key, key)).fetchone():
+                if time.monotonic() >= deadline:
+                    raise TimeoutError("owned live or legacy turn has not ended")
+                time.sleep(0.01)
+        except TimeoutError:
+            phase, diagnostic = "failed", f"{remaining} drain timed out; stop-time push is not safe"
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError, SHADOW.ObservationError):
+            phase, diagnostic = "failed", f"{remaining} drain unavailable; fence retained"
+        # A failed mutation drain must not skip cancellation of independent old
+        # services. Stop these after the lock, since an admitted rollback may
+        # have restored one before it observed the new fence.
+        if control["operation"] == "stop":
+            try:
+                context = json.loads(state["context"])
+                services = json.loads(state["authority"]["legacy"]).get("services", [])
+                for service in services:
+                    try:
+                        service_control("stop", service, context)
+                    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError):
+                        phase = "failed"
+                        diagnostic = (diagnostic + "; " if diagnostic else "") + f"recorded legacy service {json.dumps(service)} stop failed"
+            except (ValueError, TypeError, KeyError):
+                phase, diagnostic = "failed", "recorded legacy actor context unavailable; fence retained"
+        with self.ledger.transaction():
+            self.db.execute("""UPDATE authorities SET control_drain=?,control_diagnostic=?,control_next=?
+                WHERE identity=? AND control_epoch=?""", (phase, diagnostic, self.clock() + SHADOW.INTERVAL, key, fence))
+        return self.status(key)
 
     def hint(self, key):
         """Coalesce a verified event hint into an earlier authoritative read only."""
@@ -180,7 +286,7 @@ class ActiveSupervisor:
             snapshot = source.observe_currency()
             # The per-PR drain lock spans bounded remote work, never a SQLite
             # transaction. Other PRs, owner heartbeats and admissions stay usable.
-            # Stop/hold takes this same lock before fencing and returning to push.
+            # Stop/hold publishes its fence before waiting on this drain lock.
             with self.mutation_guard(key):
                 with self.ledger.transaction():
                     record = self.ledger.get(key)
@@ -188,10 +294,12 @@ class ActiveSupervisor:
                     if (record["stopped"] or record["held"] or record["epoch"] != epoch
                             or record["lease_owner"] != writer or record["lease_until"] <= self.clock()):
                         raise SHADOW.Fenced("actor was stopped, held or superseded")
+                if actor and actor["update_head"] and snapshot["state"] != "OPEN":
+                    self._account_update(key, snapshot)
                 if actor and actor["state"] == "active" and snapshot["state"] == "OPEN":
                     if actor["update_head"]:
                         if actor["update_head"] != snapshot["head"] or snapshot["currency"] == "current":
-                            self.db.execute("UPDATE authorities SET update_head=NULL,update_started=NULL,error=NULL WHERE identity=?", (key,))
+                            self._account_update(key, snapshot)
                         elif self.clock() - actor["update_started"] > 120:
                             raise SHADOW.ObservationError("server update has not settled; diagnose before retry")
                     elif snapshot["currency"] == "update_candidate":
@@ -205,11 +313,22 @@ class ActiveSupervisor:
                                 and latest["base"] == snapshot["base"] and latest["base_sha"] == snapshot["base_sha"]
                                 and latest["currency"] == "update_candidate")
                             if admitted:
-                                self.db.execute("UPDATE authorities SET update_head=?,update_started=? WHERE identity=?",
-                                                (latest["head"], self.clock(), key))
+                                request = {"expected_head": latest["head"], "started": self.clock(), "outcome": "admitted"}
+                                self.db.execute("""UPDATE authorities SET update_head=?,update_started=?,update_evidence=?
+                                    WHERE identity=?""", (latest["head"], request["started"], SHADOW.canonical(request), key))
                         if admitted:
-                            source.update(latest["head"])
+                            try:
+                                source.update(latest["head"])
+                            except BaseException:
+                                request["outcome"] = "unknown"
+                                self.db.execute("""UPDATE authorities SET update_evidence=?
+                                    WHERE identity=? AND update_head=?""", (SHADOW.canonical(request), key, latest["head"]))
+                                raise
+                            request["outcome"] = "accepted"
+                            self.db.execute("UPDATE authorities SET update_evidence=? WHERE identity=? AND update_head=?",
+                                (SHADOW.canonical(request), key, latest["head"]))
                             snapshot = source.observe_currency()
+                            self._account_update(key, snapshot)
                         else:
                             snapshot = latest
                 evidence = source.observe()
@@ -218,7 +337,12 @@ class ActiveSupervisor:
                 snapshot = evidence
                 self.ledger.finish(key, writer, epoch, self.clock(), snapshot=snapshot, persist=self._persist)
         except SHADOW.ObservationError as error:
-            self.ledger.finish(key, writer, epoch, self.clock(), error=str(error), persist=self._persist)
+            try:
+                self.ledger.finish(key, writer, epoch, self.clock(), error=str(error), persist=self._persist)
+            except SHADOW.Fenced:
+                pass
+        except SHADOW.Fenced:
+            pass
         return self.status(key)
 
     def acknowledge(self, key, generation, fence, admission, source=None):
@@ -262,6 +386,7 @@ class ActiveSupervisor:
             if actor is None:
                 return {"authorized":False}
             if operation == "finish":
+                self.db.execute("UPDATE authorities SET legacy_active=NULL WHERE identity=? AND legacy_active=?", (key, token))
                 self.db.execute("""UPDATE authorities SET legacy_delivery=NULL,legacy_running=0,
                     legacy_deadline=NULL,legacy_context=NULL,legacy_attempts=0,error=NULL
                     WHERE identity=? AND legacy_delivery=? AND epoch=?""", (key,token,epoch))
@@ -297,7 +422,7 @@ class ActiveSupervisor:
             allowed = (allowed and actor["legacy_delivery"] == token and actor["epoch"] == epoch
                        and (actor["legacy_running"] or (actor["legacy_deadline"] or 0) > self.clock()))
             if allowed and operation == "start":
-                self.db.execute("UPDATE authorities SET legacy_running=1 WHERE identity=?", (key,))
+                self.db.execute("UPDATE authorities SET legacy_running=1,legacy_active=? WHERE identity=?", (token, key))
             return {"authorized":bool(allowed)}
 
     def recover_legacy(self, session):
@@ -541,6 +666,10 @@ def main():
                 previous = None
                 while True:
                     states = []
+                    for row in list(actor.db.execute("""SELECT identity FROM authorities
+                            WHERE control_drain IN ('pending','failed') AND control_next<=?""", (actor.clock(),))):
+                        record = actor.drain_control(row["identity"], timeout=0)
+                        states.append({"identity": row["identity"], "control": record["control"]})
                     for key in actor.due():
                         try:
                             record = actor.reconcile(key)

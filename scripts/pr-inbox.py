@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import argparse
 from contextlib import contextmanager
+import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -47,6 +49,10 @@ class Inbox:
                 status TEXT NOT NULL CHECK(status IN ('pending','admitted','received','stopped')),
                 held TEXT, attempts INTEGER NOT NULL DEFAULT 0, next_attempt REAL NOT NULL,
                 admission TEXT, receipt REAL, last_error TEXT)""")
+            if "running" not in {row[1] for row in self.db.execute("PRAGMA table_info(deliveries)")}:
+                self.db.execute("ALTER TABLE deliveries ADD COLUMN running TEXT")
+            self.db.execute("""CREATE TABLE IF NOT EXISTS activations (
+                session TEXT PRIMARY KEY, token TEXT NOT NULL, targets TEXT NOT NULL)""")
             self.db.execute("PRAGMA user_version=1")
 
     @contextmanager
@@ -69,6 +75,24 @@ class Inbox:
         """Close this handle without changing durable deliveries."""
         if self.owns_connection:
             self.db.close()
+
+    @contextmanager
+    def activation_guard(self, session, timeout=None):
+        """Serialize owned RPC activation and drain across host/control processes."""
+        suffix = hashlib.sha256(session.encode()).hexdigest()
+        descriptor = os.open(str(self.path) + "." + suffix + ".activation",
+                             os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+        with os.fdopen(descriptor, "r+") as lock:
+            deadline = None if timeout is None else time.monotonic() + timeout
+            while True:
+                try:
+                    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    break
+                except BlockingIOError:
+                    if deadline is not None and time.monotonic() >= deadline:
+                        raise TimeoutError("owned RPC activation is still draining")
+                    time.sleep(0.01)
+            yield
 
     def enqueue(self, identity, session, generation, payload, now=None):
         """Coalesce newer generations; duplicate/older hints cannot replay receipt."""

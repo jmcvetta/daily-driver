@@ -18,6 +18,7 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 	let owner;
 	let timer;
 	let active;
+	let running;
 	let carrier = false;
 	const z = pi.zod;
 	const now = () => Date.now() / 1000;
@@ -46,17 +47,33 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 		return source?.kind === "env" ? `env:${source.envVar}` : source?.kind ?? "unknown";
 	}
 
+	function authorityAllows(row) {
+		if (JSON.parse(row.payload).kind !== "pr-supervisor-work") return true;
+		const record = database.query("SELECT stopped,held FROM records WHERE identity=?").get(row.identity);
+		const actor = database.query("SELECT state FROM authorities WHERE identity=?").get(row.identity);
+		return record && !record.stopped && !record.held && actor?.state === "active";
+	}
+
 	function valid(delivery, admittedOnly = false) {
 		if (!database || !delivery) return false;
-		const row = database.query("SELECT * FROM deliveries WHERE identity=?").get(delivery.identity);
-		if (row && JSON.parse(row.payload).kind === "pr-supervisor-work") {
-			const record = database.query("SELECT stopped,held FROM records WHERE identity=?").get(delivery.identity);
-			const actor = database.query("SELECT state FROM authorities WHERE identity=?").get(delivery.identity);
-			if (!record || record.stopped || record.held || actor?.state !== "active") return false;
+		try {
+			const row = database.query("SELECT * FROM deliveries WHERE identity=?").get(delivery.identity);
+			return row && authorityAllows(row) && row.session === owner &&
+				(row.status === "admitted" || (!admittedOnly && row.status === "received")) && !row.held
+				&& row.generation === delivery.generation && row.fence === delivery.fence
+				&& row.admission === delivery.admission;
+		} catch {
+			return false;
 		}
-		return row && row.session === owner && (row.status === "admitted" || (!admittedOnly && row.status === "received")) && !row.held
-			&& row.generation === delivery.generation && row.fence === delivery.fence
-			&& row.admission === delivery.admission;
+	}
+
+	function endWork() {
+		if (database && running) {
+			database.query("UPDATE deliveries SET running=NULL WHERE identity=? AND running=?")
+				.run(running.identity, running.admission);
+		}
+		running = undefined;
+		active = undefined;
 	}
 
 	function tick(ctx) {
@@ -81,7 +98,7 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 			const row = database.query(`SELECT * FROM deliveries WHERE session=?
 				AND status IN ('pending','admitted') AND held IS NULL
 				AND attempts<5 AND next_attempt<=? ORDER BY next_attempt,identity LIMIT 1`).get(owner, now());
-			if (!row) return;
+			if (!row || !authorityAllows(row) || row.running) return;
 			row.admission = randomUUID();
 			const delay = Math.min(120, 2 ** (row.attempts + 1));
 			database.query(`UPDATE deliveries SET status='admitted',admission=?,attempts=attempts+1,
@@ -203,9 +220,17 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 		const token = event.prompt?.match(/DAILY_DRIVER_PR_DELIVERY (\S+) (\d+) (\d+) (\S+)/);
 		if (!token) { active = undefined; return; }
 		active = {identity: token[1], generation: Number(token[2]), fence: Number(token[3]), admission: token[4]};
-		if (!valid(active)) {
+		const admitted = database?.transaction(() => {
+			if (!valid(active)) return false;
+			database.query("UPDATE deliveries SET running=? WHERE identity=?")
+				.run(active.admission, active.identity);
+			return true;
+		}).immediate();
+		if (!admitted) {
 			active = undefined;
 			ctx.abort();
+		} else {
+			running = active;
 		}
 	});
 	pi.on("tool_call", (event) => {
@@ -221,11 +246,7 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 					AND status IN ('pending','admitted') AND held IS NULL AND attempts<5
 					ORDER BY next_attempt,identity LIMIT 1`).get(target);
 				if (!row) return;
-				if (JSON.parse(row.payload).kind === "pr-supervisor-work") {
-					const record = database.query("SELECT stopped,held FROM records WHERE identity=?").get(row.identity);
-					const actor = database.query("SELECT state FROM authorities WHERE identity=?").get(row.identity);
-					if (!record || record.stopped || record.held || actor?.state !== "active") return;
-				}
+				if (!authorityAllows(row) || row.running) return;
 				row.admission = randomUUID();
 				database.query(`UPDATE deliveries SET status='admitted',admission=?,attempts=attempts+1,next_attempt=?
 					WHERE identity=?`).run(row.admission,now()+120,row.identity);
@@ -245,7 +266,7 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 		}
 		if (active && !valid(active)) return { block: true, reason: "PR delivery was fenced or stopped; do no work" };
 	});
-	pi.on("agent_end", () => { active = undefined; });
+	pi.on("agent_end", event => { if (event.isTerminal !== false) endWork(); });
 	pi.registerTool({
 		name: "daily_driver_pr_inbox_receipt",
 		label: "Acknowledge PR inbox receipt",
