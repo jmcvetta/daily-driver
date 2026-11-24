@@ -64,22 +64,27 @@ export function installNotificationPolicy(pi, getSettings, dependencies = {}) {
 				entry.data.workIdentity === identity && entry.data.reason === params.reason &&
 				entry.data.key === params.key);
 			if (duplicate) return { accepted: false, duplicate: true };
-			await pi.appendEntry(ENTRY, { schema: 1, sessionId, workIdentity: identity, reason: params.reason, key: params.key });
 			try {
 				const terminal = await getTransport();
 				if (typeof terminal?.sendNotification !== "function") throw new Error("Omp notification transport is unavailable");
-				terminal.sendNotification({
+				await terminal.sendNotification({
 					title: ctx.sessionManager.getSessionName?.() || "omp",
 					body: params.message,
 					type: params.reason === "work_complete" ? "completion" : "permission",
 					urgency: params.reason === "work_complete" ? "low" : "normal",
 					actions: "focus",
 				});
-				return { accepted: true };
 			} catch (error) {
-				console.error(`daily-driver: notification delivery failed: ${error.message}`);
-				return { accepted: false, suppressed: "delivery-failed" };
+				console.error(`daily-driver: notification delivery failed: ${error?.message ?? error}`);
+				return { accepted: false, suppressed: "delivery-failed", error: error?.message ?? String(error) };
 			}
+			try {
+				await pi.appendEntry(ENTRY, { schema: 1, sessionId, workIdentity: identity, reason: params.reason, key: params.key });
+			} catch (error) {
+				// The toast is already visible; a failed deduplication write must not report it undelivered.
+				console.error(`daily-driver: notification deduplication write failed: ${error?.message ?? error}`);
+			}
+			return { accepted: true };
 		})();
 		pending.set(dedupeKey, operation);
 		try { return await operation; }

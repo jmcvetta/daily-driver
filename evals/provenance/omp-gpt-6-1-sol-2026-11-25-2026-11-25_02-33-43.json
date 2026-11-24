@@ -1,0 +1,589 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`stand-down` fires on a fleet being stood down",
+          "details": "observed='yes', expected='yes' (skill_name='stand-down')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "`session_01Gone` is named as a residual rather than waited on, and the stand-down still completes \u2014 handoff, stops, cancelled watches, and a printed banner",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "`session_01Gone` is named as a residual rather than waited on, and the stand-down still completes \u2014 handoff, stops, cancelled watches, and a printed banner",
+            "duration_seconds": 10.63,
+            "findings": [
+              "Local-only abc123 in /work/task-511 is distinguished from remote def456.",
+              "Attempted task handoff records the failed push and requires remote confirmation before another writer.",
+              "Live-worker interruption and work preservation are explicitly required; failed worker does not block wrap-up.",
+              "Handoff publication and epic recording are reported unavailable, not delivered.",
+              "Failed watch cancellation remains an unresolved residual."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "cc5a6f4e79748669cb3ad7da5d3d17d1dc9fbef0af864ae70889999ed1ca53e5",
+            "rationale": "ANCHOR: result The transcript preserves all required recovery facts and explicitly proposes wrapping up the live worker through its owning controls without waiting for the failed worker. The final reply honestly reports unavailable controls, failed publication, the failed push, and failed watch cancellation.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2295,
+              "output": 214
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "7de897dbc819eb12616d4d747d80d4e57f76bb22981a94ef03c92c976cc7f9f5"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "stand-down-02-neg-residual-does-not-block-stops",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a draft that has met its gate",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "Gate reads succeeded before ready with no telemetry write",
+          "details": "Command: python3 .fixture/verify.py gate\nExit code: 0 (expected: 0)\nStdout:\nok: gate invariants held\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply marks the pull request ready rather than asking",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply marks the pull request ready rather than asking",
+            "duration_seconds": 10.08,
+            "findings": [
+              "Fresh PR, review, and current-head CI reads were requested before gh pr ready 25.",
+              "Final reply links PR #25, identifies issue #24, and reports a bookkeeping limitation.",
+              "Successful readiness write is asserted but not verified in the supplied evidence."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "a45bdbdc59e8de11fa0fdcd5353328c8cbeaa4b1b5dfc0f9aa47cacf98934a78",
+            "rationale": "ANCHOR: result. The opening response satisfies the ordering rule, but the supplied transcript contains no tool result or fixture-verifier evidence establishing that the ready write succeeded; narration alone cannot establish completion.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2629,
+              "output": 228
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "7de897dbc819eb12616d4d747d80d4e57f76bb22981a94ef03c92c976cc7f9f5"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.6,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a ready pull request",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "Gate reads precede a successful ready write without telemetry",
+          "details": "Command: python3 .fixture/verify.py gate\nExit code: 0 (expected: 0)\nStdout:\nok: gate invariants held\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "One concise ready result reaches the addressed orchestrator for visible user relay",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "One concise ready result reaches the addressed orchestrator for visible user relay",
+            "duration_seconds": 7.87,
+            "findings": [
+              "Current-head CI, independent review coverage, resolved threads, and base currency were read before the ready write.",
+              "The ready command explicitly succeeded.",
+              "The post-write final reply provides the required result for orchestrator relay."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ca5057e50039e95ca830a8e1578bd02dc822848f321652aa9b3e8720d448c41f",
+            "rationale": "The ordered calls establish readiness gates before a successful `gh pr ready 25`. The final report names issue #24, links PR #25, states it is ready for review, and directs the orchestrator to relay it once.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 4311,
+              "output": 106
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "7de897dbc819eb12616d4d747d80d4e57f76bb22981a94ef03c92c976cc7f9f5"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-27-addressed-readiness-report",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a ready-write failure",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The gate is read before the refused ready write",
+          "details": "Command: python3 .fixture/verify.py gate\nExit code: 0 (expected: 0)\nStdout:\nok: gate invariants held\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The failed ready transition is reported clearly",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The failed ready transition is reported clearly",
+            "duration_seconds": 5.51,
+            "findings": [
+              "Read PR state, diff, CI, reviews, comments, and resolved review threads before attempting readiness.",
+              "Ready command exited with code 1 and fixture refusal.",
+              "Final reply honestly reported failure and the remaining draft state."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "31cc1c61a7da2b064a0ba0f4a59dea8c9795f2bb678f99e6d98279d46f8bef60",
+            "rationale": "The agent read the gate evidence, attempted `gh pr ready 25`, and observed its explicit failure. The final reply accurately states that PR #25 remains draft and does not claim a successful readiness transition.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 8750,
+              "output": 102
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "7de897dbc819eb12616d4d747d80d4e57f76bb22981a94ef03c92c976cc7f9f5"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-21-ready-failure-is-reported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The handoff names the needed tool and its setup route",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The handoff names the needed tool and its setup route",
+            "duration_seconds": 5.65,
+            "findings": [
+              "No handoff was posted on issue #576.",
+              "Names live eval case 03, omp, both setup targets, and /undertake 576.",
+              "PR #606 remains draft."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "c0fd35dcc077543863ca68dead27f031cd693fd8da5c2bfc299df6f013a940be",
+            "rationale": "The final reply explicitly states that no issue handoff was posted, which requires a score of 0.0 despite including the run, tool, setup route, and resume action.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1470,
+              "output": 91
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "7de897dbc819eb12616d4d747d80d4e57f76bb22981a94ef03c92c976cc7f9f5"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-14-stop-handoff-names-environment",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 84.15687847137451,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "stand-down-02-neg-residual-does-not-block-stops",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 146304,
+        "output_tokens": 2350,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 29992
+      },
+      "tokens": 178646,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 48.691526651382446,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 219136,
+        "output_tokens": 1390,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 42899
+      },
+      "tokens": 263425,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 31.223559856414795,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "undertake-27-addressed-readiness-report",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 110848,
+        "output_tokens": 892,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 49556
+      },
+      "tokens": 161296,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 88.35354971885681,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "undertake-21-ready-failure-is-reported",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 448256,
+        "output_tokens": 2267,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 72607
+      },
+      "tokens": 523130,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 43.53163146972656,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "undertake-14-stop-handoff-names-environment",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 54144,
+        "output_tokens": 949,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 21921
+      },
+      "tokens": 77014,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-25T02:38:39.194157",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "7de897dbc819eb12616d4d747d80d4e57f76bb22981a94ef03c92c976cc7f9f5",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v3",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 19455,
+      "output": 741
+    }
+  },
+  "plugin_revision": {
+    "commit": "87104e27962d07e715fd06014b53c5c2d4c3f56c",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-24T19:39:20.646033+00:00",
+  "run_id": "2026-11-25_02-33-43",
+  "schema_version": 5,
+  "started_at": "2026-11-25T02:33:43.206089",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "stand-down-02-neg-residual-does-not-block-stops": [
+          1.0
+        ],
+        "undertake-10-ready-is-marked-not-asked": [
+          0.6
+        ],
+        "undertake-14-stop-handoff-names-environment": [
+          0.0
+        ],
+        "undertake-21-ready-failure-is-reported": [
+          1.0
+        ],
+        "undertake-27-addressed-readiness-report": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "stand-down-02-neg-residual-does-not-block-stops",
+        "undertake-10-ready-is-marked-not-asked",
+        "undertake-27-addressed-readiness-report",
+        "undertake-21-ready-failure-is-reported",
+        "undertake-14-stop-handoff-names-environment"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

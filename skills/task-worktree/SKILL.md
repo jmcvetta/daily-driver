@@ -54,9 +54,7 @@ Establish the task root
 =======================
 
 1. **Inspect only the repository boundary.** Read the current repository root,
-   branch, registered worktrees, remote default branch, and the primary
-   worktree's status. Keep the primary status as the baseline for the final
-   check.
+   branch, registered worktrees, and remote default branch.
 2. **Resolve the remote and base.** Use the remote declared by the task or
    repository, then `remote.pushDefault`, then the only configured remote.
    More than one unexplained remote is a stop. Use the task/repository base
@@ -127,13 +125,6 @@ Establish the task root
    without switching, resetting, stashing, copying, or overwriting work.
    Fetch remote-only recovery branches by their exact ref first. Do not move
    detached task commits to the base or silently abandon them.
-9. **Verify registration and preservation.** Re-read Git's registered paths
-   and the selected worktree's branch. Confirm it is non-primary and owned by
-   this task; attach its task branch before committing. In the primary-held
-   designation exception, verify the fresh execution branch starts at the
-   remote default base and keep local/remote identities separate. Preserve
-   the primary branch, tip, index, tracked files, untracked files and status
-   baseline. Do not copy its uncommitted changes.
 
 
 Stay inside it
@@ -146,11 +137,9 @@ File tools use absolute task-worktree paths. Delegated prompts name the same
 root explicitly.
 
 Never edit, stage, clean, reset, stash, or commit in the primary worktree. Do
-not copy the primary worktree's uncommitted files into the task worktree. They
-are the user's work and are outside this task.
+not copy its uncommitted files into the task worktree. Pre-existing and
+unrelated user changes stay outside the task commit.
 
 The task worktree persists through the pull request and review cycle. Cleanup
 is not part of this skill. Later manual cleanup may use Git or the user's
-chosen tool; never force removal of existing work. Before delivery, compare
-the primary worktree with its setup baseline. Report an external change;
-never erase it to make the comparison pass.
+chosen tool; never force removal of existing work.

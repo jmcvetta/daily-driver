@@ -1,0 +1,45 @@
+task_id: pr-14-accurate-metadata-is-not-rewritten
+description: >-
+  Adopting an existing PR with accurate title and body causes no metadata
+  write, even when its live CI state changes.
+tags: [pr, behaviour, fire]
+initial_prompt: >-
+  Adopt PR #14 for continued supervision. Its existing title and body have
+  been checked against the branch and are accurate. The required CI check has
+  changed from passing to failing. Should I refresh the PR title or body?
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+run_limits: {max_turns: 10, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  # Behaviour row: the trigger is recorded, but the no-write check and judge
+  # carry the assertion so model variance in skill engagement cannot fail it.
+  - type: skill_triggered
+    weight: 0
+    description: "`pr` fires when an existing PR is adopted for supervision"
+    expected_skill: pr
+    skill_name: pr
+  - type: command_executed
+    description: No PR title or body metadata write is made
+    tool_name: Bash
+    command_pattern: 'gh (pr edit|api).*(--title|-t|--body|body=|title=)'
+    min_count: 0
+    max_count: 0
+    weight: 2
+  - type: agent_judge
+    description: Accurate metadata stays unchanged while live CI is assessed separately
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Find the final [RESULT - ...] reply. Score 0 if absent.
+      Score 1 only if it refuses to refresh the accurate title or body, explains
+      that the CI failure must be assessed from GitHub's live status rather than
+      copied into metadata, and does not claim the changed CI state is green or
+      that the PR is ready.
+      Score 0 if it proposes a title/body metadata write, or treats the missing
+      write as a reason to skip live CI assessment.

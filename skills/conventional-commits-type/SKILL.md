@@ -210,31 +210,23 @@ What does not decide it
 What ends the question
 ======================
 
-One input does decide the type, and it decides it by ending the question: the
-type already on the pull request, where the user put it. It is settled: it is
-not changed back. The tests above still run against it — a disagreement can
-only be raised once it is seen — but their answer is a sentence to the user,
-never a title to write.
+An explicitly user-set type decides the title: it is not changed back. Establish
+that the user set it from evidence such as the user's statement, a title-change
+event attributed to the user, or a discussion or handoff that records the
+user's decision. An inherited title, unknown author, or session boundary alone
+does not establish user intent.
 
-Where it looks wrong, say so in a sentence and ask — then wait. Editing the
-title and reporting the edit is the failure this section exists to stop, and
-the *Projected Releases* comment is no exception: a projection that disagrees
-with a user-set type is something to raise, not something to correct.
+Where evidence shows an agent wrote the type and the tests select another,
+correct the agent-authored title through the normal `pr-title` path. Where no
+user-set decision is known, classify the title from the tests; do not treat an
+inherited type as protected by default. If available attribution and handoff
+evidence still leave genuine human intent unclear, ask before changing it.
+When a known user-set type disagrees with the tests, report the mismatch and
+ask; do not edit that type while waiting.
 
-**This does not depend on knowing who set it.** A type that disagrees with the
-one the tests pick is a type to ask about, because *a subagent must have done
-that* is the assumption the failure came from. On Green-Pagoda/pagoda#387
-a `chore(deps):` title was retitled `test:` by the user, read as a stray edit,
-and set back. The user's reading was the better one — every package in the
-diff was a devDependency of the test tooling, nothing in a shipped artifact
-moved, and the pull request added two tests — but which type was right is not
-what went wrong. A human decision was reverted without being recognised as
-one.
-
-It is narrower than *never touch the title*. Correcting a type this session
-wrote itself, or writing one where the pull request carries none, is
-unchanged. The stop bites where the type on the pull request is not one this
-session wrote — the unattributable case included.
+This protects known user decisions without turning every title that survives
+a session boundary into one. The title this session wrote itself may be
+corrected if the tests show it was wrong; a title known to be user-set may not.
 
 
 One type for the whole pull request

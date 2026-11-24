@@ -283,7 +283,7 @@ class ActiveSupervisor:
             return self.status(key)
         self.db.execute("UPDATE authorities SET hint_due=NULL WHERE identity=?", (key,))
         try:
-            snapshot = source.observe()
+            snapshot = source.observe_currency()
             # The per-PR drain lock spans bounded remote work, never a SQLite
             # transaction. Other PRs, owner heartbeats and admissions stay usable.
             # Stop/hold publishes its fence before waiting on this drain lock.
@@ -302,16 +302,16 @@ class ActiveSupervisor:
                             self._account_update(key, snapshot)
                         elif self.clock() - actor["update_started"] > 120:
                             raise SHADOW.ObservationError("server update has not settled; diagnose before retry")
-                    elif snapshot["currency"] == "update_candidate" and snapshot["ci"] not in ("in_flight", "unregistered"):
-                        latest = source.observe()
+                    elif snapshot["currency"] == "update_candidate":
+                        latest = source.observe_currency()
                         with self.ledger.transaction():
                             current = self.ledger.get(key)
                             if (current["epoch"] != epoch or current["lease_owner"] != writer
                                     or current["lease_until"] <= self.clock() or current["stopped"] or current["held"]):
                                 raise SHADOW.Fenced("lease expired or actor superseded during pre-update observation")
                             admitted = (latest["state"] == "OPEN" and latest["head"] == snapshot["head"]
-                                and latest["base"] == snapshot["base"] and latest["currency"] == "update_candidate"
-                                and latest["ci"] not in ("in_flight", "unregistered"))
+                                and latest["base"] == snapshot["base"] and latest["base_sha"] == snapshot["base_sha"]
+                                and latest["currency"] == "update_candidate")
                             if admitted:
                                 request = {"expected_head": latest["head"], "started": self.clock(), "outcome": "admitted"}
                                 self.db.execute("""UPDATE authorities SET update_head=?,update_started=?,update_evidence=?
@@ -327,10 +327,14 @@ class ActiveSupervisor:
                             request["outcome"] = "accepted"
                             self.db.execute("UPDATE authorities SET update_evidence=? WHERE identity=? AND update_head=?",
                                 (SHADOW.canonical(request), key, latest["head"]))
-                            snapshot = source.observe()
+                            snapshot = source.observe_currency()
                             self._account_update(key, snapshot)
                         else:
                             snapshot = latest
+                evidence = source.observe()
+                if any(evidence[field] != snapshot[field] for field in ("head", "base", "base_sha", "state")):
+                    raise SHADOW.ObservationError("PR changed before resulting-head evidence")
+                snapshot = evidence
                 self.ledger.finish(key, writer, epoch, self.clock(), snapshot=snapshot, persist=self._persist)
         except SHADOW.ObservationError as error:
             try:

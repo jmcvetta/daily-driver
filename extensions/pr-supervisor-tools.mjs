@@ -6,6 +6,7 @@ const script = resolve(dirname(fileURLToPath(import.meta.url)), "../scripts/pr-a
 
 /** Install opt-in PR authority controls and return the attributed-write hook. */
 export function installPrSupervisorTools(pi, { takeTimers, restoreTimers, takeWatches, stopWatches, restoreWatches }) {
+	let legacyAdmissionReader;
 	const databasePath = process.env.DAILY_DRIVER_PR_SUPERVISOR;
 	if (!databasePath) return undefined;
 	if (!isAbsolute(databasePath)) throw new Error("PR supervisor database must be an absolute owner-only path");
@@ -120,7 +121,18 @@ export function installPrSupervisorTools(pi, { takeTimers, restoreTimers, takeWa
 
 	return {
 		databasePath, initialize,
-		legacyWake(identity, operation, token, epoch, context) {
+		bindLegacyAdmissionReader(reader) {
+			legacyAdmissionReader = typeof reader === "function" ? reader : undefined;
+		},
+		async legacyWake(identity, operation, token, epoch, context) {
+			if (operation === "check") {
+				if (!legacyAdmissionReader) return {authorized:false,reason:"Legacy admission reader is not bound"};
+				try {
+					return await legacyAdmissionReader(identity, token, epoch);
+				} catch {
+					return {authorized:false,reason:"Legacy admission reader failed; authorization denied"};
+				}
+			}
 			return backend("legacy-wake", [identity], {operation,token,epoch,context});
 		},
 		recoverLegacy(session) {
