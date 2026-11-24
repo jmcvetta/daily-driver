@@ -255,12 +255,10 @@ The landing mode is copied unchanged from the latest record into this
 superseding comment. A resumed `embark` therefore reads the same opt-out or
 default after every earlier muster roll has been superseded.
 
-The epic's body is **not** edited. `epic`'s wave states are `in progress`
-and `done` and nothing else — a third state invented here is one `epic`'s
-body fill would erase, and the stand-down comment is the record, not a body
-state. A wave left at sea still reads `in progress` in the body; what
-changed is on the epic's comments, which is where `Take the wave` reads
-at-sea status from.
+The epic's body is **not** edited. The stand-down comment records retired
+ownership; resume reads the durable comments and implementor lifecycle, then
+derives eligibility from the current graph and scheduling constraints.
+No body wave-status update is required.
 
 **Idempotent re-entry.** A stand-down interrupted by a session death is
 re-run, not duplicated, and the writes are idempotent one by one: a handoff

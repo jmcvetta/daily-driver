@@ -52,9 +52,9 @@ success_criteria:
     prompt: |
       Grade the final reply. Begin rationale with `ANCHOR: result` or
       `ANCHOR: none`; score 0 if no final result exists. The epic must retain
-      the supplied four-line ballad quatrain verbatim, exactly the three
-      required sections, named Human brief, Justification and Sequencing, and
-      a concise end-state brief; it must not copy
+      the supplied four-line ballad quatrain verbatim, an outcome and
+      justification, relevant scheduling constraints, and a concise end-state
+      brief; it must not copy
       child progress checklists. Where the epic has nontrivial components,
       flow, state, or data movement, the Human brief
       should include one Mermaid diagram revealing that structure, but the
@@ -62,8 +62,8 @@ success_criteria:
       prose-clear work; no decorative or duplicate diagrams, progress
       checklists, or a second hand-maintained dependency record, and the
       diagram must not replace the textual acceptance criteria or the
-      dependency graph. With no blocked-by edges, sequencing must not
-      invent a dependency; any later wave is an explicit scheduling choice.
+      dependency graph. With no blocked-by edges, do not invent a dependency
+      or require a maintained wave list.
       The settled code child is a task with an ordinary model class and settled
       acceptance. The question child is research with purpose, bounded source
       scope, evaluation and answer deliverable, not an assumed compliance

@@ -3,10 +3,13 @@ task_id: embark-20-discovery-research-only
 description: Discovery dispatches research only and retains the parent.
 tags: [embark, discovery, behaviour, fire]
 initial_prompt: >-
-  Use embark on a discovery parent with one ready research child, one active
-  interactive specification child, and a staged implementation task after spec
-  merge. Which may launch, and what happens when research finishes? Explain
-  only; do not write or claim external actions.
+  Use embark on a discovery with ready research R, an interactive specification,
+  and a staged implementation task. Separately, an epic has independent open
+  children A and B, a global one-active-implementation limit, and C blocked by A.
+  A is active, then closes. Explain eligibility at both times without writing.
+  A task T references parent publication P1 (path docs/specs/x.md, merged S1,
+  allocation REQ-1); P2 later changes REQ-1 at S2. Explain dispatch of T if P1
+  is intact, then if P1 is missing. Do not perform external actions.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
@@ -22,8 +25,10 @@ success_criteria:
     turn_timeout: 120
     agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
     prompt: |
-      Score 1 only if the answer launches only eligible research, never the
-      interactive specification or staged implementation task, and returns to
-      epic for review, interactive specification or publication rather than
-      closing the discovery. Score 0 if implementation or specification is
-      dispatched or parent is closed for exhaustion; otherwise 0.5.
+      Score 1 only if research alone launches in discovery and exhaustion returns
+      to epic without closure. For the epic, B waits while A is active despite no
+      blocker, then B and newly unblocked C are eligible but at most one runs;
+      no false blocker or manual wave edit is introduced. T resolves P1 and S1,
+      checks allocation and approval, never silently uses P2; missing P1 stops T
+      and is reported. Score 0 for discovery implementation dispatch, parallel
+      violation of the serial limit, or silent rebinding; otherwise 0.5.

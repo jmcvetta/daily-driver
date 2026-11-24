@@ -111,16 +111,16 @@ leaving it open spends capability the worker may not have.
 An issue body is a requirement source, not original user approval. Later issue
 edits do not silently cancel agreed requirements for active work.
 
-**Specification-backed task variant.** Name the canonical document path, its
-exact operator-approved merge commit on `master`, and the stable requirement
-IDs allocated to this task. The issue owns allocation, explicit exclusions,
-grounded implementation map, verification route and model class. The document
-at that revision owns behavior, interfaces, constraints and acceptance; do
-not duplicate them in full. Before presenting the task as ready, read that
-revision, verify every cited ID exists and matches the parent publication
-record, and confirm its allocation and exclusions are unambiguous. Keep the
-issue as external task identity. Missing or mismatched revision or IDs route to
-`epic`, not a silent substitution of the newest document.
+**Specification-backed task variant.** Reference one specific, stable parent
+publication record and name the allocated requirement IDs and explicit
+exclusions. The record owns the approved canonical path and exact merged
+`master` commit; the task owns allocation, implementation map, verification
+and class. Resolve that record and read the document at that commit; verify
+the IDs exist, allocation and exclusions are unambiguous, and decomposition
+was separately agreed. Missing, changed, ambiguous or inaccessible records
+route to `epic`, never to the latest revision. Existing task contracts that
+pin their own path and SHA remain valid and keep that binding; do not reinterpret
+them as a newer publication. The document owns behavior and acceptance.
 
 **A task body opens in a fixed shape.** Its parts appear in this order:
 
@@ -197,8 +197,8 @@ an unstated product or architecture decision?
   unattended execution; unresolved decisions are expected on the issue.
 - For `human`, readiness is for the responsible person to act without
   reconstructing the request. It is never agent-execution readiness.
-- For `epic`, use both existing epic decomposition gates and confirm the graph
-  agrees with its rendered waves.
+- For `epic`, use both decomposition gates and the current graph, respecting
+  explicit scheduling constraints not represented by edges.
 
 **A complete task draft includes that pass before it is delivered.** Every
 complete task body — a new draft and a deliberate revision alike — gets a
