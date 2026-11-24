@@ -1,9 +1,8 @@
 ---
 name: pr
 description: >-
-  Read for `/pr` before validation, proposing or changing CI enforcement, or
-  opening or updating a pull request. The policy applies without an issue or
-  PR, and reading it starts neither. For the current branch, triggers include
+  Read for `/pr` before PR operations and before proposing or changing CI
+  enforcement. It applies with or without an issue; reading it starts neither.
   opening, raising, or updating a PR and any agent-initiated call before
   creating one or updating one beyond its title or body. Supplies the branch
   guard, the existing-PR check, draft state, ongoing base maintenance, and the
@@ -143,6 +142,9 @@ Run broader local validation at meaningful checkpoints when its cost is
 justified. A failure reproduction or experiment is not required. Read
 [`docs/testing-standards.md`](../../docs/testing-standards.md) when writing,
 changing, or reviewing tests.
+
+Read this skill for PR operations and CI-enforcement changes, not before each
+local test, linter or formatter.
 
 Push and read CI. Never bypass or remove validation for cost or effort. Only
 explicit owner direction may reduce CI scope or spending: disclose lost
