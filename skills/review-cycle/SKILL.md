@@ -171,9 +171,10 @@ CI.
 decision; this rule clarifies the supervised-service boundary.
 
 **A surface that can neither block nor wake itself cannot wait.** Read the
-checks once; if they have not all reported, report the continuation limit.
-Review can still proceed, but readiness must wait for current-head green CI.
-The harness reference identifies whether this limit applies.
+checks once and apply the absence-evidence rule above. If CI is still unknown
+or pending, report the continuation limit. Review can still proceed; readiness
+requires green CI or established no-applicable-CI evidence. The harness
+reference identifies whether this limit applies.
 
 
 Name the level
