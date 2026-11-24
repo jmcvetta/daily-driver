@@ -1618,15 +1618,17 @@ the GitHub MCP and waking needs a surface that can wake itself, and the
 sandbox is neither. It grades the failure, not the fix.
 
 The other is `conventional-commits-type/07-user-set-type-is-not-reverted`,
-built the same way and for the same kind of report. The title on a pull
-request has moved since the branch was pushed, the prompt names who pushed it
-and not who moved it, and the row asserts that no `gh pr edit` or `gh api`
-call put the old type back. `Bash` is open for the same reason, and the diff
-the prompt describes is one the type tests read as `chore(deps):` — so a bare
-arm that reasons from the description reverts, and the ablation has somewhere
-to show. The same half is ungradeable: that the disagreement is raised and
-waited on needs a live pull request and someone to answer. It grades the
-revert, not the asking.
+built the same way and for the same kind of report. The prompt describes a
+change limited to an existing GitHub repository setting, whose title the user
+explicitly set to `feat(infra):`; the type tests read that change as
+`chore(infra):`. The row asserts that no `gh pr edit` or `gh api` call wrote a
+different title, and its judge requires the reply to report the mismatch,
+recognise the known user-set type, ask whether the user intended it, and wait.
+`Bash` is open for the same reason, so a bare arm that reasons only from the
+description can silently correct the title and the ablation has somewhere to
+show. The other half of the rule — that an agent-authored inherited title is
+correctable — is `11-agent-authored-inherited-title-is-correctable`, which
+grades classification of a handoff that attributes the title to a prior agent.
 
 The informational firing criterion also means these cases can receive their
 remaining weighted score on a no-op trajectory: the negative command checks in
