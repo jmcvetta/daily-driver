@@ -169,13 +169,12 @@ After the work is secured, so the record describes the pushed tip rather
 than a tip about to move. Write one concise recovery record on each task
 issue, using observed facts; do not ask an implementor to summarize. Include
 the branch and worktree, observed remote head, any unsecured work or failed
-push, and pull-request state when relevant. Say that no unsecured work remains
+push, and pull-request state when relevant. Name the tool and setup route that
+outstanding work needs when they matter. Say that no unsecured work remains
 only when observed. Add worker lifecycle only when it affects recovery, along
 with applicable authorization or stop limits and a concrete next action. Omit
 inapplicable facts; state an uncertainty only when it affects safe recovery.
 Never infer the remote head from the local tip.
-An agent-written summary does not grant permission, and an unavailable
-private source is not verified authority.
 
 The active route adds `provenance` to each comment. Omp's wrapper appends its
 block after the authored body, including the envoi; both blocks name this
@@ -201,6 +200,9 @@ Landing: <orchestrator|by hand>
 
 Task handoffs:
 - #144 — <handoff link>
+
+Exceptional residuals: <observed failed stop, unsecured work, or live watch;
+include this line only when one exists>
 
 Resume: an explicit `/embark <epic>` reads these records and checks lifecycle
 and current claims before dispatch; a later wake alone does not resume work.

@@ -1023,6 +1023,7 @@ In order:
    `Handoff — undertaking stopped <UTC timestamp>`. Include applicable
    recovery facts: the task branch and worktree, observed remote head,
    unsecured local work or failed push, and pull-request state when relevant.
+   Name the tool and setup route that outstanding work needs when they matter.
    State that no unsecured work remains only when observed. Note the last
    completed stage and a concrete next action, with applicable original
    authorization and stop limits. Include worker lifecycle only when it
