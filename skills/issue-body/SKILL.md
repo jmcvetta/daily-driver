@@ -112,16 +112,21 @@ leaving it open spends capability the worker may not have.
 An issue body is a requirement source, not original user approval. Later issue
 edits do not silently cancel agreed requirements for active work.
 
-**Specification-backed task variant.** Reference one specific, stable parent
-publication record and name the allocated requirement IDs and explicit
-exclusions. The record owns the approved canonical path and exact merged
-`master` commit; the task owns allocation, implementation map, verification
-and class. Resolve that record and read the document at that commit; verify
-the IDs exist, allocation and exclusions are unambiguous, and decomposition
-was separately agreed. Missing, changed, ambiguous or inaccessible records
-route to `epic`, never to the latest revision. Existing task contracts that
-pin their own path and SHA remain valid and keep that binding; do not reinterpret
-them as a newer publication. The document owns behavior and acceptance.
+**Specification-backed task variant.** Each new task carries
+`Canonical: <repository-relative document path>@<full merged commit SHA>`,
+`Approval: <exact issue-comment or pull-request-review URL recording explicit
+operator approval>`, allocated stable requirement IDs and explicit exclusions.
+The task also owns its implementation map, verification and class. Read the
+document at that exact commit; verify that the commit is the corresponding
+specification's merged `master` revision, the approval belongs to its issue or
+merged specification PR, the IDs exist, allocation and exclusions are clear,
+and decomposition was separately agreed. Agent review or a silent merge is
+not product approval. Missing, ambiguous, inaccessible, unmerged or mismatched
+evidence blocks precisely and routes to `epic`; never select the latest revision.
+A parent publication record is an optional index, not another permission source,
+and cannot override accessible equivalent evidence. Existing parent-record
+bindings and tasks pinned to a path and SHA remain valid under their original
+contract. The document owns behavior and acceptance.
 
 **A task body opens in a fixed shape.** Its parts appear in this order:
 
@@ -241,11 +246,14 @@ The detailed contracts for research, bug, proposal, specification, and human are
 contract remains in [`epic/SKILL.md`](../epic/SKILL.md#the-epic-body).
 
 A repository-answerable question is answered now by the author. An unresolved
-user decision makes the issue unready at every class. Unknown class tokens,
-multiple class sections, and a missing rationale are invalid metadata, not a
-default to `routine`. A `frontier` assignment needs its class rationale like
-any other class; no separate approval record is required. Frontier research
-remains `research` and carries no task template.
+user decision makes the issue unready at every class. Missing, duplicate or
+invalid class metadata is not a product-readiness defect: assess the grounded
+handoff and record the lowest reasonable class and rationale before or during
+dispatch. Preserve an explicit recognized class even when its rationale is
+missing, and record a grounded rationale without changing its capability
+requirement; never default to `routine` without evidence. A `frontier`
+assignment needs its rationale, not a separate approval record. Frontier
+research remains `research` and carries no task template.
 
 Preserve supplied execution bounds and applicable authority in a handoff.
 Do not add an approval checkpoint for a requested operation merely because
@@ -269,18 +277,17 @@ story assignable. **Assignable is not the `task` kind.** It means:
    defect. A bug story states the incorrect behavior, the expected contract,
    the bounded diagnosis and correction scope, and the completion evidence,
    without inventing an undiagnosed cause or a predetermined fix.
-3. Carrying exactly one valid `## Model class` section: one backtick-wrapped
-   lowercase class token from
-   [`references/model-classes.md`](references/model-classes.md), then a short
-   rationale paragraph. This holds for every dispatchable story, including
-   research and bug work. For `research` and `bug`, place it after the
-   kind's opening content and before `provenance`'s trailing block. The task
-   shape above is unchanged.
+3. Its capability need is assessed from the grounded handoff. Record one valid
+   `## Model class` section with a lowercase class token and short rationale
+   before or during dispatch, including for research and bug stories. Place
+   their section after the kind's opening content and before `provenance`'s
+   trailing block. Preserve a supplied valid class.
 
-An unknown token, a duplicate section, a missing section or a missing
-rationale makes the story not ready. None of them defaults to
-`routine`. A `story` marker, a parent edge or a kind label alone proves
-no readiness.
+Missing or malformed metadata does not itself make a substantively ready story
+unready. Repair it from the handoff without blindly choosing `routine`. If the
+capability requirement cannot be determined, report that uncertainty and use
+an available route rather than inventing a class; record the assessment when
+grounded. A `story` marker, parent edge or kind label alone proves no readiness.
 
 Resolve repository-answerable gaps before presenting a story as ready, and
 preserve valid existing content under the update rule below. Do not invent
@@ -315,12 +322,12 @@ reporting.
 A deliberately revised task emits the new section and removes its trailing
 task `Model:` field — the legacy class-metadata field below `## Human brief`, never
 a `provenance` block below the closing `---` rule, which follows `provenance`'s
-distinct-attribution rule. When selecting an old task for work, assess its body
-against the class rubric and migrate only that issue before dispatch. Map the
-former `standard` class to `routine` and `advanced` to `complex`, based
-on the grounded handoff; do not change its rationale or capability requirement,
-and do not infer a class from the old identifier. A valid new section is
-authoritative when both forms exist.
+distinct-attribution rule. When selecting an old issue for work, assess its body
+against the class rubric and migrate only that issue before or during dispatch.
+Use the grounded handoff to assess legacy `standard` or `advanced` metadata;
+preserve its rationale and capability requirement rather than inferring a class
+from the old identifier. A valid new section is authoritative when both forms
+exist.
 
 
 The model class section
@@ -337,11 +344,12 @@ The API contract and edge cases are fixed; implementation follows the existing
 adapter pattern.
 ```
 
-`undertake` validates and, where grounded, migrates the section before routing
-a classed `task`, `research` or `bug` assignment.
-It attempts the initial class selection once through the active harness's
-configuration authority before worktree creation or claim. Omp uses its
-effective class role, including model/provider and effort; Claude Code retains
+`undertake` assesses class and, where grounded, records missing or legacy
+metadata before or during dispatch for a classed `task`, `research` or `bug`.
+When the class is grounded, it attempts the initial class selection once
+through the active harness's configuration authority before worktree creation
+or claim. Omp uses its effective class role, including model/provider and
+effort; Claude Code retains
 its supported class-appropriate route. Failure is informational: name the
 attempted target, failure and actual route, then continue ordinary work without
 confirmation or repair. Later operator choices and resume never reselect.

@@ -13,15 +13,16 @@ description: >-
 # Review cycle
 
 One full review per scope, then an independent fix-delta pass for every batch
-of corrections pushed under it, until one comes back clean or three in a row
-do not. Every finding is answered, and a behavioral fix is verified without
-repeatedly auditing unchanged pull-request content. A standalone review records its
-findings and stops; it does not turn into an implementation run.
+of corrections pushed under it, until one comes back clean or evidence shows
+the corrections cannot converge. Every finding is answered, and a behavioral
+fix is verified without repeatedly auditing unchanged pull-request content.
+A standalone review records its findings and stops; it does not turn into an
+implementation run.
 
 The analysis uses the active harness route's default review surface unless the
 operator explicitly selects another independent review method. This skill does
 not supply the analysis. What it supplies is the six things around it — the
-wait for CI, the level, the durable review record, the thread protocol, bounded
+wait for CI, the level, the durable review record, the thread protocol,
 fix verification, and the full-review test — none of which any review surface
 has an opinion about.
 
@@ -90,8 +91,9 @@ findings is not standalone and follows the relevant later stage.
 checks are not passing checks, but do not prevent independent review. Review
 and CI may proceed concurrently. Bind review evidence to the reviewed SHA;
 if the head changes, apply the review-scope and fix-delta rules below. An
-observed CI failure goes to `Fix, answer, resolve, push`. Current-head green
-CI remains required by the caller's readiness gate.
+observed CI failure goes to `Fix, answer, resolve, push`. The caller's
+readiness gate requires current-head green CI or established no-applicable-CI
+evidence.
 
 Reuse an existing review or CI watch for the same head rather than starting
 duplicates. An unavailable CI wait does not prevent review.
@@ -127,14 +129,18 @@ discipline each mechanism needs. What follows holds whichever one is in use.
   names a workflow-run read, a run for the head that is not terminal blocks the
   verdict, and a read that cannot establish what has registered is an incomplete
   observation, not a pass. The calls are the reference's.
-- **An empty answer is not an answer.** Nothing from either endpoint, on a head
-  pushed seconds ago, means nothing has registered yet rather than that
-  everything passed — *every check has reported* is otherwise vacuously true of
-  a pull request nothing has looked at. Keep an actual continuation for another read.
-  **The exception is a partial watch that cannot observe registration and
-  cannot wake itself.** Its reference must say so; it rejects the empty result
-  and stops under *A surface that can neither block nor wake itself cannot
-  wait*, rather than hiding an unbounded poll behind the word *waiting*.
+- **An empty inventory is unknown until absence is established.** A newly
+  pushed head may still register checks. Establish a no-applicable-CI result
+  only from complete, current repository workflow configuration, applicable
+  required-check context (including branch rules and rulesets), and the
+  event, base, head and changed paths that select workflows for this change.
+  Account for other configured check providers too. If any applicable check
+  may still register, keep the result pending; a known missing required check
+  is never a pass. Denied, malformed, truncated or failed reads leave absence
+  unknown. Record the evidence and conclusion as **no applicable CI**, not
+  as checks passed. Reassess it when the head or relevant configuration changes.
+  A partial watch that cannot establish absence or wake itself reports its
+  continuation limit rather than hiding an unbounded poll.
 - **A wake that is not about a check is still just a read.** The round is its
   own loudest source of the other kind: a review that posts a thread per
   finding, and a reply to every one. None of that is a check reporting, so none
@@ -167,9 +173,10 @@ CI.
 decision; this rule clarifies the supervised-service boundary.
 
 **A surface that can neither block nor wake itself cannot wait.** Read the
-checks once; if they have not all reported, report the continuation limit.
-Review can still proceed, but readiness must wait for current-head green CI.
-The harness reference identifies whether this limit applies.
+checks once and apply the absence-evidence rule above. If CI is still unknown
+or pending, report the continuation limit. Review can still proceed; readiness
+requires green CI or established no-applicable-CI evidence. The harness
+reference identifies whether this limit applies.
 
 
 Name the level
@@ -366,37 +373,33 @@ change.
 
 **Every behavioral fix batch needs the pass that confirms it.** Do not refuse
 verification of a pushed fix because an arbitrary pass budget was spent.
-The bound below counts fixes that do not converge, not passes as such.
 
 **The loop ends on the first clean pass.** A pass that records concrete
 defects earns one batched correction, pushed, and one more targeted pass over
 that correction delta and its regression risk. CI runs independently; observed
 failures enter the correction path. Repeat while passes keep finding defects.
 
-**Three consecutive passes that each record defects is the wall**, in the
-sense `undertake`'s operational escalation policy gives it: the corrections are
-not converging, and a fourth attempt is the push-through that rule forbids.
-Stop there. Post the outstanding defects on the pull request, leave (or
-return) the pull request in draft, keep the caller's watch armed, and say in
-one line what is blocking. An incomplete pass and an unavailable reviewer
-stop unattended progress the same way, and neither is approval.
+**Escalate evidence of non-convergence, not a count of passes.** Repeated
+failure to resolve the same defect, or evidence that the current correction
+approach cannot converge, may stop unattended progress. Record the specific
+defect, attempted corrections and evidence on the pull request; leave (or
+return) it in draft, keep the caller's watch armed, and report the condition
+and concrete resume path. A new distinct repairable defect, a late bot finding,
+or an unavailable reviewer alone is not evidence of non-convergence.
 
-The count runs from the first pass of the scope. A clean pass resets nothing,
-because a clean pass ends the loop. Commits, resumes, rewrites, late bot
-findings, and further CI fixes are not passes and do not move the count; only
-a pass that records defects moves it. A materially changed scope runs `Review
-the head` as a new full round and starts a new count; it does not disguise a
-reset as a fix.
+An incomplete pass or unavailable reviewer does not approve the change: keep
+the pull request draft and obtain the missing independent verification through
+an available route. A material scope change runs `Review the head` as a new
+full round.
 
 Rejected findings remain closed unless new evidence defeats the recorded
-rejection. Repeating a rejected finding without that evidence is not a defect
-and does not consume a pass.
+rejection. Repeating a rejected finding without that evidence is not a defect.
 
 Record a concise result on the pull request, or link an existing independent
 result: what revision or content and fixes were checked, whether they passed,
 and any remaining defects or coverage limits. Preserve enough prior results
-to recognize three consecutive defect-producing passes without a fixed
-verification template, empty fields, wall-state token, usage record, or
+to recognize repeated unresolved defects and failed approaches without a fixed
+verification template, pass counter, state token, usage record, or
 reviewer-transcript inspection.
 
 
@@ -422,10 +425,10 @@ Where it stops and waits
   owns. That skill owns the gate, and it is the gate for every question this
   round would otherwise ask. A finding whose fix the standard already picks is
   not one of these — fix it and say so.
-- **Fixes that will not converge**, at `Verify the fix delta`: three
-  consecutive passes each recording defects. A report, not a question — the
-  defects go on the pull request, it stays draft, and nothing waits on an
-  answer.
+- **Fixes that will not converge**, at `Verify the fix delta`: specific
+  evidence of repeated failure to resolve a defect or a failed correction
+  approach. Record the evidence and resume path on the pull request; it stays
+  draft. Distinct repairable defects alone do not stop the loop.
 
 Everything else runs through. No permission is asked to fix a finding, to
 reply, to resolve, or to push.

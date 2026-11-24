@@ -95,9 +95,9 @@ author records the independent result, never substitutes a verdict.
 Publish any new findings through the routes below. Link the result or use
 `gh pr comment <number> --body-file <path>` for a concise account of the
 checked content and fixes, outcome, and any remaining defects or coverage
-limits. Preserve enough prior results to enforce `SKILL.md`'s
-three-defect-pass limit. No fixed verification fields, empty values, wall-state
-token, usage data, or reviewer-transcript inspection are required. A failed or
+limits. Preserve enough prior results to recognize repeated unresolved defects
+and failed approaches. No fixed verification fields, empty values, pass counter,
+usage data, or reviewer-transcript inspection are required. A failed or
 incomplete dispatch is not a clean result. Published records use ordinary
 `provenance`.
 
@@ -109,10 +109,11 @@ wake itself after the turn ends, so this harness is the one `SKILL.md` names
 under `How to wait`: *a surface that can neither block nor wake itself cannot
 wait*.
 
-So, unattended: **read the checks once and report any pending checks and the
-continuation limit.** Proceed with review of the stable pushed head; do not
-mark the PR ready until current-head CI is green. The owner must resume the
-readiness check when results are available.
+So, unattended: **read the checks once and apply `SKILL.md`'s absence-evidence
+rule.** If checks remain pending or absence is unknown, report the continuation
+limit. Proceed with review of the stable pushed head; readiness requires green
+CI or established no-applicable-CI evidence. The owner must resume the
+readiness check when incomplete results can be observed.
 
 | Half | Call |
 | ---- | ---- |
