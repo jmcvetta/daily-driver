@@ -59,6 +59,10 @@ jobs:
         run: |
           curl -fsSL --retry 5 --retry-delay 2 --retry-all-errors https://omp.sh/install | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Install uv
+        id: install-uv
+        if: ${{ !cancelled() && steps.plan.outcome == 'success' && (contains(fromJSON(steps.plan.outputs.checks), 'check-checkov') || contains(fromJSON(steps.plan.outputs.checks), 'check-zizmor') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-plugin')) }}
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
       - name: Validate repository step references
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-step-names')
         run: make check-step-names
@@ -143,10 +147,6 @@ jobs:
         id: validate-infrastructure
         if: ${{ !cancelled() && steps.install-opentofu.outcome == 'success' }}
         run: make check-infra
-      - name: Install uv
-        id: install-uv
-        if: ${{ !cancelled() && steps.plan.outcome == 'success' && (contains(fromJSON(steps.plan.outputs.checks), 'check-checkov') || contains(fromJSON(steps.plan.outputs.checks), 'check-zizmor')) }}
-        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
       - name: Install Checkov
         id: install-checkov
         if: ${{ !cancelled() && steps.install-uv.outcome == 'success' && contains(fromJSON(steps.plan.outputs.checks), 'check-checkov') }}
