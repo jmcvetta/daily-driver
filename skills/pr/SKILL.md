@@ -85,9 +85,10 @@ the head with the harness's server-side update-branch call, never a rebase or
 force-push. The call also settles draft-masked or indeterminate currency.
 
 Check every two minutes where the harness supports durable continuation.
-Reuse one pending wake or running watch per PR. A run in flight on the current
-head defers the merge, so currency maintenance does not keep restarting CI.
-A clean merge needs current-head CI, not another review of an unchanged diff.
+Reuse one pending wake or running watch per PR. Attempt currency updates even
+when current-head CI is in flight; assess CI on the resulting head after an
+update. A clean merge needs current-head CI, not another review of an unchanged
+diff.
 
 Stop automatic updates on a conflict. Resolve only a plain mechanical
 conflict; ask when resolution requires a behavior decision. After resolution

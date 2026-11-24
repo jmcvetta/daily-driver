@@ -26,25 +26,21 @@ Base currency checkpoint
 After `gh pr create` or `gh pr edit`, read the resulting pull request:
 
 ```sh
-gh pr view <number> --json state,baseRefName,headRefName,mergeStateStatus,headRefOid,statusCheckRollup
+gh pr view <number> --json state,baseRefName,headRefName,mergeStateStatus,headRefOid
 ```
 
 The PR's `baseRefName` is authoritative; do not assume `master`. Merged or
 closed PRs need no update. `DIRTY` is a conflict stop. `CLEAN` and `UNSTABLE`
 need no currency write. `BEHIND`, `DRAFT`, `BLOCKED`, and `UNKNOWN` require a
-currency attempt unless current-head CI is in flight. `DRAFT`, `BLOCKED`, and
-`UNKNOWN` can mask branch currency, so the update call itself tests and settles
-them.
+currency attempt even when current-head CI is in flight. `DRAFT`, `BLOCKED`,
+and `UNKNOWN` can mask branch currency, so the update call itself tests and
+settles them.
 
-Before an update, inspect the PR's current head through `review-cycle`'s
-three-source CI read: the check-run inventory, commit statuses, and matching
-workflow runs. If any source shows a current-head run in flight, leave the
-branch alone and state that condition; do not call an old green result current.
-Otherwise run `gh pr update-branch <number>`. Do not replace this with a local
-merge, rebase, force-push, or prose about a future check.
-GitHub authors the update-branch merge commit and its API does not accept a
-custom message. Do not claim an agent-supplied trailer on that server-authored
-commit; keep this server-side route.
+Run `gh pr update-branch <number>`. Do not replace this with a local merge,
+rebase, force-push, or prose about a future check. GitHub authors the
+update-branch merge commit and its API does not accept a custom message. Do not
+claim an agent-supplied trailer on that server-authored commit; keep this
+server-side route.
 
 
 After the call, read `state,baseRefName,headRefName,mergeStateStatus,headRefOid`
@@ -55,9 +51,9 @@ update or conflict as unfinished work. An already-up-to-date response is a
 valid no-op; it does not mark the PR ready or complete.
 
 For an open PR without a conflict, after the checkpoint start or reuse the
-detached watch below even when draft or CI deferred the update. Merged,
-closed, or user-stopped PRs start no watch. A conflict waits for resolution
-before restart. `undertake` retains its own gate, not a second currency watch.
+detached watch below, including when CI is in flight. Merged, closed, or
+user-stopped PRs start no watch. A conflict waits for resolution before
+restart. `undertake` retains its own gate, not a second currency watch.
 
 The watch is a detached Omp service
 ===================================
@@ -78,8 +74,8 @@ write `detached` to `proc://<name>/mode` and read it back to confirm
 `detached=true`. On mode failure or missing confirmation, kill the service
 and report the failure. Never claim durability without confirmation.
 
-The script ticks every two minutes, defers in-flight CI, and uses
-`gh pr update-branch` for behind or draft-masked currency. It never judges CI,
+The script ticks every two minutes and uses `gh pr update-branch` for behind or
+draft-masked currency, including while CI is in flight. It never judges CI,
 reviews, or readiness. Exit 0 means merged or closed; exit 3 means a conflict
 needs the owner. After resolving and pushing it, restart the watch. Thirty
 consecutive failed reads exit 2 and require investigating access before a
