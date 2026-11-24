@@ -508,6 +508,14 @@ standard, not an evaluation of a new tool.
 
 ## Changing this standard
 
-Change it through a pull request against this repository. A pull request that
-adds or changes a control in a surveyed repository updates the control's
-implementation table and the adoption matrix in the same change.
+Change this document through a pull request against this repository. When the
+shared standard changes a control, update its relevant description and the
+implementation and adoption evidence here. Keep the survey dated: repository
+configuration is the evidence for implementation, and an adoption decision is
+not proof that a change has landed.
+
+This document is a periodic snapshot, not a synchronized ledger. An
+implementation pull request in a surveyed repository does not need to update
+this document or its adoption matrix. Reconcile the survey periodically and
+when deliberately changing the shared standard; when immediate visibility is
+useful, link a companion update instead.
