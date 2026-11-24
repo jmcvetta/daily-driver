@@ -49,18 +49,19 @@ success_criteria:
       `ANCHOR: result`.
 
       The rule: a behavior-changing batch, including a Markdown workflow fix,
-      gets ONE independent reviewer delta pass after CI. The reviewer receives
-      the reviewed SHA, current SHA, original findings, and dispositions; it
-      checks fixes and regressions, not a whole-PR audit or style. The result is
-      durably recorded with SHAs, pass number, outcome, defects, wall state, and
-      unavailable usage. A pass that finds defects earns one batched correction,
-      pushed, and the pass that confirms it — a pushed fix is never left
-      unverified for want of an allowance. The loop ends on the first clean
-      pass. Three consecutive defect-finding passes is the wall: the defects go
-      on the PR, it stays draft, and the blocker is reported. An incomplete or
-      unavailable pass stops progress the same way. Commits, resumes, rewrites,
-      bot findings, and CI fixes are not passes and do not move the count, and
-      CI is never verification.
+      gets ONE independent reviewer delta pass after CI. The reviewer has
+      enough context about the reviewed and current content, findings, and
+      dispositions to check fixes and regressions, not conduct a whole-PR audit
+      or solicit style work. Record the result durably on the PR with enough
+      evidence to identify the review, its scope, and its outcome; do not
+      require a fixed set of record fields. A pass that finds defects earns one
+      batched correction, pushed, and the pass that confirms it — a pushed fix
+      is never left unverified for want of an allowance. The loop ends on the
+      first clean pass. Three consecutive defect-finding passes is the wall:
+      the defects go on the PR, it stays draft, and the blocker is reported. An
+      incomplete or unavailable pass stops progress the same way. Commits,
+      resumes, rewrites, bot findings, and CI fixes are not passes and do not
+      move the count, and CI is never verification.
 
       Score 1.0 only if the REPLY states all parts. Score 0.5 if it describes
       the independent batch pass and the confirmation the next correction earns

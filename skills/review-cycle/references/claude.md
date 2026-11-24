@@ -8,22 +8,23 @@ Codex's in [`codex.md`](codex.md).
 The review surface
 ==================
 
-The session's built-in **`/code-review`**, run against the pull request with
-**`--comment`**.
+The default is the session's built-in **`/code-review`**, run against the pull
+request with **`--comment`**. Honor an operator-selected independent method
+under `SKILL.md`; credible existing human or agent review of the relevant
+content can satisfy the stage without another invocation.
 
-`--comment` is what carries the findings out of the terminal and onto the pull
-request. They arrive as **resolvable review threads**, inline on the diff under
-a submitted `COMMENT` review — measured on live pull requests at `medium` and
-again at `max`, CLI 2.1.263, 2026-09-07. The default level is measured rather
-than assumed from a deeper level's result.
+`--comment` publishes findings on the pull request as resolvable inline
+threads. That is a useful native route, not a requirement that all evidence
+use one account or a particular GitHub review event.
 
 **The level is named on every invocation.** `/code-review` otherwise reuses
 whatever level was typed last, in some other session, about some other diff.
 `SKILL.md`'s `Name the level` is the rule; this is the surface that makes it
 load-bearing.
 
-If the CLI returns findings without a submitted review, publish them through
-the fallback below. Plain issue comments are not an equivalent artifact.
+If the CLI returns findings without publishing them, record them through the
+fallback below. A durable pull-request comment is also suitable evidence when
+it identifies the reviewed content and preserves findings and dispositions.
 
 
 Fix-delta verification
@@ -33,38 +34,25 @@ Fix-delta verification
 --comment` reviews the pull request as a whole; it has no measured SHA-range
 or finding-disposition input, so it cannot be represented as an independent
 delta pass, and a second full review through it is not targeted verification.
-The route is a briefed subagent instead: dispatch exactly one, through the
-`Agent` tool, carrying the bounded brief `SKILL.md`'s `Verify the fix delta`
-requires — the pull request, base branch, full-review SHA, current SHA,
-original findings, dispositions, and pass number. Require it to compare the
-pull request's three-dot content at the reviewed SHA with its three-dot
-content at the current SHA, exclude changes attributable only to the base
-branch, and inspect affected callers. It reports only whether each
-implemented finding is solved and any concrete regressions in that delta. It
-must not perform a full-PR audit, solicit style work, or supply the verdict —
-the session records the result from the subagent's report, never in place of
-it.
+When a new delta pass is needed, use one briefed subagent through the `Agent`
+tool, unless an operator-selected independent method applies. Existing
+independent human or agent review covering the delta can also satisfy it.
+Give the reviewer the pull request, base branch, prior reviewed revision,
+current revision, relevant original findings and dispositions. Require a
+comparison of relevant pull-request content at those revisions, excluding
+base-only changes, and inspection of affected callers. Comparing the three-dot
+diffs is one way to establish that delta; commit ancestry alone is not.
+The reviewer reports whether implemented findings are solved and any concrete
+regressions in the delta. It must not perform a full-PR audit or solicit style
+work. The author records the independent result, never substitutes a verdict.
 
-Publish any findings it raises through this file's `Review history,
-publication, and threads` route below, then record the pass with
-`mcp__github__add_issue_comment`:
-
-```text
-Review verification
-scope reviewed: <sha>
-pass: <n>
-verified: <sha>
-findings: <finding ids and dispositions>
-outcome: <clear|defects|incomplete|unavailable>
-defects: <none|concise list>
-wall: <open|reached>
-usage: <exact value if exposed|unavailable>
-```
-
-`outcome: unavailable` stays reachable for a dispatch that genuinely fails —
-the subagent returns nothing usable, or does not return at all — recorded as
-such rather than guessed at; a working dispatch is not unavailable by design.
-Never estimate usage when the invocation does not expose it.
+Publish new findings through the routes below. Link the result or use
+`mcp__github__add_issue_comment` for a concise account of the checked content
+and fixes, outcome, and any remaining defects or coverage limits. Preserve
+enough prior results to enforce `SKILL.md`'s three-defect-pass limit. No
+fixed verification fields, empty values, wall-state token, usage data, or
+reviewer-transcript inspection are required. A failed or incomplete dispatch
+is not a clean result. Published records use ordinary `provenance`.
 
 The wait
 ========
@@ -186,40 +174,45 @@ current-head green CI.
 Review history, publication, and threads
 ========================================
 
-Before reviewing, read `pull_request_read` with `get_reviews`,
-`get_review_comments`, and `get_comments`. Follow every page or cursor until
-the result is complete. Preserve resolved and outdated threads, replies,
-review identifiers, and reviewed SHAs in the reviewer brief.
+Read the relevant new reviews, comments, replies, open findings, and prior
+decisions using the previous checkpoint or links. `pull_request_read` provides
+`get_reviews`, `get_review_comments`, and `get_comments`. Follow all pages
+needed for that context. Reconstruct resolved and outdated threads as well
+when reliable state is missing, including after a resume, or a dispute
+requires it; do not reread all history on every round.
 
 `/code-review --comment` is the native publication route. Confirm that its
-result is a submitted `COMMENT` review with the reviewed SHA before treating
-its threads as recorded. Compare the returned review and comments with the
-history first; a resumed session must not post native findings twice.
+result was recorded and identifies the reviewed content. Compare returned
+identifiers or links with the existing record to avoid duplicate publication.
+The GitHub event type and publishing account do not determine whether the
+review is independent or current.
 
-Where the review surface returns findings but no submitted review, create one
-with `curl` and the ambient `GITHUB_TOKEN` on a web worker, or `gh api` on a
-laptop, through `POST /repos/{owner}/{repo}/pulls/{n}/reviews`.
-The JSON body has `event: "COMMENT"`, `commit_id: <reviewed-sha>`, a summary
-`body`, and a `comments` array whose entries carry `path`, `side`, `line`
-(and `start_side` / `start_line` for a range), and finding body. The submitted
-summary carries unanchorable or clean results. Validate the head and diff
-anchors again immediately before this call. A missing token, GitHub rejection,
-or head change leaves the findings intact and reports publication as incomplete.
+For locally returned findings, a submitted review can be created with `curl`
+and the ambient `GITHUB_TOKEN` on a web worker, or `gh api` on a laptop,
+through `POST /repos/{owner}/{repo}/pulls/{n}/reviews`. An example JSON body has
+`event: "COMMENT"`, `commit_id: <reviewed-sha>`, summary `body`, and a
+`comments` array carrying `path`, `side`, `line` (and `start_side` /
+`start_line` for a range), and finding body. The summary can carry clean or
+unanchorable results. `COMMENT` is an example, not an evidence gate.
 
-The `/comments` fallback — REST `POST …/pulls/{n}/comments` with the ambient
-token, measured 2026-09-12 on PR #190 — demonstrates inline posting, not this
-submitted-review aggregation; read the response and review history before
-claiming the aggregation succeeded.
+Check freshness and any inline anchors before publishing. If the head moved,
+preserve the reviewed revision and compare relevant content; unchanged content
+can retain evidence, while behavioral changes need applicable new review.
+If inline publication is unavailable, use `mcp__github__add_issue_comment` with
+clear file and code references for findings. Never invent an anchor. A failed
+durable publication is reported as incomplete, with findings retained.
+Apply ordinary `provenance` to each published artifact.
 
 | Operation | Call |
 | --------- | ---- |
 | Read review history | `mcp__github__pull_request_read`, `get_reviews`, `get_review_comments`, and `get_comments` |
 | Native publication | `/code-review` with `--comment` |
 | Fallback publication | `curl` with `GITHUB_TOKEN`, or `gh api`, to `POST /repos/{owner}/{repo}/pulls/{n}/reviews` |
+| Publish result or summary | `mcp__github__add_issue_comment` |
 | Reply on a thread | `mcp__github__add_reply_to_pull_request_comment` |
 | Resolve a thread | `mcp__github__resolve_review_thread` |
 
 The identifier trap `SKILL.md` states applies to the last two: resolve takes
 the thread's `PRRT_…` node ID, reply takes the `#discussion_r…` number from the
-comment's `html_url`. The fallback creates a review, not a loose comment, so it
-gives the summary and each finding one durable review record.
+comment's `html_url`. Findings recorded in a summary instead of a thread
+receive their substantive dispositions in that record or a linked follow-up.

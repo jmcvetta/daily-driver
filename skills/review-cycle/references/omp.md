@@ -17,27 +17,17 @@ this default for its stated scope under `Operator-selected review method`.
 the depth judgement is the agent's. `SKILL.md`'s `Name the level` has nothing
 to bind here — there is no remembered level to override.
 
-**Its findings return locally and must be published as a GitHub review.** They
-are not a transcript-only degradation. Give the reviewer the complete history,
-reviewed SHA, and current head; the publication route below turns its findings
-into the submitted threads that `Fix, answer, resolve, push` answers.
+**Record returned findings durably on the pull request.** Give the reviewer
+the relevant history, reviewed revision, and current head. The routes below
+support submitted reviews and ordinary pull-request comments; neither one
+publication shape nor a matching author account is a prerequisite. Existing
+credible independent human or agent review can supply this evidence without
+another task dispatch.
 
-For each completed reviewer task, retain its execution identity with that
-result. Task result `outputPath` names its artifact; the sibling `.jsonl`
-is the persisted child session. Read the assistant `message.model` and
-`message.provider` fields from successful review turns in that session and
-the session ID from its header. If the transcript is unavailable or those
-fields are missing or disagree across the review, report the affected field
-as `unreported`. A task's `resolvedModel` and `resolvedModelIdentity` describe
-resolution, not proof of the model that served the review. Never substitute
-the configured role, publisher, or the reviewer's own claim.
-
-Pass the observed values as `reviewerModel`, `reviewerProvider`, and
-`reviewerSession` to the publication calls below. Use
-`reviewerModel: "unreported"` when no actual model is available; omit unknown
-provider or session values. Keep each review and verification pass paired with
-its own result. The normal `Model:` block identifies the publisher, not the
-reviewer.
+Use ordinary `provenance` for published artifacts. Do not inspect persisted
+reviewer transcripts to reconstruct model, provider, or session identity.
+Identify the independent review by its available result or link; the wrapper's
+normal provenance describes the writer and is not proof of review coverage.
 
 Operator-selected review method
 -------------------------------
@@ -48,64 +38,53 @@ its replacement. Do not silently fall back, install a replacement framework, or
 change persistent reviewer configuration. The default method's prerequisites
 are not prerequisites for a different selected method.
 
-Give the selected reviewer the pull request, actual base branch, immutable
-reviewed and current SHAs, complete review history and dispositions, and
-applicable issue or specification requirements. For a full review, require the
+Give an invoked reviewer the pull request, actual base branch, reviewed and
+current revisions, relevant history and dispositions, and applicable issue or
+specification requirements. For a full review, require the
 complete three-dot pull-request diff, affected callers, and relevant tests to
 be inspected for concrete correctness defects and unmet requirements, not style.
 For a fix-delta pass, use the bounded brief in `Fix-delta verification` below.
 The reviewer must not edit files or run project checks; the author owns CI.
 Apply `SKILL.md`'s effort rule only when the selected surface takes a level.
 
-Require a result bound to the reviewed SHA, coverage and limitations, and valid
-diff anchors for line-specific findings. A failed invocation is `unavailable`;
-partial coverage or a mismatched SHA is `incomplete`. Neither satisfies
-readiness. Do not silently switch methods again on failure.
+Require a result tied to the reviewed content, with coverage limits and
+concrete findings. Include valid diff anchors where available. A failed
+invocation or partial coverage is not a clean result. Do not silently switch
+methods again on failure.
 
-Record the selected method and scope with the reviewed SHA. Publish returned
-full-review findings, including a clean summary, through `Review history,
-publication, and threads` below; use native publication when available. Retain
-the method's review/session identifier and returned GitHub review ID to avoid
-duplicate publication. Record fix-delta results in the existing verification
-format below. Use observed execution identity, never configured or self-reported
-identity; for non-task methods whose served identity is not exposed, use
-`reviewerModel: "unreported"` and omit unknown provider/session fields.
+Keep the selected method and scope clear in the review evidence. Use native
+publication or the routes below, and link an existing published result instead
+of duplicating it. Record fix-delta results concisely as described below;
+no execution-identity fields or reviewer-session inspection are required.
 
 
 Fix-delta verification
 ======================
 
-Dispatch exactly one `reviewer` task agent with a bounded brief unless the
-operator selected another independent method for this pass. Give it the
-pull request, base branch, full-review SHA, current SHA, original findings,
-dispositions, and pass number. Require it to compare the pull request's
-three-dot content at the reviewed SHA with its three-dot content at the current
-SHA, exclude changes attributable only to the base branch, and inspect affected
-callers. It reports only whether each implemented finding is solved and any
-concrete regressions in that delta. It must not perform a full-PR audit or offer
-style improvements.
+When a new pass is needed, dispatch one `reviewer` task agent unless the
+operator selected another independent method. Existing credible independent
+human or agent review of the delta can also satisfy the pass.
 
-The author records the result with `daily_driver_gh_write({ args: ["pr",
-"comment", <number>, "--body-file", <path>], reviewerModel: <pass model>,
-reviewerProvider: <pass provider>, reviewerSession: <pass session> })`:
+Give the reviewer the pull request, base branch, prior reviewed revision,
+current revision, relevant original findings and dispositions. Require it to
+compare the relevant pull-request content at those revisions, excluding
+base-only changes, and inspect affected callers. Comparing the three-dot
+pull-request diffs is one way to establish the content delta; do not infer it
+from commit ancestry alone. It reports whether each implemented finding is
+solved and any concrete regressions in that delta. It must not perform a
+full-PR audit or offer style improvements.
+
+After receiving the independent result, link it or record a concise account
+of the checked content and fixes, outcome, and any defects or coverage limits:
 
 ```text
-Review verification
-scope reviewed: <sha>
-pass: <n>
-verified: <sha>
-findings: <finding ids and dispositions>
-outcome: <clear|defects|incomplete|unavailable>
-defects: <none|concise list>
-wall: <open|reached>
-usage: unavailable
+daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>] })
 ```
 
-The selected reviewer's result is independent evidence. The author writes this
-record only after receiving it; it must not invent a verdict. Omp task results
-expose no reviewer token-usage value, so use `usage: unavailable` for them;
-for another method use exposed counts or `unavailable`. The wrapper adds
-provenance; do not add a block to the record.
+No fixed verification heading, field set, empty values, usage data, or wall
+token is needed. Preserve enough result history to enforce the three-defect-pass
+limit in `SKILL.md`. The author must not invent the reviewer's verdict.
+The wrapper adds ordinary provenance; do not add a new block to the body.
 
 The wait
 ========
@@ -254,17 +233,20 @@ after a user stop performs no work.
 Review history, publication, and threads
 ========================================
 
-Before invoking the selected reviewer, read every submitted review with `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews`. Read the complete thread graph with a
-paginated GraphQL `PullRequest.reviewThreads` query, including `id`,
-`isResolved`, `isOutdated`, review/comment IDs, replies, SHAs, paths, lines,
-and bodies. A REST comments page alone is not complete history and does not
-contain the `PRRT_…` ID needed to resolve a thread.
+Read the history needed under `SKILL.md`: new reviews and replies, open
+findings, and relevant prior decisions, using the previous checkpoint or
+links. The calls below support reconstruction when incremental state is
+missing, including after a resume, or when a dispute requires it. Paginate
+needed results to completion. A GraphQL `PullRequest.reviewThreads` query
+provides `id`, `isResolved`, `isOutdated`, comments, replies, revisions, paths,
+lines, and bodies. A REST comments page does not supply the `PRRT_…` node ID
+needed to resolve a thread.
 
-After the reviewer returns, re-read the head and its diff anchors. Compare the
-returned findings with the review history and recorded review identifier before
-posting; a resumed run must not duplicate a review already submitted for that
-identifier and SHA. Put line-specific findings in `review.json` and create one
-submitted review:
+After review, check current-head content and any inline anchors. Preserve the
+reviewed revision if the head moved, and obtain applicable new review for
+behavioral changes. Check the existing record before posting to avoid duplicate
+findings. Use native publication, or put line-specific findings in `review.json`
+and submit a review, for example:
 
 ```json
 {
@@ -283,26 +265,27 @@ submitted review:
 ```
 
 Run `daily_driver_gh_write({ args: ["api", "--method", "POST",
-"/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"],
-reviewerModel: <review model>, reviewerProvider: <review provider>,
-reviewerSession: <review session> })`. The wrapper labels the reviewer and
-publisher on the summary and every inline comment in the JSON body.
-Use `start_side` and `start_line` for a valid range. A clean or unanchorable
-review has no `comments` entry and uses the submitted summary. Never invent an
-anchor. On changed head, invalid anchor, absent `gh`, or GitHub failure, retain
-the findings and report publication as incomplete.
+"/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"] })`.
+`COMMENT` is an example, not an evidence gate. Use `start_side` and
+`start_line` for a valid range. Cross-cutting or clean results can use the
+summary without `comments`. If inline publication is unavailable, record
+findings with clear file and code references in a pull-request comment through
+`daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>] })`.
+Never invent an anchor. If no durable route works, retain the findings and
+report publication as incomplete.
 
 | Operation | Call |
 | --------- | ---- |
 | Read reviews | `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews` |
 | Read threads | paginated `gh api graphql` query of `PullRequest.reviewThreads` |
-| Publish review | `daily_driver_gh_write({ args: ["api", "--method", "POST", "/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"], reviewerModel: <review model>, reviewerProvider: <review provider>, reviewerSession: <review session> })` |
+| Publish review | `daily_driver_gh_write({ args: ["api", "--method", "POST", "/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"] })` |
+| Publish result or summary | `daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>] })` |
 | Reply on a thread | `daily_driver_gh_write({ args: ["api", "-X", "POST", "/repos/{owner}/{repo}/pulls/{n}/comments/{comment_id}/replies", "--input", "reply.json"] })` |
 | Resolve a thread | `gh api graphql` with the `resolveReviewThread` mutation |
 
 The identifier trap `SKILL.md` states applies to the last two: the mutation
 takes the thread's `PRRT_…` node ID, while reply takes the comment's numeric
-ID. The review REST endpoint returns a review ID; record it with the reviewed
-SHA and dispositions so later rounds have a stable duplicate check. The wrapper
-adds and deduplicates provenance for review and reply bodies; do not add a new
-block to `review.json` or `reply.json`.
+ID. Keep returned review or comment links with the covered revision and
+dispositions so later rounds can find the evidence without republishing it.
+The wrapper adds and deduplicates ordinary provenance for review and reply
+bodies; do not add a new block to `review.json` or `reply.json`.

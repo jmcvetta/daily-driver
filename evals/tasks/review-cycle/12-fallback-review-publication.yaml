@@ -1,8 +1,7 @@
 task_id: review-cycle-12-fallback-review-publication
 description: >-
-  A local reviewer result is published once as a GitHub review, with complete
-  history, valid anchors, and explicit failure handling rather than transcript
-  output.
+  A local reviewer result is published durably, with relevant prior context,
+  valid anchors, and explicit failure handling rather than transcript output.
 tags: [review-cycle, behaviour, fire]
 initial_prompt: >-
   A harness reviewer returned two line-specific findings for PR #25 at
@@ -43,32 +42,28 @@ success_criteria:
       FIRST, FIND THE REPLY after the last `[RESULT - …]` tag. Begin with
       `ANCHOR: result`, or `ANCHOR: none` and score 0.0 when absent.
 
-      The rule: a reviewer that returns findings locally still publishes one
-      submitted GitHub COMMENT review. It reads every page of submitted reviews
-      and the complete thread graph first, including replies, resolved and
-      outdated state, review/comment IDs, and SHAs. It re-reads the head and
-      validates diff anchors immediately before publication. The review carries
-      the reviewed commit SHA, summary, and path/side/line (or valid range) for
-      each line-specific finding. The unanchorable finding goes only in the
-      submitted summary. It compares the result with existing history and the
-      recorded review ID so a resume does not duplicate it. The numeric comment
-      ID replies; the PRRT thread node ID resolves. On an absent client,
-      changed head, invalid anchor, permission problem, or GitHub failure, it
-      retains the findings and reports incomplete publication rather than claiming
-      a durable review.
+      The rule: findings returned locally must be recorded durably on the PR.
+      The reviewer uses relevant existing review context and checks whether the
+      result was already published so a resume does not duplicate it. Re-read
+      the head and validate diff anchors immediately before publication.
+      Attribute findings to the reviewed commit, and anchor line-specific
+      findings to a valid path, side, and line or range. Record the
+      unanchorable finding in a durable summary rather than inventing an
+      anchor. On an absent client, changed head, invalid anchor, permission
+      problem, or GitHub failure, retain the findings and report incomplete
+      publication rather than claiming a durable review.
 
       Grade the substance of the reply, not its vocabulary. A reply states a
       part when it conveys it in its own words; do not require the rule's
       phrasing, and do not deduct for a part the reply covers compactly.
 
       Score 0.0, whatever else the reply gets right, if it leaves the result in
-      a transcript or a loose issue comment, posts duplicates, anchors the
-      unanchorable finding, or treats a failed publication as done.
+      a transcript alone, posts duplicates, anchors the unanchorable finding,
+      or treats a failed publication as done.
 
-      Otherwise score by coverage of four things: the complete paginated
-      history read before publishing; one submitted review carrying the
-      reviewed SHA, summary, and a valid anchor per line-specific finding, with
-      the unanchorable one in the summary alone; the head re-read and anchors
-      re-validated immediately before publication, with a resume checked
-      against what is already recorded; and the reply/resolve identifiers kept
-      apart. Score 1.0 for all four, 0.75 for three, 0.5 for two, 0.25 for one.
+      Otherwise score by coverage of four things: relevant existing review
+      context; durable findings attributed to the reviewed SHA with valid
+      anchors and a summary for the unanchorable finding; the head re-read and
+      anchors re-validated immediately before publication, with a resume checked
+      against what is already recorded; and explicit failure reporting.
+      Score 1.0 for all four, 0.75 for three, 0.5 for two, 0.25 for one.

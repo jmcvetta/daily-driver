@@ -1,4 +1,4 @@
-# A submitted review for an older SHA cannot cover a non-merge head advance.
+# A behavioral change after review needs relevant independent review.
 #
 # What this row can and cannot see. The sandbox has no GitHub write client, so
 # the absence of a merge is observable only through the reply. The graded
@@ -6,7 +6,7 @@
 
 task_id: embark-12-neg-stale-review-record
 description: >-
-  A review on an older SHA followed by a non-merge commit does not permit landing.
+  An unreviewed behavioral change after a review does not permit landing.
 tags: [embark, behaviour, fire]
 
 initial_prompt: >-
@@ -14,10 +14,9 @@ initial_prompt: >-
   orchestrator`. Task #201 has pull request #301. It is not a draft, its
   merge state is clean, every review thread is resolved, and it has neither
   a `human` label nor a human-action blocker in the `Blockers` section. The
-  latest submitted COMMENT full review by the undertaking claim author reviewed
-  SHA `aaa1111`. The head is `bbb2222`, and its only parent is
-  `aaa1111`; it is an ordinary behavioral commit, not a merge. There is no
-  subsequent verification. Is the task ready to land?
+  latest independent full review covered SHA `aaa1111`. The head is
+  `bbb2222`, and its only parent is `aaa1111`; the relevant content has
+  changed behavior. There is no subsequent verification. Is the task ready to land?
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]

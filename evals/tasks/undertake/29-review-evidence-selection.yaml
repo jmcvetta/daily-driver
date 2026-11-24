@@ -1,32 +1,24 @@
 task_id: undertake-29-review-evidence-selection
-description: Deterministic review selection, verification supersession, author, and ancestry examples.
+description: Independent review coverage and content-based staleness examples.
 tags: [undertake, behaviour, fire]
 initial_prompt: |-
   Apply the undertaking readiness review-evidence predicate to each independent
-  case below. Complete histories are available. The claim author is A; all
-  selected full reviews are submitted COMMENT reviews for the current scope
-  unless stated otherwise. All other gates, including CI and resolved threads,
-  hold. For each case say whether review evidence permits readiness and why.
-  Do not perform writes.
+  case below. The reviews are credible and independent unless stated otherwise.
+  All other gates, including CI and finding dispositions, hold. For each case
+  say whether review evidence permits readiness and why. Do not perform writes.
 
-  1. A clean review at head H; no verification exists.
-  2. Review at H has only rejected findings, no behavioral fix and no verification.
-  3. Review at S, behavioral fix at H; A's latest verification for S is clear,
-     defects none, wall open, verified H.
-  4. As 3, followed by A's later verification for S reporting defects.
-  5. As 3, followed by A's later verification for S reporting incomplete.
-  6. Review at S, behavioral fix at H; the only clear verification names scope X,
-     not S, and verified H.
-  7. Clean review at S, no behavioral change; head H is a merge whose first
-     parent is S.
-  8. Clean review at S; head H is a non-merge behavioral commit whose parent is S;
-     no verification exists.
-  9. The only full review is clean at H but was submitted by B, not A.
-  10. Clean review at S; H is later, but the ancestry read is unavailable.
-  11. Review at S, behavioral fix at H; B's clear verification for S is the only
-      verification. B is not A.
-  12. Review at S, behavioral fix at H; A's clear verification for S is followed
-      by A's clear verification for another scope X. Both verify H.
+  1. A clean agent review covers current head H.
+  2. A human approval covers H, published by someone other than the claim author.
+  3. A review at S has only rejected findings; the relevant content at H is unchanged.
+  4. Review at S, behavioral fix at H; an independent reviewer verified the fix at H.
+  5. As 4, but the independent verification reports an unresolved defect.
+  6. Review at S, behavioral fix at H; only the author checked the fix.
+  7. A clean review at S; H is a base merge and the relevant content is unchanged.
+  8. A clean review at S; H changes behavior and has no subsequent review.
+  9. A clean independent review at H is published as a durable comment.
+  10. A clean review at S; the content at H cannot be compared with S.
+  11. A fix at H is independently reviewed by someone other than the claim author.
+  12. A review at S is followed by a material scope addition at H; only the old scope was reviewed.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
@@ -51,9 +43,9 @@ success_criteria:
       disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |-
-      Find the reply after the last `[RESULT - …]` tag. The exact correct
-      classification is: permit 1, 2, 3, 7, 12; block 4, 5, 6, 8, 9, 10, 11.
-      Score 1 only if all twelve classifications are correct and the reasons
-      distinguish later same-scope supersession, wrong author/scope, merge-only
-      first-parent coverage, and unavailable ancestry. Score 0 if it permits a
-      blocked case; otherwise score 0.5 for an incomplete or incorrect answer.
+      Find the reply after the last `[RESULT - …]` tag. The correct decisions
+      permit 1, 2, 3, 4, 7, 9 and 11; block 5, 6, 8, 10 and 12.
+      Score 1 only if all twelve decisions are correct and distinguish
+      independent review, relevant content changes and unresolved defects.
+      Score 0 if it permits a blocked case; otherwise score 0.5 for an
+      incomplete or incorrect answer.
