@@ -32,17 +32,25 @@ def snapshot(**changes):
 class Source:
     """Record consumer operations and advance a deterministic authoritative trace."""
 
-    def __init__(self, *states):
+    def __init__(self, *states, currency_states=None):
         self.states = list(states or [snapshot()])
+        self.currency_states = list(currency_states if currency_states is not None else self.states)
         self.reads = 0
         self.updates = []
 
-    def observe(self):
-        self.reads += 1
-        value = self.states.pop(0) if len(self.states) > 1 else self.states[0]
+    @staticmethod
+    def next_state(states):
+        value = states.pop(0) if len(states) > 1 else states[0]
         if isinstance(value, Exception):
             raise value
         return copy.deepcopy(value)
+
+    def observe_currency(self):
+        return self.next_state(self.currency_states)
+
+    def observe(self):
+        self.reads += 1
+        return self.next_state(self.states)
 
     def update(self, head):
         self.updates.append(head)
@@ -172,31 +180,45 @@ class ActiveTests(unittest.TestCase):
         self.assertIsNone(result["delivery"])
         self.assertEqual(result["authority"]["state"], "shadow")
 
-    def test_current_head_ci_defers_all_server_updates(self):
+    def test_stale_branch_updates_even_when_ci_is_in_flight_or_unregistered(self):
         self.activate()
         for ci in ("in_flight", "unregistered"):
             with self.subTest(ci=ci):
-                source = Source(snapshot(currency="update_candidate", ci=ci))
-                self.actor.reconcile(self.key, source)
-                self.assertEqual(source.updates, [])
+                old = snapshot(currency="update_candidate", ci=ci)
+                new = snapshot(head="c" * 40, ci=ci)
+                source = Source(new, currency_states=[old, old, new])
+                self.actor.db.execute("UPDATE authorities SET update_head=NULL,update_started=NULL")
+                result = self.actor.reconcile(self.key, source)
+                self.assertEqual(source.updates, [old["head"]])
+                self.assertEqual(json.loads(result["observed"])["ci"], ci)
+
+    def test_update_proceeds_when_inventory_is_denied(self):
+        self.activate()
+        old = snapshot(currency="update_candidate")
+        new = snapshot(head="c" * 40, ci="unregistered")
+        source = Source(ACTIVE.SHADOW.ObservationError("CI inventory denied"),
+                        currency_states=[old, old, new])
+        result = self.actor.reconcile(self.key, source)
+        self.assertEqual(source.updates, [old["head"]])
+        self.assertIn("CI inventory denied", result["degraded"])
 
     def test_reread_before_and_after_server_update_discards_old_head(self):
         self.activate()
         old = snapshot(currency="update_candidate")
         new = snapshot(head="c" * 40, ci="unregistered")
-        source = Source(old, old, new)
+        source = Source(new, currency_states=[old, old, new])
         result = self.actor.reconcile(self.key, source)
-        self.assertEqual(source.reads, 3)
+        self.assertEqual(source.reads, 1)
         self.assertEqual(source.updates, [old["head"]])
         self.assertEqual(json.loads(result["observed"])["head"], new["head"])
         self.assertEqual(json.loads(result["delivery"]["payload"])["observed"]["ci"], "unregistered")
 
-    def test_new_workflow_or_head_at_prewrite_reread_prevents_update(self):
+    def test_moved_head_base_or_conflict_prevents_update(self):
         self.activate()
-        for latest in (snapshot(ci="in_flight", currency="update_candidate"),
-                       snapshot(head="d" * 40, currency="current"), snapshot(currency="conflict")):
+        for latest in (snapshot(head="d" * 40), snapshot(base_sha="d" * 40, currency="update_candidate"),
+                       snapshot(currency="conflict")):
             with self.subTest(latest=latest):
-                source = Source(snapshot(currency="update_candidate"), latest)
+                source = Source(latest, currency_states=[snapshot(currency="update_candidate"), latest])
                 self.actor.db.execute("UPDATE authorities SET update_head=NULL,update_started=NULL")
                 self.actor.reconcile(self.key, source)
                 self.assertEqual(source.updates, [])

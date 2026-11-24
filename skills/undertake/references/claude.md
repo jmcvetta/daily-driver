@@ -183,28 +183,24 @@ The orchestrator
 ================
 
 `SKILL.md`'s `Reporting to an orchestrator` applies where the system prompt
-names an orchestrator session id — `embark`'s dispatch puts it there. The
-report is a one-shot Routine bound to that session:
+names an orchestrator session id — `embark`'s dispatch puts it there. When the
+child's result reaches only that session, deliver the concise readiness report
+to the orchestrator with one one-shot Routine:
 
 | Field of `mcp__Claude_Code_Remote__create_trigger` | Value |
 | ---- | ----- |
 | `persistent_session_id` | The orchestrator's session id |
 | `run_once_at` | The next whole UTC minute plus one, RFC3339 |
-| `prompt` | The report, opening with its fixed line |
-| `name` | The report's fixed opening line |
+| `prompt` | The concise report: task, linked PR, ready outcome, and material limitations |
+| `name` | A short title for the report |
 | `initiation` | `own_followup` |
 
 The tool is deferred: load it with `ToolSearch`, `select:` its name, before the
 first report. The Routine disables itself once it fires, so there is nothing
-to delete.
-For `Ready for review`, the implementor also sends the same report in its
-user-facing conversation after the ready write succeeds. This is required
-whether or not the orchestrator id exists. When it exists, use the Routine
-above for the orchestrator copy; the Routine does not replace user delivery.
-If the user-facing send or Routine delivery fails, report that failure once in
-the available conversation and continue without undoing readiness or retrying.
-Where a child conversation reaches only the parent, the orchestrator visibly
-relays the report to the user.
+to delete. The orchestrator must visibly relay the report to the user. Where a
+direct user-facing route is available, report there once instead of sending a
+duplicate to the orchestrator. If delivery fails, state that once through the
+available route; do not undo readiness or retry.
 
 **Not `fire_trigger`, and not `send_later`.** A manual `fire_trigger` on a
 Routine bound to the orchestrator returns success and delivers nothing.

@@ -46,8 +46,9 @@ Inspect `git -C <worktree> status --short` before applying the shared
 cancellation refusal is a residual.
 
 Read `git -C <worktree> rev-parse HEAD` and `git ls-remote origin <branch>`
-separately. Record the observed remote head and any local-only commit and
-worktree path in the task handoff; an unavailable read is unknown.
+separately. Include the observed remote head and any local-only commit and
+worktree path when they affect recovery. Record an unavailable read only when
+that uncertainty affects safe recovery; never infer the remote tip locally.
 
 
 The watches

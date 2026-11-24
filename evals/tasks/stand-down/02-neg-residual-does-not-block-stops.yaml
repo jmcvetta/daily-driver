@@ -13,9 +13,9 @@
 
 task_id: stand-down-02-neg-residual-does-not-block-stops
 description: >-
-  An implementor the wrap-up cannot reach is reported as a residual and
-  archived anyway; it does not stop the rest of the fleet from being secured,
-  stopped, and the banner printed.
+  An unreachable implementor is reported as a residual while the fleet is
+  secured and stopped. Recovery details remain in concise task handoffs; the
+  epic record links them and reports only exceptional residuals.
 tags: [stand-down, behaviour, fire]
 
 initial_prompt: >-
@@ -24,7 +24,9 @@ initial_prompt: >-
   `session_01Gone`, whose cloud workspace no longer exists — `send_message`
   errors and `get_session` reports it failed. Task #511 has local commit
   `abc123` in `/work/task-511`; its push failed, and the observed remote head
-  is `def456`. A watch cancellation also failed. Stand down the fleet.
+  is `def456`. A watch cancellation also failed. Neither task has an open PR
+  or an external environment prerequisite; omit those irrelevant fields rather
+  than adding unknown placeholders. Stand down the fleet.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -86,6 +88,9 @@ success_criteria:
       unresolved failures and not wait for the failed worker. The live worker
       must receive, or be identified as needing, the wrap-up described above.
       Do not require the final reply to duplicate facts in attempted records.
+      Task handoffs should omit empty fields; the epic record should link the
+      task handoffs without repeating successful worker lifecycle. Do not
+      require PR or environment placeholders.
 
       Score 0.5 if it retains the failed worker and continues stopping the
       fleet but omits one required recovery fact or action. Score 0.0 if it

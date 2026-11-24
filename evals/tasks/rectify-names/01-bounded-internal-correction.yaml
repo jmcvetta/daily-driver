@@ -1,0 +1,44 @@
+task_id: rectify-names-01-bounded-internal-correction
+description: >-
+  A single agreed internal rename with a known consumer surface uses the
+  ordinary issue-to-PR path without audit ceremony.
+tags: [rectify-names, proportionality, bounded, fire]
+
+initial_prompt: >-
+  Apply the naming-correction workflow to one change we have already agreed:
+  rename the private helper `read_value` to `read_measure`. It is not exported,
+  linked, packaged, released, user-facing, or persisted. Its two call sites are
+  known and traced, and no compatibility decision or coupled rename remains.
+  The scope is exactly this one coherent rename across the two files. Explain
+  the evidence and next steps; do not expand the scope.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 180, task_timeout: 400}
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: Naming correction workflow is consulted
+    expected_skill: rectify-names
+    skill_name: rectify-names
+  - type: agent_judge
+    description: Bounded rename skips audit ceremony but preserves evidence and scope
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 4
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Score 1 only if the answer treats this already agreed, single internal
+      rename as a bounded correction; retains the semantic reason, both known
+      call sites, compatibility conclusion and behavior-preserving verification;
+      uses the ordinary issue-to-PR path with one coherent task if an issue is
+      needed; and does not require stable candidate IDs, a separate judging
+      pass, a durable planning map, an epic, or one-issue-per-occurrence work.
+      It must not start implementation before the complete scope is agreed or
+      expand the agreed scope. Score 0.5 for one material omission, and 0 for
+      full-audit ceremony, an unsupported compatibility assumption, or scope
+      expansion.

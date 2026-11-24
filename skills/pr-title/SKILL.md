@@ -37,9 +37,11 @@ capability. The type comes from what the change **does**, not the branch name,
 issue label, scope, or shape of the diff. The classification rules stay in
 that skill.
 
-It also decides when the type is decided already: a type on the pull request
-that this session did not write is settled — whoever set it — and a
-disagreement with it is raised rather than retitled.
+When revising an existing title, use `conventional-commits-type` to establish
+whether the current type is protected by a known user decision or can be
+corrected. The author may be identified from available title history and
+handoff evidence; an inherited title or session boundary alone does not make
+it user-set. Do not change an accurate title just to refresh PR metadata.
 
 The type is not decoration. Releases are cut from it: the type in a merged
 PR's title becomes the squashed commit subject, and that subject is what
