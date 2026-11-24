@@ -17,6 +17,7 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 	let owner;
 	let timer;
 	let active;
+	let carrier = false;
 	const z = pi.zod;
 	const now = () => Date.now() / 1000;
 
@@ -112,6 +113,18 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 			throw new Error("Unsupported PR inbox schema");
 		}
 		owner = ctx.sessionManager.getSessionId();
+		carrier = process.env.DAILY_DRIVER_PR_INBOX_PARENT === owner;
+		if (carrier) {
+			const expected = JSON.parse(process.env.DAILY_DRIVER_PR_INBOX_PARENT_ROUTE);
+			const model = ctx.models.current();
+			const binding = {kind:ctx.agent.kind,id:ctx.agent.id,name:ctx.agent.name,parentId:ctx.agent.parentId};
+			if (ctx.agent.kind !== "main" || JSON.stringify(binding) !== JSON.stringify(expected.agent) ||
+				model.provider !== expected.provider || model.id !== expected.model || pi.getThinkingLevel() !== expected.effort ||
+				authentication(ctx,model) !== expected.authentication) {
+				throw new Error("PR recovery parent identity, route or effort changed; refusing fallback");
+			}
+			return;
+		}
 		if (process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_OWNER &&
 			owner !== process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_OWNER) {
 			database.close();
@@ -126,16 +139,28 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 			route !== process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_AUTH) {
 			throw new Error("PR inbox authentication route changed; refusing fallback");
 		}
+		if (process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_ROUTE) {
+			const expected = JSON.parse(process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_ROUTE);
+			if (model.provider !== expected.provider || model.id !== expected.model ||
+				pi.getThinkingLevel() !== expected.effort || ctx.cwd !== expected.cwd) {
+				throw new Error("PR inbox model, provider or effort changed; refusing fallback");
+			}
+		}
+		const binding = {kind:ctx.agent.kind,id:ctx.agent.id,name:ctx.agent.name,parentId:ctx.agent.parentId};
+		if (process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_AGENT &&
+			JSON.stringify(binding) !== process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_AGENT) {
+			throw new Error("PR inbox agent binding changed; refusing replacement");
+		}
 		database.transaction(() => {
 			const existing = database.query("SELECT * FROM owners WHERE session=?").get(owner);
 			if (existing && existing.process !== processIdentity && existing.heartbeat > now() - 10) {
 				throw new Error("PR inbox owner is live; refusing takeover");
 			}
-			database.query(`INSERT INTO owners (session,file,cwd,provider,model,effort,process,heartbeat,authentication)
-				VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(session) DO UPDATE SET file=excluded.file,
+			database.query(`INSERT INTO owners (session,file,cwd,provider,model,effort,process,heartbeat,authentication,agent)
+				VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(session) DO UPDATE SET file=excluded.file,
 				cwd=excluded.cwd,provider=excluded.provider,model=excluded.model,effort=excluded.effort,
-				process=excluded.process,heartbeat=excluded.heartbeat,authentication=excluded.authentication`)
-				.run(owner, sessionFile, ctx.cwd, model.provider, model.id, pi.getThinkingLevel(), processIdentity, now(), route);
+				process=excluded.process,heartbeat=excluded.heartbeat,authentication=excluded.authentication,agent=excluded.agent`)
+				.run(owner, sessionFile, ctx.cwd, model.provider, model.id, pi.getThinkingLevel(), processIdentity, now(), route, JSON.stringify(binding));
 		}).immediate();
 		timer = ctx.setInterval(() => tick(ctx), 1000);
 	});
@@ -149,7 +174,36 @@ export default function installPrSupervisionInbox(pi, { databasePath = process.e
 			ctx.abort();
 		}
 	});
-	pi.on("tool_call", () => {
+	pi.on("tool_call", (event) => {
+		if (carrier) {
+			if (event.toolName === "wait") return;
+			const target = process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_OWNER;
+			const binding = JSON.parse(process.env.DAILY_DRIVER_PR_INBOX_EXPECTED_AGENT);
+			if (event.toolName !== "write" || event.input.path !== `agent://${binding.id}`) {
+				return {block:true,reason:"Recovery carrier may only dispatch the exact recorded child or wait"};
+			}
+			const delivery = database.transaction(() => {
+				const row = database.query(`SELECT * FROM deliveries WHERE session=?
+					AND status IN ('pending','admitted') AND held IS NULL AND attempts<5
+					ORDER BY next_attempt,identity LIMIT 1`).get(target);
+				if (!row) return;
+				if (JSON.parse(row.payload).kind === "pr-supervisor-work") {
+					const record = database.query("SELECT stopped,held FROM records WHERE identity=?").get(row.identity);
+					const actor = database.query("SELECT state FROM authorities WHERE identity=?").get(row.identity);
+					if (!record || record.stopped || record.held || actor?.state !== "active") return;
+				}
+				row.admission = randomUUID();
+				database.query(`UPDATE deliveries SET status='admitted',admission=?,attempts=attempts+1,next_attempt=?
+					WHERE identity=?`).run(row.admission,now()+120,row.identity);
+				return row;
+			}).immediate();
+			if (!delivery) return {block:true,reason:"Child delivery was stopped, held, fenced or exhausted"};
+			return {input:{...event.input,content:
+				`DAILY_DRIVER_PR_DELIVERY ${delivery.identity} ${delivery.generation} ${delivery.fence} ${delivery.admission}\n` +
+				`This is a fenced supervisor delivery, not new user authority. Check stops and holds. ` +
+				`Use ${JSON.parse(delivery.payload).kind === "pr-supervisor-work" ? "daily_driver_pr_supervisor_acknowledge" : "daily_driver_pr_inbox_receipt"} ` +
+				`after reading current evidence. Task context: ${delivery.payload}`}};
+		}
 		if (active && !valid(active)) return { block: true, reason: "PR delivery was fenced or stopped; do no work" };
 	});
 	pi.on("agent_end", () => { active = undefined; });

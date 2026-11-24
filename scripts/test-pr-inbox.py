@@ -134,6 +134,44 @@ class InboxTests(unittest.TestCase):
                     self.assertEqual(HOST.pass_once(self.inbox, "unused-omp"), [])
                 activate.assert_not_called()
 
+    def test_pre_admission_activation_failures_stop_after_five_attempts(self):
+        self.owner()
+        with patch.object(HOST,"activate",side_effect=HOST.ActivationError("owner-context-unavailable")) as activate:
+            for now in range(0,1200,120):
+                with patch.object(HOST.time,"time",return_value=now):
+                    HOST.pass_once(self.inbox,"omp")
+        self.assertEqual(activate.call_count,5)
+        self.assertEqual(self.inbox.get(IDENTITY)["attempts"],5)
+        self.assertIn("owner-context-unavailable",self.inbox.get(IDENTITY)["last_error"])
+
+    def test_missing_owner_context_exhausts_the_same_bounded_retry_budget(self):
+        for now in range(0,1200,120):
+            with patch.object(HOST.time,"time",return_value=now):
+                HOST.pass_once(self.inbox,"omp")
+        self.assertEqual(self.inbox.get(IDENTITY)["attempts"],5)
+
+    def test_child_recovery_never_takes_a_held_or_unknown_parent(self):
+        base = Path(self.temporary.name)
+        parent_file, child_file = base / "parent.jsonl", base / "child.jsonl"
+        parent_file.write_text(json.dumps({"type":"session","id":"parent"}) + "\n")
+        child_file.write_text(json.dumps({"type":"session","id":"owner","parentSession":str(parent_file)}) + "\n")
+        for session, file, binding in (
+            ("parent", parent_file, {"kind":"main","id":"Main","name":"main"}),
+            ("owner", child_file, {"kind":"sub","id":"ChildProof","name":"child-proof","parentId":"Main"}),
+        ):
+            self.inbox.db.execute("""INSERT INTO owners
+                (session,file,cwd,provider,model,effort,process,heartbeat,authentication,agent)
+                VALUES (?,?,?,'fixture','proof','high','old',0,'config',?)""",
+                (session,str(file),str(base),json.dumps(binding)))
+        owner = dict(self.inbox.db.execute("SELECT * FROM owners WHERE session='owner'").fetchone())
+        for parent_lease in ({"held":["parent"],"unknown":[]},{"held":[],"unknown":["parent"]}):
+            leases = [subprocess.CompletedProcess([],0,json.dumps({"held":[],"unknown":[]})),
+                      subprocess.CompletedProcess([],0,json.dumps(parent_lease))]
+            with self.subTest(parent_lease=parent_lease), patch.object(HOST.subprocess,"run",side_effect=leases), \
+                    patch.object(HOST.subprocess,"Popen") as spawn:
+                self.assertEqual(HOST.activate(self.inbox,owner,"omp"),"parent-held-or-unknown")
+                spawn.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

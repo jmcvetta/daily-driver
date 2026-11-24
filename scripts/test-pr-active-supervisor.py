@@ -5,7 +5,6 @@ import copy
 import fcntl
 import importlib.util
 import json
-import sqlite3
 from pathlib import Path
 import tempfile
 import threading
@@ -143,6 +142,34 @@ class ActiveTests(unittest.TestCase):
         self.assertEqual(result["delivery"]["status"], "received")
         self.assertEqual(source.reads, 3)
 
+    def test_hint_deadline_is_separate_and_real_periodic_outage_is_retained(self):
+        self.activate()
+        self.actor.reconcile(self.key, Source())
+        self.now = 10
+        self.actor.hint(self.key)
+        self.assertEqual(self.actor.status(self.key)["next_due"], 120)
+        self.assertEqual(self.actor.due(), [self.key])
+        self.actor.reconcile(self.key, Source())
+        self.assertEqual(self.actor.due(), [])
+        self.now = 131
+        record = self.actor.reconcile(self.key, Source())
+        self.assertIn("supervision_gap", json.loads(record["proposal"])["reasons"])
+        self.assertEqual(record["gap_start"], 130)
+
+    def test_rollback_then_retransfer_reactivates_fenced_delivery(self):
+        self.activate()
+        self.actor.reconcile(self.key, Source())
+        stale = self.admit()
+        with patch.object(self.actor, "source", return_value=Source()):
+            self.actor.rollback(self.key, lambda *_args: None)
+            self.actor.transfer(self.key, ["keep-current-7"], [], lambda *_args: None)
+        self.actor.reconcile(self.key, Source())
+        renewed = self.actor.inbox.get(self.key)
+        self.assertEqual(renewed["status"], "pending")
+        self.assertGreater(renewed["fence"], stale["fence"])
+        self.assertFalse(self.actor.acknowledge(self.key, stale["generation"], stale["fence"],
+                                              stale["admission"], Source())["acknowledged"])
+
     def test_acknowledgment_performs_a_fresh_read_and_persists_evidence(self):
         self.activate()
         self.actor.reconcile(self.key, Source())
@@ -268,27 +295,41 @@ class ActiveTests(unittest.TestCase):
         self.assertTrue(all(json.loads(record["context"])["session"] == "owner" for record in records))
         self.assertEqual(self.actor.db.execute("SELECT count(*) FROM authorities").fetchone()[0], 1)
 
-    def test_stop_cannot_commit_inside_an_in_flight_server_mutation(self):
+    def test_stop_drains_remote_mutation_without_locking_heartbeats(self):
         self.activate()
-        other = ACTIVE.ActiveSupervisor(self.path, clock=lambda: 0)
-        other.db.execute("PRAGMA busy_timeout=0")
+        entered, stop_requested, stopped = threading.Event(), threading.Event(), threading.Event()
+        def stop():
+            other = ACTIVE.ActiveSupervisor(self.path, clock=lambda: 0)
+            try:
+                stop_requested.set()
+                other.control(self.key, "stop", "stop before push")
+                stopped.set()
+            finally:
+                other.close()
         source = Source(snapshot(currency="update_candidate"), snapshot(currency="update_candidate"),
                         snapshot(head="c" * 40, ci="unregistered"))
         def update(head):
             source.updates.append(head)
-            with self.assertRaisesRegex(sqlite3.OperationalError, "locked"):
-                other.control(self.key, "stop", "stop before push")
+            entered.set()
+            worker.start()
+            self.assertTrue(stop_requested.wait(5))
+            heartbeat = ACTIVE.ActiveSupervisor(self.path, clock=lambda: 0)
+            try:
+                heartbeat.db.execute("PRAGMA busy_timeout=0")
+                heartbeat.db.execute("UPDATE owners SET heartbeat=1")
+                self.assertFalse(stopped.is_set())
+            finally:
+                heartbeat.close()
+        worker = threading.Thread(target=stop)
         source.update = update
-        try:
-            self.actor.reconcile(self.key, source)
-            other.control(self.key, "stop", "stop before push")
-            later = Source(snapshot(currency="update_candidate"))
-            other.reconcile(self.key, later)
-            self.assertEqual(later.updates, [])
-            self.assertEqual(later.reads, 0)
-            self.assertEqual(other.inbox.get(self.key)["status"], "stopped")
-        finally:
-            other.close()
+        self.actor.reconcile(self.key, source)
+        worker.join(5)
+        self.assertTrue(entered.is_set())
+        self.assertTrue(stopped.is_set())
+        later = Source(snapshot(currency="update_candidate"))
+        self.actor.reconcile(self.key, later)
+        self.assertEqual(later.reads, 0)
+        self.assertEqual(self.actor.inbox.get(self.key)["status"], "stopped")
 
     def test_update_client_uses_only_expected_head_server_merge(self):
         source = ACTIVE.GitHub("github.com", "example/project", 7, "author")
@@ -347,6 +388,70 @@ class ActiveTests(unittest.TestCase):
         result = self.actor.acknowledge(self.key, stale["generation"], stale["fence"], "delivery-token", fresh)
         self.assertFalse(result["acknowledged"])
         self.assertEqual(fresh.reads, 0)
+
+    def test_shadow_only_controls_refuse_without_remote_work(self):
+        self.actor.db.execute("DELETE FROM authorities WHERE identity=?", (self.key,))
+        with patch.object(self.actor,"source",side_effect=AssertionError("must not read")), \
+                patch.object(self.actor,"host_running",side_effect=AssertionError("must not probe")):
+            self.assertFalse(self.actor.acknowledge(self.key,1,1,"missing")["acknowledged"])
+            self.assertIn("refused",self.actor.transfer(self.key,[],[]))
+            self.assertFalse(self.actor.rollback(self.key)["restored"])
+
+    def test_identical_trace_compares_wakes_reconciliation_and_action_latency(self):
+        self.activate()
+        # The baseline is explicitly the former configured 120-second owner
+        # reminder plus currency poll, not invented production fleet telemetry.
+        transitions = [(0,snapshot(ci="in_flight")),(121,snapshot()),
+                       (251,snapshot(feedback=[["comments",1]])),(480,snapshot(state="MERGED"))]
+        def evidence(now):
+            return next(value for at,value in reversed(transitions) if at<=now)
+        active = {"reconciliations":0,"agent_wakes":0,"event_to_action_seconds":[]}
+        baseline = {"reconciliations":0,"agent_wakes":0,"event_to_action_seconds":[]}
+        active_actions, baseline_actions = {}, {}
+        for now in range(601):
+            self.now = now
+            if now in (10,122,252,481):
+                for _ in range(20):
+                    self.actor.hint(self.key)
+            if self.key in self.actor.due():
+                active["reconciliations"] += 1
+                source = Source(evidence(now))
+                record = self.actor.reconcile(self.key,source)
+                if record["delivery"] and record["delivery"]["status"] == "pending":
+                    active["agent_wakes"] += 1
+                    delivery = self.admit()
+                    self.assertTrue(self.actor.acknowledge(self.key,delivery["generation"],
+                        delivery["fence"],"delivery-token",source)["acknowledged"])
+                    for event in (121,251):
+                        if now>=event:
+                            active_actions.setdefault(event,now)
+            if now%120 == 0 and now<=480:
+                baseline["reconciliations"] += 1
+                baseline["agent_wakes"] += 1
+                for event in (121,251):
+                    if now>=event:
+                        baseline_actions.setdefault(event,now)
+        active["event_to_action_seconds"] = [active_actions[event]-event for event in (121,251)]
+        baseline["event_to_action_seconds"] = [baseline_actions[event]-event for event in (121,251)]
+        self.assertEqual(active,{"reconciliations":7,"agent_wakes":3,"event_to_action_seconds":[1,1]})
+        self.assertEqual(baseline,{"reconciliations":5,"agent_wakes":5,"event_to_action_seconds":[119,109]})
+        print("Identical fixture trace (configured legacy timer model): " +
+              json.dumps({"active":active,"legacy":baseline},sort_keys=True))
+
+    def test_queued_legacy_wake_is_fenced_and_running_work_must_drain(self):
+        wake = self.actor.legacy_wake(self.key,"admit")
+        self.assertTrue(wake["authorized"])
+        self.activate()
+        self.assertFalse(self.actor.legacy_wake(self.key,"start",wake["token"],wake["epoch"])["authorized"])
+        with patch.object(self.actor,"source",return_value=Source()):
+            self.actor.rollback(self.key,lambda *_args:None)
+        wake = self.actor.legacy_wake(self.key,"admit")
+        self.assertTrue(self.actor.legacy_wake(self.key,"start",wake["token"],wake["epoch"])["authorized"])
+        with self.assertRaisesRegex(ValueError,"drain"):
+            self.activate()
+        self.actor.legacy_wake(self.key,"finish",wake["token"],wake["epoch"])
+        self.activate()
+        self.assertFalse(self.actor.legacy_wake(self.key,"check",wake["token"],wake["epoch"])["authorized"])
 
 
 if __name__ == "__main__":

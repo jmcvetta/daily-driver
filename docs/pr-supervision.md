@@ -1,10 +1,11 @@
-# PR supervision: shadow implementation and capability evidence
+# Opt-in PR supervision
 
-Issue [#1038](https://github.com/jmcvetta/daily-driver/issues/1038) is unfinished.
-The accepted design is the [research report](https://github.com/jmcvetta/daily-driver/issues/1022#issuecomment-7128430156)
+The accepted design for [#1038](https://github.com/jmcvetta/daily-driver/issues/1038)
+is the [research report](https://github.com/jmcvetta/daily-driver/issues/1022#issuecomment-7128430156)
 and its [correction](https://github.com/jmcvetta/daily-driver/issues/1022#issuecomment-7128609718).
 The existing [Omp maintenance route](../skills/pr/references/omp.md) remains
-authoritative. No real PR's ownership has been transferred.
+authoritative unless an explicitly configured owner completes a per-PR transfer.
+No real PR's ownership was transferred as integration proof.
 
 ## Bounded capability evidence
 
@@ -151,72 +152,117 @@ the existing authoritative maintenance route; use that route's stop procedure
 before a stop-time push. Never use a shadow stop as evidence that live actors
 were stopped.
 
-## Unfinished active integration checkpoint
+## Active controller and owner tools
 
-`scripts/pr-active-supervisor.py` and `extensions/pr-supervisor-tools.mjs`
-are an opt-in implementation checkpoint, not an approved cutover. The active
-controller shares the durable inbox transaction with observation/control,
-conditionally requests GitHub's expected-head server update, and requires a
-fresh authoritative inventory before work acknowledgment. Registration and
-control are exposed only with `DAILY_DRIVER_PR_SUPERVISOR` configured. Do not
-set it for live work until the remaining isolated proofs and review pass.
+`scripts/pr-active-supervisor.py` shares the ledger and inbox database.
+`run` holds one controller file lease, reconciles due records, and dispatches
+cold owner work through a bounded worker pool. A service manager must own its
+restart policy; the command does not install or enable a live service.
+The configured reconciliation interval is 120 seconds. Event hints can move
+the next read earlier, but cannot move the periodic outage deadline.
+Missed deadlines and access failures remain durable degraded evidence.
 
-Offline coverage now includes the active controller and runtime registration
-consumer in the existing `check-pr-keep-current` target. The latest checkpoint
-passed 8 legacy, 27 shadow and 11 inbox tests; the active suite passed 22 of
-23. Its unchanged-observation/duplicate-hint regression fails: advancing
-`next_due` for hints also advances outage detection, creating a false changed
-generation. The Node registration/control consumer and all 407 extension
-checks passed separately. This failure is retained, not bypassed.
+Set `DAILY_DRIVER_PR_SUPERVISOR` to an absolute owner-only database path in an
+authorized owner profile. The runtime registers PR creation/body-update results
+through `daily_driver_gh_write`. For adoption or another creation route, call
+`daily_driver_pr_supervisor_register` with the exact PR URL and task worktree.
+Registration retains the original owner, actual task worktree, branch and task
+context; another session cannot take control by registering the same identity.
+It starts in shadow mode and does not replace existing maintenance.
 
-The additional bounded command is:
+The controller reads complete authoritative current-head inventories. It
+defers updates for in-flight or unregistered CI, rereads immediately before
+and after GitHub's expected-head update-branch request, and discards old-head
+evidence. It never rebases, force-pushes, marks ready, closes issues or merges PRs.
+A per-PR drain lock serializes a remote mutation with stop/hold; SQLite
+transactions remain short so other records and heartbeats stay writable.
 
-```sh
-python3 scripts/probe-omp-child-resumption.py
-```
+Changed actionable observations coalesce into one generation. The owner tool
+`daily_driver_pr_supervisor_acknowledge` makes another complete authoritative
+read before accepting a current, admitted generation. A receipt alone cannot
+acknowledge active work. Changed heads, stopped/held actors and superseded
+admissions reject stale work. Delivery attempts and failures before admission
+share a bounded retry budget; missing context or activation failures cannot
+spawn a new process forever.
 
-It creates one actual child in a disposable profile with the local provider.
-Direct CLI `--resume` preserves the child's session ID but binds it as
-`main/Main`, not its original `sub/ChildProof` identity. RPC `--restore` is
-rejected because it requires an interactive terminal. The host therefore
-refuses direct cold activation of saved sessions with `parentSession` rather
-than silently changing the agent. This conservative guard also refuses forks.
-The probe's registry query returned an empty visible registry; this does not
-prove the native parent `write agent://ChildProof` revival route unavailable.
-The next capability step is to exercise that route after resuming the parent
-and verify the actual child's binding and acknowledgment. No general missing
-SDK primitive is established by these results.
+### Cold child recovery
 
-Still unproved: integrated fresh-work acknowledgment through the real host,
-safe child cold recovery, queued-stop delivery races, restart during active
-reconciliation, and identical-trace wake/latency comparison. Transfer/rollback
-and stop-time legacy timer recovery need further review, including retry after
-rollback. The receipt-only host restart proof above is not evidence for these
-active behaviors. No live service or real-PR proof was installed or run.
+The bounded `python3 scripts/probe-omp-child-resumption.py` proof uses a
+disposable profile and localhost provider. Parent `--resume`, followed by a
+native `write agent://ChildProof`, revives the same persisted child with its
+original `sub/ChildProof` binding and a persisted native-tool acknowledgment.
+An empty RPC `get_subagents` snapshot does not prevent this supported resolver.
+Direct child `--resume` preserves the session ID but incorrectly binds it as
+`main/Main`; the host never uses that route for a child. RPC `--restore`
+requires an interactive terminal and is not this adapter's route.
 
-## Verification and remaining acceptance
+The host checks both child and parent leases and refuses a held or unknown
+parent. It resumes the recorded parent as a restricted dispatch carrier:
+only native write to the exact recorded child and wait are admitted.
+Parent and child identity, provider, model, effort, authentication route and
+working context are checked before delivery. Native dispatch reads current
+generation/stop/hold state, and the child rechecks admission before tools.
+Credentials are used in place, never copied or forwarded from arbitrary
+environment variables. Missing identity or route evidence is degraded, not
+permission to use another agent.
 
-The existing `make check-pr-keep-current` gate also runs
-`scripts/test-pr-supervisor.py` and `scripts/test-pr-inbox.py`. Offline consumer tests cover concurrent
-registration, identity isolation, lease exclusion/expiry, stale observations,
-restart gaps, failed reads, hold/stop races, duplicate observations, terminal
-cleanup, paginated inventories, workflow-only pending CI, changed heads,
-masked currency, feedback and conflict-recovery proposals. Inbox tests cover
-coalescing, stale/duplicate generations, holds, stops, receipt retry bounds,
-missing context and refusal to open held or unknown owners. The existing CI
-filter includes these product sources/tests. The manual capability probes do
-not become recurring CI checks.
+The same command runs `scripts/probe-pr-active-supervisor.py` under an actual,
+bounded transient systemd user unit with `Restart=on-failure`. The active
+controller and actual child owner persist fresh-read work acknowledgments for
+two fixture heads across controller restart. A stop during the resumed
+parent's queued/in-flight turn prevents native child dispatch, a child
+provider request and acknowledgment of the stopped generation. This is not
+proof that an arbitrary already-running provider request can be undone.
+The probe uses isolated `gh` response fixtures, not a real PR.
 
-Still unfinished: active registration of every created/adopted PR, integration
-of the proved restart/delivery primitives with the PR supervisor, fresh-read
-work acknowledgment, event validation/coalescing, fenced GitHub mutation,
-stop-time cancellation of all queued owner work, active conflict resumption,
-and ownership transfer/rollback. Full delivery race coverage and identical-trace
-active wake/latency comparisons must exercise that integrated actor. Shadow's
-zero agent deliveries are a safety property, not measured fleet savings.
-No baseline fleet metrics or continuous-operation claim are made.
+### Transfer, rollback and stop
 
-Keep both the issue and PR unfinished. Do not weaken the acceptance criteria,
-mark the PR ready, or enable an active mode based on this shadow evidence.
-Claude Code and Codex retain their existing best-effort routes; this work adds
-no cross-shutdown guarantee for them.
+After the authorized controller is running, use
+`daily_driver_pr_supervisor_control` with operation `transfer`, the exact
+identity, every owned legacy service name and the live owner-reminder IDs.
+Drain queued owner work first. The tool persists rollback identity before
+cancelling timers, fences old pending wakes, verifies/stops the old services,
+takes fresh GitHub state and activates the new authority. A missing controller,
+unknown timer, stop, hold or running admitted legacy wake prevents activation.
+An incomplete transfer retains the recovery record; do not start a second owner.
+
+Transferred and restored legacy timers carry an authority-epoch admission.
+A timer that fires before transfer but delivers afterwards cannot run.
+Already-running admitted legacy work must drain before transfer. Rollback
+first fences new deliveries and drains mutations, then reads fresh state and
+restores only the recorded prior services and original reminder message/deadline.
+Successful timer restoration is persisted so retries do not duplicate it.
+Retransfer creates a new fenced transport incarnation from fresh evidence.
+Stops and holds are never cleared by rollback or re-registration.
+
+Use operation `stop` before any stop-time push. It fences observations,
+pending admissions and queued work, drains an in-flight mutation, and stops
+recorded old services. Owned cold RPC work is aborted when its deliveries
+are stopped or held. Merge/close observations retain terminal evidence and
+leave the due set. `release` clears an explicit hold, not a stop.
+After an authorized conflict resolution is pushed, release any explicit hold
+and reconcile the same identity; do not create another actor.
+
+The old Omp route still cannot cold-resume an owner after shutdown. Rollback
+reports that limitation. No machine-reboot or deployed continuous-availability
+claim follows from the transient restart proof; outages remain gaps.
+
+## Verification
+
+The existing `make check-pr-keep-current` target covers the legacy, shadow,
+inbox, active-controller and runtime-tool consumers. Coverage includes lease
+expiry, concurrent registration, hints and missed deadlines, fresh ACKs,
+stop/hold races, head changes, workflow-only CI, conflicts, terminal cleanup,
+bounded activation failures, legacy timer restoration and retransfer.
+Manual lifecycle proofs do not add recurring CI checks.
+
+An identical deterministic trace compares the active consumer with an explicitly
+configured 120-second legacy owner-timer/currency-poll model. The trace has
+seven active reconciliations and three agent wakes, against five legacy polls
+and five owner wakes. Two event-to-action latencies are 1/1 seconds for active
+hint delivery and 119/109 seconds for the legacy timer. These are fixture
+results, not production fleet metrics or a claim that every trace saves reads.
+
+Current-head CI and independent review remain separate readiness requirements.
+Claude Code and Codex retain their existing honest best-effort routes; this
+implementation adds no cross-shutdown guarantee for them.

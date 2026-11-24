@@ -24,9 +24,13 @@ export function installPrSupervisorTools(pi, { takeTimers, restoreTimers }) {
 		});
 	}
 	async function backend(operation, args = [], request, signal) {
-		const result = await run("python3", [script, "--database", databasePath, operation, ...args,
-			...(request === undefined ? [] : ["--request", "-"])], request === undefined ? undefined : JSON.stringify(request), signal);
-		return JSON.parse(result);
+		try {
+			const result = await run("python3", [script, "--database", databasePath, operation, ...args,
+				...(request === undefined ? [] : ["--request", "-"])], request === undefined ? undefined : JSON.stringify(request), signal);
+			return JSON.parse(result);
+		} catch (error) {
+			throw new Error(`Supervisor ${operation} failed; no success is claimed`, {cause:error});
+		}
 	}
 	const initialize = () => backend("initialize");
 
@@ -84,11 +88,17 @@ export function installPrSupervisorTools(pi, { takeTimers, restoreTimers }) {
 			if (params.operation === "transfer") {
 				if (ctx.hasPendingMessages()) throw new Error("Drain queued owner work before transferring supervision");
 				if (!state.host_running) throw new Error("No active lifecycle controller holds this ledger; prior maintenance stays authoritative");
-				const cancelled = takeTimers(params.timerIds ?? [], ctx);
-				result = await backend("transfer", [params.identity], {services: params.services ?? [], cancelled_timers: cancelled}, signal);
+				const timers = takeTimers(params.timerIds ?? [], ctx, {cancel:false,identity:params.identity});
+				const request = {services:params.services ?? [],cancelled_timers:timers};
+				await backend("prepare-transfer", [params.identity], request, signal);
+				takeTimers(params.timerIds ?? [], ctx);
+				result = await backend("transfer", [params.identity], request, signal);
 			} else if (params.operation === "rollback") {
 				result = await backend("rollback", [params.identity], undefined, signal);
-				if (result.restored) result.timerIds = restoreTimers(result.timers.map(timer => ({...timer,identity:params.identity})), ctx);
+				if (result.restored && result.timers.length) {
+					result.timerIds = restoreTimers(result.timers.map(timer => ({...timer,identity:params.identity})), ctx);
+					await backend("complete-rollback", [params.identity], {timer_ids:result.timerIds}, signal);
+				}
 				delete result.timers;
 			} else {
 				const args = [params.identity];
@@ -104,6 +114,9 @@ export function installPrSupervisorTools(pi, { takeTimers, restoreTimers }) {
 
 	return {
 		databasePath, initialize,
+		legacyWake(identity, operation, token, epoch) {
+			return backend("legacy-wake", [identity], {operation,token,epoch});
+		},
 		async allowsLegacy(identity) {
 			const state = await backend("status", [identity]);
 			return !state.stopped && !state.held && state.authority.state === "shadow";

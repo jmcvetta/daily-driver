@@ -39,6 +39,8 @@ class Inbox:
             columns = {row[1] for row in self.db.execute("PRAGMA table_info(owners)")}
             if "authentication" not in columns:
                 self.db.execute("ALTER TABLE owners ADD COLUMN authentication TEXT NOT NULL DEFAULT 'unknown'")
+            if "agent" not in columns:
+                self.db.execute("ALTER TABLE owners ADD COLUMN agent TEXT NOT NULL DEFAULT '{}'")
             self.db.execute("""CREATE TABLE IF NOT EXISTS deliveries (
                 identity TEXT PRIMARY KEY, session TEXT NOT NULL, generation INTEGER NOT NULL,
                 fence INTEGER NOT NULL DEFAULT 1, payload TEXT NOT NULL,

@@ -2631,30 +2631,62 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 
 	function scheduleReminder(ctx, params) {
 		const triggerId = newTriggerId();
+		const dueAt = Date.now() + params.delaySeconds * 1000;
 		const handle = ctx.setTimeout(async () => {
 			TRIGGERS.delete(triggerId);
-			if (params.identity && prSupervisor && !await prSupervisor.allowsLegacy(params.identity)) return;
+			if (params.identity && prSupervisor) {
+				const admitted = await prSupervisor.legacyWake(params.identity,"admit");
+				if (!admitted.authorized) return;
+				pi.sendUserMessage(`DAILY_DRIVER_PR_LEGACY ${params.identity} ${admitted.epoch} ${admitted.token}\n${params.message}`,
+					{deliverAs:"followUp",attribution:"agent"});
+				return;
+			}
 			pi.sendMessage({customType: REMINDER_CUSTOM_TYPE, content:params.message,
 				display:true, attribution:"user"}, {deliverAs:"followUp",triggerTurn:true});
 		}, params.delaySeconds * 1000);
-		TRIGGERS.set(triggerId, {ctx,handle,message:params.message,delaySeconds:params.delaySeconds,identity:params.identity});
+		TRIGGERS.set(triggerId, {ctx,handle,params,dueAt,message:params.message,delaySeconds:params.delaySeconds,identity:params.identity});
 		return triggerId;
 	}
 	const prSupervisor = installPrSupervisorTools(pi, {
-		takeTimers(ids, ctx) {
+		takeTimers(ids, ctx, {cancel = true, identity} = {}) {
 			const entries = ids.map(id => {
 				const entry = TRIGGERS.get(id);
 				if (!entry || entry.ctx.sessionManager.getSessionId() !== ctx.sessionManager.getSessionId()) {
 					throw new Error("A legacy reminder is unknown or queued; drain it before transfer");
 				}
-				return {id,message:entry.message,delaySeconds:entry.delaySeconds};
+				if (identity) entry.params.identity = identity;
+				return {id,message:entry.message,delaySeconds:entry.delaySeconds,dueAt:entry.dueAt};
 			});
-			for (const entry of entries) cancelTrigger(entry.id);
+			if (cancel) for (const entry of entries) cancelTrigger(entry.id);
 			return entries;
 		},
-		restoreTimers(timers, ctx) { return timers.map(params => scheduleReminder(ctx, params)); },
+		restoreTimers(timers, ctx) {
+			return timers.map(params => scheduleReminder(ctx, {...params,
+				delaySeconds:params.dueAt ? Math.max(1,Math.ceil((params.dueAt-Date.now())/1000)) : params.delaySeconds}));
+		},
 	});
 	if (prSupervisor) installPrSupervisionInbox(pi, prSupervisor);
+	let legacyWakeToken;
+	pi.on("before_agent_start", async (event, ctx) => {
+		const match = event.prompt?.match(/DAILY_DRIVER_PR_LEGACY (\S+) (\d+) (\S+)/);
+		legacyWakeToken = match ? {identity:match[1],epoch:Number(match[2]),token:match[3]} : undefined;
+		if (!legacyWakeToken || !prSupervisor) return;
+		const {identity,token,epoch} = legacyWakeToken;
+		if (!(await prSupervisor.legacyWake(identity,"start",token,epoch)).authorized) await ctx.abort();
+	});
+	pi.on("tool_call", async () => {
+		if (!legacyWakeToken || !prSupervisor) return;
+		const {identity,token,epoch} = legacyWakeToken;
+		if (!(await prSupervisor.legacyWake(identity,"check",token,epoch)).authorized) {
+			return {block:true,reason:"Legacy PR wake was stopped or transferred; do no work"};
+		}
+	});
+	pi.on("agent_end", async event => {
+		if (event.willContinue || !legacyWakeToken || !prSupervisor) return;
+		const {identity,token,epoch} = legacyWakeToken;
+		legacyWakeToken = undefined;
+		await prSupervisor.legacyWake(identity,"finish",token,epoch);
+	});
 
 	// Extension state is read from the active branch for each event. This keeps
 	// a resumed session recoverable without sharing a process-global target.

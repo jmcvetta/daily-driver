@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /** Exercise opt-in runtime PR registration and owner controls without GitHub. */
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { mkdtempSync, mkdirSync, writeFileSync, chmodSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, delimiter } from "node:path";
 import { installPrSupervisorTools } from "../extensions/pr-supervisor-tools.mjs";
+import dailyDriverExtension from "../extensions/daily-driver.js";
 
 const root = mkdtempSync(join(tmpdir(), "pr-supervisor-tools-"));
 const priorPath = process.env.PATH;
@@ -23,18 +24,29 @@ try {
 	writeFileSync(fake, `#!/usr/bin/env python3
 import json, sys
 args = sys.argv[1:]
-assert args[:5] == ["api","--hostname","isolated.example","--method","GET"], args
-if args[5] == "user":
- print("fixture-author")
-elif args[5] == "/repos/fixture/project/pulls/7":
- print(json.dumps({"head":{"ref":"task"}}))
+if args[:4] == ["api","--hostname","isolated.example","graphql"]:
+ print(json.dumps([{"data":{"repository":{"pullRequest":{"reviewThreads":{"nodes":[],"pageInfo":{"hasNextPage":False,"endCursor":None}}}}}}]))
 else:
- raise SystemExit("unexpected fixture endpoint")
+ assert args[:5] == ["api","--hostname","isolated.example","--method","GET"], args
+ endpoint = "user" if args[5] == "user" else args[-1]
+ if endpoint == "user":
+  print("fixture-author")
+ elif endpoint == "/repos/fixture/project/pulls/7":
+  print(json.dumps({"head":{"ref":"task","sha":"a"*40},"base":{"ref":"release","sha":"b"*40},
+   "state":"open","merged":False,"mergeable":True,"mergeable_state":"clean"}))
+ elif "/check-runs?" in endpoint:
+  print(json.dumps([{"total_count":1,"check_runs":[{"id":1,"status":"completed","conclusion":"success"}]}]))
+ elif "/actions/runs?" in endpoint:
+  print(json.dumps([{"total_count":0,"workflow_runs":[]}]))
+ else:
+  assert any(part in endpoint for part in ("/statuses?","/comments?","/reviews?")), endpoint
+  print("[[]]")
 `);
 	chmodSync(fake, 0o755);
 	process.env.PATH = bin + delimiter + priorPath;
 	process.env.DAILY_DRIVER_PR_SUPERVISOR = join(root, "private", "supervisor.sqlite");
-	const node = {optional() { return this; }, int() { return this; }};
+	const node = {optional() { return this; },int() { return this; },min() { return this; },
+		max() { return this; },describe() { return this; }};
 	const tools = new Map();
 	const pi = {zod:{object:value=>value,string:()=>node,number:()=>node,array:()=>node,enum:()=>node},
 		registerTool:tool=>tools.set(tool.name,tool)};
@@ -63,6 +75,56 @@ else:
 	assert.equal(await service.allowsLegacy(result.details.identity), false);
 	await control.execute("release", {operation:"release",identity:result.details.identity,reason:"explicit release"}, undefined, undefined, ctx);
 	assert.equal(await service.allowsLegacy(result.details.identity), true);
+	// Drive the real runtime reminder adapter through transfer, rollback and
+	// retransfer. No custom callback stands in for cancellation/restoration.
+	const supervisorScript = new URL("./pr-active-supervisor.py", import.meta.url).pathname;
+	const host = spawn("python3", [supervisorScript,"--database",process.env.DAILY_DRIVER_PR_SUPERVISOR,"run"], {stdio:["ignore","pipe","pipe"]});
+	try {
+		await new Promise((resolveReady,reject) => {
+			const deadline = setTimeout(()=>reject(new Error("fixture controller did not acquire its lease")),5000);
+			host.stdout.once("data",()=>{clearTimeout(deadline);resolveReady();});
+			host.once("error",reject);
+			host.once("exit",code=>{clearTimeout(deadline);reject(new Error(`fixture controller exited ${code}`));});
+		});
+		const events = new Map(), runtimeTools = new Map(), timers = new Map(), sent = [];
+		let nextTimer = 0, aborted = 0;
+		const runtime = {zod:pi.zod,on(name,handler) {events.set(name,[...(events.get(name)??[]),handler]);},
+			registerTool:tool=>runtimeTools.set(tool.name,tool),registerCommand() {},
+			getActiveTools:()=>["read","write"],getAllTools:()=>[...runtimeTools.values()],
+			sendUserMessage:(content,options)=>sent.push({content,options}),sendMessage() {},appendEntry() {}};
+		dailyDriverExtension(runtime,{notificationDependencies:{lookup:()=>({override(){}})}});
+		const timerContext = {...ctx,cwd:worktree,agent:{kind:"main",id:"Main"},
+			sessionManager:{...ctx.sessionManager,getSessionName:()=>"#7 Fixture",getBranch:()=>[]},
+			setTimeout(fn,delay) {timers.set(++nextTimer,{fn,delay});return nextTimer;},
+			clearTimer:id=>timers.delete(id),abort:async()=>{aborted++;}};
+		const schedule = runtimeTools.get("daily_driver_schedule");
+		const original = (await schedule.execute("timer",{delaySeconds:60,message:"Original owner continuation"},undefined,undefined,timerContext)).details.triggerId;
+		const runtimeControl = runtimeTools.get("daily_driver_pr_supervisor_control");
+		const invoke = (operation,timerIds=[]) => runtimeControl.execute(operation,
+			{operation,identity:result.details.identity,timerIds,services:[]},undefined,undefined,timerContext);
+		await invoke("transfer",[original]);
+		assert.equal(timers.size,0,"transfer cancels the original timer");
+		const rollback = await invoke("rollback");
+		assert.equal(rollback.details.timerIds.length,1);
+		assert.equal(timers.size,1,"rollback restores exactly one continuation");
+		await invoke("rollback");
+		assert.equal(timers.size,1,"repeated rollback cannot duplicate timers");
+		const restored = [...timers.values()][0];
+		timers.clear();
+		await restored.fn();
+		assert.equal(sent.length,1);
+		assert.match(sent[0].content,/Original owner continuation/);
+		// Transfer after timer admission but before native message delivery:
+		// the authority epoch must reject the queued wake before owner work.
+		await invoke("transfer");
+		for (const handler of events.get("before_agent_start")??[]) {
+			await handler({prompt:sent[0].content},timerContext);
+		}
+		assert.equal(aborted,1,"an already-queued old timer cannot start work after retransfer");
+	} finally {
+		host.kill("SIGTERM");
+		await new Promise(resolveExit=>host.once("exit",resolveExit));
+	}
 	await control.execute("stop", {operation:"stop",identity:result.details.identity,reason:"explicit stop"}, undefined, undefined, ctx);
 	assert.equal(await service.allowsLegacy(result.details.identity), false);
 	await register.execute("adopt", {url}, undefined, undefined, other);
