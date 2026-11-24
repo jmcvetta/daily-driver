@@ -116,13 +116,11 @@ export const UNANCHORED_PATH_BLOCK_REASON =
 
 /** What a command the guard could not read is told. */
 export const UNREADABLE_COMMAND_BLOCK_REASON =
-	"This command could not be read well enough to tell whether it changes " +
-	"the primary checkout, so it is refused rather than allowed unchecked. " +
-	"The guard enumerates the commands a shell call will run; a command it " +
-	"cannot enumerate is refused wherever it might be running in the primary " +
-	"checkout. Repeat the operation written literally \u2014 no `eval`, no " +
-	"executable named by a variable, no unterminated quote \u2014 from a " +
-	"working directory rooted in the task worktree.";
+	"This command could not be classified safely for primary-checkout " +
+	"protection. Opaque executables, eval and shell input are allowed in a verified " +
+	"non-primary task worktree, not in the primary or an unknown directory. " +
+	"Use the task-worktree path as cwd. Keep Git repository selectors literal " +
+	"and shell syntax complete so recognized primary rewrites remain checked.";
 
 /** What a mutation is told when Git itself could not be consulted. */
 export const GIT_UNAVAILABLE_BLOCK_REASON =
@@ -628,8 +626,8 @@ const CONTROL_KEYWORDS = new Set([
  * One word of a command, and whether its text is the whole story. A word is
  * literal when nothing in it expands: no `$`, no backtick, no glob, no leading
  * `~`. Only a literal word may be read as a path, an executable name, or a Git
- * subcommand; anything else is a value the guard cannot know, and the caller
- * refuses rather than guesses.
+ * subcommand; anything else is opaque. Primary/unknown-directory invocations
+ * stay conservative, while verified feature worktrees may run opaque programs.
  */
 function shellWord(text, literal) {
 	return { text, literal };
@@ -1701,14 +1699,10 @@ function directoryAfterChange(base, words) {
 }
 
 /**
- * A command that would rewrite the primary checkout's working tree, or one
- * unreadable enough that it might.
- *
- * The walk is the inversion this guard turns on: it does not look for proof
- * that a command is dangerous, it looks for proof that every command is
- * placed. A command whose executable, arguments, or working directory the
- * recognizer cannot read is refused where it could be running in the primary
- * checkout, rather than allowed because nothing matched a dangerous shape.
+ * A recognized primary working-tree rewrite or unclassifiable targeted Git
+ * operation. Verified feature worktrees may run opaque programs, but literal
+ * and later Git operations are still inspected. This is a targeted
+ * ordinary-accident backstop, not a filesystem boundary.
  */
 function rewritesPrimaryWorkingTree(event, cwd) {
 	if (event.toolName !== "bash" || typeof event.input?.command !== "string") {
@@ -1803,6 +1797,13 @@ function shellInvocation(name, operands) {
 	return { file };
 }
 
+/** Permit opaque programs only from a verified non-primary worktree. */
+function permitsOpaqueShell(cwd) {
+	if (cwd === null) return false;
+	const state = worktreeState(".", cwd);
+	return state !== null && state.root !== state.primaryRoot;
+}
+
 /** Walk one command's segments, tracking the shell's working directory. */
 function walkShellCommand(command, toolCwd) {
 	const { segments, functions, unreadable } = shellSegments(command);
@@ -1848,10 +1849,7 @@ function walkShellCommand(command, toolCwd) {
 		}
 		const executable = segment.words[position];
 		if (executable === undefined) continue;
-		if (!executable.literal) {
-			// Everywhere, not only in the primary checkout: the program a word
-			// expands to may be `git`, and `git -C <primary> switch` reaches the
-			// primary from any directory at all.
+		if (!executable.literal && !permitsOpaqueShell(shellCwd)) {
 			throw new UnreadableCommandError(
 				"a command names an executable that expands",
 			);
@@ -1904,25 +1902,35 @@ function walkShellCommand(command, toolCwd) {
 			}
 		}
 
-		// An interpreter is found at every literal word, the way `git` is, so a
-		// wrapper in front of it — `exec bash -c …`, `timeout 5 bash -c …`,
-		// `env bash -` — does not hide it. A word that only mentions an
-		// interpreter (`command -v bash`) has no operands to classify and is
-		// refused: the same visible false positive the guard takes for an
-		// executable that expands.
+		// Inspect literal command strings behind wrappers as well. Opaque shell
+		// input is permitted only from a verified non-primary worktree.
 		for (let index = position; index < segment.words.length; index++) {
 			const word = segment.words[index];
 			if (!word.literal) continue;
 			const interpreter = basename(word.text);
 			if (!STRING_INTERPRETERS.has(interpreter)) continue;
-			const invocation = shellInvocation(
-				interpreter,
-				segment.words.slice(index + 1),
-			);
+			let invocation;
+			try {
+				invocation = shellInvocation(
+					interpreter,
+					segment.words.slice(index + 1),
+				);
+			} catch (err) {
+				if (!(err instanceof UnreadableCommandError) || !permitsOpaqueShell(shellCwd)) {
+					throw err;
+				}
+				// An opaque eval can change this shell's directory. A child shell
+				// cannot, but neither route is an audit of the program it runs.
+				if (interpreter === "eval") shellCwd = null;
+				continue;
+			}
 			if (invocation.file !== undefined) continue;
 			if (walkShellCommand(invocation.command.text, shellCwd)) return true;
 			if (interpreter === "eval") shellCwd = null;
 		}
+		// An expanded executable may name a shell function or eval. Do not
+		// assign a later Git rewrite the old cwd after an opaque invocation.
+		if (!executable.literal) shellCwd = null;
 		if (STRING_INTERPRETERS.has(name)) continue;
 
 		if (DIRECTORY_UNKNOWNS.has(name) || defined.has(name)) {

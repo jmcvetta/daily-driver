@@ -4,7 +4,7 @@
 
 ### Changed
 
-* Accept Git-created and externally placed dedicated task worktrees, allow detached non-primary file edits with branch recovery before commits, and retain primary and shell protections because actual Omp routes do not yet provide filesystem containment ([#1036](https://github.com/jmcvetta/daily-driver/issues/1036)).
+* Accept Git-created and externally placed dedicated task worktrees, allow detached non-primary file edits with branch recovery, and admit opaque executables, eval and scripts from verified feature worktrees while retaining targeted primary protections and stating best-effort limits ([#1036](https://github.com/jmcvetta/daily-driver/issues/1036)).
 
 * Simplify independent review evidence and finding records while retaining current-content coverage and substantive dispositions ([#1025](https://github.com/jmcvetta/daily-driver/issues/1025)).
 * Allow independent review and fix-delta verification while CI runs, while keeping current-head green CI mandatory for readiness ([#1033](https://github.com/jmcvetta/daily-driver/issues/1033)).

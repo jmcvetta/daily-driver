@@ -60,12 +60,13 @@ task paths with `read`, `glob` and `grep`. Give delegated slices that same
 root. Never retry a rejected primary mutation with the same relative path.
 
 The current guard keeps canonical file-target diagnostics and primary Git
-rewrite checks, including detached-primary protection. Its global shell
-recognizer still refuses opaque executable expansion and nonliteral `eval`.
-It is not a filesystem sandbox; scripts, eval kernels and extension code can
-reach other paths. See the actual-route evidence and unmet integration in
-[`docs/harness-integration.md`](../../../docs/harness-integration.md#worktree-containment-integration-gap).
-Do not remove those checks until an equivalent boundary is active and proven.
+rewrite checks, including detached-primary protection and recognizable later
+Git operations after opaque commands. Expanded executables, nonliteral `eval`
+and script input are allowed from verified non-primary task worktrees.
+Primary or unknown directories and unplaceable Git targets remain conservative.
+This is not a filesystem sandbox: arbitrary programs, eval kernels and
+extension code can reach other paths. These limitations do not require a
+universal-containment integration before ordinary feature work can proceed.
 
 Coordinate concurrent writers, including shared refs. Do not make ordinary
 commits to `master`. Compare the primary status with its setup baseline

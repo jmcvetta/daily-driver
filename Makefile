@@ -238,8 +238,10 @@ check-omp-guard-differential:
 # target nobody runs by accident should fail loudly when its toolchain is
 # absent; a target inside `check` would have needed the guard, and the guard is
 # what would have let it silently check nothing.
+# The actual-tool worktree fixture uses the locked pytest dev dependency.
 check-omp-plugin:
 	python3 scripts/check-omp-plugin.py
+	uv run --frozen python scripts/check-omp-worktree-live.py
 
 # The cache refresh target changes user state in a real run. This check puts a
 # fake `omp` first on PATH and asserts the command order and fail-fast behavior.

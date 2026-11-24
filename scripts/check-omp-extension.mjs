@@ -3303,15 +3303,13 @@ checkGuard(
 	worktrees.primary,
 );
 
-// --- the inversion: what the guard cannot read, it refuses ------------------
-// The recognizer no longer looks for proof that a command is dangerous. It
-// looks for proof that every command it will run has been placed, and refuses
-// where it has none. These are the constructs that leaves it refusing, and the
-// ordinary ones it must still let through.
-
-check("the unreadable denial tells the model to write the command literally", () => {
-	assert.match(UNREADABLE_COMMAND_BLOCK_REASON, /refused rather than allowed/iu);
-	assert.match(UNREADABLE_COMMAND_BLOCK_REASON, /literally/iu);
+// --- opaque feature commands and conservative primary diagnostics -----------
+// Opaque programs are usable in verified feature worktrees; diagnostics
+// retain the conservative primary/unknown-target recovery route.
+check("unreadable guidance identifies feature usability and protected targets", () => {
+	assert.match(UNREADABLE_COMMAND_BLOCK_REASON, /allowed in a verified.*non-primary/iu);
+	assert.match(UNREADABLE_COMMAND_BLOCK_REASON, /primary or an unknown directory/iu);
+	assert.match(UNREADABLE_COMMAND_BLOCK_REASON, /selectors literal/iu);
 	assert.match(UNREADABLE_COMMAND_BLOCK_REASON, /eval/iu);
 });
 
@@ -3367,7 +3365,7 @@ check("unreadable refusals identify the mode without copying secrets", () => {
 			"bash",
 			{
 				command,
-				cwd: worktrees.task,
+				cwd: worktrees.primary,
 				name: "keep-current-511",
 				ready: { log: "keep-current-started" },
 				env: { PRIVATE_KEY: "private-environment-secret" },
@@ -3425,8 +3423,8 @@ for (const [name, command, blocked] of [
 		`bash -ec 'git -C "${worktrees.primary}" switch master' arg0 extra`,
 		true,
 	],
-	["a shell reading commands from stdin", "bash -", true],
-	["an unclassified shell option", "bash --unknown scripts/provision-disposable.sh status", true],
+	["a shell reading commands from stdin", "bash -", false],
+	["an unclassified shell option", "bash --unknown scripts/provision-disposable.sh status", false],
 ]) {
 	checkGuard(
 		`${name} ${blocked ? "is refused" : "passes"}`,
@@ -3468,14 +3466,12 @@ for (const [name, command] of [
 	["a here-string fed to a shell", "bash <<< 'true'"],
 	["a file redirected into a shell", "bash < script.sh"],
 	["a wrapped shell reading stdin", "env bash -"],
-	// The named cost: a word that only mentions an interpreter has no operands
-	// to classify, so it is refused from any cwd. A visible false positive with
-	// an obvious repair, in place of a silent hole.
+	// Mentioning a shell is not itself a primary-checkout rewrite.
 	["an interpreter word that is only mentioned", "command -v bash"],
 ]) {
 	checkGuard(
-		`${name} is refused from a task worktree`,
-		true,
+		`${name} passes from a verified task worktree`,
+		false,
 		"bash",
 		{ command },
 		worktrees.task,
@@ -3504,12 +3500,9 @@ for (const [name, command] of [
 	["an executable that expands", "$g switch master"],
 	["an executable that a substitution produces", "$(echo git) switch master"],
 ]) {
-	// Refused from the task worktree, not only from the primary: the string or
-	// the program may name the primary checkout itself, and `git -C <primary>`
-	// reaches it from any directory at all.
 	checkGuard(
-		`${name} is refused even from a task worktree`,
-		true,
+		`${name} passes from a verified task worktree`,
+		false,
 		"bash",
 		{ command },
 		worktrees.task,
@@ -3535,19 +3528,41 @@ checkGuard(
 	UNREADABLE_COMMAND_BLOCK_REASON,
 );
 
-// The cost the inversion accepts, stated rather than discovered: a command
-// naming its interpreter through a variable is refused wherever it runs. It is
-// a visible false positive with an obvious repair, which is the whole bargain —
-// the alternative is a silent hole of exactly the shape four rounds kept
-// finding.
+// Ordinary tool selection must not require an isolation-unrelated rewrite.
 checkGuard(
-	"an ordinary command whose interpreter expands is refused as well",
-	true,
+	"an ordinary command whose interpreter expands passes from a task worktree",
+	false,
 	"bash",
 	{ command: '"$PYTHON" -m pytest' },
 	worktrees.task,
 	UNREADABLE_COMMAND_BLOCK_REASON,
 );
+
+for (const command of ['"$PYTHON" -m pytest', 'eval "$script"', 'bash -c "$script"', "bash -"]) {
+	checkGuard(
+		`opaque input remains refused in the primary: ${command}`,
+		true,
+		"bash",
+		{ command },
+		worktrees.primary,
+	);
+}
+
+for (const command of [
+	`"$PYTHON" -m pytest; git -C "${worktrees.primary}" switch master`,
+	`eval "$script"; git -C "${worktrees.primary}" reset --hard`,
+	`bash -c "$script"; git --work-tree="${worktrees.primary}" reset --hard`,
+	`cd "${worktrees.primary}"; eval "$script"`,
+	`eval "$script"; git switch feature/unknown-cwd`,
+]) {
+	checkGuard(
+		`opaque input does not bypass a later protected operation: ${command}`,
+		true,
+		"bash",
+		{ command },
+		worktrees.task,
+	);
+}
 
 // Arithmetic is not a command, so a variable inside it is not an executable.
 checkGuard(
