@@ -48,6 +48,7 @@ evals/
 │   ├── task-worktree/   … before repository-changing work, and not for read-only work?
 │   ├── stand-down/      … when an embarked fleet is stood down, and not one undertaking?
 │   ├── constitution/    does the constitution reach a subagent, and land?
+│   ├── rectify-names/    … when naming corrections are scoped and scaled to risk?
 │   └── model-classes/   does this model finish real delegated work? see below
 
 ├── fixtures/
@@ -66,6 +67,11 @@ evals/
 ├── coder-eval-omp/      the `omp` agent kind, so the same cases run on Omp
 └── coder-eval-codex/    `coder_eval`'s Codex agent, with the judge's anchor put back
 ```
+
+`tasks/rectify-names/` covers the proportionality boundary: a scoped, agreed
+internal rename uses one evidence record and the ordinary issue-to-PR path,
+while public, persisted-state and cross-session work keeps durable candidates,
+compatibility review and coordinated planning.
 
 `tasks/issue/` covers the eight kind-specific body contracts and their
 boundaries: settled versus unresolved task intent, bounded research and
@@ -1741,16 +1747,14 @@ that reason: a pass-stop there would end the run the moment `pr` fires and the
 distractor would pass vacuously, while the bare arm keeps `pr` at `Open the
 draft`, so `pr` firing on an undertake prompt is correct.
 
-`deps/` asks where the line falls between a bulk upgrade and one dependency.
-`01` is the slash command and `02` is the register the skill was written for —
-Dependabot's pull requests named, the whole set asked for. `03` and `04` are the rows
-that carry the suite. `Bump requests to 2.32.3 — just that one, nothing else.`
-is ordinary work through the package manager, and a description that swept it
-in would answer a one-line ask by upgrading everything in the repository. `04`
-is the ambient case: Dependabot's pull requests visible in the prompt and other
-work asked for, which is the shape a description reaching for "noticing" would
-misread as an invitation.
-
+`deps/` distinguishes a requested bulk upgrade from one dependency and
+Dependabot context from dependency discovery. `01` is the slash command; `02`
+is the bulk request phrased around open Dependabot PRs. `03` and `04` carry the
+negative boundary: a named dependency stays ordinary work, and bot PRs noticed
+while unrelated work is underway do not start an upgrade. `05` checks each
+harness's search call for known Dependabot upgrades. `07` guards the
+no-Dependabot path: it checks `uv.lock` and `pnpm-lock.yaml` map to the right
+managers, and both manager discovery and upgrade are part of the plan.
 `task-worktree/` tests the boundary and the work, not a narrated command.
 `01` names the feature branch but says nothing about isolation; the rule and
 skill must supply Worktrunk creation in a sibling worktree. The shared fixture
