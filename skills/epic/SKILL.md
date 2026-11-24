@@ -362,7 +362,10 @@ finished. Concise, and about the end state rather than the route to it — the
 tasks are listed under `Sequencing`, and repeating them here is a second list
 to keep current.
 
-It is also the test `embark`'s `Close the epic` step closes against.
+State the observable coordinated outcome and the evidence needed to establish
+it. `embark`'s `Close the epic` checks that outcome; closed children alone and
+inconclusive research do not establish delivery. A canceled child counts only
+when the accepted condition explicitly permits it.
 
 Where the epic has nontrivial components, flow, state, or data movement,
 this brief should include one Mermaid diagram
