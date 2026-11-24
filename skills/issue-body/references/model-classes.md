@@ -33,21 +33,18 @@ capability decision; no separate approval record is required.
 
 ## Selection
 
-For classed undertaking, make the initial selection within the invoking family
-and provider before worktree or claim. Never deliberately substitute another
-provider. A configured mapping does not itself prove capability.
+Attempt initial selection once before worktree or claim through the active
+harness's configuration authority. Omp's effective class role governs model,
+provider and effort together, even across families/providers. Claude Code
+retains automatic class-appropriate selection through its supported mechanism;
+a full handoff is optional when that route supports it.
 
-If the known family is absent from the class table, prominently warn with the
-family, requested class, and retained provider/model. Continue immediately on
-the invoking model, provider, and effort without confirmation. Class suitability
-is unverified, even if execution identity is observed. A class omitted from a
-mapped family uses this same warning-and-continue, with suitability unverified.
-Do not use this exception for unknown identity or for a mapped family with an
-explicitly cleared class or unavailable target: report those configuration
-gaps.
-
-For a mapped family, prefer a supported in-session switch for initial selection.
-The receiving session owns the undertaking and the sender stops.
+Missing, cleared, invalid or unavailable assignments, unsupported controls,
+credentials, rejected setters and persistence failures are informational.
+Briefly report the requested class, attempted target, failure and actual route,
+then continue ordinary work without confirmation or repair. Never claim that
+missing credentials work or that a partial switch retained the invoking route.
+Explicit cancellation remains a stop.
 
 After initial selection, operator model, provider, and effort changes remain
 permitted and must not be blocked or reversed, including after rejection or
@@ -62,11 +59,9 @@ token and rationale. Do not apply the task template to other issue kinds. A
 meanings; the class states the capability needed to deliver that kind's
 settled handoff.
 
-A row in the harness reference's `Measured routes` table outranks this file's
-hand-written `Classes` table. A missing row, or one marked `unmeasured` or
-`unreported`, means the model is unmeasured. A stale row, judged from its
-`Recorded` date, is read the same way. An unmeasured model is unknown, and
-unknown falls to the operator's configured preference above.
+Measured-route tables provide evidence, not admission rules. They do not
+override the operator's effective Omp role assignment. An unfamiliar model name
+or absent benchmark does not justify substituting another model.
 
 Record the requested class separately from the initial selected route and actual
 model. Use `unreported` when the harness does not report actual execution

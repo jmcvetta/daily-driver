@@ -7,6 +7,7 @@
 * Add an opt-in read-only PR supervision ledger, a durable Omp owner-receipt inbox, and isolated cold-resume/host-restart proofs; retain existing maintenance while active PR reconciliation and cutover remain unfinished ([#1038](https://github.com/jmcvetta/daily-driver/issues/1038)).
 
 * Accept Git-created and externally placed dedicated task worktrees, allow detached non-primary file edits with branch recovery, and admit opaque executables, eval and scripts from verified feature worktrees while retaining targeted primary protections and stating best-effort limits ([#1036](https://github.com/jmcvetta/daily-driver/issues/1036)).
+* Honor effective Omp class roles across providers for one best-effort initial selection, continue on selection failures, and keep cancellation ownership without a finish-before-next-issue requirement ([#1037](https://github.com/jmcvetta/daily-driver/issues/1037)).
 
 * Simplify independent review evidence and finding records while retaining current-content coverage and substantive dispositions ([#1025](https://github.com/jmcvetta/daily-driver/issues/1025)).
 * Allow independent review and fix-delta verification while CI runs, while keeping current-head green CI mandatory for readiness ([#1033](https://github.com/jmcvetta/daily-driver/issues/1033)).

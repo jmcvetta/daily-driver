@@ -18,9 +18,11 @@ The required class
 
 Task bodies, assignable epic stories of any eligible kind, and frontier
 research assignments use the provider-neutral `Model class` section defined in [`model-classes.md`](model-classes.md). Before
-creating a session, `embark` resolves that class to a currently valid concrete
-identifier. It never passes a class name, configured alias, or suffixed
-`configured_model` value as the `model` argument.
+creating a session, `embark` attempts automatic class-appropriate selection
+through the supported Claude Code mechanism. It never passes a class name,
+configured alias or unsupported suffixed `configured_model` as `model`.
+If no supported route is available, explain and continue on the invoking
+model without confirmation or repair. Do not apply Omp class-role semantics.
 
 Do not invent a Fable identifier or assume an API route. Class labels describe
 capability, not a permission check.

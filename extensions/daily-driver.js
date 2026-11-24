@@ -41,7 +41,7 @@ import { existsSync, realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { prepareCommitMessage } from "./commit-message.mjs";
-import { installModelClassDefaults, readModelClassRoutes } from "./role-default-helper.mjs";
+import { installModelClassDefaults } from "./role-default-helper.mjs";
 import {
 	createGitHubWriteRunner,
 	GITHUB_WRITE_BLOCK_REASON,
@@ -2520,7 +2520,6 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 	const undertakingRouting = installUndertakingRouting(
 		pi,
 		settingsFor,
-		async ctx => readModelClassRoutes(await settingsFor(ctx)),
 		async (ctx, issue) => notificationPolicy.notify(ctx, {
 			reason: "work_complete",
 			key: `undertaking-${issue}-complete`,
