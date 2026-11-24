@@ -24,10 +24,12 @@ Reconciling the story marker
 
 `issue-deps` supplies a verified direct-parent read. If that parent's labels
 include `epic` or `discovery`, include `story` in the replacement `labels`
-set. If no parent is confirmed or neither kind is present, remove `story`.
-A failed graph read preserves the current set and reports the limitation. The
-replacement write includes the existing issue kind, stock labels, bot labels,
-and unrelated labels; `story` is never a substitute for a kind.
+set. If a successful graph read confirms no parent or neither kind is present,
+remove `story`. A failed graph read preserves the current set and reports the
+limitation. The replacement write includes the existing issue kind, stock labels,
+bot labels, and unrelated labels; `story` is never a substitute for a kind.
+Invoke this reconciliation only after a confirmed parent-membership change or
+parent-kind change; reading a relationship alone never writes a label.
 
 Finding the issues that carry a label is `mcp__github__list_issues` with
 `labels`, or `mcp__github__search_issues` with `label:task` in the query —
