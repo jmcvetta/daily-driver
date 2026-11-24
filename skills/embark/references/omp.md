@@ -12,18 +12,15 @@ Omp's surfaces. The absence of a session-opening client means the agent-driven
 wave needs an owner turn; it does not mean supervised processes cannot survive
 a client exit. The fallback exists for session work, not process supervision.
 
-For an explicit Omp embark command, the initial identity read must be the
-canonical single-issue `issue://` read. If the command supplied a GitHub URL,
-preserve its repository in that `issue://` reference.
-Read-only discovery and prerequisites may come first, but cannot certify this
-step. The result supplies the canonical title, number, URL and labels. If its
-metadata confirms the requested issue is an epic, set the orchestrator title
-in the [`session-title` epic form](../../session-title/SKILL.md) before graph
-traversal or any unrelated tool call. The extension denies dispatch and writes
-before the identity read, then denies unrelated calls after the metadata
-result; it cannot cancel calls already running in a batch. A free-form request
-that invokes `embark` without an explicit command does not activate this
-earlier barrier.
+For an explicit Omp embark command, read the requested issue before dispatch:
+use the single-issue `issue://` read, or `gh issue view <number> --repo
+<owner>/<repo> --json number,title,url,labels`. Preserve any explicitly
+supplied repository. The successful result supplies the title, number, URL and
+labels. If it confirms an epic or discovery, set the orchestrator title in the
+[`session-title` epic form](../../session-title/SKILL.md) before dispatch or
+claims. Read-only research and diagnostics remain available while identity or
+title recovery is pending; they do not release the barrier. A free-form
+request without an explicit command does not activate this barrier.
 
 Only interactive or RPC user input activates or supersedes this barrier.
 Plain `embark`, `/embark`, and `/skill:embark` commands each start a fresh
@@ -35,57 +32,11 @@ preparation is not a new user command.
 Recovering the startup barrier
 =============================
 
-While startup is `awaiting` or `required`, bounded reporting routes remain
-available without satisfying or resetting the barrier. In `required`, the
-title-recovery routes above remain available as well; none may rename a
-different epic or clear the pending title. The title forms and their exact
-limits are documented in [`session-title`'s Omp reference](../../session-title/references/omp.md).
-
-For a harness report, Bash admits only one whole-command call with one quoted
-literal message argument:
-
-```sh
-report_issue 'daily_driver_set_session_title: the explicit-embark title gate denies its documented recovery forms'
-```
-
-The message may contain newlines. Do not append commands or use substitutions,
-redirects, pipelines, groups, or expanding operands. This invokes the harness
-reporting route; it does not mean that a Daily Driver issue was created.
-
-For an attributed Daily Driver bug report, use `daily_driver_gh_write` for
-`issue create` in `jmcvetta/daily-driver`, with exactly one `bug` label, a
-title, and an inline body. The direct tool call is:
-
-```js
-await tool.daily_driver_gh_write({args: [
-  'issue', 'create',
-  '--repo', 'jmcvetta/daily-driver',
-  '--label', 'bug',
-  '--title', 'Omp embark title recovery is blocked',
-  '--body', 'The title recovery route is denied while explicit embark startup is pending.'
-]});
-```
-
-The standalone Bash JSON invocation uses the same `args` array:
-
-```sh
-daily_driver_gh_write -j '{"args":["issue","create","--repo","jmcvetta/daily-driver","--label","bug","--title","Omp embark title recovery is blocked","--body","The title recovery route is denied while explicit embark startup is pending."]}'
-```
-
-These are the only emergency GitHub-write forms. No other repository, command,
-API write, added or duplicate label, conflicting option, body file, stdin, or
-unrelated option is admitted. The wrapper adds provenance and its actual
-success or failure must be reported; admission is not success. Do not bypass
-the wrapper with a direct body-bearing `gh` command.
-
-During this barrier, read only these published references when preparing the
-report: `skill://issue`, `skill://issue/references/omp.md`,
-`skill://issue-body`, `skill://issue-body/references/omp.md`,
-`skill://issue-body/references/kind-contracts.md`, `skill://issue-labels`,
-`skill://issue-labels/references/omp.md`, `skill://provenance`, and
-`skill://provenance/references/omp.md`. These exact reads do not authorize
-other reads or writes. Unrelated calls, mutations, and dispatch remain blocked
-until the session name actually matches the requested epic.
+While identity or title recovery is pending, dispatch and issue claims remain
+blocked. Independent research, diagnostics, and other work remain subject to
+their ordinary guards. Reporting a defect does not satisfy the title barrier;
+use the normal attributed reporting routes. After the authoritative issue
+read, set the title using [`session-title`](../../session-title/references/omp.md).
 
 
 The wave
@@ -93,7 +44,7 @@ The wave
 
 | Step | Operation | Call |
 | ---- | --------- | ---- |
-| `Read the epic` | Read its identity before the graph | `read issue://<number>`; preserve an explicitly supplied repository-qualified issue reference |
+| `Read the epic` | Read its identity before dispatch | `read issue://<number>` or the structured `gh issue view` form above |
 | `Take the wave` | Read each eligible child's body and claim | `issue://<number>`, comments included |
 | `Open the sessions` | Dispatch one implementor per eligible child, concurrently | `task`, one item per child issue in a single batch |
 | `Open the sessions` | Name the implementor | the item's `name`, in `session-title`'s form |

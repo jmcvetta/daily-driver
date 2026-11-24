@@ -488,6 +488,61 @@ export default function registerWatchContinuationChecks(check, { makeSession, fa
 		}
 	});
 
+	// Damaged state must remain diagnosable and stoppable without restoring its payload.
+	watchCheck("suspended get and stop preserve a terminal fence across valid and invalid journal entries", async create => {
+		for (const damage of [{ schema: 99 }, { state: null }, { revision: "bad" }, { deadline: "bad" }]) {
+			const original = await create();
+			ok(await original.register());
+			const valid = structuredClone(original.entries.at(-1));
+			const damaged = { ...structuredClone(valid), data: { ...valid.data, revision: 2, ...damage } };
+			const s = await create({ entries: [...original.entries, damaged] });
+			const result = ok(await s.call({ action: "get", key: EPIC }));
+			assert.equal(result.details.suspended, true);
+			assert.equal(result.details.registrationId, valid.data.registrationId);
+			assert.equal(result.details.sessionId, valid.data.sessionId);
+			assert.ok(result.details.diagnostic);
+			assert.equal(result.details.state, undefined);
+			rejected(await s.call({ action: "checkpoint", key: EPIC, state: state() }));
+			rejected(await s.register());
+			ok(await s.call({ action: "stop", key: EPIC }));
+			const tombstone = await s.record();
+			assert.equal(tombstone.lifecycle, "stopped");
+			assert.equal(tombstone.tombstone, true);
+			assert.equal(tombstone.state, undefined);
+			assert.deepEqual(s.entries[1], damaged, "stopping must not rewrite the damaged payload");
+			assert.equal(ok(await s.call({ action: "stop", key: EPIC })).details.stopped, false);
+			assert.equal(ok(await s.register()).details.registered, false);
+			for (const later of [valid, damaged, { ...damaged, data: { ...damaged.data, lifecycle: "stopped" } }]) {
+				s.entries.push(structuredClone(later));
+				s.setBranch([later]);
+				await s.fire("session_tree");
+				assert.deepEqual(await s.record(), tombstone);
+				await s.advance(1_800_000);
+				assert.equal(s.timers.size, 0);
+				assert.deepEqual(s.sent, []);
+			}
+		}
+	});
+
+	// A damaged entry without a valid registration identity is diagnosable but cannot be stopped.
+	watchCheck("suspended stop refuses without a recoverable registration identity", async create => {
+		const original = await create();
+		ok(await original.register());
+		const valid = structuredClone(original.entries.at(-1));
+		const damaged = { ...structuredClone(valid),
+			data: { ...valid.data, schema: 99, revision: 2, registrationId: "not-a-uuid" } };
+		const s = await create({ entries: [...original.entries, damaged] });
+		const viewed = ok(await s.call({ action: "get", key: EPIC }));
+		assert.equal(viewed.details.suspended, true);
+		assert.equal(viewed.details.registrationId, undefined);
+		assert.ok(viewed.details.diagnostic);
+		const stopped = await s.call({ action: "stop", key: EPIC });
+		rejected(stopped);
+		assert.match(stopped.content.map(part => part.text).join("\n"), /known registration identity/);
+		assert.deepEqual(s.entries[1], damaged, "refusal must not write a tombstone");
+		assert.equal(s.entries.length, 2);
+	});
+
 	// Only explicit stand-down invocation stops embark; prose mentions and PR ownership are unaffected.
 	watchCheck("explicit stand-down stops embark only and ignores prose mentions", async create => {
 		for (const text of ["stand-down", "/stand-down", "/skill:stand-down", '[IMPORTANT: User invoked the "stand-down" skill; use its instructions.]']) {
