@@ -291,7 +291,7 @@ check-step-names:
 	python3 scripts/check-step-names.py
 
 
-# check-model-telemetry: `scripts/model-telemetry.py`'s claim, readiness and
+# check-model-telemetry: claim, historical readiness and
 # review-verification comment parsers, checked against fixture text -- no
 # credentials, no network. `model-telemetry.py` itself imports nothing beyond
 # the standard library, so unlike its `uv run --frozen` neighbours above it
@@ -735,7 +735,7 @@ evals-run-classes: evals-judge-preflight evals-plan evals-preflight
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/classes-$(MODEL).yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
-# model-telemetry: mine `undertake`'s claim/readiness comments and
+# model-telemetry: mine `undertake` claims, historical readiness reports and
 # `review-cycle`'s `Review verification` comments for one repository's
 # production rework, and re-render evals/provenance/production/README.md
 # over every repository's records on disk. Needs GITHUB_TOKEN or GH_TOKEN,

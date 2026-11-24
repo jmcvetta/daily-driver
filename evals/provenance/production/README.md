@@ -1,6 +1,6 @@
 # Production provenance
 
-Per-model rework mined from `undertake`'s claim and first-readiness comments and `review-cycle`'s `Review verification` comments, by `scripts/model-telemetry.py`. Each pull request under a repository directory here is one JSON record; this table is `render_table` over every record present.
+Per-model rework mined from `undertake` claims, historical readiness reports where available, and `review-cycle`'s `Review verification` comments, by `scripts/model-telemetry.py`. Each pull request under a repository directory here is one JSON record; this table is `render_table` over every record present.
 
 Refresh a repository with `make model-telemetry REPO=owner/repo`, or `python3 scripts/model-telemetry.py owner/repo --refresh` to re-fetch records already on disk.
 
