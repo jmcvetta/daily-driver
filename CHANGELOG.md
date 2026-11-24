@@ -33,12 +33,11 @@
 
 ### Fixed
 
-* Admit bounded literal title recovery and attributed bug reporting during pending Omp explicit-embark startup without releasing the barrier ([#1039](https://github.com/jmcvetta/daily-driver/issues/1039)).
-
-
 * Distinguish delegated reviewer identity from publisher provenance in Omp reviews and verification records ([#973](https://github.com/jmcvetta/daily-driver/issues/973)).
 
 * Answer readiness interruptions before workflow reads and retain completed evidence until its inputs change; treat satisfied agent reminders as expired, not as user holds ([#957](https://github.com/jmcvetta/daily-driver/issues/957)).
+
+* Admit bounded literal title recovery and attributed bug reporting during pending Omp explicit-embark startup without releasing the barrier ([#1039](https://github.com/jmcvetta/daily-driver/issues/1039)).
 
 * Preserve evidence for unchanged criteria across contract revisions while requiring fresh observations for changed criteria ([#883](https://github.com/jmcvetta/daily-driver/issues/883)).
 
