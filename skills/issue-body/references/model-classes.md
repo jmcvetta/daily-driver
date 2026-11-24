@@ -31,10 +31,17 @@ not make an underspecified task ready.
 A frontier assignment's `## Model class` section and rationale carry its
 capability decision; no separate approval record is required.
 
+For missing or legacy metadata, assess the grounded handoff and record the
+lowest reasonable class and rationale before or during dispatch. Preserve an
+explicit recognized class and its capability requirement even if its rationale
+is missing. Formatting is not product readiness; do not invent a class or
+default to `routine` when the need is unclear. Report uncertainty and continue
+settled work on an available route.
+
 ## Selection
 
-Attempt initial selection once before worktree or claim through the active
-harness's configuration authority. Omp's effective class role governs model,
+When the class is grounded, attempt initial selection once before worktree or
+claim through the active harness's configuration authority. Omp's effective class role governs model,
 provider and effort together, even across families/providers. Claude Code
 retains automatic class-appropriate selection through its supported mechanism;
 a full handoff is optional when that route supports it.
