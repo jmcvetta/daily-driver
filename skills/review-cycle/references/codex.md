@@ -95,9 +95,9 @@ author records the independent result, never substitutes a verdict.
 Publish any new findings through the routes below. Link the result or use
 `gh pr comment <number> --body-file <path>` for a concise account of the
 checked content and fixes, outcome, and any remaining defects or coverage
-limits. Preserve enough prior results to enforce `SKILL.md`'s
-three-defect-pass limit. No fixed verification fields, empty values, wall-state
-token, usage data, or reviewer-transcript inspection are required. A failed or
+limits. Preserve enough prior results to recognize repeated unresolved defects
+and failed approaches. No fixed verification fields, empty values, pass counter,
+usage data, or reviewer-transcript inspection are required. A failed or
 incomplete dispatch is not a clean result. Published records use ordinary
 `provenance`.
 
