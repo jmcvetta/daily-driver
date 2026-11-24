@@ -1,0 +1,54 @@
+task_id: deps-07-no-dependabot-fallback
+description: >-
+  A bulk upgrade discovers and updates repository dependencies even when
+  Dependabot has no configuration or pull requests.
+tags: [deps, behaviour, fire]
+
+initial_prompt: >-
+  Run a bulk dependency upgrade in this repository. Dependabot is disabled,
+  there is no .github/dependabot.yml and it has no open pull requests. The
+  checked-in lockfiles are uv.lock and pnpm-lock.yaml. Before running anything,
+  explain how you will identify eligible upgrades and update both ecosystems.
+
+agent:
+  disallowed_tools: [Read, Write, Edit, NotebookEdit, Glob, Grep, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  task_timeout: 1080
+  turn_timeout: 900
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`deps` fires for a bulk dependency upgrade without Dependabot"
+    expected_skill: deps
+    skill_name: deps
+
+  - type: agent_judge
+    description: The plan discovers both managers without treating Dependabot as a prerequisite
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade only the final reply in the AGENT OUTPUT block, beginning at the
+      last [RESULT - SUCCESS] or [RESULT - ERROR] tag.
+
+      Score 1.0 only if the reply proceeds without Dependabot configuration or
+      PRs, identifies `uv.lock` as owned by uv and `pnpm-lock.yaml` as owned by
+      pnpm (not npm), plans to inspect project configuration/manifests and use
+      each manager's documented supported outdated/dependency-discovery
+      operation to identify eligible upgrades, and uses the managers'
+      supported bulk-upgrade operations on one coherent branch. It must not
+      guess an unsupported discovery command, hand-edit manifests or lockfiles,
+      or expand beyond the requested dependencies. Score 0.0 if it blocks on
+      Dependabot, maps either lockfile to the wrong manager, or omits any
+      required discovery or upgrade step.

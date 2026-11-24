@@ -113,24 +113,26 @@ run:
 The pass
 ========
 
-**Read what is behind from the open Dependabot pull requests**, rather than
-guessing at it from the manifest. A search for open pull requests authored
-by Dependabot is the list, and each title names the dependency and the
-version it wants — not a plain listing of pull requests, which cannot
-filter by author, and not the manifest. The reference file for the harness
-in use names the exact search call, and the trap in reaching for the wrong
-one instead.
+**Use open Dependabot pull requests as context, not as the inventory.** Search
+for them when available: their titles identify known upgrades, and their links
+belong in the pull request body when this batch supersedes them. No results,
+missing or disabled configuration, delayed runs, or ecosystems the bot omits
+do not stop the pass.
 
-**Upgrade every ecosystem the repository declares, on one branch.** One CI run
-over the whole upgrade is the point. `.github/dependabot.yml` says which
-ecosystems a repository declares, and the **lockfile in the tree** says which
-manager owns each one. Read the second before running anything: Dependabot's
-`npm` ecosystem covers pnpm, yarn and bun, and its `pip` ecosystem covers
-Poetry, Pipenv and uv, so the ecosystem name alone picks the wrong command
-about as often as the right one. A `pnpm-lock.yaml` answered with
-`npm update` writes a stray `package-lock.json` and upgrades nothing.
+**Discover dependencies from the repository itself.** Inspect project
+configuration, manifests and lockfiles to identify every declared ecosystem
+and map each lockfile to the package manager that owns it. Do not treat
+Dependabot's ecosystem names as manager names: its `npm` ecosystem includes
+pnpm, yarn and bun, and its `pip` ecosystem includes Poetry, Pipenv and uv.
+For each identified manager, use its documented, supported outdated or
+dependency-discovery operation to find eligible upgrades and existing
+constraints. Read that manager's manual when its discovery or bulk-upgrade
+command is not already known; never guess at a command or omit a declared
+manager because Dependabot did not report it.
 
-The command is whatever that manager calls its bulk upgrade:
+**Upgrade every applicable manager on one branch.** One CI run over the whole
+upgrade is the point. Use the bulk-upgrade command supported by the manager
+that owns each lockfile:
 
 | Lockfile in the tree | The bulk command |
 | -------------------- | ---------------- |
@@ -145,16 +147,17 @@ The command is whatever that manager calls its bulk upgrade:
 | `composer.lock` | `composer update` |
 | `packages.lock.json` | `dotnet list package --outdated`, then `dotnet add package` per row |
 
-**The table is a convenience, not the rule.** The rule is *the manager that
-wrote the lockfile is the manager that updates it*, and a manager missing from
-the table is looked up in its own manual rather than guessed at — the
-constitution's “manuals first” rule. Maven, Gradle and Docker are the common ones absent
-here.
+The table is a convenience, not the rule. The manager that wrote the lockfile
+is the manager that updates it. For a manager missing from the table, consult
+its manual rather than guessing. Maven, Gradle and Docker are common examples.
+If the repository has a managed ecosystem but no lockfile, use its project
+configuration and manager documentation to establish the supported path
+before changing anything.
 
-Some ecosystems have no package manager to run at all. A GitHub Actions pin
-and a Terraform provider lock are moved by editing the pin and re-locking with
-the project's own tooling — `tofu init -upgrade` and its kind — which is that
-ecosystem's package manager rather than a hand edit.
+Some managed dependencies have no package manager to run. A GitHub Actions pin
+and a Terraform provider lock are updated with the project's own tooling, such
+as editing the pin and running `tofu init -upgrade`; do not hand-edit a
+lockfile.
 
 **Split the branch only under duress.** Where one ecosystem goes red and holds
 the rest hostage, lift it out onto its own branch so the green ones can land.
