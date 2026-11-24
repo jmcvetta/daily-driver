@@ -252,7 +252,7 @@ failure; do not claim that CI remains watched.
 This durability does not turn the process into an agent. A persistent service
 can continue its bounded command after a client exits, but cannot reopen a
 terminated owner. While the session is live, each implementor retains `pr`'s
-owner reminder across renewable CI windows. An implementor result that says
+owner continuation across renewable CI windows. An implementor result that says
 only a detached service remains is unfinished, not an active agent watch.
 Inspect its lifecycle and recover an ended owner on the same branch under
 `Recovering an implementor`; do not wait for a user status request. Preserve
@@ -260,14 +260,32 @@ genuine prerequisites and avoid a second writer alongside a live owner.
 After actual session shutdown, a later invocation must read the graph and
 PR evidence; do not claim cross-shutdown recovery.
 
-While the orchestrator lives, the backstop is the timer pair:
-`daily_driver_schedule` arms it ten minutes out, and
-`daily_driver_cancel_schedule` cancels it at the wave's close. The timer is
-cleared on session shutdown. It supervises the live orchestrator only; the
-persistent named CI service is stopped separately with
-`write proc://<name>/kill`. The one-slot rule `SKILL.md` states still holds:
-one timer, kept by the trigger id the call returned, filled again before the
-turn ends while a wave is at sea.
+Register one `daily_driver_watch` backstop with action `register`, delaySeconds
+`600`, and key `embark:<host>/<owner>/<repo>#<epic>` (host and repository
+normalized to lowercase). Supply state with workflow `embark`, host, repository,
+epic number, `nextAction`, `authorityRefs`, `holds`, `workers`, `services`,
+and `observations`; include branch, worktree, ownerIssue and lastReported where
+applicable. Record worker issue/job IDs, relevant PRs and exact compared
+values, not policy dumps or credentials. Authority references are not approval;
+holds persist until the user releases them.
+
+Use `get` to recover the current record. After relevant current reads or
+permitted work, `checkpoint` the latest snapshot and 600-second delay; an
+unrelated question or event alone is not reconciliation. The module maintains
+fallback coverage and coalesces due work with native worker/service turns.
+Never create a second backstop or migrate delayed implementor reports into it.
+For a live legacy backstop, cancel its exact known `triggerId` with
+`daily_driver_cancel_schedule` before registering. If cancellation fails,
+retain the legacy owner and report the failure; an unknown ID is not migrated.
+Never cancel unrelated requested reminders.
+
+On completion, by-hand or genuine human-only stop, call
+`daily_driver_watch({action: "stop", key: <key>})`; stop the persistent named
+CI service separately with `write proc://<name>/kill`. A stale wake does not
+clear a hold or authorize registration. A stopped record stays stopped; only a
+later explicitly authorized invocation may use the canonical key plus
+`:run:<uuid>` for a fresh run. Timers stop on shutdown; same-session resume
+restores journaled deadlines, but no process monitors across shutdown.
 
 
 

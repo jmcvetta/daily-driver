@@ -59,6 +59,8 @@ check-omp-extension:
   - 'extensions/commit-message.mjs'
   - 'extensions/role-default-helper.mjs'
   - 'extensions/undertaking-routing.mjs'
+  - 'extensions/watch-continuation.mjs'
+  - 'scripts/watch-continuation-cases.mjs'
   - 'scripts/undertaking-routing-cases.mjs'
   - 'package.json'
 check-model-class-roles:
@@ -69,6 +71,7 @@ check-omp-guard-differential:
   - 'scripts/check-omp-guard-differential.mjs'
   - 'extensions/daily-driver.js'
   - 'extensions/role-default-helper.mjs'
+  - 'extensions/watch-continuation.mjs'
 check-omp-cache-clean:
   - 'scripts/check-omp-cache-clean.py'
 check-git-sync:
@@ -116,6 +119,7 @@ check-omp-embark-title-live:
   - 'scripts/check-omp-routing-live.py'
   - 'extensions/role-default-helper.mjs'
   - 'extensions/undertaking-routing.mjs'
+  - 'extensions/watch-continuation.mjs'
   - 'extensions/daily-driver.js'
   - 'skills/embark/**'
   - 'skills/session-title/**'
