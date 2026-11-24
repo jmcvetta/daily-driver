@@ -2755,7 +2755,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 		if (!legacyWakeToken || !prSupervisor) return;
 		const {identity,token,epoch} = legacyWakeToken;
 		return prSupervisor.legacyWake(identity,"check",token,epoch).then(result => {
-			if (!result.authorized) return {block:true,reason:"Legacy PR wake was stopped or transferred; do no work"};
+			if (!result.authorized) return {block:true,reason:result.reason ?? "Legacy PR wake was stopped or transferred; do no work"};
 		});
 	});
 	pi.on("agent_end", event => {
