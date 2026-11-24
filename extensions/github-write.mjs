@@ -156,11 +156,17 @@ function reviewerFromOcrResult(path, cwd, reviewer) {
 	if (typeof path !== "string" || !path.trim()) {
 		throw new Error("OCR reviewer result path must not be empty.");
 	}
+	let source;
+	try {
+		source = readFileSync(resolve(cwd || process.cwd(), path), "utf8");
+	} catch {
+		throw new Error("OCR reviewer result could not be read.");
+	}
 	let result;
 	try {
-		result = JSON.parse(readFileSync(resolve(cwd || process.cwd(), path), "utf8"));
-	} catch (error) {
-		throw new Error(`OCR reviewer result is unreadable or invalid JSON: ${error.message}`);
+		result = JSON.parse(source);
+	} catch {
+		throw new Error("OCR reviewer result is not valid JSON.");
 	}
 	if (!result || typeof result !== "object" || Array.isArray(result)) {
 		throw new Error("OCR reviewer result must be a JSON object.");
@@ -185,8 +191,7 @@ function reviewerFromOcrResult(path, cwd, reviewer) {
 		}
 	}
 	return {
-		...explicit,
-		...Object.fromEntries(Object.entries(identity).filter(([, value]) => value !== undefined)),
+		...identity,
 		identitySource: "OCR requested/configured; backend-served identity unverified",
 	};
 }

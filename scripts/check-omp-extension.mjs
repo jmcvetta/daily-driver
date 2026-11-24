@@ -1140,16 +1140,15 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 		}
 
 		const requestedOnly = join(root, "ocr-requested-only.json");
-		writeFileSync(requestedOnly, JSON.stringify({ session_id: "ocr-requested", llm: { model: "requested-model" } }));
+		writeFileSync(requestedOnly, JSON.stringify({ session_id: "ocr-requested" }));
 		const requestedReview = await execute(
 			["pr", "comment", "7", "--body", "Requested identity"],
-			{ ocrResultPath: requestedOnly },
+			{ model: "explicit-model", provider: "explicit-provider", ocrResultPath: requestedOnly },
 		);
 		assert.ok(requestedReview.capture.body.includes(
-			"Reviewer model: requested-model\nReviewer provider: unreported\nReviewer session: ocr-requested",
+			"Reviewer model: unreported\nReviewer provider: unreported\nReviewer session: ocr-requested",
 		));
 		assert.ok(requestedReview.capture.body.includes("Reviewer identity source: OCR requested/configured; backend-served identity unverified"));
-
 		const absentIdentity = join(root, "ocr-absent-identity.json");
 		writeFileSync(absentIdentity, JSON.stringify({}));
 		const absentReview = await execute(
@@ -1170,13 +1169,14 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 		assert.equal(readFileSync(capturePath, "utf8"), previousCapture, "identity conflicts fail before GitHub publication");
 
 		const malformedResult = join(root, "ocr-malformed.json");
-		writeFileSync(malformedResult, "{");
+		writeFileSync(malformedResult, '{"secret":"must-not-leak"');
 		const malformedReview = await execute(
 			["pr", "comment", "7", "--body", "Malformed identity"],
 			{ ocrResultPath: malformedResult },
 		);
 		assert.equal(malformedReview.result.isError, true);
-		assert.match(malformedReview.result.content[0].text, /OCR reviewer result is unreadable or invalid JSON/u);
+		assert.match(malformedReview.result.content[0].text, /OCR reviewer result is not valid JSON/u);
+		assert.doesNotMatch(malformedReview.result.content[0].text, /must-not-leak/u);
 		assert.equal(readFileSync(capturePath, "utf8"), previousCapture, "malformed results fail before GitHub publication");
 
 		const unreadableReview = await execute(
@@ -1184,7 +1184,7 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 			{ ocrResultPath: join(root, "missing-ocr-result.json") },
 		);
 		assert.equal(unreadableReview.result.isError, true);
-		assert.match(unreadableReview.result.content[0].text, /OCR reviewer result is unreadable or invalid JSON/u);
+		assert.match(unreadableReview.result.content[0].text, /OCR reviewer result could not be read/u);
 		assert.equal(readFileSync(capturePath, "utf8"), previousCapture, "unreadable results fail before GitHub publication");
 		const verification = await execute(["pr", "comment", "7", "--body", "Review verification"], { model: "other-reviewer" });
 		assert.ok(verification.capture.body.includes("Reviewer model: other-reviewer\nReviewer provider: unreported\nReviewer session: unreported"));
