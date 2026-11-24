@@ -93,6 +93,22 @@ The six focused provenance cases passed with the Omp GPT 6.1 Sol subject in
 and [`19-04-35`](provenance/omp-gpt-6-1-sol-2026-10-31-2026-10-31_19-04-35.json).
 The subject's served identity was unreported; the Omp GPT 6.1 Sol judge scored
 each case. The successive-revision cases use one turn, not a resumed session.
+The Omp judge-selection regressions for issue #1062 cover new and revised
+task handoffs, explicit non-Claude overrides, and explicitly authorized Claude
+judging. Four bounded runs used requested subject `openai-codex/gpt-6-luna`
+and validated judge `omp-gpt-6.1-sol` (observed `gpt-6.1-sol`); the subject's
+served identity was unreported. The initial five-case run
+[`19-50-03`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_19-50-03.json)
+passed the new-task and authorized-Claude cases, but failed the revised-task,
+judge-controls, and existing campaign-provenance cases. After repairing the
+campaign guidance, [`20-03-54`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-03-54.json)
+passed the campaign case but not judge controls. The next run
+[`20-12-43`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-12-43.json)
+again passed campaign provenance but not judge controls. The final targeted
+run [`20-18-19`](provenance/omp-gpt-6-luna-2026-11-24-2026-11-24_20-18-19.json)
+passed both judge-control variants. These bounded runs test workflow
+decisions; they do not estimate fleet reliability.
+
 
 A separate two-turn Omp 18.14.1 smoke used `--plugin-dir` pointing at this
 checkout, `--model openai-codex/gpt-6.1-sol`, `--tools read`, and an isolated

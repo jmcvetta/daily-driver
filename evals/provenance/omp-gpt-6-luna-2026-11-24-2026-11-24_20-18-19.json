@@ -1,0 +1,244 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Explicit valid judge and authorized Claude route remain valid independently",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Explicit valid judge and authorized Claude route remain valid independently",
+            "duration_seconds": 9.51,
+            "findings": [
+              "Task A retains the exact judge, task list, one repeat, and one job.",
+              "Task B preserves the authorized Claude Code route without additional approval.",
+              "Neither task adds a separate recording command.",
+              "Task B omits several required run-record fields."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "522d1ac649814b371f10d52d66b35aeaf4a37f32bf018e8cdf2c1aedff6d5579",
+            "rationale": "ANCHOR: result Both complete task bodies preserve their distinct authorized judge routes and provide executable commands that pass JUDGE to automatic recording. Task B has a reporting omission: it requires the judge session and identity but not the run identifier, requested/observed subject and judge identities, or each case outcome.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2167,
+              "output": 244
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "15535ec3c221f67a44ac329a22af7de850ca8b74f800a515755af9d71bbf8768"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-26-judge-selection-controls",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Explicit valid judge and authorized Claude route remain valid independently",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Explicit valid judge and authorized Claude route remain valid independently",
+            "duration_seconds": 7.54,
+            "findings": [
+              "Task A retains omp-gpt-6.1-sol and requires the run identifier, requested/observed subject and judge identities, and every case outcome.",
+              "Task B preserves the explicitly authorized Claude Code route and requires the recorded judge session and identity.",
+              "Both commands retain the exact task list, REPEATS=1, and JOBS=1."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "522d1ac649814b371f10d52d66b35aeaf4a37f32bf018e8cdf2c1aedff6d5579",
+            "rationale": "ANCHOR: result Both complete revised task bodies provide executable commands with the required distinct judge routes and bounded runs. Each explicitly carries JUDGE into automatic evals-record recording without a second command or additional approval condition.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2622,
+              "output": 154
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "15535ec3c221f67a44ac329a22af7de850ca8b74f800a515755af9d71bbf8768"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-26-judge-selection-controls",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 41.21885013580322,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-26-judge-selection-controls",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 2944,
+        "output_tokens": 1440,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 6706
+      },
+      "tokens": 11090,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 30.798646926879883,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "issue-26-judge-selection-controls",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 5632,
+        "output_tokens": 1295,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 10075
+      },
+      "tokens": 17002,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-24T20:19:31.335409",
+  "experiment_id": "omp-gpt-6-luna",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "15535ec3c221f67a44ac329a22af7de850ca8b74f800a515755af9d71bbf8768",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v3",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 4789,
+      "output": 398
+    }
+  },
+  "plugin_revision": {
+    "commit": "3558efa45b81b61546ed943faa6e7f3aee84f9d9",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-24T13:19:49.667591+00:00",
+  "run_id": "2026-11-24_20-18-19",
+  "schema_version": 5,
+  "started_at": "2026-11-24T20:18:19.312970",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-26-judge-selection-controls": [
+          0.5
+        ]
+      },
+      "task_ids": [
+        "issue-26-judge-selection-controls"
+      ],
+      "variant_id": "bare"
+    },
+    {
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-26-judge-selection-controls": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "issue-26-judge-selection-controls"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
