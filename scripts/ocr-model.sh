@@ -14,6 +14,8 @@ usage:
 MODEL_ID must be a Vercel AI Gateway model identifier such as
 provider/model-name. Set AI_GATEWAY_API_KEY in the environment before
 running OCR reviews through the gateway.
+For the ChatGPT subscription, sign in when needed:
+  ocr auth login --provider chatgpt
 EOF
 	exit 2
 }

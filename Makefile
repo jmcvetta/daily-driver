@@ -101,6 +101,7 @@ omp-update-daily-driver:
 # Usage:
 #   make ocr-set-vercel-model MODEL=deepseek/deepseek-v4.1-flash-1017
 #   make ocr-set-openai-codex
+# First-time ChatGPT subscription setup: ocr auth login --provider chatgpt
 # The Vercel API key stays in the environment and is read by OCR at request time.
 .PHONY: ocr-set-vercel-model ocr-set-openai-codex
 ocr-set-vercel-model: export OCR_MODEL = $(MODEL)
