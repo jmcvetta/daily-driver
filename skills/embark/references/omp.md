@@ -118,10 +118,12 @@ context is the second copy `SKILL.md` forbids.
 The route an implementor runs
 =============================
 
-The `task` surface selects an `agent`, not a model. For mapped families, select
+The `task` surface selects an `agent`, not a model. Select
 the agent named for the required class (`mechanical`, `routine`,
 `intermediate`, `complex`, or `frontier`); each item sets only `agent`, with
-no per-item model argument. Apply
+no per-item model argument. The implementor attempts its effective Omp class
+role once; a missing or failed selection explains and continues, not admission.
+Apply
 [`issue-body`'s required-class policy](../../issue-body/references/omp.md#the-required-class).
 `task.agentModelOverrides[agentName]` takes precedence over discovered agent
 frontmatter, including tagged-role assignments such as `@routine` or

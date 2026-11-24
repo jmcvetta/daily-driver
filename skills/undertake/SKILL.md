@@ -219,36 +219,27 @@ its single class section and rationale before claim or substantive work. The
 class states the capability a dispatcher such as `embark` selects a route for;
 it is a capability label, not an approval gate.
 
-**Select the initial route for classed undertaking work before the worktree or
-claim.** This covers classed `task`, `research` and `bug` issues alike; there is
-no second router. Resolve the exact class within the invoking model family and
-provider through the existing class mapping. Preserve the existing configuration
-and effort-selection conventions; an already matching model needs no setter
-call. Do not change shared roles or credentials to make a route available. This
-initial selection covers undertaking workers, delegated issue work, and their
-execution fallbacks. Independently configured `reviewer`, `scout`,
-`security-reviewer`, and `seance` helpers are not issue implementation workers.
+**Attempt initial class selection once before the worktree or claim.** This
+covers classed `task`, `research` and `bug` assignments. Use the active
+harness's configuration authority and supported selection route, not a second
+policy map. Matching model and effort need no setters. Do not change shared
+roles or credentials to make selection succeed.
 
-When the known invoking family is absent from the class-routing table, issue a
-prominent WARNING naming the family, required class, and retained provider/model.
-Continue immediately on the invoking model, provider, and effort without
-confirmation. Its suitability for the class is unverified; an observed
-execution identity does not establish suitability. Do not dispatch a replacement
-worker merely to obtain a mapping.
+Omp's effective class role is authoritative, including its model, provider,
+and effort, across global/project settings, CLI overlays, and Roles UI edits.
+Installed defaults apply only to absent assignments; cleared roles stay
+cleared. Do not impose a same-family/provider or benchmark admission rule.
+Claude Code retains automatic class-appropriate selection through its
+supported in-session route or full handoff; never invent an agent-callable
+switch from a host-only API.
 
-A class omitted from a mapped family follows the absent-family continuation:
-warn, retain the invoking route, and report suitability as unverified. A known
-mapped family with an explicitly cleared class or unavailable target is a
-configuration gap at initial selection. Unknown family or execution identity is
-not evidence of an absent family. Report unsupported controls without claiming
-verification. Preserve provider where the harness supports it; state any
-limitation and never deliberately substitute another provider.
-
-For a mapped family, prefer a supported in-session switch for this initial
-selection. If an in-session switch is unavailable, a full handoff is allowed on
-a surface that can establish the same initial selection. The receiving session
-owns the undertaking; the sender stops. If neither route can establish the
-initial selection, report the precise gap before work.
+If resolution, credentials, controls, a setter, or persistence fails, briefly
+name the class, attempted target if known, failure, and actual retained route.
+Continue ordinary work immediately without confirmation, configuration repair,
+replacement dispatch, or a successful routing record as prerequisites.
+Report partial mutations honestly; restore only selector-owned changes, never
+an operator change. The host does not promise atomic model-plus-effort updates.
+An explicit abort or cancellation remains stopped, not informational fallback.
 
 After initial selection, an operator may change model, provider, or effort.
 Never block or reverse that operator choice, including after request rejection,
@@ -258,9 +249,11 @@ worker, provider, and fallback choices are not restricted by the undertaking
 router; missing candidate metadata or route verification does not stop dispatch
 or ordinary work.
 
-In Omp, an attempt to select another issue does not replace the existing
-undertaking owner. Finish the completed undertaking or resume the existing one
-before selecting a different issue; use the Omp reference for the finish call.
+Selection history does not grant execution permission. A new issue may start
+without finishing the previous issue. Keep previous active work cancellable;
+do not silently complete or abandon it. Use finish only for truthful completion.
+Same-issue re-entry, resume, later role edits, retries, fallback and worker
+dispatch do not reapply initial selection.
 
 Concrete `Model:` lines in claim provenance record the observed model, not task
 metadata.

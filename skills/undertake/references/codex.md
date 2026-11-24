@@ -47,19 +47,14 @@ claim, repairing an old or invalid body where its handoff is grounded. A
 frontier `research` issue keeps that label and its narrow metadata exception;
 do not impose the task template.
 
-Before worktree creation or claim, make the initial class selection within the
-invoking family and provider. Never deliberately substitute a provider.
-If the known family is absent from the class table, prominently warn with the
-family, class, and retained provider/model, then continue immediately on the
-invoking model and effort without confirmation. Identity does not establish
-class suitability.
-
-For a mapped family, a class omitted from the family map follows the same
-warning-and-continue with suitability unverified. An explicitly cleared class
-or unavailable target is a gap. Unknown family or identity is not an absent
-family. This surface exposes no measured agent-callable in-session model
-switch; do not invent one. Report unsupported controls and do not claim
-verification.
+Before worktree or claim, attempt initial class-appropriate selection once
+through supported Codex controls, retaining its family/provider conventions.
+This surface exposes no measured agent-callable in-session model switch; do
+not invent one or apply Omp role semantics here. If the assignment, target,
+credentials or controls are unavailable, name the class, attempted target,
+failure and actual retained route, then continue ordinary work immediately
+without confirmation, repair or replacement dispatch. Explicit cancellation
+remains stopped. Later operator choices and resume never reselect.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
@@ -77,10 +72,10 @@ sources in issue or PR comments.
 The implementor
 ===============
 
-For a mapped family, prefer a verified in-session route. A full undertaking
-handoff through `multi_agent_v1` is allowed. The receiving session owns the
-undertaking and the sender stops without recursively handing off. If no
-in-session switch is available, report the exact gap.
+A full undertaking handoff through `multi_agent_v1` is allowed when it supports
+the initial class selection. The receiver owns the undertaking and the sender
+stops without recursively handing off. If no supported route is available,
+explain and continue with the invoking model.
 
 
 The pull request

@@ -112,38 +112,35 @@ entries are automatic transitions. Omp 18.15.0 cannot identify every caller of
 the top-level model setter. This adapter is not a security boundary against
 arbitrary trusted extensions.
 
-`dailyDriver.modelClassRoutes` is an array of entries with `referenceModel`
-and `classes`, for example `{ referenceModel: "provider/model", classes: {
-routine: "provider/variant:high" } }`. Omp resolves the reference
-through its model catalog to identify the family; that family mapping applies
-regardless of the reference model's provider. Omp resolves the configured
-class target to the same model identity in the invoking provider and family,
-then retains the invoking provider. Ambiguous or unavailable targets are route
-gaps. Explicit class roles remain valid only in the invoking provider and
-family. The built-in OpenAI Codex entry preserves existing defaults, and the
-DeepSeek V4.1 Flash entry maps only its measured mechanical and routine
-classes. Plugin-installed global defaults do not establish a mapping for
-unrelated families. A mapping is not measurement evidence.
+Omp's effective class role is the only undertaking selector. It applies the
+configured model/provider and effort together, including cross-provider
+assignments, from live global/project settings, CLI overlays and Roles UI
+edits. Installed defaults govern only absent assignments; explicitly cleared
+roles stay cleared. `dailyDriver.modelClassRoutes` no longer controls selection.
+Express desired routes through Omp class roles instead; the plugin does not
+rewrite existing configuration files. Helper roles and role tags remain separate.
 
-An unset route configuration uses the registered default, including when Omp
-clones settings for a task. An explicit empty array stays empty; malformed
-explicit values are rejected rather than replaced with defaults.
+Classed work attempts selection once before task worktree and claim. Matching
+model and effort need no setters. A suffix selects effort; absent or `inherit`
+preserves invoking effort, and other supported values use host semantics.
+Later operator model/provider/effort choices always win. Same-issue re-entry,
+resume, later role edits, retries, fallback and worker dispatch never reapply
+selection. There is no atomic model-plus-effort API: pending setters cannot
+promise atomicity. On failure, restore only mutations still attributable to the
+selector and report the actual state if restoration fails or is unsafe.
 
-Classed work selects an initial route once, before the task worktree and
-claim. For a mapped family, that selection fixes the class and effort; after
-it, worker, provider, effort and fallback choices are not restricted by the
-router, and independent specialist routes remain separate. When the known
-family is absent from the class table, Omp warns with the family, required
-class and retained model, then continues on the invoking route without
-confirmation. A class omitted from a mapped family continues the same way. In
-both cases class suitability stays unverified, and host-owned OAuth
-restrictions remain in force. An explicitly cleared (`null`) class or an
-unavailable initial target is a configuration gap that needs repair; unknown
-identity and later operator selections are not. A `selected` status records
-the initial selection, not the observed execution identity or class
-suitability. The finish call releases ownership and sends its completion
-notice; exact calls, status fields and handoff rules are in the
-[undertake reference](../skills/undertake/references/omp.md).
+Missing, cleared, invalid or unavailable roles, credentials, controls, rejected
+switches and persistence failures are informational. The result names the
+class, attempted target, failure and actual route; ordinary work continues
+immediately without confirmation or repair. This does not conceal real
+provider failures. Explicit abort/cancellation remains stopped. Attempted,
+selected and observed model facts remain distinct and do not establish
+benchmark suitability.
+
+A new issue may start without a finish ceremony. Previous active work remains
+cancellable and is not silently completed or abandoned. Finish records only
+truthful completion and sends its notification once. Exact calls and status
+fields are in the [undertake reference](../skills/undertake/references/omp.md).
 
 ### Local undertaking recovery
 
@@ -157,14 +154,15 @@ If a malformed record has no recoverable issue, status reports
 `cancelOwner: invalid`; `/undertaking cancel invalid` explicitly cancels that
 record in the current session.
 
-Cancellation requires the exact current owner. It aborts and waits for local
-work before releasing only the undertaking's OAuth lease. It retires pending
-handoffs and revokes owned children. Running children retain their restrictions
-until shutdown and cannot resume after reload. Other sessions and operator-owned
-leases remain unchanged.
+Cancellation requires an exact owner from the status `owners` list, including
+older active issues. It aborts and waits for owned work, retires pending handoffs
+and revokes owned children without changing unrelated sessions or host-owned
+authentication restrictions. Retired children cannot restart after reload.
 
-Cancellation writes a schema-2 `cancelled` lifecycle record, not a completion
-record. Existing schema-1 active and completed records remain readable.
+Schema 4 separates selection history from cancellation ownership. Schemas 1–3
+and legacy implementation/integration/reasoning class tokens remain readable;
+resume never restores a historical route. Malformed metadata has local recovery
+and cannot deny ordinary work or override cancellation tombstones.
 Transcript, worktree, branch, and unfinished task state stay intact. A new
 undertaking requires a fresh initial selection. Repeated cancellation with no
 owner is a no-op. This command does not replace the workflow's stop handoff.
