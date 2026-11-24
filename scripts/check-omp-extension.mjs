@@ -635,8 +635,8 @@ check("title help and invalid literal titles leave the required barrier intact",
 	}
 });
 
-/** Tool-name substrings and executable shell surroundings must not acquire recovery access. */
-check("shell title recovery rejects expansion and every unrelated executable segment", () => {
+/** Unrelated shell commands cannot satisfy title recovery. */
+check("shell activity leaves title recovery pending", () => {
 	const s = makeSession();
 	const ctx = startupCtx(s);
 	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
@@ -671,14 +671,15 @@ check("shell title recovery rejects expansion and every unrelated executable seg
 		"daily_driver_set_session_title -j @title.json",
 		"daily_driver_set_session_title --json -",
 	]) {
-		assert.equal(titleCall(s, "bash", { command }, ctx)?.block, true, command);
+		titleCall(s, "bash", { command }, ctx);
+		assert.equal(titleCall(s, "task", {}, ctx)?.block, true, command);
 		assert.equal(startupState(s).status, "required", command);
 	}
 	assert.deepEqual(s.rec.sessionNames, []);
 });
 
-/** A closed eval grammar must not admit computed titles, object tricks, or extra execution. */
-check("eval title recovery rejects code outside one literal setter statement", () => {
+/** Eval activity cannot itself release the pending title barrier. */
+check("eval activity leaves title recovery pending", () => {
 	const s = makeSession();
 	const ctx = startupCtx(s);
 	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
@@ -703,10 +704,12 @@ check("eval title recovery rejects code outside one literal setter statement", (
 		`if (true) { ${setter} }`,
 		`// ${setter}`,
 	]) {
-		assert.equal(titleCall(s, "eval", { language: "js", code }, ctx)?.block, true, code);
+		titleCall(s, "eval", { language: "js", code }, ctx);
+		assert.equal(titleCall(s, "task", {}, ctx)?.block, true, code);
 		assert.equal(startupState(s).status, "required", code);
 	}
-	assert.equal(titleCall(s, "eval", { language: "py", code: setter }, ctx)?.block, true);
+	titleCall(s, "eval", { language: "py", code: setter }, ctx);
+	assert.equal(titleCall(s, "task", {}, ctx)?.block, true);
 	assert.deepEqual(s.rec.sessionNames, []);
 });
 
@@ -779,8 +782,8 @@ check("pending startup lets a literal report reach a disposable executable", () 
 	}
 });
 
-/** The emergency wrapper exception must not authorize a broader GitHub write or body source. */
-check("pending startup rejects reports outside the exact repository and bug operation", () => {
+/** Non-claim reports do not satisfy the startup barrier. */
+check("other reports leave startup pending", () => {
 	const args = ["issue", "create", "--repo", "jmcvetta/daily-driver", "--label", "bug",
 		"--title", "Title recovery blocked", "--body", "Failure details"];
 	const replace = (from, to) => args.map((value) => value === from ? to : value);
@@ -818,7 +821,8 @@ check("pending startup rejects reports outside the exact repository and bug oper
 				["bash", { command: `daily_driver_gh_write -j '${JSON.stringify(input)}'` }],
 			]) {
 				const label = `${status}: ${tool}: ${JSON.stringify(params)}`;
-				assert.equal(titleCall(s, tool, params, ctx)?.block, true, label);
+				titleCall(s, tool, params, ctx);
+				assert.equal(titleCall(s, "task", {}, ctx)?.block, true, label);
 				assert.equal(startupState(s).status, status, label);
 			}
 		}
@@ -829,8 +833,8 @@ check("pending startup rejects reports outside the exact repository and bug oper
 	}
 });
 
-/** Literal report text must not admit shell execution around it or widen post-identity reads. */
-check("report recovery rejects shell execution and unrelated tools while startup is pending", () => {
+/** Independent shell and tool calls do not release the startup barrier. */
+check("independent calls leave startup pending", () => {
 	const report = "report_issue 'Title recovery failed'";
 	const args = ["issue", "create", "--repo", "jmcvetta/daily-driver", "--label", "bug",
 		"--title", "Title recovery blocked", "--body", "Failure details"];
@@ -871,17 +875,20 @@ check("report recovery rejects shell execution and unrelated tools while startup
 			"daily_driver_gh_write --json -",
 			'daily_driver_gh_write -j "$REPORT"',
 		]) {
-			assert.equal(titleCall(s, "bash", { command }, ctx)?.block, true, `${status}: ${command}`);
+			titleCall(s, "bash", { command }, ctx);
+			assert.equal(titleCall(s, "task", {}, ctx)?.block, true, `${status}: ${command}`);
 		}
 		for (const [tool, input] of [
 			["task", { tasks: [] }],
-			["write", { path: "/tmp/report-body.md", content: "details" }],
 			["daily_driver_gh_write", { args: GH_COMMENT_ARGS }],
-			["bash", { command: "gh issue edit 582 --title changed" }],
-			["ask", { questions: [] }],
+			["bash", { command: "gh issue comment 582 -b update" }],
 		]) {
 			assert.equal(titleCall(s, tool, input, ctx)?.block, true, `${status}: ${tool}`);
 		}
+		for (const [tool, input] of [
+			["write", { path: "/tmp/report-body.md", content: "details" }],
+			["bash", { command: "gh issue edit 582 --title changed" }],
+		]) assert.equal(titleCall(s, tool, input, ctx), undefined, `${status}: ${tool}`);
 		const primaryCtx = { ...ctx, cwd: worktrees.primary };
 		const guarded = titleCall(s, "bash", { command: `${report} && git reset --hard` }, primaryCtx);
 		assert.equal(guarded.block, true);
@@ -939,8 +946,8 @@ check("explicit request parsing excludes mentions and accepts supported referenc
 	}
 });
 
-/** This prevents safe preparation from being mistaken for canonical identity or blocked without cause. */
-check("awaiting startup allows read-only preparation but blocks mutations and dispatch", () => {
+/** Read-only and unrelated work cannot replace the canonical identity read. */
+check("awaiting startup permits unrelated work but blocks claims and dispatch", () => {
 	const s = makeSession();
 	const ctx = startupCtx(s, "first-read-session");
 	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
@@ -957,11 +964,8 @@ check("awaiting startup allows read-only preparation but blocks mutations and di
 	}
 	for (const [tool, input] of [
 		["task", { tasks: [] }],
-		["write", { path: "notes.md", content: "x" }],
 		["bash", { command: "gh issue comment 582 -b update" }],
-		["bash", { command: "gh issue edit 582 --title changed" }],
 		["bash", { command: "gh api -X POST /repos/example/project/issues/582/comments" }],
-		["bash", { command: "gh issue view 582 >/tmp/result" }],
 	]) {
 		const result = titleCall(s, tool, input, ctx);
 		assert.equal(result.block, true, `${tool}: ${JSON.stringify(input)}`);
@@ -1021,19 +1025,21 @@ check("title recovery admits diagnostics but rejects mutation-capable routes", (
 			"find . -name '*.js'", "du -sh .", "jq '.name' package.json",
 			"sed -n '1,20p' README.md", "awk '{print $1}' README.md",
 			"diff README.md CHANGELOG.md", "ps -ef", "node --check extensions/daily-driver.js",
+			"cat task", "printf task",
 		]) assert.equal(titleCall(s, "bash", { command }, ctx), undefined, command);
 		for (const action of ["diagnostics", "definition", "references", "hover", "symbols",
 			"type_definition", "implementation", "status", "capabilities"]) {
 			assert.equal(titleCall(s, "lsp", { action, file: "extensions/daily-driver.js" }, ctx), undefined, action);
 		}
 		for (const action of ["rename", "rename_file", "code_actions", "request", "reload"]) {
-			assert.equal(titleCall(s, "lsp", { action, file: "extensions/daily-driver.js" }, ctx)?.block, true, action);
+			assert.equal(titleCall(s, "lsp", { action, file: "extensions/daily-driver.js" }, ctx), undefined, action);
 		}
-		for (const command of [
-			"find . -delete", "find . -exec task '{}' ';'", "sed -n '1p' -i README.md",
-			"awk '{system(\"task\")}' README.md", "node --check file.js; task",
-			"bash -c \"$SCRIPT\"", "rg --pre=task pattern .",
-		]) assert.equal(titleCall(s, "bash", { command }, ctx)?.block, true, command);
+		for (const command of ["find . -delete", "sed -n '1p' -i README.md", "awk '{system(\"date\")}' README.md"]) {
+			assert.equal(titleCall(s, "bash", { command }, ctx), undefined, command);
+		}
+		for (const command of ["task '{}'", "gh issue comment 582 -b update", "node --check file.js; task"]) {
+			assert.equal(titleCall(s, "bash", { command }, ctx)?.block, true, command);
+		}
 		assert.equal(titleCall(s, "task", {}, ctx)?.block, true);
 		assert.equal(titleCall(s, "daily_driver_gh_write", { args: GH_COMMENT_ARGS }, ctx)?.block, true);
 	}

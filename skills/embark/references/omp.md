@@ -32,52 +32,11 @@ preparation is not a new user command.
 Recovering the startup barrier
 =============================
 
-While startup is `awaiting` or `required`, bounded reporting routes remain
-available without satisfying or resetting the barrier. In `required`, the
-title-recovery routes above remain available as well; none may rename a
-different epic or clear the pending title. The title forms and their exact
-limits are documented in [`session-title`'s Omp reference](../../session-title/references/omp.md).
-
-For a harness report, Bash admits only one whole-command call with one quoted
-literal message argument:
-
-```sh
-report_issue 'daily_driver_set_session_title: the explicit-embark title gate denies its documented recovery forms'
-```
-
-The message may contain newlines. Do not append commands or use substitutions,
-redirects, pipelines, groups, or expanding operands. This invokes the harness
-reporting route; it does not mean that a Daily Driver issue was created.
-
-For an attributed Daily Driver bug report, use `daily_driver_gh_write` for
-`issue create` in `jmcvetta/daily-driver`, with exactly one `bug` label, a
-title, and an inline body. The direct tool call is:
-
-```js
-await tool.daily_driver_gh_write({args: [
-  'issue', 'create',
-  '--repo', 'jmcvetta/daily-driver',
-  '--label', 'bug',
-  '--title', 'Omp embark title recovery is blocked',
-  '--body', 'The title recovery route is denied while explicit embark startup is pending.'
-]});
-```
-
-The standalone Bash JSON invocation uses the same `args` array:
-
-```sh
-daily_driver_gh_write -j '{"args":["issue","create","--repo","jmcvetta/daily-driver","--label","bug","--title","Omp embark title recovery is blocked","--body","The title recovery route is denied while explicit embark startup is pending."]}'
-```
-
-These are the only emergency GitHub-write forms. No other repository, command,
-API write, added or duplicate label, conflicting option, body file, stdin, or
-unrelated option is admitted. The wrapper adds provenance and its actual
-success or failure must be reported; admission is not success. Do not bypass
-the wrapper with a direct body-bearing `gh` command.
-
-The published issue and provenance references remain available when preparing
-a report, as do other reads. Mutations and dispatch remain blocked until the
-session name actually matches the requested epic.
+While identity or title recovery is pending, dispatch and issue claims remain
+blocked. Independent research, diagnostics, and other work remain subject to
+their ordinary guards. Reporting a defect does not satisfy the title barrier;
+use the normal attributed reporting routes. After the authoritative issue
+read, set the title using [`session-title`](../../session-title/references/omp.md).
 
 
 The wave

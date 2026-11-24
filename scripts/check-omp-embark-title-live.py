@@ -104,7 +104,7 @@ def scenario_calls(number: int, route: str, repository_qualified: bool) -> list[
         calls.append((label, tool, arguments, expected))
 
     def pending(label):
-        add(label, "write", {"path": "forbidden-write.txt", "content": "must stay blocked"}, "blocked")
+        add(label, "task", {"tasks": [{"task": "Write forbidden-dispatch.txt in the sandbox."}]}, "blocked")
 
     def reports(state):
         for surface in ("direct", "bash"):
@@ -145,27 +145,15 @@ def scenario_calls(number: int, route: str, repository_qualified: bool) -> list[
         }, "blocked")
         add("direct-gh", "bash", {
             "command": "gh issue create --repo jmcvetta/daily-driver --label bug --title forbidden --body forbidden",
-        }, "blocked")
+        }, "provenance-blocked")
         for index, command in enumerate((
-            f"printf '%s' {shlex.quote(setter)}",
-            setter + "; printf forbidden",
-            setter + " | cat",
-            setter + " > forbidden-redirection.txt",
-            "(" + setter + ")",
-            "TITLE=forbidden " + setter,
-            "daily_driver_set_session_title \"$(printf forbidden)\"",
-            "daily_driver_set_session_title \"$HOME\"",
-            "daily_driver_set_session_title --help && " + setter + " && printf forbidden",
+            "gh issue comment 582 --body forbidden",
+            "task '{}'",
         )):
             add(f"negative-shell-{index}", "bash", {"command": command}, "blocked")
-        for index, code in enumerate((
-            f"const title = {json.dumps(title)}; await tool.daily_driver_set_session_title({{title}});",
-            f"await tool.daily_driver_set_session_title({{['title']: {json.dumps(title)}}});",
-            f"await tool.daily_driver_set_session_title({{title: {json.dumps(title)}, extra: true}});",
-            f"await tool.daily_driver_set_session_title({{title: `{title}`}});",
-            f"await tool.daily_driver_set_session_title({{title: {json.dumps(title)}}}); await tool.read({{path:'prep.md'}});",
-        )):
-            add(f"negative-eval-{index}", "eval", {"language": "js", "code": code}, "blocked")
+        add("unrelated-shell", "bash", {"command": "printf 'diagnostic\\n'"})
+        add("unrelated-eval", "eval", {"language": "js", "code": "print('diagnostic')"})
+        pending("unrelated-work-pending")
         for index, invalid in enumerate((
             TARGETS[583][1], f"⛵ EPIC #{number} ", json.dumps({"title": title}), json.dumps([title]),
         )):
@@ -981,6 +969,9 @@ def main() -> None:
                     if expected == "blocked":
                         if not event.get("isError") or not re.search(r"epic|embark|requested issue", result, re.IGNORECASE):
                             raise CheckFailed(f"{scenario}/{label}: startup barrier did not deny the call: {event!r}", stderr)
+                    elif expected == "provenance-blocked":
+                        if not event.get("isError") or "daily_driver_gh_write" not in result:
+                            raise CheckFailed(f"{scenario}/{label}: provenance guard did not deny the call: {event!r}", stderr)
                     elif expected == "report-failure":
                         if (not event.get("isError") or "offline gh refusal: " + label not in result
                                 or "issues/9001" in result):

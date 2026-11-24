@@ -2132,6 +2132,32 @@ function runsGitHubBodyWrite(command) {
 /** The dispatch tool `skills/embark/references/omp.md` opens its sessions with. */
 const DISPATCH_TOOL = "task";
 
+/** Recognize shell dispatch and provenance-wrapped claim calls. */
+function runsProtectedWorkflow(command) {
+	const { segments, unreadable } = shellSegments(command);
+	if (unreadable !== null) return true;
+	for (const segment of segments) {
+		const words = segment.words ?? [];
+		for (let index = 0; index < words.length; index++) {
+			const word = words[index];
+			if (!word.literal) continue;
+			const name = basename(word.text);
+			if (name === "task" && (index === 0 ||
+				["-exec", "-execdir", "command", "env", "exec"].includes(words[index - 1]?.text))) return true;
+			if (name !== "daily_driver_gh_write") continue;
+			const option = words[index + 1]?.text;
+			const value = words[index + 2];
+			if (!["-j", "--json"].includes(option) || !value?.literal) return true;
+			try {
+				if (isGitHubCommentWrite(JSON.parse(value.text)?.args)) return true;
+			} catch {
+				return true;
+			}
+		}
+	}
+	return runsGitHubComment(command);
+}
+
 /** Whether this call is one the title must precede. */
 function needsTitle(event) {
 	if (event.toolName === DISPATCH_TOOL) return true;
@@ -2141,90 +2167,10 @@ function needsTitle(event) {
 	return (
 		event.toolName === "bash" &&
 		typeof event.input?.command === "string" &&
-		runsGitHubComment(event.input.command)
+		runsProtectedWorkflow(event.input.command)
 	);
 }
 
-/** Admit literal local inspection commands without granting shell execution. */
-function isReadOnlyLocalInspection(command) {
-	if (typeof command !== "string") return false;
-	const { segments, functions, unreadable } = shellSegments(command);
-	if (unreadable !== null || functions.length || segments.length !== 1 || segments[0].group) return false;
-	const words = segments[0].words ?? [];
-	if (!words.length || words.some((word) => !word.literal || /[;&|<>]/u.test(word.text))) return false;
-	const [executable, ...args] = words.map((word) => word.text);
-	if (["pwd", "ls", "cat", "head", "tail", "file", "stat", "wc", "rg", "du", "diff", "ps", "jq"].includes(executable)) {
-		return !args.some((arg) => arg.startsWith("--pre") || arg === "--files0-from" ||
-			arg === "--output" || arg.startsWith("--output="));
-	}
-	if (executable === "find") {
-		return !args.some((arg) => /^-(?:exec|execdir|ok|okdir|delete|fprint|fprint0|fprintf|fls)/u.test(arg));
-	}
-	if (executable === "sed") {
-		return args.length >= 2 && args[0] === "-n" && /^\d+(?:,\d+)?p$/u.test(args[1]) &&
-			args.slice(2).every((arg) => !arg.startsWith("-"));
-	}
-	if (executable === "awk") {
-		return args.length >= 1 && /^\{\s*print(?:\s+\$\d+)?\s*\}$/u.test(args[0]) &&
-			args.slice(1).every((arg) => !arg.startsWith("-"));
-	}
-	if (executable === "node") return args[0] === "--check" && args.length === 2;
-	return executable === "git" && ["status", "log", "show", "diff", "branch", "rev-parse"].includes(args[0]) &&
-		!args.some((arg) => arg.startsWith("--output") || arg === "--ext-diff" || arg === "--textconv" ||
-			arg === "--exec" || arg.startsWith("--exec=")) &&
-		(args[0] !== "branch" || args.slice(1).every((arg) => ["--list", "-a", "-r", "-v", "-vv", "--show-current"].includes(arg)));
-}
-
-/** Only language-server requests whose operations cannot apply edits are reads. */
-function isReadOnlyLanguageServer(event) {
-	return event.toolName === "lsp" &&
-		["diagnostics", "definition", "references", "hover", "symbols", "type_definition",
-			"implementation", "status", "capabilities"].includes(event.input?.action);
-}
-
-/** Whether one plain `gh` invocation can only read GitHub data. */
-function isReadOnlyGitHubRead(command) {
-	const { segments, unreadable } = shellSegments(command);
-	if (unreadable !== null || segments.length !== 1) return false;
-	const words = segments[0].words ?? [];
-	if (segments[0].group || words.length === 0 ||
-		words.some((word) => !word.literal || /[;&|<>]/u.test(word.text)) ||
-		basename(words[0].text) !== "gh") return false;
-	const args = words.slice(1);
-	const operands = [];
-	for (let index = 0; index < args.length; index++) {
-		const text = args[index].text;
-		if (text === "-R" || text === "--repo" || text === "--hostname" || text === "--config") {
-			index++;
-		} else if (!text.startsWith("-")) {
-			operands.push(text);
-		}
-	}
-	const [group, verb] = operands;
-	if ((group === "issue" || group === "pr" || group === "repo") && verb === "view") return true;
-	if (group === "search" && verb === "issues") return true;
-	if (group !== "api") return false;
-	let method = null;
-	let sendsBody = false;
-	for (let index = 0; index < args.length; index++) {
-		const text = args[index].text;
-		if (text === "-X" || text === "--method") {
-			method = args[index + 1]?.text ?? null;
-		} else if (text.startsWith("--method=")) {
-			method = text.slice("--method=".length);
-		} else if (/^-X./u.test(text)) {
-			method = text.slice(2);
-		} else if (
-			GH_API_BODY_FLAGS.has(text) ||
-			/^--(field|raw-field|input)=/u.test(text)
-		) {
-			sendsBody = true;
-		}
-	}
-	return method
-		? method.toUpperCase() === "GET"
-		: !sendsBody;
-}
 /**
  * State carried on the active session branch while an explicit Omp embark
  * request is being resolved and titled.
@@ -2399,102 +2345,6 @@ function serializedTitleReason(kind) {
 	);
 }
 
-// These literal words exclude shell expansion even inside double quotes. The
-// narrow grammar complements shellSegments, which intentionally strips control
-// keywords and grouping for its broader worktree analysis.
-const RECOVERY_QUOTED_WORD = String.raw`(?:'[^']*'|"(?:[^"\\$` + "`" + String.raw`]|\\["\\])*")`;
-const RECOVERY_SETTER = String.raw`daily_driver_set_session_title`;
-const RECOVERY_SET = String.raw`${RECOVERY_SETTER}\s+(?:(?:-j|--json)\s+)?${RECOVERY_QUOTED_WORD}`;
-const RECOVERY_HELP = String.raw`${RECOVERY_SETTER}\s+--help`;
-const RECOVERY_SHELL_TITLE = new RegExp(
-	String.raw`^\s*(?:${RECOVERY_HELP}(?:\s*&&\s*${RECOVERY_SET})?|${RECOVERY_SET})\s*$`, "u",
-);
-const RECOVERY_SHELL_REPORT = new RegExp(
-	String.raw`^\s*report_issue\s+${RECOVERY_QUOTED_WORD}\s*$`, "u",
-);
-const RECOVERY_SHELL_GITHUB = new RegExp(
-	String.raw`^\s*daily_driver_gh_write\s+(?:-j|--json)\s+${RECOVERY_QUOTED_WORD}\s*$`, "u",
-);
-const RECOVERY_EVAL_TITLE = /^\s*await\s+tool\.daily_driver_set_session_title\s*\(\s*\{\s*title\s*:\s*(?:'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")\s*\}\s*\)\s*;?\s*$/u;
-const RECOVERY_REPORT_SKILLS = new Set([
-	"skill://issue", "skill://issue/references/omp.md",
-	"skill://issue-body", "skill://issue-body/references/omp.md",
-	"skill://issue-body/references/kind-contracts.md",
-	"skill://issue-labels", "skill://issue-labels/references/omp.md",
-	"skill://provenance", "skill://provenance/references/omp.md",
-]);
-
-/** Recognize only an attributed inline bug report to this repository. */
-function embarkBugReport(input) {
-	if (!input || typeof input !== "object" || Array.isArray(input) ||
-		Object.keys(input).some((key) => key !== "args") ||
-		!Array.isArray(input.args)) return false;
-	const args = input.args;
-	if (args[0] !== "issue" || args[1] !== "create" || args.length !== 10) return false;
-	const options = new Map();
-	for (let i = 2; i < args.length; i += 2) {
-		const key = args[i];
-		const value = args[i + 1];
-		if (!["--repo", "--label", "--title", "--body"].includes(key) ||
-			options.has(key) || typeof value !== "string" || !value.trim()) return false;
-		options.set(key, value);
-	}
-	return options.get("--repo") === "jmcvetta/daily-driver" &&
-		options.get("--label") === "bug";
-}
-
-/** Recognize whole, literal shell commands without interpreting their source. */
-function embarkRecoveryShell(command, allowTitle) {
-	if (typeof command !== "string") return false;
-	const { segments, functions, unreadable } = shellSegments(command);
-	if (unreadable !== null || functions.length || segments.some((segment) =>
-		segment.group || segment.words.some((word) => !word.literal))) return false;
-	if (allowTitle && RECOVERY_SHELL_TITLE.test(command)) {
-		return segments.length === 1 || (segments.length === 2 && segments[0].separator === "&&");
-	}
-	if (segments.length !== 1) return false;
-	if (RECOVERY_SHELL_REPORT.test(command)) return true;
-	if (!RECOVERY_SHELL_GITHUB.test(command)) return false;
-	try {
-		return embarkBugReport(JSON.parse(segments[0].words[2].text));
-	} catch {
-		return false;
-	}
-}
-
-/** Admission does not alter startup state or bypass the reporting wrapper. */
-function embarkReportRecoveryRoute(event) {
-	const input = event.input ?? {};
-	if (event.toolName === "read") return RECOVERY_REPORT_SKILLS.has(input.path);
-	if (event.toolName === "daily_driver_gh_write") return embarkBugReport(input);
-	return event.toolName === "bash" && embarkRecoveryShell(input.command, false);
-}
-
-/** Resolve only exact title-recovery tool and device routes. */
-function embarkTitleRecoveryRoute(event, state) {
-	if (embarkReportRecoveryRoute(event)) return true;
-	if (event.toolName === "bash") return embarkRecoveryShell(event.input?.command, true);
-	if (event.toolName === "eval") {
-		return event.input?.language === "js" &&
-			typeof event.input?.code === "string" && RECOVERY_EVAL_TITLE.test(event.input.code);
-	}
-	if (event.toolName === "daily_driver_get_session" || event.toolName === "daily_driver_set_session_title") {
-		return true;
-	}
-	const input = event.input ?? {};
-	if (event.toolName === "read") {
-		const path = input.path;
-		if (path === "skill://session-title" || path === "skill://session-title/references/omp.md") return true;
-		if (path === "xd://daily_driver_get_session" || path === "xd://daily_driver_set_session_title") return true;
-		const target = parseEmbarkReference(path);
-		return target?.number === state.target.number &&
-			(!state.target.requestedRepository ||
-				target.repository?.toLowerCase() === state.target.requestedRepository.toLowerCase()) &&
-			(!target.repository || target.repository.toLowerCase() === state.target.repository.toLowerCase());
-	}
-	if (event.toolName === "write" && input.path === "xd://daily_driver_set_session_title") return true;
-	return false;
-}
 
 /** Identify workflow commands that replace an explicit embark request. */
 function supersedingWorkflow(prompt) {
@@ -2560,8 +2410,8 @@ function embarkTitleReason(state) {
 		"text; in a shell command quote that title as the positional argument " +
 		"or use `-j`, never a positional JSON argument object. " +
 		"Eval JavaScript may call `await tool.daily_driver_set_session_title({title: '⛵ EPIC #" +
-		`${target.number} Short title'});` + "` with no other statements. " +
-		"Reads of `session-title`, its Omp reference, the title-tool documentation, and the same issue are allowed." +
+		`${target.number} Short title'});` + "`. " +
+		"Independent work remains available under its ordinary guards." +
 		reporting
 	);
 }
@@ -2989,14 +2839,10 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 				pendingIssueReads.set(event.toolCallId, { toolName: "bash", command: event.input.command, repository });
 				return undefined;
 			}
-			if (embarkReportRecoveryRoute(event)) return undefined;
-			if (["read", "grep", "glob", "web_search", "daily_driver_get_session"].includes(event.toolName) ||
-				isReadOnlyLanguageServer(event) ||
-				(event.toolName === "bash" &&
-					typeof event.input?.command === "string" &&
-					(isReadOnlyGitHubRead(event.input.command) || isReadOnlyLocalInspection(event.input.command)))) {
-				return undefined;
-			}
+		}
+		if (startup?.status === "awaiting" &&
+			(event.toolName === "daily_driver_set_session_title" ||
+				(event.toolName === "write" && event.input?.path === "xd://daily_driver_set_session_title"))) {
 			return { block: true, reason: embarkTitleReason(startup) };
 		}
 		if (startup?.status === "required" &&
@@ -3012,11 +2858,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting, githubWrite
 				return { block: true, reason: embarkTitleReason(startup) };
 			}
 		}
-		if (startup?.status === "required" && !embarkTitleRecoveryRoute(event, startup) &&
-			!(["read", "grep", "glob", "web_search", "daily_driver_get_session"].includes(event.toolName) ||
-				isReadOnlyLanguageServer(event) ||
-				(event.toolName === "bash" && typeof event.input?.command === "string" &&
-					(isReadOnlyGitHubRead(event.input.command) || isReadOnlyLocalInspection(event.input.command))))) {
+		if (["awaiting", "required"].includes(startup?.status) && needsTitle(event)) {
 			return { block: true, reason: embarkTitleReason(startup) };
 		}
 		// After the worktree check: the session's first issue comment and first
