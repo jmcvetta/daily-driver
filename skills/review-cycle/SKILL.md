@@ -26,6 +26,11 @@ wait for CI, the level, the durable review record, the thread protocol,
 fix verification, and the full-review test — none of which any review surface
 has an opinion about.
 
+**This skill binds the session that owns the round.** A dispatched reviewer
+works from its brief, which is its complete contract: it does not read this
+skill and does not run the round. The stages, waits and protocols below are
+the owning session's.
+
 **The routes are per harness, and they live beside this file.** Every operation
 below is named in words here and resolved to a call there:
 [`references/claude.md`](references/claude.md) for Claude Code,

@@ -18,7 +18,9 @@ the depth judgement is the agent's. `SKILL.md`'s `Name the level` has nothing
 to bind here — there is no remembered level to override.
 
 **Record returned findings durably on the pull request.** Give the reviewer
-the relevant history, reviewed revision, and current head. The routes below
+the relevant history, reviewed revision, and current head. Tell it in the
+dispatch that its brief is the complete contract and that it must not load
+`review-cycle`. The routes below
 support submitted reviews and ordinary pull-request comments; neither one
 publication shape nor a matching author account is a prerequisite. Existing
 credible independent human or agent review can supply this evidence without
@@ -40,9 +42,11 @@ are not prerequisites for a different selected method.
 
 Give an invoked reviewer the pull request, actual base branch, reviewed and
 current revisions, relevant history and dispositions, and applicable issue or
-specification requirements. For a full review, require the
-complete three-dot pull-request diff, affected callers, and relevant tests to
-be inspected for concrete correctness defects and unmet requirements, not style.
+specification requirements. Tell it in the dispatch that its brief is the
+complete contract and that it must not load `review-cycle`. For a full review,
+require the complete three-dot pull-request diff, affected callers, and
+relevant tests to be inspected for concrete correctness defects and unmet
+requirements, not style.
 For a fix-delta pass, use the bounded brief in `Fix-delta verification` below.
 The reviewer must not edit files or run project checks; the author owns CI.
 Apply `SKILL.md`'s effort rule only when the selected surface takes a level.
@@ -66,7 +70,9 @@ operator selected another independent method. Existing credible independent
 human or agent review of the delta can also satisfy the pass.
 
 Give the reviewer the pull request, base branch, prior reviewed revision,
-current revision, relevant original findings and dispositions. Require it to
+current revision, relevant original findings and dispositions. Tell it in the
+dispatch that its brief is the complete contract and that it must not load
+`review-cycle`. Require it to
 compare the relevant pull-request content at those revisions, excluding
 base-only changes, and inspect affected callers. Comparing the three-dot
 pull-request diffs is one way to establish the content delta; do not infer it

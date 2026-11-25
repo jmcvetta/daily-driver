@@ -1937,6 +1937,14 @@ which is what a model weighing two sibling skills reaches for, still scores as
 engaging `pr`. The trigger rows therefore carry an explicit `disallowed_tools`,
 which is the field that actually removes a tool.
 
+On the Omp arm, `skill_triggered` sees only the parent's tool calls. Subagent
+frames are silent — `subagent_lifecycle`, `subagent_progress` and
+`subagent_event` are in `rpc.py`'s `_SILENT_FRAMES` — so a dispatched
+reviewer's `Skill` call or `skills/<name>/` read never reaches the criterion.
+Reviewer-child evidence is collected separately into
+`omp-reviewer-telemetry.json`. A parent dispatch prompt that cites
+`skills/<name>/` still counts as parent engagement.
+
 The same hazard binds every fixture a task mounts, because the agent can read
 it. A fixture carries mechanics, not claims: the reasoning for a case lives in
 the task YAML and here, never in a file one `cat` away. And no mounted fixture file
