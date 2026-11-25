@@ -1,0 +1,324 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "command_executed",
+          "description": "Exactly one component worker handles the fix batch",
+          "details": "Matched 1 matches (allowed range 1..1) commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"Continue only the local correction batch for PR #827 within the exi)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Routine worker records passing focused test output",
+          "details": "Pattern '(?is)(?=.*exit[ _]status[ =:]+0)(?=.*Ran \\d+ tests? in )(?=.*\\nOK\\b)' found in file (matched: '')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "Owner runs the integrated acceptance test",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/PYTHONDONTWRITEBYTECODE=1\\s+python3\\s+-m\\s+unittest\\s+test_format\\.py/)\nExamples: ['PYTHONDONTWRITEBYTECODE=1 python3 -m unittest test_format.py']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "Owner reads the worker verification artifact",
+          "details": "Matched 1/1 required commands (filters: tool_name=Read, pattern=/worker-test-output\\.txt/)\nExamples: ['Read({\"file_path\": \"/tmp/coder_eval_review-cycle-22-triaged-routine-fix-batch_454cm21)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "Recorded Omp task evidence proves one routine batch and complete brief",
+          "details": "Command: python3 .fixture/check_component_dispatch.py --scenario review-fix\nExit code: 0 (expected: 0)\nStdout:\nPASS: one routine review-fix task carries the required brief\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Owner preserves review responsibilities and future verification",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Owner preserves review responsibilities and future verification",
+            "duration_seconds": 7.85,
+            "findings": [
+              "Worker and owner tests separately reported as 2 passed, exit 0.",
+              "Dispositions and thread replies remain with the owner.",
+              "No push or publication claimed; future independent verification explicitly pending.",
+              "No delegated judgment, per-finding workers, or scope expansion proposed."
+            ],
+            "index": 5,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "34fd34f7bc60a5d13dc470e44c8308c9d2b706f8755b6341dbbbb76de9f84dd8",
+            "rationale": "The owner's final reply separately reports worker and owner test evidence, retains dispositions and thread replies, and makes no publication or overall completion claim. It explicitly leaves independent `Verify the fix delta` pending after an authorized push.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1838,
+              "output": 113
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "6a48c14361c4849be3eb472ee3e0dc282de09838742894dfcfeb9e11d59a0f7e"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "review-cycle-22-triaged-routine-fix-batch",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "command_executed",
+          "description": "Exactly one component worker is dispatched",
+          "details": "Matched 1 matches (allowed range 1..1) commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"# Goal\\\\nContinue only the Implement stage of existing assignment #1)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The focused acceptance test runs",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/python3\\s+-m\\s+unittest\\s+test_labels\\.py/)\nExamples: ['PYTHONDONTWRITEBYTECODE=1 python3 -m unittest test_labels.py']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "Recorded dispatch proves one routine task with the required brief",
+          "details": "Command: python3 .fixture/check_component_dispatch.py --scenario implementation\nExit code: 0 (expected: 0)\nStdout:\nPASS: one routine implementation task carries the required brief\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The bounded brief preserves owner responsibilities and reports evidence",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The bounded brief preserves owner responsibilities and reports evidence",
+            "duration_seconds": 9.96,
+            "findings": [
+              "Names all three implemented files.",
+              "Reports owner verification with the specified command and 9 passing tests.",
+              "Retains design, integration, scope, authorization, and acceptance.",
+              "Discloses absent Git metadata and inaccessible README Omp reference."
+            ],
+            "index": 3,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "443a08bfdcc34f7c3852adbd555b22f7deb726744bd3931387203d2361f4bc1e",
+            "rationale": "The owner's final reply reports implementation and an owner-run integrated test result, explicitly retains all five responsibilities, and names unresolved exceptions. It distinguishes the worker's test result from the owner's integration verification without claiming independent review.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2046,
+              "output": 134
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "6a48c14361c4849be3eb472ee3e0dc282de09838742894dfcfeb9e11d59a0f7e"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-37-settled-routine-implementation",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 81.22918796539307,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "review-cycle-22-triaged-routine-fix-batch",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 160896,
+        "output_tokens": 1434,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 31982
+      },
+      "tokens": 194312,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 168.76929712295532,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "undertake-37-settled-routine-implementation",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 201856,
+        "output_tokens": 1731,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 44123
+      },
+      "tokens": 247710,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-25T13:33:00.790952",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "paseo-sandbox",
+    "kind": "laptop",
+    "platform": "Linux-6.8.0-151-generic-x86_64-with-glibc2.39",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "6a48c14361c4849be3eb472ee3e0dc282de09838742894dfcfeb9e11d59a0f7e",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v3",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 3884,
+      "output": 247
+    }
+  },
+  "plugin_revision": {
+    "commit": "06bbc7b27ebf60f86338a6e9fe9b2ba8a4e0573b",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-25T13:33:23.762343+00:00",
+  "run_id": "2026-11-25_13-28-50",
+  "schema_version": 5,
+  "started_at": "2026-11-25T13:28:50.771700",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "review-cycle-22-triaged-routine-fix-batch": [
+          1.0
+        ],
+        "undertake-37-settled-routine-implementation": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "review-cycle-22-triaged-routine-fix-batch",
+        "undertake-37-settled-routine-implementation"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
