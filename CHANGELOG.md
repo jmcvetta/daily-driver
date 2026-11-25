@@ -87,6 +87,38 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.79.0](https://github.com/jmcvetta/daily-driver/compare/v0.78.0...v0.79.0) (2026-11-24)
+
+
+### Features
+
+* bind specification tasks directly to approved revisions ([#1100](https://github.com/jmcvetta/daily-driver/issues/1100)) ([3c9948d](https://github.com/jmcvetta/daily-driver/commit/3c9948dc45376841b4a764e2c82d93570d0edf6e))
+* **deps:** discover upgrades without Dependabot ([#1114](https://github.com/jmcvetta/daily-driver/issues/1114)) ([a1933c2](https://github.com/jmcvetta/daily-driver/commit/a1933c27d47b5d024e8b9a00c83ed180fca6bfdf))
+* permit readiness when no CI applies ([#1098](https://github.com/jmcvetta/daily-driver/issues/1098)) ([8f54764](https://github.com/jmcvetta/daily-driver/commit/8f547641683f16bb3443d9ebc08ce07cd49d8720))
+* **rectify-names:** scale naming records to risk ([#1111](https://github.com/jmcvetta/daily-driver/issues/1111)) ([c3d9f06](https://github.com/jmcvetta/daily-driver/commit/c3d9f062920e01521c482ddb8bd2b6739ef14ad7))
+* simplify readiness and recovery reports ([#1117](https://github.com/jmcvetta/daily-driver/issues/1117)) ([59c1cff](https://github.com/jmcvetta/daily-driver/commit/59c1cff26c654b18d5dbdc3055ca9bcda18ec8a3))
+
+
+### Bug Fixes
+
+* **issue-labels:** classify report-only filings as bugs ([#1116](https://github.com/jmcvetta/daily-driver/issues/1116)) ([e02a057](https://github.com/jmcvetta/daily-driver/commit/e02a057040fd77bb9e2ff50ebe1a23182396bc81))
+* **issue-labels:** reconcile story after graph changes ([#1112](https://github.com/jmcvetta/daily-driver/issues/1112)) ([7d00041](https://github.com/jmcvetta/daily-driver/commit/7d000416dc6dd0a49a9660273d17c238b345de61))
+* keep model-class metadata non-blocking ([#1101](https://github.com/jmcvetta/daily-driver/issues/1101)) ([13bcfcc](https://github.com/jmcvetta/daily-driver/commit/13bcfccd9c379c44673757c916740d147f3c388a))
+* keep supervision recovery operable ([#1110](https://github.com/jmcvetta/daily-driver/issues/1110)) ([d09c9cc](https://github.com/jmcvetta/daily-driver/commit/d09c9cc083df02252590d8c2854c463b9bd8e919))
+* narrow epic title recovery restrictions ([#1102](https://github.com/jmcvetta/daily-driver/issues/1102)) ([187834e](https://github.com/jmcvetta/daily-driver/commit/187834eb9a987b1fbb7e7ce02ef1dc184dd16fff))
+* **notification-policy:** persist deduplication after successful delivery ([#1108](https://github.com/jmcvetta/daily-driver/issues/1108)) ([d97709b](https://github.com/jmcvetta/daily-driver/commit/d97709bf142243d40f9a8821f3389afada7b45a7))
+* **omp:** distinguish shell execution positions from arguments ([#1113](https://github.com/jmcvetta/daily-driver/issues/1113)) ([09050ef](https://github.com/jmcvetta/daily-driver/commit/09050ef4853d025735f0b1dc26152962ae853076))
+* **omp:** report successful PR writes despite registration failures ([#1118](https://github.com/jmcvetta/daily-driver/issues/1118)) ([5a72f49](https://github.com/jmcvetta/daily-driver/commit/5a72f49eff2a6fcdc3159c2f00b873fe09ff4f82))
+* preserve accurate PR metadata ([#1109](https://github.com/jmcvetta/daily-driver/issues/1109)) ([db10fbf](https://github.com/jmcvetta/daily-driver/commit/db10fbfb8b57c257881b7d442bf2676588bcd0cf))
+* **pr:** prove base currency before branch updates ([#1105](https://github.com/jmcvetta/daily-driver/issues/1105)) ([d0a5c09](https://github.com/jmcvetta/daily-driver/commit/d0a5c09edd1902a4f151e52d4381c09fe4ee8cae))
+* remove residual standing-policy ceremony ([#1107](https://github.com/jmcvetta/daily-driver/issues/1107)) ([012e0de](https://github.com/jmcvetta/daily-driver/commit/012e0dec906b1ba2ac298aee1a5c1fb7d672c9cc))
+* **review-cycle:** escalate on convergence evidence ([#1103](https://github.com/jmcvetta/daily-driver/issues/1103)) ([927644f](https://github.com/jmcvetta/daily-driver/commit/927644f09cde9b8ed197d3e8e358dc4ed7700fb2))
+
+
+### Performance Improvements
+
+* **supervision:** reuse the inbox admission read for legacy checks ([#1119](https://github.com/jmcvetta/daily-driver/issues/1119)) ([b92710a](https://github.com/jmcvetta/daily-driver/commit/b92710a2e987fe60b84ca5834cb65a6028bc5c23))
+
 ## [0.78.0](https://github.com/jmcvetta/daily-driver/compare/v0.77.0...v0.78.0) (2026-11-24)
 
 
