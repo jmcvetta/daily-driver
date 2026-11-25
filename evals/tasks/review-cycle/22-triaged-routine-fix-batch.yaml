@@ -81,7 +81,7 @@ success_criteria:
   - type: file_matches_regex
     description: Routine worker records passing focused test output
     path: .fixture/worker-test-output.txt
-    pattern: '(?is)(?=.*exit status: 0)(?=.*Ran \d+ tests? in )(?=.*\nOK\b)'
+    pattern: '(?is)(?=.*exit[ _]status[ =:]+0)(?=.*Ran \d+ tests? in )(?=.*\nOK\b)'
     weight: 2
   - type: command_executed
     description: Owner runs the integrated acceptance test

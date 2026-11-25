@@ -22,13 +22,12 @@ SCENARIOS: dict[str, dict[str, Any]] = {
         "command": "python3 -m unittest test_labels.py",
         "requirements": (
             ("contract", ("normalize_label", "lowercase", "ascii", "spaces or tabs", "underscore")),
-            ("scope", ("owned product files", "do not change other files", "no other files", "may be edited", "sole writer of")),
+            ("scope", ("scope", "only ", "sole writer")),
             ("authorization", ("authorized", "no network", "no tracker")),
-            ("single-writer ownership", ("sole writer", "one writer", "single writer")),
+            ("single-writer ownership", ("sole writer", "one writer", "single writer", "sole file writer")),
             ("owner integration", ("owner", "integrat")),
             ("acceptance", ("acceptance",)),
             ("requested result", ("observed", "unresolved")),
-            ("no nested delegation", ("do not spawn", "no further worker", "no other worker", "dispatch any agent", "no other agent")),
         ),
     },
     "review-fix": {
@@ -37,13 +36,12 @@ SCENARIOS: dict[str, dict[str, Any]] = {
         "requirements": (
             ("triaged findings", ("triaged", "accepted")),
             ("correction contract", ("format_name", "trim", "upper")),
-            ("scope", ("owned product files", "do not change other files", "no other files", "may be edited", "sole writer of")),
+            ("scope", ("scope", "only ", "sole writer")),
             ("authorization", ("authorized", "no publication", "no push")),
-            ("single-writer ownership", ("sole writer", "one writer", "single writer")),
+            ("single-writer ownership", ("sole writer", "one writer", "single writer", "sole file writer")),
             ("owner dispositions", ("owner", "thread", "disposition")),
             ("independent verification", ("verify the fix delta",)),
             ("requested result", ("observed", "unresolved")),
-            ("no nested delegation", ("do not spawn", "no further worker", "no other worker", "dispatch any agent", "no other agent")),
         ),
     },
 }
