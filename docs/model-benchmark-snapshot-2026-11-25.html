@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI model benchmarks and API prices — 25 November 2026</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0;
+    padding: 2rem clamp(1rem, 2vw, 2rem) 3rem;
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1, p { max-width: 64rem; }
+  h1 { margin: 0 0 .5rem; font-size: 1.5rem; line-height: 1.25; }
+  p { margin: .75rem 0; max-width: 48rem; }
+  .warning { font-weight: 600; }
+  .hint { color: color-mix(in srgb, CanvasText 70%, transparent); }
+  .scroll { overflow-x: auto; margin: 1.25rem 0; }
+  table { border-collapse: collapse; width: 100%; }
+  caption { padding-bottom: .5rem; text-align: left; }
+  th, td {
+    padding: .4rem .6rem;
+    border-bottom: 1px solid color-mix(in srgb, CanvasText 22%, transparent);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  thead th {
+    position: sticky;
+    top: 0;
+    background: Canvas;
+    border-bottom-width: 2px;
+    vertical-align: bottom;
+    white-space: normal;
+  }
+  th:first-child, td:first-child { text-align: left; white-space: normal; }
+  thead th button {
+    all: unset;
+    cursor: pointer;
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    text-align: inherit;
+    font-weight: 600;
+  }
+  thead th button:hover { text-decoration: underline; }
+  thead th button:focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+  th[aria-sort="ascending"] button::after { content: " \25B4"; }
+  th[aria-sort="descending"] button::after { content: " \25BE"; }
+  th[aria-sort] { background: color-mix(in srgb, Canvas 85%, Highlight 15%); }
+  tbody tr:nth-child(even) { background: color-mix(in srgb, Canvas 95%, CanvasText 5%); }
+  tbody tr:hover { background: color-mix(in srgb, Canvas 88%, CanvasText 12%); }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+<h1>AI model benchmarks and API prices</h1>
+
+<p class="warning">Snapshot: 25 November 2026, 09:06 UTC. Benchmark scores, model
+availability, and API prices change quickly. Check current results and provider
+pricing before choosing a model.</p>
+
+<p>This comparison covers selected models for software engineering and
+terminal-based work. Each row uses the highest reasoning setting tested by
+Artificial Analysis, where the source lists one. These settings are not
+necessarily the API defaults.</p>
+
+<p class="hint">Click a column heading to sort by it; click it again to reverse
+the order. <span aria-hidden="true">&uarr;</span> marks a column where higher is
+better and <span aria-hidden="true">&darr;</span> a column where lower is
+better.</p>
+
+<div class="scroll">
+<table id="benchmarks">
+  <caption class="visually-hidden">AI model benchmark scores and API prices, 25 November 2026</caption>
+  <thead>
+    <tr>
+      <th scope="col" aria-sort="none"><button type="button">Model</button></th>
+      <th scope="col" aria-sort="descending"><button type="button">Intelligence Index &uarr;</button></th>
+      <th scope="col" aria-sort="none"><button type="button">Terminal-Bench 4.1 &uarr;</button></th>
+      <th scope="col" aria-sort="none"><button type="button">FrontierCode-AA 2.0 &uarr;</button></th>
+      <th scope="col" aria-sort="none"><button type="button">Input USD / 1M &darr;</button></th>
+      <th scope="col" aria-sort="none"><button type="button">Output USD / 1M &darr;</button></th>
+      <th scope="col" aria-sort="none"><button type="button">Cost/task &darr;</button></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Gemini 4 Neon XHigh</td>
+      <td data-value="62"><strong>62</strong></td>
+      <td data-value="65.2">65.2%</td>
+      <td data-value="44.4">44.4%</td>
+      <td data-value="3.00">$3.00</td>
+      <td data-value="15.00">$15.00</td>
+      <td data-value="6.44">$6.44</td>
+    </tr>
+    <tr>
+      <td>Gemini 4 Carbon High</td>
+      <td data-value="60">60</td>
+      <td data-value="66.2">66.2%</td>
+      <td data-value="40.6">40.6%</td>
+      <td data-value="4.00">$4.00</td>
+      <td data-value="20.00">$20.00</td>
+      <td data-value="7.76">$7.76</td>
+    </tr>
+    <tr>
+      <td>Claude Opus 5.5 Max</td>
+      <td data-value="59">59</td>
+      <td data-value="59.1">59.1%</td>
+      <td data-value="46.9"><strong>46.9%</strong></td>
+      <td data-value="4.00">$4.00</td>
+      <td data-value="20.00">$20.00</td>
+      <td data-value="10.04">$10.04</td>
+    </tr>
+    <tr>
+      <td>GPT-6.2 Sol Max</td>
+      <td data-value="57">57</td>
+      <td data-value="60.1">60.1%</td>
+      <td data-value="44.4">44.4%</td>
+      <td data-value="2.00">$2.00</td>
+      <td data-value="10.00">$10.00</td>
+      <td data-value="1.01">$1.01</td>
+    </tr>
+    <tr>
+      <td>Claude Sonnet 5.5 Max</td>
+      <td data-value="55">55</td>
+      <td data-value="65.2">65.2%</td>
+      <td data-value="41.9">41.9%</td>
+      <td data-value="2.00">$2.00</td>
+      <td data-value="10.00">$10.00</td>
+      <td data-value="10.02">$10.02</td>
+    </tr>
+    <tr>
+      <td>Gemini 4 Hydrogen XHigh</td>
+      <td data-value="54">54</td>
+      <td data-value="55.1">55.1%</td>
+      <td data-value="39.0">39.0%</td>
+      <td data-value="1.50">$1.50</td>
+      <td data-value="7.50">$7.50</td>
+      <td data-value="3.16">$3.16</td>
+    </tr>
+    <tr>
+      <td>GPT-6.1 Terra Max</td>
+      <td data-value="51">51</td>
+      <td data-value="56.6">56.6%</td>
+      <td data-value="42.1">42.1%</td>
+      <td data-value="1.00">$1.00</td>
+      <td data-value="5.00">$5.00</td>
+      <td data-value="0.96">$0.96</td>
+    </tr>
+    <tr>
+      <td>Kimi K3.1 Pro</td>
+      <td data-value="47">47</td>
+      <td data-value="68.2"><strong>68.2%</strong></td>
+      <td data-value="25.5">25.5%</td>
+      <td data-value="2.00">$2.00</td>
+      <td data-value="10.00">$10.00</td>
+      <td data-value="3.68">$3.68</td>
+    </tr>
+    <tr>
+      <td>Qwen4 Max</td>
+      <td data-value="43">43</td>
+      <td data-value="47.5">47.5%</td>
+      <td data-value="26.5">26.5%</td>
+      <td data-value="1.50">$1.50</td>
+      <td data-value="4.50">$4.50</td>
+      <td data-value="3.27">$3.27</td>
+    </tr>
+    <tr>
+      <td>GLM-5.3 Max</td>
+      <td data-value="32">32</td>
+      <td data-value="40.9">40.9%</td>
+      <td data-value="21.6">21.6%</td>
+      <td data-value="1.40">$1.40</td>
+      <td data-value="4.40">$4.40</td>
+      <td data-value="5.01">$5.01</td>
+    </tr>
+    <tr>
+      <td>DeepSeek V4.1 Flash 1017 Max</td>
+      <td data-value="32">32</td>
+      <td data-value="32.3">32.3%</td>
+      <td data-value="28.2">28.2%</td>
+      <td data-value="0.30">$0.30</td>
+      <td data-value="1.20">$1.20</td>
+      <td data-value="0.60">$0.60</td>
+    </tr>
+    <tr>
+      <td>Inkling 2 Small</td>
+      <td data-value="31">31</td>
+      <td data-value="13.6">13.6%</td>
+      <td data-value="25.4">25.4%</td>
+      <td data-value="0.30">$0.30</td>
+      <td data-value="1.00">$1.00</td>
+      <td data-value="1.18">$1.18</td>
+    </tr>
+    <tr>
+      <td>GPT-6 Luna Max</td>
+      <td data-value="28">28</td>
+      <td data-value="12.6">12.6%</td>
+      <td data-value="25.2">25.2%</td>
+      <td data-value="0.10"><strong>$0.10</strong></td>
+      <td data-value="0.50"><strong>$0.50</strong></td>
+      <td data-value="0.15"><strong>$0.15</strong></td>
+    </tr>
+    <tr>
+      <td>GLM-5.3-Flash Max</td>
+      <td data-value="28">28</td>
+      <td data-value="32.8">32.8%</td>
+      <td data-value="17.2">17.2%</td>
+      <td data-value="0.15">$0.15</td>
+      <td data-value="0.50"><strong>$0.50</strong></td>
+      <td data-value="0.58">$0.58</td>
+    </tr>
+    <tr>
+      <td>Mistral Large 4 High</td>
+      <td data-value="26">26</td>
+      <td data-value="24.7">24.7%</td>
+      <td data-value="15.0">15.0%</td>
+      <td data-value="0.70">$0.70</td>
+      <td data-value="2.10">$2.10</td>
+      <td data-value="2.06">$2.06</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>The <a href="https://artificialanalysis.ai/evaluations/artificial-analysis-intelligence-index">Intelligence Index v5.0.2</a>
+aggregates multiple evaluations. Terminal-Bench measures terminal-based agent work;
+FrontierCode measures software engineering in repositories. Compare the column
+closest to your workload rather than treating the overall index as a coding score.</p>
+
+<p>Token rates are US dollars per million tokens before cache discounts. Cost per
+task is the weighted average for the Intelligence Index suite, not a price quote
+for your workload. Models can use different numbers of tokens on the same task, so
+equal token rates do not imply equal task costs.</p>
+
+<p>The <a href="model-benchmark-snapshot-2026-11-25.md">Markdown snapshot</a> holds
+the same data, the benchmark source links, and the surrounding notes.</p>
+
+<p id="sort-status" role="status" class="visually-hidden"></p>
+
+<script>
+  const table = document.getElementById("benchmarks");
+  const tbody = table.tBodies[0];
+  const headers = Array.from(table.tHead.rows[0].cells);
+  const publishedRows = Array.from(tbody.rows);
+  const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+  const status = document.getElementById("sort-status");
+  let sortIndex = 0;
+  let sortDirection = -1; // The published order is Intelligence Index, descending.
+
+  const valueOf = (row, index) => {
+    const cell = row.cells[index];
+    if (cell.dataset.value !== undefined) return Number(cell.dataset.value);
+    return cell.textContent.trim();
+  };
+
+  const compare = (a, b) =>
+    typeof a === "number" && typeof b === "number" ? a - b : collator.compare(a, b);
+
+  const sortBy = (index, direction) => {
+    const rows = Array.from(tbody.rows);
+    rows.sort((a, b) => {
+      const order = compare(valueOf(a, index), valueOf(b, index)) * direction;
+      return order !== 0 ? order : publishedRows.indexOf(a) - publishedRows.indexOf(b);
+    });
+    tbody.replaceChildren(...rows);
+
+    headers.forEach((th, i) => {
+      if (i === index) {
+        th.setAttribute("aria-sort", direction === 1 ? "ascending" : "descending");
+      } else {
+        th.setAttribute("aria-sort", "none");
+      }
+    });
+
+    sortIndex = index;
+    sortDirection = direction;
+    const label = headers[index].textContent.replace(/[\u25B4\u25BE\u2191\u2193]/g, "").trim();
+    status.textContent = `Sorted by ${label}, ${direction === 1 ? "ascending" : "descending"}.`;
+  };
+
+  headers.forEach((th, index) => {
+    th.querySelector("button").addEventListener("click", () => {
+      const direction = sortIndex === index && sortDirection === 1 ? -1 : 1;
+      sortBy(index, direction);
+    });
+  });
+</script>
+</body>
+</html>
