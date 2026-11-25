@@ -34,10 +34,7 @@ model, the
   cheaper fallback default, the advisor, and the strong-model review that gates
   an implementor's pull request.
 - **`undertake` does not start a second full undertaking for one issue.** The original observation remains valid: a second session repeats the claim and splits ownership of the branch, pull request and gates. The narrower rule that the owner must write all implementation code is superseded by note `0036`: the owner may delegate a bounded settled component slice while retaining the issue and outcome.
-- **The review round still delegates.** `review-cycle`'s `Verify the fix delta`
-  dispatches a briefed subagent, and that is the one dispatch inside the
-  sequence. The author of a delta cannot be an independent reader of it, so the
-  second context there is the whole point.
+- **Review-round delegation remains independent review.** `Review the head` uses a full independent reviewer, and `Verify the fix delta` checks each correction batch independently. These review tasks are distinct from routine implementation handoffs in note `0036`; neither is removed or replaced by them. The author of a change cannot be its independent reader.
 - **`embark`-of-one keeps nothing.** A fleet of one was the case the delegation
   note used to justify reaching into `undertake`; with the rule scoped to
   parallelism, there

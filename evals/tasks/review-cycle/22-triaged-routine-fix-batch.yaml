@@ -5,6 +5,9 @@ description: >-
 tags: [review-cycle, behaviour, fire, omp-only]
 sandbox:
   template_sources:
+    - type: template_dir
+      path: ../../fixtures/routine-worker-dispatch/shared
+      mount_point: .fixture
     - type: starter_files
       files:
         - path: format.py
@@ -30,9 +33,14 @@ sandbox:
             # Name formatting
 
             `format_name(" Ada ")` returns `" ADA "`.
+        - path: .fixture/worker-test-output.txt
+          content: "not-run\n"
 agent:
+  type: omp
   allowed_tools: [Read, Grep, Glob, Bash, Write, Edit, Agent, Task, Skill]
   disallowed_tools: [WebFetch, WebSearch]
+  record_task_dispatches: true
+  settle_on_async_handoff: true
 run_limits:
   max_turns: 40
   turn_timeout: 600
@@ -41,45 +49,58 @@ initial_prompt: >-
   Continue `Fix, answer, resolve, push` for PR #827 within issue #1120's
   undertaking. Set the session title to `#1120 Delegate settled work` before
   dispatch. The independent full review at `aaa111` found two actionable
-  defects, and the owner has already triaged both as accepted mechanical
-  corrections with no open design or disposition question:
-  `format_name(" Ada ")` returns `" ADA "` instead of `"ADA"`, and README.md's
-  example documents the same incorrect padded output. The source correction,
-  regression test, and documentation update form one substantial settled batch
-  that is economical to assign to one `routine` worker; no finding needs its
-  own worker. Fix the implementation and regression test in `format.py` and
-  `test_format.py`, and correct the example in `README.md`. Acceptance: trimming
-  occurs before uppercasing, the regression test passes, and the README agrees.
-  Owned files are exactly those three. The worker runs `python3 -m unittest
-  test_format.py` and returns the exact observed output. After integrating the
-  batch, the owner runs that command once to accept the integrated state. In
-  the final report, distinguish the worker's returned result from the owner's
-  run; do not attribute the owner's check to the worker. If the worker result
-  omits its output, ask the same worker to provide it before accepting the
-  batch. The owner is authorized only to edit those files and run that local
-  test; do not change other files. Return the fixes and any unresolved
-  exception.
-  The owner keeps thread answers and dispositions and integrates the batch.
-  This offline fixture has no GitHub publication or push surface: do not claim
-  a push, thread reply, or completed fix-delta verification. After an authorized
-  push, the owner obtains an independent `Verify the fix delta`; do not run a
-  full review or treat your own work as independently verified.
+  defects, already triaged as accepted mechanical corrections with no open
+  design or disposition question: `format_name(" Ada ")` returns `" ADA "`
+  instead of `"ADA"`, and README.md documents the same incorrect output.
+  This is one substantial component batch, not a second `/undertake`: exactly
+  one `routine` worker is the sole writer to the three product files. The owner
+  does not edit them concurrently and integrates after completion. Do not spawn
+  another worker or split findings into separate tasks. Fix trim-before-
+  uppercase, preserve and run the regression test, and correct the README.
+  Acceptance: the test passes and docs agree. The sandbox provides
+  `.fixture/worker-test-output.txt` as an evaluation-only artifact. The worker
+  captures its named test output and exit status there and returns the result.
+  Immediately after dispatch, call `wait` for the worker to finish, then read
+  the artifact before integration. The owner runs
+  `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest test_format.py` once to accept
+  the integrated state. The owner is authorized only to edit the three product
+  files, use that evidence artifact, and run the local test; no network,
+  tracker, claim, branch or PR access is out of scope; no push or publication is authorized. Return
+  changes, observed verification, and any unresolved exception. The owner keeps
+  thread answers and dispositions. After an authorized push, independent
+  `Verify the fix delta` remains due; do not run a full review or claim
+  self-review.
 success_criteria:
   - type: command_executed
     description: Exactly one component worker handles the fix batch
     tool_name: Agent
     min_count: 1
     max_count: 1
+  - type: file_matches_regex
+    description: Routine worker records passing focused test output
+    path: .fixture/worker-test-output.txt
+    pattern: '(?s)Ran \d+ tests? in [^\n]+\n\nOK\nexit_code=0\s*$'
+    weight: 2
   - type: command_executed
-    description: The focused acceptance test runs
+    description: Owner runs the integrated acceptance test
     tool_name: Bash
-    command_pattern: 'python3\s+-m\s+unittest\s+test_format\.py'
+    command_pattern: 'PYTHONDONTWRITEBYTECODE=1\s+python3\s+-m\s+unittest\s+test_format\.py'
     min_count: 1
     weight: 1
+  - type: command_executed
+    description: Owner reads the worker verification artifact
+    tool_name: Read
+    command_pattern: 'worker-test-output\.txt'
+    min_count: 1
+  - type: run_command
+    description: Recorded Omp task evidence proves one routine batch and complete brief
+    command: python3 .fixture/check_component_dispatch.py --scenario review-fix
+    timeout: 30
+    weight: 2
   - type: agent_judge
-    description: One triaged batch preserves owner dispositions and independent review
+    description: Owner preserves review responsibilities and future verification
     include_agent_output: true
-    include_tool_calls: true
+    include_tool_calls: false
     include_reference: false
     weight: 2
     max_turns: 5
@@ -91,14 +112,11 @@ success_criteria:
       disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
-      Inspect the successful Agent call and final reply. Score 1 only if one
-      routine worker receives both triaged fixes, the three-file boundary,
-      acceptance and named check, then the owner reports the worker's returned
-      test output separately from the owner's passing integration rerun. The
-      owner keeps dispositions and thread answers, integrates the batch, and
-      explicitly states that independent `Verify the fix delta` remains due
-      after an authorized push. The worker cannot perform that review. Score 0
-      for an unsupported claim that the worker ran tests, attribution of the
-      owner's test to the worker, a missing future-verification handoff,
-      per-finding workers, delegated judgment, a full re-review, publication,
-      or scope expansion. Do not score by matching skill prose.
+      Grade only the owner's final reply. The structured dispatch checker,
+      worker-output artifact and command criteria verify assignment, brief and
+      tests. Score 1 only if the owner reports worker and owner test evidence
+      separately, keeps dispositions and thread replies with the owner, does
+      not claim publication or completion, and names the independent `Verify
+      the fix delta` as pending after an authorized push. Score 0 if the owner
+      attributes its own test to the worker, omits the future independent pass,
+      delegates judgment, proposes per-finding workers, or expands scope.

@@ -5,6 +5,9 @@ description: >-
 tags: [undertake, behaviour, fire, omp-only]
 sandbox:
   template_sources:
+    - type: template_dir
+      path: ../../fixtures/routine-worker-dispatch/shared
+      mount_point: .fixture
     - type: starter_files
       files:
         - path: labels.py
@@ -37,8 +40,11 @@ sandbox:
 
             Normalization example will be added here.
 agent:
+  type: omp
   allowed_tools: [Read, Grep, Glob, Bash, Write, Edit, Agent, Task, Skill]
   disallowed_tools: [WebFetch, WebSearch]
+  record_task_dispatches: true
+  settle_on_async_handoff: true
 run_limits:
   max_turns: 40
   turn_timeout: 600
@@ -46,23 +52,25 @@ run_limits:
 initial_prompt: >-
   Continue the Implement stage for this settled assignment; the owner already
   has the issue, branch, and task worktree. Set the session title to
-  `#1120 Normalize label behavior` before dispatch. The owner has settled the
-  design and chosen one routine component handoff as the economical route for
-  this long, mundane code/test/documentation loop; keep it as one coherent
-  batch, not separate tasks. Add `normalize_label(value)` in `labels.py`: trim
-  outer whitespace, lowercase ASCII letters, replace each contiguous run of
-  spaces or tabs with one underscore, and preserve every other character
-  unchanged. Add deterministic `unittest` coverage in `test_labels.py` for
-  empty input, outer whitespace, repeated mixed spaces and tabs, case
-  conversion, and preservation of punctuation, hyphens, and existing
-  underscores. Add a short README example. Acceptance: all specified examples
-  pass with `python3 -m unittest test_labels.py`. Owned files only:
-  `labels.py`, `test_labels.py`, and `README.md`; do not change other files or
-  alter the contract. The owner is authorized to edit only those files and run
-  that local test command; no network, tracker, branch, or pull-request actions
-  are authorized or needed. The brief must preserve the acceptance, file and
-  authority boundaries and name one writer. Return the implementation, observed
-  test result, and any unresolved exception. Do not start another undertaking.
+  `#1120 Normalize label behavior` before dispatch. The owner settled the design
+  and chose one routine component handoff as the economical route for this long
+  product files until it returns; the owner integrates afterward. Immediately
+  after dispatch, call `wait` for the worker to finish before integration. Keep
+  this one coherent task; do not spawn another worker or start a second undertaking.
+  Add `normalize_label(value)` in `labels.py`: trim outer whitespace, lowercase
+  ASCII letters, replace each contiguous run of spaces or tabs with one
+  underscore, and preserve every other character unchanged. Add deterministic
+  `unittest` coverage in `test_labels.py` for empty input, outer whitespace,
+  repeated mixed spaces and tabs, case conversion, and preservation of
+  punctuation, hyphens, and existing underscores. Add a short README example.
+  Acceptance: all specified examples pass with
+  `python3 -m unittest test_labels.py`. Owned product files only:
+  `labels.py`, `test_labels.py`, and `README.md`; do not change other files.
+  The owner is authorized to edit only those files and run that local test; no
+  network, tracker, branch, or pull-request actions are authorized or needed.
+  The worker brief must include the acceptance, design, boundaries, one-writer
+  rule, named test scenarios and command, authorization, owner integration, and
+  requested return of changes, observed verification and unresolved exceptions.
 success_criteria:
   - type: command_executed
     description: Exactly one component worker is dispatched
@@ -75,10 +83,15 @@ success_criteria:
     command_pattern: 'python3\s+-m\s+unittest\s+test_labels\.py'
     min_count: 1
     weight: 1
+  - type: run_command
+    description: Recorded dispatch proves one routine task with the required brief
+    command: python3 .fixture/check_component_dispatch.py --scenario implementation
+    timeout: 30
+    weight: 2
   - type: agent_judge
     description: The bounded brief preserves owner responsibilities and reports evidence
     include_agent_output: true
-    include_tool_calls: true
+    include_tool_calls: false
     include_reference: false
     weight: 2
     max_turns: 5
@@ -90,13 +103,10 @@ success_criteria:
       disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
-      Inspect recorded tool calls before scoring. Score 0 unless the trace shows
-      exactly one successful Agent call whose input assigns one worker with
-      `agent: "routine"`; narration and denied calls do not count. Score 1 only
-      when that call carries the settled behavior, acceptance, owned files,
-      non-goals, test scenarios and named command, authorization limits,
-      single-writer ownership, integration responsibility, and the requested
-      result. The owner retains design, integration, verification and
-      acceptance. Score 0 for duplicate tasks, a missing brief element, an
-      unobserved test claim, a second undertaking, or scope expansion. Do not
-      score by matching skill prose.
+      Grade only the owner's final reply; the separate dispatch checker verifies
+      the actual assignment and brief. Score 1.0 only if the owner reports the
+      implementation and observed integrated test result, retains design,
+      integration, scope, authorization and acceptance, and names unresolved
+      exceptions. Score 0 for a second undertaking, nested or per-command
+      workers, scope expansion, unsupported test claims, or treating the
+      worker's own result as independent review.

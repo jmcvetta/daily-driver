@@ -1,0 +1,173 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "command_executed",
+          "description": "Exactly one component worker handles the fix batch",
+          "details": "Matched 1 matches (allowed range 1..1) commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"# Goal\\\\nContinue Fix, answer, resolve, push for PR #827 within issu)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The focused acceptance test runs",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/python3\\s+-m\\s+unittest\\s+test_format\\.py/)\nExamples: ['PYTHONDONTWRITEBYTECODE=1 python3 -m unittest test_format.py']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "One triaged batch preserves owner dispositions and independent review",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "One triaged batch preserves owner dispositions and independent review",
+            "duration_seconds": 16.7,
+            "findings": [
+              "Exactly one routine worker received both fixes, the three-file boundary, acceptance criteria, named check, and observed-output request.",
+              "Owner acceptance command actually passed with 2 tests.",
+              "Agent result only confirms spawning; no worker completion or test output is present.",
+              "Final reply nevertheless claims worker-reported 2 tests, OK, exit 0.",
+              "Owner retained thread dispositions and explicitly left independent Verify the fix delta due after an authorized push; no publication occurred."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "1473131862a7ef1a1f3eeaf972b93218b7be60cb822de53954534a47abbe9995",
+            "rationale": "The single routine delegation meets the batching contract, and the owner ran the named acceptance test, but the final reply claims worker test results that are absent from the supplied task result. The grading prompt explicitly disallows unsupported worker-verification claims.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 4094,
+              "output": 154
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "a0e38b4a16588d1bdfe41ff6232236c8ab50331f5edcadaee34300d8a8239971"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "review-cycle-22-triaged-routine-fix-batch",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 110.15281081199646,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "review-cycle-22-triaged-routine-fix-batch",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 161536,
+        "output_tokens": 3427,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 98635
+      },
+      "tokens": 263598,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-25T16:16:27.698885",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "a0e38b4a16588d1bdfe41ff6232236c8ab50331f5edcadaee34300d8a8239971",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v3",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 4094,
+      "output": 154
+    }
+  },
+  "plugin_revision": {
+    "commit": "d93652f2adb2b49b52264f97de21bcc61b9fa4e8",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-25T09:16:45.571140+00:00",
+  "run_id": "2026-11-25_16-14-37",
+  "schema_version": 5,
+  "started_at": "2026-11-25T16:14:37.542773",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "review-cycle-22-triaged-routine-fix-batch": [
+          0.5
+        ]
+      },
+      "task_ids": [
+        "review-cycle-22-triaged-routine-fix-batch"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
