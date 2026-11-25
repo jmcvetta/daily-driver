@@ -4,6 +4,8 @@
 
 This comparison covers selected models for software engineering and terminal-based work. Each row uses the highest reasoning setting tested by Artificial Analysis, where the source lists one. These settings are not necessarily the API defaults.
 
+The [sortable HTML version](model-benchmark-snapshot-2026-11-25.html) reorders the table when you click a column heading. GitHub serves HTML files as source, so open or download that file to use it.
+
 | Model | Intelligence Index ↑ | Terminal-Bench 4.1 ↑ | FrontierCode-AA 2.0 ↑ | Input USD / 1M ↓ | Output USD / 1M ↓ | Cost/task ↓ |
 |---|---:|---:|---:|---:|---:|---:|
 | Gemini 4 Neon XHigh | **62** | 65.2% | 44.4% | $3.00 | $15.00 | $6.44 |
