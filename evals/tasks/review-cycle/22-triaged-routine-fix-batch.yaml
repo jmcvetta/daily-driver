@@ -37,10 +37,9 @@ sandbox:
           content: "not-run\n"
 agent:
   type: omp
-  allowed_tools: [Read, Grep, Glob, Bash, Write, Edit, Agent, Task, Skill]
+  allowed_tools: [Read, Grep, Glob, Bash, Write, Edit, Agent, Task, Skill, wait]
   disallowed_tools: [WebFetch, WebSearch]
   record_task_dispatches: true
-  settle_on_async_handoff: true
 run_limits:
   max_turns: 40
   turn_timeout: 600
@@ -55,7 +54,7 @@ initial_prompt: >-
   This is one substantial component batch, not a second `/undertake`: exactly
   one `routine` worker is the sole writer to the three product files. The owner
   does not edit them concurrently and integrates after completion. Do not spawn
-  another worker or split findings into separate tasks. Fix trim-before-
+  a second worker or split findings into separate tasks. Fix trim-before-
   uppercase, preserve and run the regression test, and correct the README.
   Acceptance: the test passes and docs agree. The sandbox provides
   `.fixture/worker-test-output.txt` as an evaluation-only artifact. The worker
@@ -64,12 +63,15 @@ initial_prompt: >-
   the artifact before integration. The owner runs
   `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest test_format.py` once to accept
   the integrated state. The owner is authorized only to edit the three product
-  files, use that evidence artifact, and run the local test; no network,
-  tracker, claim, branch or PR access is out of scope; no push or publication is authorized. Return
-  changes, observed verification, and any unresolved exception. The owner keeps
-  thread answers and dispositions. After an authorized push, independent
-  `Verify the fix delta` remains due; do not run a full review or claim
-  self-review.
+  files, use that evidence artifact, and run the local test. No network,
+  tracker, claim, branch, or PR access is authorized; no push or publication is
+  authorized. Return changes, observed verification, and any unresolved
+  exception. The owner keeps thread answers and dispositions. After an
+  authorized push, independent `Verify the fix delta` remains due; do not run a
+  full review or claim self-review. In the final reply, report the worker's
+  observed test result and your own integrated test result separately, state
+  that the owner retains dispositions and thread replies, and name `Verify the
+  fix delta` as pending rather than claiming publication or completion.
 success_criteria:
   - type: command_executed
     description: Exactly one component worker handles the fix batch
@@ -79,7 +81,7 @@ success_criteria:
   - type: file_matches_regex
     description: Routine worker records passing focused test output
     path: .fixture/worker-test-output.txt
-    pattern: '(?s)Ran \d+ tests? in [^\n]+\n\nOK\nexit_code=0\s*$'
+    pattern: '(?is)(?=.*exit status: 0)(?=.*Ran \d+ tests? in )(?=.*\nOK\b)'
     weight: 2
   - type: command_executed
     description: Owner runs the integrated acceptance test

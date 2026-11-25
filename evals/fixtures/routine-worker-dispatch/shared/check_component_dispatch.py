@@ -5,12 +5,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
 
 EVIDENCE_PATH = Path("omp-task-dispatches.json")
 PENDING_PATH = EVIDENCE_PATH.with_name(f"{EVIDENCE_PATH.name}.pending")
+SPAWNED_MANY = re.compile(r"^Spawned (\d+) background agents? using ([^\s.]+)\.\s*$")
+SPAWNED_ONE = re.compile(r"^Spawned agent `([^`]+)` \(job `([^`]+)`\)\.\s*$")
+JOB = re.compile(r"^\s*(?:[-*•])\s+(\S.*?)\s*$")
 
 SCENARIOS: dict[str, dict[str, Any]] = {
     "implementation": {
@@ -18,13 +22,13 @@ SCENARIOS: dict[str, dict[str, Any]] = {
         "command": "python3 -m unittest test_labels.py",
         "requirements": (
             ("contract", ("normalize_label", "lowercase", "ascii", "spaces or tabs", "underscore")),
-            ("scope", ("owned product files", "do not change other files")),
+            ("scope", ("owned product files", "do not change other files", "no other files", "may be edited", "sole writer of")),
             ("authorization", ("authorized", "no network", "no tracker")),
             ("single-writer ownership", ("sole writer", "one writer", "single writer")),
             ("owner integration", ("owner", "integrat")),
             ("acceptance", ("acceptance",)),
             ("requested result", ("observed", "unresolved")),
-            ("no nested delegation", ("do not spawn", "no further worker", "no other worker")),
+            ("no nested delegation", ("do not spawn", "no further worker", "no other worker", "dispatch any agent", "no other agent")),
         ),
     },
     "review-fix": {
@@ -33,13 +37,13 @@ SCENARIOS: dict[str, dict[str, Any]] = {
         "requirements": (
             ("triaged findings", ("triaged", "accepted")),
             ("correction contract", ("format_name", "trim", "upper")),
-            ("scope", ("owned product files", "do not change other files")),
+            ("scope", ("owned product files", "do not change other files", "no other files", "may be edited", "sole writer of")),
             ("authorization", ("authorized", "no publication", "no push")),
             ("single-writer ownership", ("sole writer", "one writer", "single writer")),
             ("owner dispositions", ("owner", "thread", "disposition")),
             ("independent verification", ("verify the fix delta",)),
             ("requested result", ("observed", "unresolved")),
-            ("no nested delegation", ("do not spawn", "no further worker", "no other worker")),
+            ("no nested delegation", ("do not spawn", "no further worker", "no other worker", "dispatch any agent", "no other agent")),
         ),
     },
 }
@@ -94,8 +98,25 @@ def successful_task(calls: list[dict[str, Any]]) -> tuple[dict[str, Any] | None,
     if task.get("agent", arguments.get("agent")) != "routine":
         return None, "component task is not assigned to routine"
     result = call.get("result_text")
-    if not isinstance(result, str) or "Spawned agent" not in result:
-        return None, "task call did not record a spawned worker"
+    if not isinstance(result, str):
+        return None, "task call did not record its result text"
+    lines = [line for line in result.splitlines() if line.strip()]
+    header = lines[0] if lines else ""
+    single = SPAWNED_ONE.match(header)
+    many = SPAWNED_MANY.match(header)
+    if single is not None:
+        if single.group(1) != single.group(2):
+            return None, "spawned worker name and job differ"
+    elif many is not None:
+        if int(many.group(1)) != 1:
+            return None, "task call did not report exactly one spawned worker"
+        if many.group(2) != "routine":
+            return None, f"spawned worker is {many.group(2)}, not routine"
+        jobs = [line for line in lines[1:2] if JOB.match(line)]
+        if not jobs:
+            return None, "spawned worker is not listed by job"
+    else:
+        return None, "task call did not report a recognised spawned worker"
     if not isinstance(task.get("task"), str):
         return None, "routine task has no textual brief"
     return call, None

@@ -41,10 +41,9 @@ sandbox:
             Normalization example will be added here.
 agent:
   type: omp
-  allowed_tools: [Read, Grep, Glob, Bash, Write, Edit, Agent, Task, Skill]
+  allowed_tools: [Read, Grep, Glob, Bash, Write, Edit, Agent, Task, Skill, wait]
   disallowed_tools: [WebFetch, WebSearch]
   record_task_dispatches: true
-  settle_on_async_handoff: true
 run_limits:
   max_turns: 40
   turn_timeout: 600
@@ -54,9 +53,10 @@ initial_prompt: >-
   has the issue, branch, and task worktree. Set the session title to
   `#1120 Normalize label behavior` before dispatch. The owner settled the design
   and chose one routine component handoff as the economical route for this long
-  product files until it returns; the owner integrates afterward. Immediately
-  after dispatch, call `wait` for the worker to finish before integration. Keep
-  this one coherent task; do not spawn another worker or start a second undertaking.
+  mundane implementation loop; do not implement this slice in the owner's
+  context. Immediately after dispatch, call `wait` for the worker to finish
+  before integration. Keep this one coherent task; do not spawn a second worker
+  or start a second undertaking.
   Add `normalize_label(value)` in `labels.py`: trim outer whitespace, lowercase
   ASCII letters, replace each contiguous run of spaces or tabs with one
   underscore, and preserve every other character unchanged. Add deterministic
@@ -71,6 +71,10 @@ initial_prompt: >-
   The worker brief must include the acceptance, design, boundaries, one-writer
   rule, named test scenarios and command, authorization, owner integration, and
   requested return of changes, observed verification and unresolved exceptions.
+  In the final reply, report the worker's observed result and your own
+  integrated test result separately, name the responsibilities you retained
+  (design, integration, scope, authorization, acceptance), and state any
+  unresolved exception.
 success_criteria:
   - type: command_executed
     description: Exactly one component worker is dispatched
