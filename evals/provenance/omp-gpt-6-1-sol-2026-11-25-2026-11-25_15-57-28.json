@@ -1,0 +1,172 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "command_executed",
+          "description": "Exactly one component worker handles the fix batch",
+          "details": "Matched 1 matches (allowed range 1..1) commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"Continue issue #1120 / PR #827 at Fix, answer, resolve, push. Indep)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The focused acceptance test runs",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/python3\\s+-m\\s+unittest\\s+test_format\\.py/)\nExamples: ['PYTHONDONTWRITEBYTECODE=1 python3 -m unittest test_format.py']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "One triaged batch preserves owner dispositions and independent review",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "One triaged batch preserves owner dispositions and independent review",
+            "duration_seconds": 28.92,
+            "findings": [
+              "One successful Agent call assigns both fixes together within the three-file boundary and names acceptance and the test command.",
+              "Owner's named check passes two tests.",
+              "No recorded worker result supports the claim that the worker also ran passing tests.",
+              "No publication or completed independent verification is claimed, but the required future verification handoff is missing."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "81e83bfd8ed0bb9890191e9a7e6ef6d0696990d10bcbe66066b60559deee53ed",
+            "rationale": "The trace shows exactly one successful routine-worker assignment with the required batch and boundaries, but no worker return containing observed passing test output. The owner reruns the check but does not explicitly state that independent `Verify the fix delta` remains due after an authorized push.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 4446,
+              "output": 134
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "3f95f649997374a43b577940492af0724f32c98b22505203d0440ec0b5736e3f"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "review-cycle-22-triaged-routine-fix-batch",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 100.74367332458496,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "review-cycle-22-triaged-routine-fix-batch",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 213120,
+        "output_tokens": 2107,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 148521
+      },
+      "tokens": 363748,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-25T15:59:09.744696",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "3f95f649997374a43b577940492af0724f32c98b22505203d0440ec0b5736e3f",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v3",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 4446,
+      "output": 134
+    }
+  },
+  "plugin_revision": {
+    "commit": "4c8a177032b9e933d5a77f65a07c5cf941e3c242",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-25T08:59:40.551529+00:00",
+  "run_id": "2026-11-25_15-57-28",
+  "schema_version": 5,
+  "started_at": "2026-11-25T15:57:28.996676",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "review-cycle-22-triaged-routine-fix-batch": [
+          0.5
+        ]
+      },
+      "task_ids": [
+        "review-cycle-22-triaged-routine-fix-batch"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

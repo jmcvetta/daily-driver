@@ -109,10 +109,9 @@ stays open.
 The implementor
 ===============
 
-Prefer the in-session route. A full `undertake #<issue>` handoff through `task`
-is permitted. The receiving session owns the worktree, claim, implementation,
-and pull request. The sender stops rather than repeating the handoff or
-supervising duplicate work.
+Prefer the in-session route. A full `undertake #<issue>` handoff through `task` is permitted. The receiving session owns the worktree, claim, implementation, and pull request. The sender stops rather than repeating the handoff or supervising duplicate work.
+
+This full undertaking handoff is distinct from bounded component execution during `Implement`: dispatch the existing Omp subagent route with `agent: "routine"`, passing the owner's task-worktree path and the settled slice brief. The owner retains integration and acceptance; do not start another `/undertake`, claim, branch, pull request, or readiness gate for the component.
 
 Explicit top-level frontier selection and native `^provider/model`
 consultations are ordinary model choices. They do not change the undertaking's

@@ -303,6 +303,8 @@ when it has one, and close the thread after answering:
 5. **Never left open silently.** The rule the other four exist to serve.
 
 
+After triaging the findings, the owner may send the mechanical corrections as one bounded batch to a `routine` worker when that avoids a long mundane fix loop. The owner keeps judgment-dependent dispositions, thread answers and scope control, and supplies the relevant findings, files, acceptance and named checks. Do not dispatch one worker per finding. The owner remains responsible for integration; the worker's corrections are not independent review. `Verify the fix delta` remains an independent pass after the pushed batch, unchanged.
+
 Every reviewer uses this protocol — the agent's own findings, a human's, a
 bot's, or locally returned output. For findings recorded in a summary or
 comment rather than threads, record each disposition there or in a linked

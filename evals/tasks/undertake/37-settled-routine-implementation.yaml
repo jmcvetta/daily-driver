@@ -1,0 +1,116 @@
+task_id: undertake-37-settled-routine-implementation
+description: >-
+  A settled implementation slice is handed to one routine worker with a bounded
+  brief, while the owner retains design, integration, scope, and acceptance.
+tags: [undertake, behaviour, fire, omp-only]
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/routine-worker-dispatch/shared
+      mount_point: .fixture
+    - type: starter_files
+      files:
+        - path: labels.py
+          content: |
+            def normalize_label(value):
+                return value
+        - path: test_labels.py
+          content: |
+            import unittest
+            from labels import normalize_label
+
+            class NormalizeLabelTests(unittest.TestCase):
+                def test_empty_input(self):
+                    self.assertEqual(normalize_label(""), "")
+
+                def test_outer_whitespace(self):
+                    self.assertEqual(normalize_label("  Alpha  "), "alpha")
+
+                def test_mixed_whitespace_runs(self):
+                    self.assertEqual(normalize_label("one \t two\tthree"), "one_two_three")
+
+                def test_preserves_other_characters(self):
+                    self.assertEqual(normalize_label("A-B_C!"), "a-b_c!")
+
+            if __name__ == "__main__":
+                unittest.main()
+        - path: README.md
+          content: |
+            # Label helpers
+
+            Normalization example will be added here.
+agent:
+  type: omp
+  allowed_tools: [Read, Grep, Glob, Bash, Write, Edit, Agent, Task, Skill, wait]
+  disallowed_tools: [WebFetch, WebSearch]
+  record_task_dispatches: true
+run_limits:
+  max_turns: 40
+  turn_timeout: 600
+  task_timeout: 1200
+initial_prompt: >-
+  Continue the Implement stage for this settled assignment; the owner already
+  has the issue, branch, and task worktree. Set the session title to
+  `#1120 Normalize label behavior` before dispatch. The owner settled the design
+  and chose one routine component handoff as the economical route for this long
+  mundane implementation loop; do not implement this slice in the owner's
+  context. Immediately after dispatch, call `wait` for the worker to finish
+  before integration. Keep this one coherent task; do not spawn a second worker
+  or start a second undertaking.
+  Add `normalize_label(value)` in `labels.py`: trim outer whitespace, lowercase
+  ASCII letters, replace each contiguous run of spaces or tabs with one
+  underscore, and preserve every other character unchanged. Add deterministic
+  `unittest` coverage in `test_labels.py` for empty input, outer whitespace,
+  repeated mixed spaces and tabs, case conversion, and preservation of
+  punctuation, hyphens, and existing underscores. Add a short README example.
+  Acceptance: all specified examples pass with
+  `python3 -m unittest test_labels.py`. Owned product files only:
+  `labels.py`, `test_labels.py`, and `README.md`; do not change other files.
+  The owner is authorized to edit only those files and run that local test; no
+  network, tracker, branch, or pull-request actions are authorized or needed.
+  The worker brief must include the acceptance, design, boundaries, one-writer
+  rule, named test scenarios and command, authorization, owner integration, and
+  requested return of changes, observed verification and unresolved exceptions.
+  In the final reply, report the worker's observed result and your own
+  integrated test result separately, name the responsibilities you retained
+  (design, integration, scope, authorization, acceptance), and state any
+  unresolved exception.
+success_criteria:
+  - type: command_executed
+    description: Exactly one component worker is dispatched
+    tool_name: Agent
+    min_count: 1
+    max_count: 1
+  - type: command_executed
+    description: The focused acceptance test runs
+    tool_name: Bash
+    command_pattern: 'python3\s+-m\s+unittest\s+test_labels\.py'
+    min_count: 1
+    weight: 1
+  - type: run_command
+    description: Recorded dispatch proves one routine task with the required brief
+    command: python3 .fixture/check_component_dispatch.py --scenario implementation
+    timeout: 30
+    weight: 2
+  - type: agent_judge
+    description: The bounded brief preserves owner responsibilities and reports evidence
+    include_agent_output: true
+    include_tool_calls: false
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade only the owner's final reply; the separate dispatch checker verifies
+      the actual assignment and brief. Score 1.0 only if the owner reports the
+      implementation and observed integrated test result, retains design,
+      integration, scope, authorization and acceptance, and names unresolved
+      exceptions. Score 0 for a second undertaking, nested or per-command
+      workers, scope expansion, unsupported test claims, or treating the
+      worker's own result as independent review.

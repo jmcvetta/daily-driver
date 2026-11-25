@@ -1,0 +1,280 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "command_executed",
+          "description": "Exactly one component worker is dispatched",
+          "details": "Matched 1 matches (allowed range 1..1) commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"Continue only the Implement stage of settled issue #1120. Owner alr)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The focused acceptance test runs",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/python3\\s+-m\\s+unittest\\s+test_labels\\.py/)\nExamples: ['python3 -m unittest test_labels.py']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The bounded brief preserves owner responsibilities and reports evidence",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The bounded brief preserves owner responsibilities and reports evidence",
+            "duration_seconds": 19.8,
+            "findings": [
+              "Single routine worker with exclusive ownership of the three named files.",
+              "Brief includes behavior, acceptance, non-goals, test scenarios, command, authorization limits, and requested results.",
+              "Owner reviewed final files and ran python3 -m unittest test_labels.py: seven tests passed.",
+              "No duplicate delegation, second undertaking, or scope expansion observed."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "8d2c3b406a084cb7069a45e5b7c6962c3688e6fd8685eb3af23a574cb255540a",
+            "rationale": "The trace contains exactly one successful Agent call assigning one routine worker with a complete, bounded implementation brief. The owner retains the settled design, integration and acceptance responsibility, reviews all three files, and observes the authorized test command passing.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 4826,
+              "output": 155
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "89667a16407d36241357ce137d37e2ddf2e171bcf00e1855a7e7ebfd910410fa"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-37-settled-routine-implementation",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "command_executed",
+          "description": "Exactly one component worker handles the fix batch",
+          "details": "Matched 1 matches (allowed range 1..1) commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"Continue the local correction batch for PR #827 within issue #1120\\')']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The focused acceptance test runs",
+          "details": "Matched 0/1 required commands (filters: tool_name=Bash, pattern=/python3\\s+-m\\s+unittest\\s+test_format\\.py/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "One triaged batch preserves owner dispositions and independent review",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "One triaged batch preserves owner dispositions and independent review",
+            "duration_seconds": 6.01,
+            "findings": [
+              "One successful Agent call with one agent: routine task.",
+              "Both fixes bundled within format.py, test_format.py, and README.md.",
+              "Acceptance and python3 -m unittest test_format.py supplied.",
+              "Worker explicitly excluded from independent review and publication."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "f10f6e38587b3e6a5852159798717f2f91c896de875e11eec4ad2b25b5c4fdd3",
+            "rationale": "The trace records exactly one successful Agent call assigning one routine worker both accepted fixes with the three-file boundary, acceptance criteria, and named test command. The owner retains dispositions, thread answers, integration, and scope, explicitly reserving independent fix-delta verification until after an authorized push without claiming publication or completed independent verification.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 4270,
+              "output": 129
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "89667a16407d36241357ce137d37e2ddf2e171bcf00e1855a7e7ebfd910410fa"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.75,
+      "raw_weighted_score": 0.75,
+      "replicate_index": 0,
+      "task_id": "review-cycle-22-triaged-routine-fix-batch",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 121.67424273490906,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "undertake-37-settled-routine-implementation",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 213760,
+        "output_tokens": 2828,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 98944
+      },
+      "tokens": 315532,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 108.07660436630249,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "review-cycle-22-triaged-routine-fix-batch",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 265600,
+        "output_tokens": 2383,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 51921
+      },
+      "tokens": 319904,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/19.1.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-25T15:54:36.438214",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "89667a16407d36241357ce137d37e2ddf2e171bcf00e1855a7e7ebfd910410fa",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v3",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 9096,
+      "output": 284
+    }
+  },
+  "plugin_revision": {
+    "commit": "fe5ca4ac8d8ac9db5cd90f8c8c289f1eda3324ae",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-25T08:55:04.045267+00:00",
+  "run_id": "2026-11-25_15-50-46",
+  "schema_version": 5,
+  "started_at": "2026-11-25T15:50:46.680775",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "review-cycle-22-triaged-routine-fix-batch": [
+          0.75
+        ],
+        "undertake-37-settled-routine-implementation": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "undertake-37-settled-routine-implementation",
+        "review-cycle-22-triaged-routine-fix-batch"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
