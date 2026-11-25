@@ -17,19 +17,33 @@ this default for its stated scope under `Operator-selected review method`.
 the depth judgement is the agent's. `SKILL.md`'s `Name the level` has nothing
 to bind here — there is no remembered level to override.
 
-**Record returned findings durably on the pull request.** Give the reviewer
-the relevant history, reviewed revision, and current head. Tell it in the
-dispatch that its brief is the complete contract and that it must not load
-`review-cycle`. The routes below
-support submitted reviews and ordinary pull-request comments; neither one
-publication shape nor a matching author account is a prerequisite. Existing
+**A locally returned full-review result is published as one submitted GitHub
+`COMMENT` review.** Give the reviewer the relevant history, reviewed revision,
+and current head. Tell it in the dispatch that its brief is the complete
+contract and that it must not load `review-cycle`; the publication route below
+turns its findings into the submitted threads that `Fix, answer, resolve,
+push` answers. A matching author account is not a prerequisite. Existing
 credible independent human or agent review can supply this evidence without
-another task dispatch.
+another task dispatch; link it rather than republishing it.
 
-Use ordinary `provenance` for published artifacts. Do not inspect persisted
-reviewer transcripts to reconstruct model, provider, or session identity.
-Identify the independent review by its available result or link; the wrapper's
-normal provenance describes the writer and is not proof of review coverage.
+For each completed reviewer task, retain its execution identity with that
+result. Task result `outputPath` names its artifact; the sibling `.jsonl` is
+the persisted child session. Read the assistant `message.model` and
+`message.provider` fields from successful review turns in that session and the
+session ID from its header. This is bounded execution-metadata extraction, not
+review-transcript analysis: do not read message content, reasoning, or tool
+transcripts. If the metadata is unavailable, or successful review turns
+disagree, record the affected field as `unreported`. A task's `resolvedModel`
+and `resolvedModelIdentity` describe resolution, not proof of the model that
+served the review. Never substitute the configured role, the publisher, or the
+reviewer's own claim.
+
+Pass the observed values as `reviewerModel`, `reviewerProvider`, and
+`reviewerSession` to every full-review and fix-delta publication call. Use
+`reviewerModel: "unreported"` when no actual model is available; omit unknown
+provider or session values. Keep each review and verification pass paired with
+its own result. The normal `Model:` block identifies the publisher, not the
+reviewer.
 
 Operator-selected review method
 -------------------------------
@@ -58,8 +72,9 @@ methods again on failure.
 
 Keep the selected method and scope clear in the review evidence. Use native
 publication or the routes below, and link an existing published result instead
-of duplicating it. Record fix-delta results concisely as described below;
-no execution-identity fields or reviewer-session inspection are required.
+of duplicating it. Record fix-delta results concisely as described below, each
+attributed to its own verifier's observed execution identity; review content
+is not inspected.
 
 
 Fix-delta verification
@@ -84,14 +99,21 @@ After receiving the independent result, link it or record a concise account
 of the checked content and fixes, outcome, and any defects or coverage limits:
 
 ```text
-daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>] })
+daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>],
+  reviewerModel: <pass model>, reviewerProvider: <pass provider>,
+  reviewerSession: <pass session> })
 ```
+
+Attribute the record to that pass's own verifier; a fix-delta verifier is not
+the full reviewer or the publisher. If the verifier's execution metadata is
+unavailable, pass `reviewerModel: "unreported"` and omit unknown provider or
+session values.
 
 No fixed verification heading, field set, empty values, usage data, or pass
 counter is needed. Preserve enough result history to recognize repeated
 unresolved defects and failed approaches. The author must not invent the
-reviewer's verdict. The wrapper adds ordinary provenance; do not add a new
-block to the body.
+reviewer's verdict. The wrapper labels the reviewer record separately from the
+publisher's ordinary provenance; do not add a new block to the body.
 
 The wait
 ========
@@ -296,11 +318,12 @@ provides `id`, `isResolved`, `isOutdated`, comments, replies, revisions, paths,
 lines, and bodies. A REST comments page does not supply the `PRRT_…` node ID
 needed to resolve a thread.
 
-After review, check current-head content and any inline anchors. Preserve the
+After review, check current-head content and every inline anchor. Preserve the
 reviewed revision if the head moved, and obtain applicable new review for
 behavioral changes. Check the existing record before posting to avoid duplicate
-findings. Use native publication, or put line-specific findings in `review.json`
-and submit a review, for example:
+findings. Publish the locally returned full review as one submitted `COMMENT`
+review tied to the reviewed commit; put line-specific findings in `review.json`,
+for example:
 
 ```json
 {
@@ -318,21 +341,26 @@ and submit a review, for example:
 }
 ```
 
-Run `daily_driver_gh_write({ args: ["api", "--method", "POST",
-"/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"] })`.
-`COMMENT` is an example, not an evidence gate. Use `start_side` and
-`start_line` for a valid range. Cross-cutting or clean results can use the
-summary without `comments`. If inline publication is unavailable, record
-findings with clear file and code references in a pull-request comment through
-`daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>] })`.
-Never invent an anchor. If no durable route works, retain the findings and
-report publication as incomplete.
+Revalidate the head and anchors, then run
+`daily_driver_gh_write({ args: ["api", "--method", "POST",
+"/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"],
+reviewerModel: <review model>, reviewerProvider: <review provider>,
+reviewerSession: <review session> })`. The wrapper labels the reviewer and
+publisher on the summary and every inline comment in the JSON body. `COMMENT`
+is the submitted-review event. Use `start_side` and `start_line` for a valid
+range. Cross-cutting or clean results can use the summary without `comments`.
+If inline publication is unavailable, record the findings with clear file and
+code references in a durable pull-request comment through
+`daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>] })`
+and report that inline publication was unavailable. Never invent an anchor,
+and an invalid anchor alone must not erase the findings. If no durable route
+works, retain the findings and report publication as incomplete.
 
 | Operation | Call |
 | --------- | ---- |
 | Read reviews | `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews` |
 | Read threads | paginated `gh api graphql` query of `PullRequest.reviewThreads` |
-| Publish review | `daily_driver_gh_write({ args: ["api", "--method", "POST", "/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"] })` |
+| Publish review | `daily_driver_gh_write({ args: ["api", "--method", "POST", "/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"], reviewerModel: <review model>, reviewerProvider: <review provider>, reviewerSession: <review session> })` |
 | Publish result or summary | `daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>] })` |
 | Reply on a thread | `daily_driver_gh_write({ args: ["api", "-X", "POST", "/repos/{owner}/{repo}/pulls/{n}/comments/{comment_id}/replies", "--input", "reply.json"] })` |
 | Resolve a thread | `gh api graphql` with the `resolveReviewThread` mutation |

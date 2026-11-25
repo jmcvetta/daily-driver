@@ -218,6 +218,15 @@ unmet requirements. The author cannot substitute self-review. Give an invoked
 reviewer the requirements, reviewed revision, relevant prior findings and
 dispositions, and a route for recording the result on the pull request.
 
+**A delegated pass names its own reviewer.** For every delegated full review
+and fix-delta pass, carry that pass's observed reviewer identity into the
+publication call separately from the publishing agent's provenance. Never
+substitute the publisher, the configured reviewer role, or a model's
+self-report for observed execution identity; an unavailable or conflicting
+field is recorded as `unreported`. The harness reference names the
+bounded execution-metadata route. Existing credible independent human or
+agent review remains acceptable across accounts and publication methods.
+
 **Use the active harness route's default review surface unless the operator
 explicitly selects another independent review method.** Honor that selection
 for its stated scope, including a requested switch away from a running review;
@@ -239,14 +248,17 @@ round can read incrementally. Reconstruct the full history, including resolved
 and outdated threads and their replies, on resume without reliable state, a
 dispute, or a gap in that context. Paginate each needed query to completion.
 
-**Keep actionable findings durable and easy to answer.** Prefer inline
-threads for line-specific defects when valid diff anchors are available.
-Anchor them to the reviewed commit, path, side, and valid line or range.
+**Keep actionable findings durable and easy to answer.** Publish a locally
+returned full-review result as one submitted GitHub `COMMENT` review tied to
+the reviewed commit. Each actionable line-specific finding with a valid diff
+anchor is an inline thread carrying the path, side, and line or valid range;
+clean, cross-cutting, or unanchorable results belong in the review summary.
 Use a suggestion block only when it clarifies the replacement; it never
-replaces the explanation of the defect. Put cross-cutting or unanchorable
-findings in a review summary or pull-request comment; never invent an anchor.
-A clean review needs a concise durable result too. No particular account,
-GitHub review event, or comment format is required.
+replaces the explanation of the defect. Never invent an anchor, and do not
+create a second review when an existing native independent result can be
+linked. A clean review needs a concise durable result too. Existing credible
+independent review across accounts and publication methods remains
+acceptable.
 
 **Use native publication where available; otherwise record the returned
 result through the available GitHub route.** Link existing human or agent
@@ -259,9 +271,11 @@ author's transcript when a pull request is available.
 reviewed revision attached to its result; never attribute it to content the
 reviewer did not inspect. If the head moved, compare the relevant content.
 Unchanged content can retain the evidence; behavioral changes require the
-applicable new review. Revalidate inline anchors, or preserve the findings in
-a summary with clear file and code references when inline publication cannot
-be used.
+applicable new review. Revalidate the head and every inline anchor immediately
+before publication. If inline publication is unavailable, preserve the
+findings in a durable ordinary pull-request comment with clear file and code
+references and report that inline publication was unavailable. An invalid
+anchor alone must not erase the findings.
 
 **Report incomplete recording, never claim it succeeded.** If no durable
 GitHub route works, retain the findings and state the publication failure.
@@ -402,10 +416,11 @@ rejection. Repeating a rejected finding without that evidence is not a defect.
 
 Record a concise result on the pull request, or link an existing independent
 result: what revision or content and fixes were checked, whether they passed,
-and any remaining defects or coverage limits. Preserve enough prior results
-to recognize repeated unresolved defects and failed approaches without a fixed
-verification template, pass counter, state token, usage record, or
-reviewer-transcript inspection.
+and any remaining defects or coverage limits. Attribute each pass to its own
+verifier, kept distinct from the publisher and from the full reviewer. Preserve
+enough prior results to recognize repeated unresolved defects and failed
+approaches without a fixed verification template, pass counter, state token,
+usage record, or review-transcript analysis.
 
 
 

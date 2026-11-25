@@ -54,7 +54,9 @@ success_criteria:
       has context about reviewed and current content, findings, and dispositions
       to check fixes and regressions, not conduct a whole-PR audit or solicit
       style work. Record the result durably with enough evidence to identify
-      scope and outcome, without fixed record fields. A defect earns a batched
+      scope and outcome, without fixed record fields, and name that pass's own
+      verifier separately from the publisher and the full reviewer; unknown
+      execution identity is reported as unreported. A defect earns a batched
       correction and independent confirmation. The first clean pass ends the
       loop. Three distinct repairable defects do not bar a fourth correction
       and targeted pass. Repeated failure to fix the same defect or a
@@ -67,5 +69,6 @@ success_criteria:
       independent batch verification and permits the fourth correction but
       misses material record or escalation details. Score 0.0 if it imposes a
       fixed pass wall, treats distinct defects as non-convergence, offers a
-      full re-review, verifies per finding, accepts CI as verification, or
-      approves after a defect.
+      full re-review, verifies per finding, accepts CI as verification,
+      attributes the pass to the publisher or the full reviewer, or approves
+      after a defect.

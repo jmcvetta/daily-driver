@@ -42,16 +42,22 @@ success_criteria:
       FIRST, FIND THE REPLY after the last `[RESULT - …]` tag. Begin with
       `ANCHOR: result`, or `ANCHOR: none` and score 0.0 when absent.
 
-      The rule: findings returned locally must be recorded durably on the PR.
-      The reviewer uses relevant existing review context and checks whether the
-      result was already published so a resume does not duplicate it. Re-read
-      the head and validate diff anchors immediately before publication.
-      Attribute findings to the reviewed commit, and anchor line-specific
-      findings to a valid path, side, and line or range. Record the
-      unanchorable finding in a durable summary rather than inventing an
-      anchor. On an absent client, changed head, invalid anchor, permission
-      problem, or GitHub failure, retain the findings and report incomplete
-      publication rather than claiming a durable review.
+      The rule: findings returned locally must be published as one submitted
+      GitHub `COMMENT` review tied to the reviewed commit. The reviewer uses
+      relevant existing review context and checks whether the result was already
+      published so a resume does not duplicate it. Re-read the head and validate
+      diff anchors immediately before publication. Attribute findings to the
+      reviewed commit and to the observed reviewer separately from the publishing
+      agent; unknown reviewer fields are unreported and never filled from the
+      publisher. Anchor line-specific findings to a valid path, side, and line
+      or range. Record the unanchorable finding in the submitted summary rather
+      than inventing an anchor. If inline publication is unavailable, preserve
+      the findings in a durable pull-request comment with clear file and code
+      references and report that inline publication was unavailable; an invalid
+      anchor alone must not erase the findings. On an absent client, changed
+      head, invalid anchor, permission problem, or GitHub failure, retain the
+      findings and report incomplete publication rather than claiming a durable
+      review.
 
       Grade the substance of the reply, not its vocabulary. A reply states a
       part when it conveys it in its own words; do not require the rule's
@@ -59,11 +65,16 @@ success_criteria:
 
       Score 0.0, whatever else the reply gets right, if it leaves the result in
       a transcript alone, posts duplicates, anchors the unanchorable finding,
+      treats a plain pull-request comment as equivalent when submitted review
+      publication is available, substitutes publisher identity for the reviewer,
       or treats a failed publication as done.
 
       Otherwise score by coverage of four things: relevant existing review
-      context; durable findings attributed to the reviewed SHA with valid
-      anchors and a summary for the unanchorable finding; the head re-read and
-      anchors re-validated immediately before publication, with a resume checked
-      against what is already recorded; and explicit failure reporting.
+      context; one submitted review carrying the reviewed SHA, summary, and a
+      valid anchor per line-specific finding, with the unanchorable one in its
+      summary alone and the observed reviewer named separately from the
+      publisher; the head re-read and anchors re-validated immediately before
+      publication, with a resume checked against what is already recorded; and
+      explicit failure reporting with the durable comment fallback and its
+      stated limitation.
       Score 1.0 for all four, 0.75 for three, 0.5 for two, 0.25 for one.

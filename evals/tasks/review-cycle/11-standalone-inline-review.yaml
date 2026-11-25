@@ -46,26 +46,30 @@ success_criteria:
 
       The rule: a standalone review uses relevant prior review context, including
       the earlier rejection and its disposition, and reviews the current
-      content independently. Each actionable line-specific finding becomes a
-      durable inline thread anchored to the reviewed SHA, path, side, and valid
-      diff line or range. A clean or unanchorable result belongs in a durable
-      review summary; no anchor is invented. A repeated rejected finding links
-      to its earlier disposition. A reversal names the prior decision and new
-      evidence or changed constraint. The review-only request then stops: no
-      code fix, thread resolution, draft-state change, or merge.
+      content independently. Its findings are published as one submitted GitHub
+      `COMMENT` review tied to the reviewed revision. Each actionable
+      line-specific finding becomes an inline thread anchored to the reviewed
+      SHA, path, side, and valid diff line or range. A clean or unanchorable
+      result belongs in the submitted review summary; no anchor is invented. A
+      repeated rejected finding links to its earlier disposition. A reversal
+      names the prior decision and new evidence or changed constraint. The
+      review-only request then stops: no code fix, thread resolution,
+      draft-state change, or merge.
 
       Grade the substance of the reply, not its vocabulary. A reply states a
       part when it conveys it in its own words; do not require the rule's
       phrasing, and do not deduct for a part the reply covers compactly.
 
       Score 0.0, whatever else the reply gets right, if it treats a transcript
-      alone as sufficient, invents an anchor, reopens a prior rejection without
-      new evidence, or starts fixing.
+      or an ordinary pull-request comment as sufficient when submitted review
+      publication is available, invents an anchor, reopens a prior rejection
+      without new evidence, or starts fixing.
 
       Otherwise score by coverage of four things: relevant prior context and
-      independent review; durable publication as anchored inline threads;
-      a durable summary for clean and unanchorable results; and the earlier
-      decision honoured on a repeat or a reversal.
+      independent review; submitted publication as anchored inline threads in
+      one `COMMENT` review; the submitted summary as the home for clean and
+      unanchorable results; and the earlier decision honoured on a repeat or a
+      reversal.
       Score 1.0 for all four, 0.75 for three, 0.5 for two, 0.25 for one. The
       review-only stop is a fifth requirement rather than a quarter: a reply
       that fixes, resolves, changes draft state, or merges scores 0.0 under the

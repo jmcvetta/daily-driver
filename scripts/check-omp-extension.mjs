@@ -1688,7 +1688,10 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 		writeFileSync(reviewFile, JSON.stringify({
 			event: "COMMENT",
 			body: "review summary",
-			comments: [{ path: "a.js", line: 3, body: "line comment" }],
+			comments: [
+				{ path: "a.js", line: 3, body: "line comment" },
+				{ path: "b.js", line: 8, body: "second line comment" },
+			],
 		}));
 		const review = await execute(["api", "--method", "POST", "repos/o/r/pulls/7/reviews", "--input", reviewFile]);
 		assert.ok(review.capture.payload.body.includes("Model: model-b"));
@@ -1698,12 +1701,17 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 		// The publisher's identity must not replace the reviewer in either body.
 		const reviewer = { model: "mistral", provider: "gateway", session: "review-session" };
 		const delegated = await execute(["api", "--method", "POST", "repos/o/r/pulls/7/reviews", "--input", reviewFile], reviewer);
-		for (const body of [delegated.capture.payload.body, delegated.capture.payload.comments[0].body]) {
+		for (const body of [
+			delegated.capture.payload.body,
+			...delegated.capture.payload.comments.map((comment) => comment.body),
+		]) {
 			assert.ok(body.includes("Reviewer model: mistral\nReviewer provider: gateway\nReviewer session: review-session"));
 			assert.ok(body.includes("Publisher provenance:\n\n---\nModel: model-b"));
 		}
 		const verification = await execute(["pr", "comment", "7", "--body", "Review verification"], { model: "other-reviewer" });
 		assert.ok(verification.capture.body.includes("Reviewer model: other-reviewer\nReviewer provider: unreported\nReviewer session: unreported"));
+		assert.ok(!verification.capture.body.includes("mistral"), "a fix-delta record does not inherit the full reviewer");
+		assert.ok(verification.capture.body.includes("Publisher provenance:\n\n---\nModel: model-b"));
 		const editReviewFile = join(root, "review-edit.json");
 		writeFileSync(editReviewFile, JSON.stringify({ body: delegated.capture.payload.body }));
 		const reviewEdit = await execute(["api", "--method", "PATCH", "repos/o/r/pulls/7/reviews", "--input", editReviewFile], reviewer);

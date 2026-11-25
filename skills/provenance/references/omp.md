@@ -30,11 +30,13 @@ For supported `gh api --input` review and reply routes, it updates the JSON
 `body` fields, including each inline review comment, in a private temporary
 copy and removes that copy after success or failure.
 
-For delegated review artifacts, callers may pass observed reviewer identity
-as `reviewerModel`, `reviewerProvider`, and `reviewerSession`. The wrapper
-labels that reviewer record separately from publisher provenance; unknown
-reviewer fields are `unreported`. Ordinary writes without `reviewerModel`
-keep their existing behavior. Do not infer reviewer identity from the publisher.
+For delegated review artifacts, `review-cycle` passes the observed reviewer
+identity separately as `reviewerModel`, `reviewerProvider`, and
+`reviewerSession` on every full-review and fix-delta publication call. The
+wrapper adds a labeled reviewer record and labels the normal block as publisher
+provenance, for the review summary and every inline comment body. Unknown
+reviewer fields are `unreported`; ordinary writes without `reviewerModel` keep
+their existing behavior. Do not infer reviewer identity from the publisher.
 
 Direct body-bearing `gh` calls from Bash are denied with a recovery instruction
 that names `daily_driver_gh_write`. Read-only calls and non-body operations,

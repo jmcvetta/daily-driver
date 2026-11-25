@@ -48,11 +48,13 @@ success_criteria:
       remain targeted to fixes and regressions rather than repeated full audits.
       Results must cover the requested scope at the reviewed SHA. Failed or
       partial results cannot pass readiness. Returned local findings, including
-      a clean result, need a durable GitHub review record with valid inline
-      anchors where available; check existing evidence to avoid duplicate
-      publication. Compare content to determine freshness: a behavioral change
-      needs a new relevant independent review, not an ancestry ritual. CI alone
-      is not independent review or a ready gate.
+      a clean result, need a submitted GitHub `COMMENT` review tied to the
+      reviewed commit, with valid inline anchors where available and the
+      observed reviewer named separately from the publisher; check existing
+      evidence to avoid duplicate publication. Compare content to determine
+      freshness: a behavioral change needs a new relevant independent review,
+      not an ancestry ritual. CI alone is not independent review or a ready
+      gate.
 
       Score 0.0 if the reply blocks on OCR, refuses the selected reviewer,
       treats the skipped run as completed, changes persistent configuration,
