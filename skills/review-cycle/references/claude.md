@@ -38,10 +38,12 @@ When a new delta pass is needed, use one briefed subagent through the `Agent`
 tool, unless an operator-selected independent method applies. Existing
 independent human or agent review covering the delta can also satisfy it.
 Give the reviewer the pull request, base branch, prior reviewed revision,
-current revision, relevant original findings and dispositions. Require a
-comparison of relevant pull-request content at those revisions, excluding
-base-only changes, and inspection of affected callers. Comparing the three-dot
-diffs is one way to establish that delta; commit ancestry alone is not.
+current revision, relevant original findings and dispositions. Tell it in the
+dispatch that its brief is the complete contract and that it must not load
+`review-cycle`. Require a comparison of relevant pull-request content at those
+revisions, excluding base-only changes, and inspection of affected callers.
+Comparing the three-dot diffs is one way to establish that delta; commit
+ancestry alone is not.
 The reviewer reports whether implemented findings are solved and any concrete
 regressions in the delta. It must not perform a full-PR audit or solicit style
 work. The author records the independent result, never substitutes a verdict.

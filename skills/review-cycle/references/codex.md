@@ -84,7 +84,9 @@ Existing independent human or agent review covering the delta can also
 satisfy the pass.
 
 Give the reviewer the pull request, base branch, prior reviewed revision,
-current revision, relevant findings and dispositions. Require comparison of
+current revision, relevant findings and dispositions. Tell it in the dispatch
+that its brief is the complete contract and that it must not load
+`review-cycle`. Require comparison of
 the relevant pull-request content at those revisions, excluding base-only
 changes, and inspection of affected callers. Comparing the three-dot diffs
 is one way to establish the delta; commit ancestry alone is not. The reviewer
