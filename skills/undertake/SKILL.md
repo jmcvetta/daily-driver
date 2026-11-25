@@ -61,13 +61,7 @@ Execution policy outside the issue sequence
 Read these policies before their action, including ordinary work without an
 issue. Reading them does not start the sequence below.
 
-**Delegation.** Plan enough to state the objective, relevant context,
-boundaries, expected result, and owner. Use delegation when parallelism,
-specialization, or a bounded handoff helps; a useful handoff may be sequential,
-or a worker may implement while the owner retains responsibility. Keep one
-clear writer per branch or file at a time. Avoid duplicated work, excess
-capability and unnecessary workers. Preserve the original approval boundaries,
-limits and conditions in every handoff. Quota is the user's money.
+**Delegation.** Choose a bounded handoff when its likely reduction in execution-model and coordination cost is greater than the handoff and review overhead. Prefer a `routine` worker for a coherent, settled slice that would otherwise make the owner run a long mundane implementation loop; do not delegate isolated commands, tiny edits or individual review findings. Keep one clear writer per file, preserve the original authorization and limits, and retain one owner accountable for the outcome. Quota is the user's money.
 
 **Errors and unfinished stops.** Diagnose errors, repair within scope, revise
 the plan, and continue permitted work. A failed command or approach alone is
@@ -420,10 +414,11 @@ nothing, as before.
 5 — Implement
 -------------
 
-**The undertaking owner remains accountable for the agreed result.** The owner
-may implement directly, delegate implementation, or share it with a worker.
-Keep ownership clear, prevent overlapping edits, and retain the required
-independent review; the author of a behavioral change is not its sole verifier.
+**The undertaking owner remains accountable for the agreed result.** At `Implement`, the owner retains requirements interpretation, design, decomposition, risky integration proof, scope and authorization control, integration, and final acceptance. Once those decisions settle a coherent slice, prefer one bounded `routine` worker over a long mundane implementation loop when the handoff is likely to reduce total model and coordination cost.
+
+The worker brief carries the required behavior, acceptance criteria and settled design; owned files, non-goals, scope limits and applicable authorization; meaningful test scenarios and named verification commands; one-writer ownership and the owner's integration responsibility; and a requested result of changes, observed verification and unresolved exceptions. The worker may implement the scoped code, tests and documentation, run named focused checks, and correct ordinary local failures within that contract. It returns to the owner for a requirements contradiction, unsettled design choice, authorization boundary, or failure outside scope; it never expands scope silently.
+
+Use one coherent implementation worker by default. Parallelize only genuinely independent slices with disjoint file ownership. The owner may implement directly when judgment remains dense, the slice is too small to repay a handoff, or requirements and acceptance are not yet precise. `intermediate` remains available for a bounded slice needing local judgment beyond routine execution; ordinary tests, documentation, checks and mechanical corrections do not need it. The worker's implementation is not independent review of its behavior.
 
 **Own the agreed result through a pause.** A review-ready pull request is the
 result when the assignment stops there; ownership does not add deployment or

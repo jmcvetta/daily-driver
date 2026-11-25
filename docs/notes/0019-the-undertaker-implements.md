@@ -1,6 +1,6 @@
-# The undertaker implements — delegation buys parallelism or nothing
+# The undertaker owns the issue — duplicate sessions buy nothing
 
-**Status:** decided, 2026-09-17.
+**Status:** decided, 2026-09-17; partially superseded by note `0036`, 2026-11-25.
 **Supersedes:** note `0017-delegation-is-unconditional` (retired to Git
 history), in the part that made delegation unconditional inside one
 undertaking.
@@ -25,8 +25,7 @@ implementation*, with nothing saying what delegation was for.
 
 ## Decided
 
-**Delegation buys parallelism. Where there is no parallelism to buy, it buys a
-second copy of the context already in hand.**
+**A second full undertaking is not justified by work that will not run in parallel.** A bounded component handoff can still reduce total cost when one routine worker replaces a long, settled implementation loop; note `0036` records that decision and its limits.
 
 - **`embark` delegates, and that is unchanged.** An epic's wave is several task
   issues at once, and one session or subagent per task is what makes them
@@ -34,10 +33,7 @@ second copy of the context already in hand.**
 model, the
   cheaper fallback default, the advisor, and the strong-model review that gates
   an implementor's pull request.
-- **`undertake` does not delegate the body of the work.** The session that
-  claimed the issue writes the code. It holds the claim, the branch, the pull
-  request and the gates already, and a dispatch splits those from the hands
-  doing the work for no gain.
+- **`undertake` does not start a second full undertaking for one issue.** The original observation remains valid: a second session repeats the claim and splits ownership of the branch, pull request and gates. The narrower rule that the owner must write all implementation code is superseded by note `0036`: the owner may delegate a bounded settled component slice while retaining the issue and outcome.
 - **The review round still delegates.** `review-cycle`'s `Verify the fix delta`
   dispatches a briefed subagent, and that is the one dispatch inside the
   sequence. The author of a delta cannot be an independent reader of it, so the

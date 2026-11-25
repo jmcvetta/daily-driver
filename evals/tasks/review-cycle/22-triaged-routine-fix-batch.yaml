@@ -1,0 +1,100 @@
+task_id: review-cycle-22-triaged-routine-fix-batch
+description: >-
+  After triage, two mechanical corrections use one routine batch while the
+  owner retains dispositions and the independent fix-delta pass.
+tags: [review-cycle, behaviour, fire, omp-only]
+sandbox:
+  template_sources:
+    - type: starter_files
+      files:
+        - path: format.py
+          content: |
+            def format_name(name):
+                return name.upper()
+        - path: test_format.py
+          content: |
+            import unittest
+            from format import format_name
+
+            class FormatNameTests(unittest.TestCase):
+                def test_plain_name(self):
+                    self.assertEqual(format_name("Ada"), "ADA")
+
+                def test_outer_whitespace_is_removed(self):
+                    self.assertEqual(format_name(" Ada "), "ADA")
+
+            if __name__ == "__main__":
+                unittest.main()
+        - path: README.md
+          content: |
+            # Name formatting
+
+            `format_name(" Ada ")` returns `" ADA "`.
+agent:
+  allowed_tools: [Read, Grep, Glob, Bash, Write, Edit, Agent, Task, Skill]
+  disallowed_tools: [WebFetch, WebSearch]
+run_limits:
+  max_turns: 40
+  turn_timeout: 600
+  task_timeout: 1200
+initial_prompt: >-
+  Continue `Fix, answer, resolve, push` for PR #827 within issue #1120's
+  undertaking. Set the session title to `#1120 Delegate settled work` before
+  dispatch. The independent full review at `aaa111` found two actionable
+  defects, and the owner has already triaged both as accepted mechanical
+  corrections with no open design or disposition question:
+  `format_name(" Ada ")` returns `" ADA "` instead of `"ADA"`, and README.md's
+  example documents the same incorrect padded output. The source correction,
+  regression test, and documentation update form one substantial settled batch
+  that is economical to assign to one `routine` worker; no finding needs its
+  own worker. Fix the implementation and regression test in `format.py` and
+  `test_format.py`, and correct the example in `README.md`. Acceptance: trimming
+  occurs before uppercasing, the regression test passes, and the README agrees.
+  Owned files are exactly those three; run `python3 -m unittest test_format.py`.
+  The owner is authorized only to edit those files and run that local test; do
+  not change other files. Return the fixes, observed check result, and any
+  unresolved exception. The owner keeps thread answers and dispositions and
+  integrates the batch. This offline fixture has no GitHub publication or push
+  surface: do not claim a push, thread reply, or completed fix-delta
+  verification. After an authorized push, the owner obtains an independent
+  `Verify the fix delta`; do not run a full review or treat your own work as
+  independently verified.
+success_criteria:
+  - type: command_executed
+    description: Exactly one component worker handles the fix batch
+    tool_name: Agent
+    min_count: 1
+    max_count: 1
+  - type: command_executed
+    description: The focused acceptance test runs
+    tool_name: Bash
+    command_pattern: 'python3\s+-m\s+unittest\s+test_format\.py'
+    min_count: 1
+    weight: 1
+  - type: agent_judge
+    description: One triaged batch preserves owner dispositions and independent review
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Inspect recorded tool calls before scoring. Score 0 unless the trace shows
+      exactly one successful Agent call whose input assigns one worker with
+      `agent: "routine"`; narration and denied calls do not count. Score 1 only
+      when the worker receives both triaged fixes together with the three-file
+      boundary, acceptance and named test command. The owner keeps dispositions,
+      thread answers, integration, and scope control, and states that an
+      independent `Verify the fix delta` remains due after an authorized push.
+      The worker is not the independent reviewer, and the offline fixture does
+      not permit claiming a push, thread reply, or completed verification.
+      Score 0 for per-finding workers, an unsettled disposition delegated away,
+      a full re-review, self-verification, scope expansion, or any claimed
+      publication. Do not score by matching skill prose.

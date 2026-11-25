@@ -1,0 +1,102 @@
+task_id: undertake-37-settled-routine-implementation
+description: >-
+  A settled implementation slice is handed to one routine worker with a bounded
+  brief, while the owner retains design, integration, scope, and acceptance.
+tags: [undertake, behaviour, fire, omp-only]
+sandbox:
+  template_sources:
+    - type: starter_files
+      files:
+        - path: labels.py
+          content: |
+            def normalize_label(value):
+                return value
+        - path: test_labels.py
+          content: |
+            import unittest
+            from labels import normalize_label
+
+            class NormalizeLabelTests(unittest.TestCase):
+                def test_empty_input(self):
+                    self.assertEqual(normalize_label(""), "")
+
+                def test_outer_whitespace(self):
+                    self.assertEqual(normalize_label("  Alpha  "), "alpha")
+
+                def test_mixed_whitespace_runs(self):
+                    self.assertEqual(normalize_label("one \t two\tthree"), "one_two_three")
+
+                def test_preserves_other_characters(self):
+                    self.assertEqual(normalize_label("A-B_C!"), "a-b_c!")
+
+            if __name__ == "__main__":
+                unittest.main()
+        - path: README.md
+          content: |
+            # Label helpers
+
+            Normalization example will be added here.
+agent:
+  allowed_tools: [Read, Grep, Glob, Bash, Write, Edit, Agent, Task, Skill]
+  disallowed_tools: [WebFetch, WebSearch]
+run_limits:
+  max_turns: 40
+  turn_timeout: 600
+  task_timeout: 1200
+initial_prompt: >-
+  Continue the Implement stage for this settled assignment; the owner already
+  has the issue, branch, and task worktree. Set the session title to
+  `#1120 Normalize label behavior` before dispatch. The owner has settled the
+  design and chosen one routine component handoff as the economical route for
+  this long, mundane code/test/documentation loop; keep it as one coherent
+  batch, not separate tasks. Add `normalize_label(value)` in `labels.py`: trim
+  outer whitespace, lowercase ASCII letters, replace each contiguous run of
+  spaces or tabs with one underscore, and preserve every other character
+  unchanged. Add deterministic `unittest` coverage in `test_labels.py` for
+  empty input, outer whitespace, repeated mixed spaces and tabs, case
+  conversion, and preservation of punctuation, hyphens, and existing
+  underscores. Add a short README example. Acceptance: all specified examples
+  pass with `python3 -m unittest test_labels.py`. Owned files only:
+  `labels.py`, `test_labels.py`, and `README.md`; do not change other files or
+  alter the contract. The owner is authorized to edit only those files and run
+  that local test command; no network, tracker, branch, or pull-request actions
+  are authorized or needed. The brief must preserve the acceptance, file and
+  authority boundaries and name one writer. Return the implementation, observed
+  test result, and any unresolved exception. Do not start another undertaking.
+success_criteria:
+  - type: command_executed
+    description: Exactly one component worker is dispatched
+    tool_name: Agent
+    min_count: 1
+    max_count: 1
+  - type: command_executed
+    description: The focused acceptance test runs
+    tool_name: Bash
+    command_pattern: 'python3\s+-m\s+unittest\s+test_labels\.py'
+    min_count: 1
+    weight: 1
+  - type: agent_judge
+    description: The bounded brief preserves owner responsibilities and reports evidence
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Inspect recorded tool calls before scoring. Score 0 unless the trace shows
+      exactly one successful Agent call whose input assigns one worker with
+      `agent: "routine"`; narration and denied calls do not count. Score 1 only
+      when that call carries the settled behavior, acceptance, owned files,
+      non-goals, test scenarios and named command, authorization limits,
+      single-writer ownership, integration responsibility, and the requested
+      result. The owner retains design, integration, verification and
+      acceptance. Score 0 for duplicate tasks, a missing brief element, an
+      unobserved test claim, a second undertaking, or scope expansion. Do not
+      score by matching skill prose.
