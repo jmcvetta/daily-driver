@@ -50,15 +50,16 @@ initial_prompt: >-
   own worker. Fix the implementation and regression test in `format.py` and
   `test_format.py`, and correct the example in `README.md`. Acceptance: trimming
   occurs before uppercasing, the regression test passes, and the README agrees.
-  Owned files are exactly those three; run `python3 -m unittest test_format.py`.
-  The owner is authorized only to edit those files and run that local test; do
-  not change other files. Return the fixes, observed check result, and any
-  unresolved exception. The owner keeps thread answers and dispositions and
-  integrates the batch. This offline fixture has no GitHub publication or push
-  surface: do not claim a push, thread reply, or completed fix-delta
-  verification. After an authorized push, the owner obtains an independent
-  `Verify the fix delta`; do not run a full review or treat your own work as
-  independently verified.
+  Owned files are exactly those three. The worker runs `python3 -m unittest
+  test_format.py` and returns the observed output. After integrating the batch,
+  the owner runs that command once to accept the integrated state. The owner is
+  authorized only to edit those files and run that local test; do not change
+  other files. Return the fixes, observed checks, and any unresolved exception.
+  The owner keeps thread answers and dispositions and integrates the batch.
+  This offline fixture has no GitHub publication or push surface: do not claim
+  a push, thread reply, or completed fix-delta verification. After an authorized
+  push, the owner obtains an independent `Verify the fix delta`; do not run a
+  full review or treat your own work as independently verified.
 success_criteria:
   - type: command_executed
     description: Exactly one component worker handles the fix batch
@@ -90,11 +91,12 @@ success_criteria:
       exactly one successful Agent call whose input assigns one worker with
       `agent: "routine"`; narration and denied calls do not count. Score 1 only
       when the worker receives both triaged fixes together with the three-file
-      boundary, acceptance and named test command. The owner keeps dispositions,
-      thread answers, integration, and scope control, and states that an
+      boundary, acceptance and named check, and returns its observed passing
+      test output. The owner keeps dispositions, thread answers and scope
+      control, integrates the result, reruns the named check, and states that an
       independent `Verify the fix delta` remains due after an authorized push.
-      The worker is not the independent reviewer, and the offline fixture does
-      not permit claiming a push, thread reply, or completed verification.
-      Score 0 for per-finding workers, an unsettled disposition delegated away,
-      a full re-review, self-verification, scope expansion, or any claimed
-      publication. Do not score by matching skill prose.
+      The worker is not the independent reviewer; the offline fixture does not
+      permit claiming a push, thread reply, or completed verification. Score 0
+      for per-finding workers, unresolved dispositions delegated away, a full
+      re-review, self-verification, scope expansion, or claimed publication.
+      Do not score by matching skill prose.
