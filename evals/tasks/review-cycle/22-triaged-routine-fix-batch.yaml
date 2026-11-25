@@ -51,10 +51,14 @@ initial_prompt: >-
   `test_format.py`, and correct the example in `README.md`. Acceptance: trimming
   occurs before uppercasing, the regression test passes, and the README agrees.
   Owned files are exactly those three. The worker runs `python3 -m unittest
-  test_format.py` and returns the observed output. After integrating the batch,
-  the owner runs that command once to accept the integrated state. The owner is
-  authorized only to edit those files and run that local test; do not change
-  other files. Return the fixes, observed checks, and any unresolved exception.
+  test_format.py` and returns the exact observed output. After integrating the
+  batch, the owner runs that command once to accept the integrated state. In
+  the final report, distinguish the worker's returned result from the owner's
+  run; do not attribute the owner's check to the worker. If the worker result
+  omits its output, ask the same worker to provide it before accepting the
+  batch. The owner is authorized only to edit those files and run that local
+  test; do not change other files. Return the fixes and any unresolved
+  exception.
   The owner keeps thread answers and dispositions and integrates the batch.
   This offline fixture has no GitHub publication or push surface: do not claim
   a push, thread reply, or completed fix-delta verification. After an authorized
@@ -87,16 +91,14 @@ success_criteria:
       disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
-      Inspect recorded tool calls before scoring. Score 0 unless the trace shows
-      exactly one successful Agent call whose input assigns one worker with
-      `agent: "routine"`; narration and denied calls do not count. Score 1 only
-      when the worker receives both triaged fixes together with the three-file
-      boundary, acceptance and named check, and returns its observed passing
-      test output. The owner keeps dispositions, thread answers and scope
-      control, integrates the result, reruns the named check, and states that an
-      independent `Verify the fix delta` remains due after an authorized push.
-      The worker is not the independent reviewer; the offline fixture does not
-      permit claiming a push, thread reply, or completed verification. Score 0
-      for per-finding workers, unresolved dispositions delegated away, a full
-      re-review, self-verification, scope expansion, or claimed publication.
-      Do not score by matching skill prose.
+      Inspect the successful Agent call and final reply. Score 1 only if one
+      routine worker receives both triaged fixes, the three-file boundary,
+      acceptance and named check, then the owner reports the worker's returned
+      test output separately from the owner's passing integration rerun. The
+      owner keeps dispositions and thread answers, integrates the batch, and
+      explicitly states that independent `Verify the fix delta` remains due
+      after an authorized push. The worker cannot perform that review. Score 0
+      for an unsupported claim that the worker ran tests, attribution of the
+      owner's test to the worker, a missing future-verification handoff,
+      per-finding workers, delegated judgment, a full re-review, publication,
+      or scope expansion. Do not score by matching skill prose.
