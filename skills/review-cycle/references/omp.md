@@ -351,8 +351,10 @@ is the submitted-review event. Use `start_side` and `start_line` for a valid
 range. Cross-cutting or clean results can use the summary without `comments`.
 If inline publication is unavailable, record the findings with clear file and
 code references in a durable pull-request comment through
-`daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>] })`
-and report that inline publication was unavailable. Never invent an anchor,
+`daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>],
+reviewerModel: <review model>, reviewerProvider: <review provider>,
+reviewerSession: <review session> })` and report that inline publication was
+unavailable. Never invent an anchor,
 and an invalid anchor alone must not erase the findings. If no durable route
 works, retain the findings and report publication as incomplete.
 
@@ -361,7 +363,7 @@ works, retain the findings and report publication as incomplete.
 | Read reviews | `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews` |
 | Read threads | paginated `gh api graphql` query of `PullRequest.reviewThreads` |
 | Publish review | `daily_driver_gh_write({ args: ["api", "--method", "POST", "/repos/{owner}/{repo}/pulls/{n}/reviews", "--input", "review.json"], reviewerModel: <review model>, reviewerProvider: <review provider>, reviewerSession: <review session> })` |
-| Publish result or summary | `daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>] })` |
+| Publish result or summary | `daily_driver_gh_write({ args: ["pr", "comment", <number>, "--body-file", <path>], reviewerModel: <review model>, reviewerProvider: <review provider>, reviewerSession: <review session> })` |
 | Reply on a thread | `daily_driver_gh_write({ args: ["api", "-X", "POST", "/repos/{owner}/{repo}/pulls/{n}/comments/{comment_id}/replies", "--input", "reply.json"] })` |
 | Resolve a thread | `gh api graphql` with the `resolveReviewThread` mutation |
 
