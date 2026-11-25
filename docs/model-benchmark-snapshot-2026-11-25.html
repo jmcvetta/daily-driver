@@ -7,11 +7,11 @@
 <style>
   :root { color-scheme: light dark; }
   body {
-    margin: 0 auto;
-    padding: 2rem 1rem 3rem;
-    max-width: 64rem;
+    margin: 0;
+    padding: 2rem clamp(1rem, 2vw, 2rem) 3rem;
     font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
   }
+  h1, p { max-width: 64rem; }
   h1 { margin: 0 0 .5rem; font-size: 1.5rem; line-height: 1.25; }
   p { margin: .75rem 0; max-width: 48rem; }
   .warning { font-weight: 600; }
@@ -32,8 +32,9 @@
     background: Canvas;
     border-bottom-width: 2px;
     vertical-align: bottom;
+    white-space: normal;
   }
-  th:first-child, td:first-child { text-align: left; }
+  th:first-child, td:first-child { text-align: left; white-space: normal; }
   thead th button {
     all: unset;
     cursor: pointer;
