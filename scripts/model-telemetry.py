@@ -77,7 +77,7 @@ class TelemetryError(Exception):
 
 # ---------------------------------------------------------------------------
 # Comment grammars -- pure functions, each exercised offline by
-# `scripts/check-model-telemetry.py` against fixture text.
+# `scripts/check-model-pr-metrics.py` against fixture text.
 # ---------------------------------------------------------------------------
 
 # `Model: ...` then an optional `Provider: ...` and `Harness: ...`, then

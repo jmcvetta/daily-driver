@@ -102,7 +102,7 @@ check-pr-keep-current:
   - 'extensions/pr-supervisor-tools.mjs'
   - 'extensions/daily-driver.js'
 check-model-telemetry:
-  - 'scripts/check-model-telemetry.py'
+  - 'scripts/check-model-pr-metrics.py'
   - 'scripts/model-telemetry.py'
   - 'scripts/fixtures/model-telemetry-*.txt'
 check-labels:

@@ -314,7 +314,7 @@ check-step-names:
 # the standard library, so unlike its `uv run --frozen` neighbours above it
 # runs under plain `python3`. See the script's docstring.
 check-model-telemetry:
-	python3 scripts/check-model-telemetry.py
+	python3 scripts/check-model-pr-metrics.py
 
 # check-labels: the issue-label standard is written twice -- the table in
 # `issue-labels` and the resources in infra/github/labels.tf -- and this leg
