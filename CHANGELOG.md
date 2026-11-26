@@ -87,6 +87,13 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.81.0](https://github.com/jmcvetta/daily-driver/compare/v0.80.0...v0.81.0) (2026-11-26)
+
+
+### Features
+
+* **issue-body:** split the task brief into Problem and Desired behavior ([#1137](https://github.com/jmcvetta/daily-driver/issues/1137)) ([3df61a9](https://github.com/jmcvetta/daily-driver/commit/3df61a96af8da359feec784bcd96170feab29f7b))
+
 ## [0.80.0](https://github.com/jmcvetta/daily-driver/compare/v0.79.0...v0.80.0) (2026-11-25)
 
 
