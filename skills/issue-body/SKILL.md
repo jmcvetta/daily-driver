@@ -68,8 +68,9 @@ The task body
 =============
 
 Six information requirements. **They are requirements on information, not a
-quota of headings or paragraphs** — a small task stays small, and
-inapplicable detail is omitted rather than manufactured into boilerplate.
+quota of paragraphs** — a small task stays small, and inapplicable detail is
+omitted rather than manufactured into boilerplate. The fixed shape below gives
+each requirement its named section.
 
 1. **Outcome and reason.** The observable change, current behaviour, and why
    the change is needed.
@@ -134,19 +135,36 @@ contract. The document owns behavior and acceptance.
 2. **A haiku.** Immediately after the summary, separated by a blank line:
    three 5-7-5 lines, italicised line by line, as
    [`HAIKU.md`](../../HAIKU.md) shows.
-3. **`## Human brief`.** A short paragraph or two describing the change and
-   reason, without duplicating `Detail`. It is human-facing, so the
-   constitution's audience rule governs it.
-4. **`## Model class`.** Immediately after `Human brief`, before `Detail`. Its
-   first paragraph is exactly one backtick-wrapped lowercase class token;
-   one short rationale paragraph follows.
-5. **`## Detail`.** The grounded map, settled design, acceptance, and
-   verification. It is agent-facing: it keeps every fact the implementer
-   needs and is not shortened to a reading budget. Its internal headings are
-   the author's choice.
+3. **`## Problem`.** The current defect or unmet need, and the impact it has.
+   A feature describes a capability gap here: `## Problem` does not claim that
+   existing behavior is broken.
+4. **`## Desired behavior`.** The requested observable outcome, stated
+   independently of its implementation — what an operator or consumer can
+   observe once the work lands, not a menu of candidate solutions.
+5. **`## Model class`.** Immediately after `Desired behavior`, before
+   `Evidence`. Its first paragraph is exactly one backtick-wrapped lowercase
+   class token; one short rationale paragraph follows.
+6. **`## Evidence`.** The grounded map the worker would otherwise rediscover
+   with less capability: relevant files and symbols, current behavior,
+   repository evidence, tests, gates, and compatibility constraints.
+7. **`## Implementation`.** Settled decisions, required constraints and
+   invariants, and concrete steps where they are known. Name the technical
+   choices deliberately left to the executor, and the decision criteria or
+   bounded proof those choices need.
+8. **`## Acceptance`.** Observable pass/fail conditions and the exact
+   applicable checks, including existing coverage the change must keep.
+9. **`## Scope`.** What remains unchanged, the non-goals, and the
+   authorization limits.
+
+`Problem` and `Desired behavior` replace the older `Human brief`, and the
+named sections replace its generic `Detail`: never carry both forms. A small
+task stays small, in short paragraphs rather than manufactured boilerplate,
+but the explicit sections are not collapsed back into a generic `Detail` —
+the distinction between the defect or unmet need and the requested behavior is
+what orients the worker.
 
 Where the work has nontrivial components, flow, state, or data movement,
-the `Human brief` should include one Mermaid
+`## Problem` or `## Desired behavior` may include one Mermaid
 diagram that reveals that structure. The diagram is optional, not a quota:
 omit it when prose is clearer or the structure is trivial. A diagram replaces
 prose that would otherwise explain the same structure — never acceptance
@@ -159,9 +177,9 @@ hand-maintained dependency record.
 The class is implementation metadata, not authoring, review, judging, effort,
 or concrete-model provenance. A task body has no trailing `Model:` or
 `Effort:` line — that is class metadata's own shape, immediately below
-`## Human brief`, and is a different thing from `provenance`'s block, which sits
-below a `---` rule at the very end of the body and this rule does not touch.
-This shape is `task`'s alone; an `epic` body is untouched.
+`## Desired behavior`, and is a different thing from `provenance`'s block,
+which sits below a `---` rule at the very end of the body and this rule does
+not touch. This shape is `task`'s alone; an `epic` body is untouched.
 
 Every complete issue-body draft follows the active harness route for
 provenance. For Omp GitHub writes, keep the authored body free of a new block;
@@ -319,21 +337,23 @@ When asked to show a revised body, include the complete body and its unchanged
 provenance block; attribution is part of the delivered revision, not optional
 reporting.
 
-A deliberately revised task emits the new section and removes its trailing
-task `Model:` field — the legacy class-metadata field below `## Human brief`, never
-a `provenance` block below the closing `---` rule, which follows `provenance`'s
-distinct-attribution rule. When selecting an old issue for work, assess its body
-against the class rubric and migrate only that issue before or during dispatch.
-Use the grounded handoff to assess legacy `standard` or `advanced` metadata;
-preserve its rationale and capability requirement rather than inferring a class
-from the old identifier. A valid new section is authoritative when both forms
-exist.
+A deliberately revised task emits the new sections and drops the old
+scaffolding the revision replaces: the legacy `Human brief`, `Detail` or
+`Summary` headings, and the legacy class-metadata `Model:` field that sat below
+`Human brief`. None of those is the `provenance` block below the closing `---`
+rule, which follows `provenance`'s distinct-attribution rule and stays. An
+older body in those legacy forms remains readable and valid; when selecting
+one for work, assess it against the class rubric and migrate only that issue
+before or during dispatch. Use the grounded handoff to assess legacy
+`standard` or `advanced` metadata; preserve its rationale and capability
+requirement rather than inferring a class from the old identifier. A valid
+`## Model class` section is authoritative when both forms exist.
 
 
 The model class section
 =======================
 
-The section is immediately below `## Human brief` and before `## Detail`:
+The section is immediately below `## Desired behavior` and before `## Evidence`:
 
 ```markdown
 ## Model class
